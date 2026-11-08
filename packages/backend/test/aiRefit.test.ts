@@ -201,6 +201,16 @@ describe('the commander and the Pressure Refit', () => {
     );
   });
 
+  it('never asks for a second copy while a line is running the first (#1785)', () => {
+    // Two yards, one of them running the refit. The server refuses the second
+    // copy (§2, "once each"), so asking again would spend every observation of
+    // the two minutes on an order it cannot win.
+    const brief = briefing(Faction.Bathyarch);
+    const state = snapshot(brief, [StructureKind.Slipway, StructureKind.Slipway]);
+    state.structures.find((s) => s.id === 30)!.refit = { kind: RefitKind.Pressure, progress: 0.4 };
+    assert.deepEqual(refitsAsked(brief, state), [], 'it is already on a line');
+  });
+
   it('holds the purse against it rather than spending the bank on the next hull', () => {
     // The saving rule #518 added, applied to the refit: a commander with the
     // crystal aboard and the nodules still coming does not let the yards spend

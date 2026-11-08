@@ -102,6 +102,21 @@ had to raid for, at a field 2,400 m down, taking crush attrition on every trip
 non-Directorate match are the hardest, and what they buy is the end of that hardness. That is
 the mid-game, and the deep paces it.
 
+**Two refits meet a hull already afloat**, and the table gives each one's stat rather than
+what it does to a hull mid-match. Both rulings are SPEC (#1785):
+
+- **Plate keeps a hull's condition.** Current hull scales with the maximum, so a full hull
+  stays full and a half-sunk one stays half-sunk, its permanently lost share included. A
+  refit is bought, not earned, and a fleet-wide heal for money would make §3's rank-up
+  something other than the one heal a hull can earn under fire. An enemy that resolves a
+  plated hull to Track reads that condition against the kind's own maximum, never the plate
+  ([systems-echo.md](systems-echo.md) §4): the plate is a purchase, and a purchase is not told.
+- **Magazine grows the roster's standard magazine, and only it.** Two becomes three
+  ([systems-combat.md](systems-combat.md) §5). The Broadside's four and the Lance's one are
+  each that hull's own argument ([units.md](units.md)), and the refit leaves both. A hull
+  afloat when it lands loads its third torpedo at its next rearm, because the field never
+  refills a magazine; a hull launched after it leaves the yard with three.
+
 **What a refit cannot buy**, by rule 2 and by the rules of the docs it would otherwise break:
 
 - **Quiet.** No refit lowers SIG at any state. The Baffle Barge is the one purchasable
@@ -221,16 +236,17 @@ close enough to know everything.
 
 ## 5. Prototype Mapping
 
-**The Pressure Refit is built; the other four refits, rank and its guard-rails are not.**
-Constants land only after this section exists ([CLAUDE.md](../CLAUDE.md), *Constants live
-in exactly one place*). Two navies buy the refit on the Slipway's line, transcribed
-in #461 (`StructureKind.Slipway` in `packages/shared/src/structures.ts`), so it takes a yard
-that already runs at 70 rather than a new yard; the Knights strike theirs at the Bastion.
+**All five refits are built (#1785); rank and its guard-rails are not.** Constants land
+only after this section exists ([CLAUDE.md](../CLAUDE.md), *Constants live in exactly one
+place*). Every refit is bought on the Slipway's line, transcribed in #461
+(`StructureKind.Slipway` in `packages/shared/src/structures.ts`), so it takes a yard that
+already runs at 70 rather than a new yard. The one exception is the Knights' Pressure Refit,
+struck at the Bastion.
 
 | Doc concept | Prototype today | Where it would land |
 | --- | --- | --- |
-| Refits (§2) | **Partly built** — the **Pressure Refit** only; Plate, Drive, Magazine and Hold are designed and not built | `REFIT_STATS` and `refitPriceFor` in `packages/shared/src/refits.ts`, priced through the same `priceOf`, `affords` and `charge` as a hull (economy.md §8). `Match.refit` takes it onto the Slipway's line; `grantRefit` in `packages/backend/src/sim/systems/refit.ts` applies it to every hull afloat, and `world.refits`, a per-player set, refits each later launch and adds its SIG. `test/refit.test.ts` covers it |
-| Pressure Refit's faction rules (§2) | **Built** | `REFIT_TERMS` and `refittedPressureRating` in `packages/shared/src/refits.ts`: each navy's rates, the Commune's PR-2 cap and the Directorate's refusal. The Knights' instant, sounded variant is struck at the Bastion by `Match.refit`, at SIG 80 for 15 s |
+| Refits (§2) | **Built** — all five | `REFIT_STATS` and `refitPriceFor` in `packages/shared/src/refits.ts`, priced through the same `priceOf`, `affords` and `charge` as a hull (economy.md §8). `Match.refit` takes a refit onto the Slipway's line, and `world.refits`, a per-player set, is what every system reads. `grantRefit` in `packages/backend/src/sim/systems/refit.ts` writes the two that a hull carries, a Pressure Refit's rating and a Plate's hull, to every hull afloat, and `spawnUnit` gives both and a Magazine's three torpedoes to each later launch. The movement, depth, rearm and harvest systems read the Drive, the Magazine and the Hold live, and the acoustics pass adds each refit's SIG. `test/refit.test.ts` covers them |
+| Each navy's terms (§2) | **Built** | `REFIT_TERMS` in `packages/shared/src/refits.ts` is the table's *Refits* column, each navy's rates for every refit; `PRESSURE_REFIT_TERMS` is its *Pressure Refit* column, with the Commune's PR-2 cap, the Directorate's refusal and the Knights' own terms. `refittedPressureRating` applies the cap. The Knights' instant, sounded Pressure Refit is struck at the Bastion by `Match.refit`, at SIG 80 for 15 s, and their other four are bought on the line |
 | Rank (§3) | **Not built** | A component on the entity: experience and rank, written by `sim/systems/combat.ts` where damage is applied, read by the same file where damage is dealt. Rank crosses the wire as own-force hull data and inside a Tier-4 contact only |
 | Guard-rails (§4) | **Not built** | `test/ttkBands.test.ts` grows a rank-3 row per band |
 

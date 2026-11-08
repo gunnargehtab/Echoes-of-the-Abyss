@@ -271,7 +271,8 @@ as nothing at all, because a Weaver going home lays none.
   it simply has to be *two* decisions the defender failed rather than one.
 - **Magazine of 2** per torpedo-armed hull (TUNABLE). Rearm within 300 m of an own Bastion
   or Foundry at 15 s per torpedo. Scarcity is the class identity: the gun never runs dry,
-  the torpedo always might.
+  the torpedo always might. The Magazine Refit makes it three
+  ([systems-progression.md](systems-progression.md) §2).
 - **Launch is loud:** +25 burst at the launcher, plus +40 if launched from silence.
 - **A running torpedo lays a wake Echo Mark** — a scout can read where torpedoes flew,
   minutes later ([systems-echo.md](systems-echo.md) §7).

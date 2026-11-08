@@ -250,9 +250,9 @@ export enum StructureKind {
   VentTap = 8,
   /**
    * The Slipway — the second yard, and the rung (docs/units.md; #461). Every
-   * navy's, crystal-locked, and the only place its Slipway hull is built. Louder
-   * than a Foundry while its line runs and grants the Foundry's eight berths:
-   * a navy that wants forty berths has to want the rung.
+   * navy's, priced in Nodules alone (#491), and the only place its Slipway hull
+   * is built. Louder than a Foundry while its line runs and grants the
+   * Foundry's eight berths: a navy that wants forty berths has to want the rung.
    */
   Slipway = 9,
   /**
@@ -273,10 +273,10 @@ export enum StructureKind {
  * The refits — fleet-wide upgrades, bought once each, on the Slipway's line
  * (docs/systems-progression.md §2).
  *
- * One entry, and the enum exists anyway rather than being a boolean, because
- * §2's list is five and the other four are the same mechanism pointed at the
- * other stats a hull has. What is *not* here is a sixth: "five refits is the
- * list. A sixth is a design change to this document, not a constant."
+ * §2's five, in its table's order, and no sixth: "five refits is the list. A
+ * sixth is a design change to this document, not a constant." The values cross
+ * the wire and sit in replays, so a new one would be appended rather than
+ * slotted in, for the reason `UnitKind` gives.
  */
 export enum RefitKind {
   /**
@@ -285,6 +285,14 @@ export enum RefitKind {
    * navy can purchase rather than position (#517).
    */
   Pressure = 0,
+  /** **+15% max hull**, and more mass pushes more water: +3 SIG at cruise. */
+  Plate = 1,
+  /** **+10% speed**, descent and ascent included, at +4 SIG idle and cruise. */
+  Drive = 2,
+  /** **Torpedo magazines 2 → 3**, and nothing on the hull: the torpedo is loud already. */
+  Magazine = 3,
+  /** **Holds +20%** at every throttle, and the hum is what it costs. */
+  Hold = 4,
 }
 
 /**

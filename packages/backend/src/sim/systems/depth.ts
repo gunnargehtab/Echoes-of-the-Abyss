@@ -26,11 +26,28 @@
 
 import { hasComponent } from 'bitecs';
 import { defineQuery } from '../query.ts';
-import { crushAttritionPerSecond, DEPTH, FOLLOW_FLOOR, onTheGround } from '@echoes/shared';
-import { DepthOrder, MoveOrder, Position, Pressure, SilentRunning } from '../components.ts';
+import {
+  crushAttritionPerSecond,
+  DEPTH,
+  FOLLOW_FLOOR,
+  onTheGround,
+  refitSpeedFactor,
+} from '@echoes/shared';
+import { DepthOrder, MoveOrder, Owner, Position, Pressure, SilentRunning } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
+// Hulls only: `spawnUnit` is the one place a DepthOrder is added, and every
+// hull it spawns has an Owner, which is what the Drive Refit is looked up by.
 const diving = defineQuery([Position, DepthOrder]);
+
+/**
+ * The navy's Drive Refit on the vertical (docs/systems-progression.md §2):
+ * "+10% speed, descent and ascent rates included". One integer compare until
+ * somebody has bought a refit, as on the horizontal in `movementSystem`.
+ */
+function driveFactor(world: SimWorld, eid: number): number {
+  return world.refits.size === 0 ? 1 : refitSpeedFactor(world.refits.get(Owner.slot[eid]!));
+}
 
 export function depthSystem(world: SimWorld): void {
   const dt = world.dt;
@@ -65,7 +82,8 @@ export function depthSystem(world: SimWorld): void {
     }
 
     const descending = remaining > 0;
-    const rate = descending ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS;
+    const rate =
+      (descending ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS) * driveFactor(world, eid);
     // Never overshoot within a single step.
     const step = Math.min(rate * dt, Math.abs(remaining));
 
@@ -292,9 +310,10 @@ function holdAgainstGround(world: SimWorld, eid: number, dt: number, wasAtM: num
   // hull started. For a hull the order is trying to push through the seabed
   // that is the floor itself, which stops it dead. For a hull that was already
   // too deep — hazard knockback writes positions without asking —
-  // it is a steady rise at the ascent rate rather than a jump, because a hull
-  // teleporting 2 km upward is not something a player can be asked to read.
-  const cap = Math.max(floor, wasAtM - DEPTH.ASCENT_RATE_MPS * dt);
+  // it is a steady rise at the hull's own ascent rate, a Drive Refit's
+  // included, rather than a jump, because a hull teleporting 2 km upward is
+  // not something a player can be asked to read.
+  const cap = Math.max(floor, wasAtM - DEPTH.ASCENT_RATE_MPS * driveFactor(world, eid) * dt);
   if (depth > cap) Position.depth[eid] = cap;
 
   // Held is not descending. SIG has exactly one author and it reads this flag;

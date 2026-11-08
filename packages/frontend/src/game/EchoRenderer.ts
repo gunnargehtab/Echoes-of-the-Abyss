@@ -79,7 +79,8 @@ import {
   productionPage,
   REFIT_KINDS,
   REFIT_STATS,
-  REFIT_TERMS,
+  refitTermsFor,
+  refitSpeedFactor,
   RefitKind,
   refitOfferedTo,
   refitPriceFor,
@@ -949,6 +950,10 @@ const UNIT_SHORT: Record<UnitKind, string> = {
  */
 const REFIT_SHORT: Record<RefitKind, string> = {
   [RefitKind.Pressure]: 'PRS',
+  [RefitKind.Plate]: 'PLT',
+  [RefitKind.Drive]: 'DRV',
+  [RefitKind.Magazine]: 'MAG',
+  [RefitKind.Hold]: 'HLD',
 };
 
 /** Compact structure names for the build buttons. */
@@ -2731,7 +2736,9 @@ export class EchoRenderer {
   private publishDestination(): void {
     if (!this.controlsStudy) return;
     this.callbacks.onDestination?.(
-      this.destination === null ? null : readMovePreview(this.destination, this.terrain, this.units)
+      this.destination === null
+        ? null
+        : readMovePreview(this.destination, this.terrain, this.units, this.refits)
     );
   }
 
@@ -2767,7 +2774,7 @@ export class EchoRenderer {
   confirmDestination(): void {
     const preview = this.destination;
     if (preview === null || this.menuOpen || this.navigating) return;
-    const reading = readMovePreview(preview, this.terrain, this.units);
+    const reading = readMovePreview(preview, this.terrain, this.units, this.refits);
     if (reading.reason !== null || !preview.pinned || preview.point === null) {
       this.refuse(reading.reason ?? 'PIN POSITION FIRST');
       return;
@@ -4165,10 +4172,13 @@ export class EchoRenderer {
         const refit = REFIT_STATS[kind];
         const price = refitPriceFor(kind, this.faction);
         const owned = this.refits.includes(kind);
-        const yard = this.refitTargetFor();
+        // Running on a line already counts as bought: the server takes one
+        // copy of a refit a navy, across every yard (§2, "once each").
+        const running = this.structures.some((s) => s.refit?.kind === kind);
+        const yard = this.refitTargetFor(kind);
         buttons.push({
           label: `${REFIT_SHORT[kind]} ${owned ? 'FITTED' : priceTag(price)}`,
-          enabled: !owned && yard !== undefined && affords(stockpile, price),
+          enabled: !owned && !running && yard !== undefined && affords(stockpile, price),
           active: owned,
           action: () => this.commandRefit(kind),
           hover: owned ? `${refit.name} — fitted` : hoverLine(refit.name, price),
@@ -4179,10 +4189,12 @@ export class EchoRenderer {
           // a Slipway for it would be the bar inventing a rule.
           refusal: owned
             ? `${refit.name}: bought — a refit is fleet-wide and bought once`
-            : yard === undefined
-              ? `${refit.name}: no ${structureStatsFor(REFIT_TERMS[this.faction].boughtAt).name} ` +
-                `with a free line`
-              : (shortfallLine(refit.name, stockpile, price) ?? undefined),
+            : running
+              ? `${refit.name}: already on a line — a refit is fleet-wide and bought once`
+              : yard === undefined
+                ? `${refit.name}: no ${structureStatsFor(refitTermsFor(kind, this.faction).boughtAt).name} ` +
+                  `with a free line`
+                : (shortfallLine(refit.name, stockpile, price) ?? undefined),
         });
       }
     } else if (this.shownTab === 'squad') {
@@ -5024,8 +5036,11 @@ export class EchoRenderer {
    * `produceTargetFor`, so a commander with two can choose which line to
    * spend.
    */
-  private refitTargetFor(): OwnStructure | undefined {
-    const boughtAt = REFIT_TERMS[this.faction].boughtAt;
+  private refitTargetFor(kind: RefitKind): OwnStructure | undefined {
+    // Asked of the refit as well as the navy: the Order strikes its Pressure
+    // Refit at a Bastion and buys the other four on a Slipway's line, "standard
+    // on the line — except the one below" (docs/systems-progression.md §2).
+    const boughtAt = refitTermsFor(kind, this.faction).boughtAt;
     const eligible = (s: OwnStructure) =>
       s.kind === boughtAt && s.buildProgress >= 1 && s.refit === undefined;
     return (
@@ -5043,7 +5058,7 @@ export class EchoRenderer {
     if (this.refusedByMission('construction')) return;
     const price = refitPriceFor(kind, this.faction);
     if (this.refusedByPrice(REFIT_STATS[kind].name, price)) return;
-    const yard = this.refitTargetFor();
+    const yard = this.refitTargetFor(kind);
     if (yard !== undefined) this.callbacks.onRefit(yard.id, kind);
   }
 
@@ -9789,7 +9804,7 @@ export class EchoRenderer {
       Number.isFinite(preview.depthM)
     ) {
       const { x, y } = preview.point;
-      const reading = readMovePreview(preview, this.terrain, this.units);
+      const reading = readMovePreview(preview, this.terrain, this.units, this.refits);
       const color = reading.reason === null ? UI.accent : UI.threat;
       if (this.plumbTo(g, x, y, preview.depthM)) g.stroke({ width: 1.5, color, alpha: 0.9 });
       const p = this.project(x, y, preview.depthM);
@@ -9882,7 +9897,10 @@ export class EchoRenderer {
     const rated = (unit: OwnUnit) => !this.wouldCrush(unit, depthM);
     const crushes = !follows && !selected.every(rated);
     const stopsShort = follows && !selected.every(rated);
-    const rate = dives ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS;
+    // At the navy's own rates: a Drive Refit dives and climbs faster
+    // (docs/systems-progression.md §2), and the server moves the hull at that.
+    const rate =
+      (dives ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS) * refitSpeedFactor(this.refits);
     const seconds = Math.abs(depthM - lead.depth) / rate;
     return { depthM, follows, dives, breaksSilence, level, crushes, stopsShort, seconds };
   }
@@ -10980,7 +10998,10 @@ export class EchoRenderer {
       // clock rather than a percentage (docs/ui-ux.md §8).
       const descending = unit.depthOrder > unit.depth;
       const metres = Math.abs(unit.depthOrder - unit.depth);
-      const seconds = metres / (descending ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS);
+      const seconds =
+        metres /
+        ((descending ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS) *
+          refitSpeedFactor(this.refits));
       this.infoLine2.text = descending
         ? `DIVING to ${unit.depthOrder.toFixed(0)}m · ${seconds.toFixed(0)}s · loud`
         : `rising to ${unit.depthOrder.toFixed(0)}m · ${seconds.toFixed(0)}s`;

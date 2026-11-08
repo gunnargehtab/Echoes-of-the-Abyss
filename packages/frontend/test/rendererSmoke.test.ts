@@ -38,6 +38,7 @@ import {
   MovementHoldReason,
   onTheGround,
   priceOf,
+  RefitKind,
   ResolutionTier,
   SIM,
   SelfEventKind,
@@ -8077,6 +8078,97 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
     try {
       assert.equal(marksIn(world, accentOf(Faction.Directorate)).length, 0);
       assert.equal(marksIn(world, accentOf(Faction.Bathyarch)).length, 0);
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+describe('the refits on the Slipway’s page (#1785)', () => {
+  /**
+   * docs/systems-progression.md §2, the Order's row: "standard on the line —
+   * except the one below". So one navy's five cells go to two yards — its
+   * Pressure Refit struck at the Bastion, the other four on a Slipway's line —
+   * and a refit already running on one line is greyed on every other.
+   */
+  it('sends each refit to the yard its navy buys it at, and greys one already on a line', async () => {
+    type Cell = { label: string; enabled: boolean; refusal?: string };
+    const world = await boot();
+    try {
+      world.chart.setIdentity(0, Faction.Hadron);
+      world.conn.setIdentity(0, Faction.Hadron);
+      const snapshot = cannedSnapshot();
+      snapshot.nodules = 5000;
+      snapshot.crystal = 500;
+      const bastion = snapshot.structures.find((s) => s.kind === StructureKind.Bastion)!;
+      const slipway = {
+        ...bastion,
+        id: 51,
+        kind: StructureKind.Slipway,
+        y: bastion.y + 800,
+        queue: [],
+        queueProgress: 0,
+      };
+      delete (slipway as { rally?: unknown }).rally;
+      snapshot.structures.push(slipway);
+      world.chart.applySnapshot(snapshot);
+      world.conn.applySnapshot(snapshot);
+      world.frame(1);
+      // A page opens by selection (docs/ui-ux.md §9).
+      selectHull(world, slipway);
+
+      const cells = (): Cell[] => (world.chart as unknown as { barButtons: Cell[] }).barButtons;
+      const cell = (short: string): Cell => {
+        const found = cells().find((c) => c.label.startsWith(`${short} `));
+        assert.ok(found !== undefined, `${short} is not on the Slipway's page`);
+        return found;
+      };
+      const press = (short: string): unknown[][] => {
+        world.log.calls.length = 0;
+        const at = barLabel(world.app, cell(short).label);
+        world.app.canvas.dispatch('pointerdown', {
+          button: 0,
+          pointerId: 1,
+          pointerType: 'mouse',
+          clientX: at.x,
+          clientY: at.y,
+        });
+        world.frame(1);
+        return world.log.calls.filter((c) => c.name === 'onRefit').map((c) => c.args);
+      };
+
+      assert.deepEqual(
+        press('PRS'),
+        [[bastion.id, RefitKind.Pressure]],
+        'the chord, at the Bastion'
+      );
+      const LINE: Array<[string, RefitKind]> = [
+        ['PLT', RefitKind.Plate],
+        ['DRV', RefitKind.Drive],
+        ['MAG', RefitKind.Magazine],
+        ['HLD', RefitKind.Hold],
+      ];
+      for (const [short, kind] of LINE) {
+        assert.deepEqual(press(short), [[slipway.id, kind]], `${short}, on the Slipway's line`);
+      }
+
+      // A second yard running the Plate: one copy a navy, so PLT greys on the
+      // free yard too, with the reason, and the other refits do not.
+      snapshot.structures.push({
+        ...slipway,
+        id: 52,
+        x: slipway.x + 600,
+        refit: { kind: RefitKind.Plate, progress: 0.3 },
+      });
+      world.chart.applySnapshot(snapshot);
+      world.conn.applySnapshot(snapshot);
+      world.frame(1);
+      assert.equal(cell('PLT').enabled, false, 'the Plate is already on a line');
+      assert.equal(
+        cell('PLT').refusal,
+        'Plate Refit: already on a line — a refit is fleet-wide and bought once'
+      );
+      assert.equal(cell('DRV').enabled, true, 'and the Drive is still for sale on the free yard');
     } finally {
       world.teardown();
     }
