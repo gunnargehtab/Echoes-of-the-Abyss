@@ -21,13 +21,13 @@
         "depthM": null
       },
       "eye": {
-        "xM": 1988,
-        "zM": 2356,
-        "depthM": -43038
+        "xM": 1989,
+        "zM": 2364,
+        "depthM": -43036
       },
       "distance": 10000,
       "calls": 45,
-      "triangles": 568986
+      "triangles": 594970
     },
     {
       "name": "low",
@@ -43,13 +43,13 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2000,
-        "zM": 3566,
-        "depthM": -651
+        "xM": 1999,
+        "zM": 3565,
+        "depthM": -664
       },
       "distance": 1600,
       "calls": 26,
-      "triangles": 561017
+      "triangles": 587001
     },
     {
       "name": "bowl",
@@ -65,13 +65,13 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2003,
+        "xM": 2001,
         "zM": 3530,
         "depthM": -16848
       },
       "distance": 4500,
       "calls": 45,
-      "triangles": 568986
+      "triangles": 594970
     },
     {
       "name": "wall",
@@ -87,13 +87,13 @@
         "depthM": 900
       },
       "eye": {
-        "xM": 2124,
+        "xM": 2126,
         "zM": 2196,
-        "depthM": 124
+        "depthM": 128
       },
       "distance": 700,
       "calls": 26,
-      "triangles": 561017
+      "triangles": 587001
     },
     {
       "name": "rim",
@@ -106,70 +106,70 @@
       "focus": {
         "xM": 1000,
         "zM": 1875,
-        "depthM": 816
+        "depthM": 603
       },
       "eye": {
         "xM": 1679,
-        "zM": 1875,
-        "depthM": 51
+        "zM": 1874,
+        "depthM": -172
       },
       "distance": 700,
       "calls": 44,
-      "triangles": 568586
+      "triangles": 593674
     },
     {
       "name": "bowl-pan",
       "strip": [
         {
-          "tMs": 92368,
+          "tMs": 110399,
           "focus": {
             "xM": 2000,
             "zM": 2000,
             "depthM": null
           },
           "eye": {
-            "xM": 2005,
-            "zM": 3530,
-            "depthM": -16848
+            "xM": 2003,
+            "zM": 3544,
+            "depthM": -16825
           }
         },
         {
-          "tMs": 103589,
+          "tMs": 123229,
           "focus": {
             "xM": 2146,
             "zM": 2000,
             "depthM": null
           },
           "eye": {
-            "xM": 2147,
-            "zM": 3531,
-            "depthM": -16847
+            "xM": 2151,
+            "zM": 3535,
+            "depthM": -16840
           }
         },
         {
-          "tMs": 114628,
+          "tMs": 136147,
           "focus": {
             "xM": 2291,
             "zM": 2000,
             "depthM": null
           },
           "eye": {
-            "xM": 2285,
-            "zM": 3531,
-            "depthM": -16841
+            "xM": 2289,
+            "zM": 3530,
+            "depthM": -16843
           }
         },
         {
-          "tMs": 125814,
+          "tMs": 149012,
           "focus": {
             "xM": 2437,
             "zM": 2000,
             "depthM": null
           },
           "eye": {
-            "xM": 2442,
-            "zM": 3531,
-            "depthM": -16834
+            "xM": 2431,
+            "zM": 3535,
+            "depthM": -16827
           }
         }
       ]
