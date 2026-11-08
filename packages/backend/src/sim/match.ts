@@ -32,7 +32,7 @@ import {
   type HarvestIdleReason,
   OPENING_ESCORT,
   PRODUCIBLE,
-  REFIT_TERMS,
+  refitTermsFor,
   RefitKind,
   refitLineTimeS,
   refitOfferedTo,
@@ -2350,10 +2350,20 @@ export class Match {
     const faction = this.factionOf(slot);
     if (!refitOfferedTo(kind, faction)) return false;
     if (this.world.refits.get(slot)?.has(kind) === true) return false;
-    // The yard §2 names for this navy, and no other — the Slipway's line for
-    // three of them, the Bastion for the one whose purchase is a chord rather
-    // than a shift.
-    if (Structure.kind[structureEid] !== REFIT_TERMS[faction].boughtAt) return false;
+    // Once each across lines as well as across time (§2: "five, fleet-wide,
+    // once each"). A second Slipway buys a second line, never a second copy of
+    // the refit the first is running: without this the second yard took the
+    // price, and its grant found the refit already owned and granted nothing.
+    for (const [line, running] of this.world.production) {
+      if (running.refit?.kind === kind && Owner.slot[line] === slot) return false;
+    }
+    // The yard §2 names for this refit and this navy, and no other — the
+    // Slipway's line for every refit but one, and the Bastion for the Order's
+    // Pressure Refit, whose purchase is a chord rather than a shift. The
+    // Order's other four are "standard on the line", so they are asked of the
+    // refit and not of the navy alone.
+    const terms = refitTermsFor(kind, faction);
+    if (Structure.kind[structureEid] !== terms.boughtAt) return false;
 
     const economy = economyFor(this.world, slot);
     const price = refitPriceFor(kind, faction);
@@ -2366,7 +2376,7 @@ export class Match {
       // hears, whatever the Bastion's hum is tuned to.
       charge(economy, price);
       grantRefit(this.world, slot, kind);
-      const sounding = REFIT_TERMS[faction].sounding;
+      const sounding = terms.sounding;
       if (sounding !== undefined) {
         const idle = structureStatsFor(Structure.kind[structureEid] as StructureKind).sigIdle;
         Acoustic.spikeAmount[structureEid] = Math.max(0, sounding.sig - idle);

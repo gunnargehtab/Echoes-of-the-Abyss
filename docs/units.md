@@ -1479,8 +1479,9 @@ Next steps
   designed in mercenaries.md (#543): the moorages, a game-controlled party that hires the
   commons out under no flag, in skirmish rooms and never in the campaign. The bars do not
   change, and the build waits for release (ROADMAP.md, under Later)
-- Transcribe the refits and rank of systems-progression.md (#462): the five refits as
-  producibles on the Slipway's line, which #461 built, then rank, which needs the TTK band
+- Done (#1785): the five refits of systems-progression.md (#462), as producibles on the
+  Slipway's line, which #461 built
+- Transcribe rank, the other half of systems-progression.md (#1785), which needs the TTK band
   test to grow a rank-3 row
 - Done: per-unit HYD values are authored in the stat blocks above and transcribed into
   `packages/shared/src/units.ts`

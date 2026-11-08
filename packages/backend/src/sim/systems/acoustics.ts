@@ -17,12 +17,12 @@ import {
   COMMUNE_ECONOMY,
   Faction,
   ORDNANCE,
-  REFIT_STATS,
   ResourceKind,
   SILENT_RUNNING,
   SIG_BANDS,
   SelfEventKind,
   harvestSigFor,
+  refitSigBonus,
   statsFor,
   structureSigFor,
   type HarvestThrottle,
@@ -59,20 +59,6 @@ import { raiseSelfEvent, type SimWorld } from '../world.ts';
 const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning, EngineOff, Position, Owner]);
 const structureEmitters = defineQuery([Acoustic, Structure]);
 const staticEmitters = defineQuery([Acoustic, StaticEmitter]);
-
-/**
- * What a navy's bought refits add to a hull at idle and at cruise.
- *
- * Summed rather than maxed: two refits that each cost noise cost both,
- * because each is a separate piece of machinery running.
- */
-function refitSigBonus(world: SimWorld, slot: number): number {
-  const owned = world.refits.get(slot);
-  if (owned === undefined) return 0;
-  let bonus = 0;
-  for (const kind of owned) bonus += REFIT_STATS[kind].sigBonus;
-  return bonus;
-}
 
 /** Below this speed the unit counts as stationary rather than cruising. */
 const MOVING_EPSILON = 0.01;
@@ -156,10 +142,14 @@ export function acousticsSystem(world: SimWorld): void {
       );
     } else {
       const speed = Math.hypot(Velocity.x[eid]!, Velocity.y[eid]!);
-      sig = speed > MOVING_EPSILON ? stats.sigCruise : stats.sigIdle;
+      const underWay = speed > MOVING_EPSILON;
+      sig = underWay ? stats.sigCruise : stats.sigIdle;
       // What the refits cost, and the only two states they cost it at
       // (docs/systems-progression.md §2): "+2 SIG idle and cruise — a thicker
-      // pressure hull is quiet; the pumps that keep it trimmed are not."
+      // pressure hull is quiet; the pumps that keep it trimmed are not." Each
+      // refit carries its own pair, so the Plate's +3 is heard only under way
+      // and the Drive's +4 stopped as well — summed, because two refits that
+      // each cost noise are two pieces of machinery running.
       //
       // Inside this branch rather than after the chain on purpose. Silent
       // Running, a drive cut, a ping and a mining throttle are each somebody
@@ -170,7 +160,9 @@ export function acousticsSystem(world: SimWorld): void {
       //
       // Gated on the map being empty, which it is in every match until
       // somebody buys: one integer compare on the hot path.
-      if (world.refits.size !== 0) sig += refitSigBonus(world, Owner.slot[eid]!);
+      if (world.refits.size !== 0) {
+        sig += refitSigBonus(world.refits.get(Owner.slot[eid]!), underWay);
+      }
     }
 
     // Descent is a floor on loudness rather than a value that replaces the

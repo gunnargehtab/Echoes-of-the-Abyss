@@ -645,7 +645,7 @@ describe('the production card’s pages', () => {
       [
         [StructureKind.Bastion, 1],
         [StructureKind.Foundry, 10],
-        [StructureKind.Slipway, 5],
+        [StructureKind.Slipway, 9],
       ],
     ],
     [
@@ -653,7 +653,7 @@ describe('the production card’s pages', () => {
       [
         [StructureKind.Bastion, 1],
         [StructureKind.Foundry, 10],
-        [StructureKind.Slipway, 5],
+        [StructureKind.Slipway, 9],
       ],
     ],
     [
@@ -661,7 +661,7 @@ describe('the production card’s pages', () => {
       [
         [StructureKind.Bastion, 1],
         [StructureKind.Foundry, 8],
-        [StructureKind.Slipway, 4],
+        [StructureKind.Slipway, 8],
       ],
     ],
     [
@@ -669,7 +669,7 @@ describe('the production card’s pages', () => {
       [
         [StructureKind.Bastion, 1],
         [StructureKind.Foundry, 9],
-        [StructureKind.Slipway, 6],
+        [StructureKind.Slipway, 10],
       ],
     ],
   ]);

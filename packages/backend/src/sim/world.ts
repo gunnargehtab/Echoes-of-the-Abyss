@@ -20,7 +20,9 @@ import {
   ORDNANCE,
   OrdnanceKind,
   RefitKind,
+  refitHullFactor,
   refittedPressureRating,
+  torpedoMagazineFor,
   type AmbientBand,
   type DrawReport,
   type FaunaSpecies,
@@ -162,11 +164,10 @@ export interface SimWorld extends IWorld {
    * (docs/systems-progression.md §2).
    *
    * Simulation state, like the order queue and the rallies, and for the same
-   * reason: a reconnecting player's fleet is still refitted. Hashed through
-   * the ratings it wrote rather than as a set — see `stateHash` — because a
-   * refit *is* the ratings it wrote, and a world that agreed about the
-   * purchase while disagreeing about the hulls would be the divergence the
-   * hash is for.
+   * reason: a reconnecting player's fleet is still refitted. Read live by the
+   * systems that own what three of the five move — speed and the depth rates,
+   * a full magazine, a full hold — and so hashed as a set, by slot
+   * (`stateHash`): those three write nothing on a hull when they land.
    */
   refits: Map<number, Set<RefitKind>>;
   /**
@@ -1074,8 +1075,9 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   // The navy's own baseline, and then whatever it has bought on top of it: a
   // hull launched after the Pressure Refit is refitted from the keel
   // (docs/systems-progression.md §2, "every hull it launches afterwards").
+  const refits = world.refits.get(opts.slot);
   const rating =
-    world.refits.get(opts.slot)?.has(RefitKind.Pressure) === true
+    refits?.has(RefitKind.Pressure) === true
       ? refittedPressureRating(effectivePressureRating(opts.kind, opts.faction), opts.faction)
       : effectivePressureRating(opts.kind, opts.faction);
   Position.depth[eid] = opts.depth ?? deliveryDepthM(rating);
@@ -1135,9 +1137,11 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   Pressure.unhealable[eid] = 0;
   Pressure.sourS[eid] = 0;
 
+  // A Plate Refit's hull from the keel (docs/systems-progression.md §2), and
+  // launched whole: a new hull has no condition to keep.
   addComponent(world, Health, eid);
-  Health.hp[eid] = stats.maxHp;
-  Health.max[eid] = stats.maxHp;
+  Health.max[eid] = stats.maxHp * refitHullFactor(refits);
+  Health.hp[eid] = Health.max[eid]!;
 
   addComponent(world, Owner, eid);
   Owner.slot[eid] = opts.slot;
@@ -1183,8 +1187,10 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   if (stats.carriesTorpedoes && opts.weaponsCold !== true) {
     addComponent(world, Magazine, eid);
     // The roster's two, unless the hull is one of the two that argue about the
-    // number: the Broadside's four and the Lance's one (docs/units.md).
-    Magazine.torpedoes[eid] = stats.torpedoMagazine ?? ORDNANCE.TORPEDO.MAGAZINE;
+    // number: the Broadside's four and the Lance's one (docs/units.md). Three
+    // once the navy owns the Magazine Refit, and full: a hull launched after it
+    // leaves the yard with the bigger magazine loaded (docs/systems-progression.md §2).
+    Magazine.torpedoes[eid] = torpedoMagazineFor(opts.kind, refits);
     Magazine.rearmRemainingS[eid] = 0;
   }
 

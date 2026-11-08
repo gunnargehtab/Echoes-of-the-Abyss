@@ -46,7 +46,7 @@ import {
   ORDNANCE,
   OrdnanceKind,
   PRODUCIBLE,
-  REFIT_TERMS,
+  refitTermsFor,
   RESOURCE,
   RefitKind,
   ResolutionTier,
@@ -64,6 +64,7 @@ import {
   refitOfferedTo,
   refitPriceFor,
   refittedPressureRating,
+  torpedoMagazineFor,
   requiredPressureRating,
   statsFor,
   structureStatsFor,
@@ -2224,6 +2225,10 @@ export class AiCommander implements AiPlayer {
     const faction = this.briefing.faction;
     if (!refitOfferedTo(RefitKind.Pressure, faction)) return 0;
     if (snapshot.refits.includes(RefitKind.Pressure)) return 0;
+    // Already on a line is already bought: the server refuses a second copy on
+    // a second yard, and a commander that asked anyway would spend every
+    // observation of the two minutes on an order it cannot win.
+    if (snapshot.structures.some((s) => s.refit?.kind === RefitKind.Pressure)) return 0;
     const field = this.crystalField;
     if (field === null) return 0;
     const base = effectivePressureRating(UnitKind.Harvester, faction);
@@ -2250,7 +2255,7 @@ export class AiCommander implements AiPlayer {
    */
   private commandRefit(snapshot: EchoSnapshot, purse: Stockpile, out: AiCommand[]): boolean {
     if (this.pressureRefitWanted(snapshot) === 0) return false;
-    const boughtAt = REFIT_TERMS[this.briefing.faction].boughtAt;
+    const boughtAt = refitTermsFor(RefitKind.Pressure, this.briefing.faction).boughtAt;
     // A yard still being commissioned has no line, and a yard already running
     // a refit has no second one: "a second Slipway buys a second line, not a
     // discount" (§2).
@@ -4090,7 +4095,7 @@ export class AiCommander implements AiPlayer {
     const [aboard, full] =
       hull.kind === UnitKind.Weaver
         ? [hull.decoys, stats.decoyMagazine ?? ORDNANCE.LAID_DECOY.MAGAZINE]
-        : [hull.torpedoes, stats.torpedoMagazine ?? ORDNANCE.TORPEDO.MAGAZINE];
+        : [hull.torpedoes, torpedoMagazineFor(hull.kind, snapshot.refits)];
     // The Thurible: a rack on a cooldown, never spent.
     if (aboard === undefined) return false;
     if (aboard <= 0) this.rearming.add(hull.id);

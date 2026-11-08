@@ -23,6 +23,7 @@ import {
   RESOURCE,
   ResourceKind,
   SelfEventKind,
+  refitHoldFactor,
   structureStatsFor,
   type StructureKind,
 } from '@echoes/shared';
@@ -100,7 +101,9 @@ function nearestDepot(world: SimWorld, slot: number, x: number, y: number): numb
 /**
  * A full Standard-throttle hold of a given resource. Crystal is dense, awkward
  * cargo. This is the unit the industrial hum is measured in, so it stays free
- * of the throttle.
+ * of the throttle — and of the Hold Refit, so that a refitted hauler's bigger
+ * delivery is a louder hum rather than the same one (docs/systems-progression.md
+ * §2: "more per delivery is a louder economy").
  */
 function capacityFor(kind: ResourceKind): number {
   return kind === ResourceKind.ResonanceCrystal
@@ -117,9 +120,16 @@ function capacityFor(kind: ResourceKind): number {
  * second and earned exactly what Standard earned. Against the load it pays
  * what the doc says, and because MINING_RATE_PER_S is fixed the bigger load
  * also costs longer on the node at the louder SIG.
+ *
+ * Rounded to the precision the load is kept at, because `Harvester.cargo` is
+ * an f32 and a hold it cannot represent is one no load ever reaches. Every
+ * throttle on both resources gave a whole number until the Hold Refit; a
+ * refitted crystal hold at Overburden is 20 × 1.4 × 1.2 = 33.6, the cargo
+ * stops at the f32 just under it, and the hauler cut a millionth of a crystal
+ * a tick and never turned for home.
  */
-function holdFor(kind: ResourceKind, cargoMultiplier: number): number {
-  return capacityFor(kind) * cargoMultiplier;
+function holdFor(kind: ResourceKind, cargoMultiplier: number, holdFactor: number): number {
+  return Math.fround(capacityFor(kind) * cargoMultiplier * holdFactor);
 }
 
 /**
@@ -230,7 +240,15 @@ export function harvestSystem(world: SimWorld): void {
       }
       Harvester.cargoKind[eid] = kind;
       const throttle = HARVEST_THROTTLE[Harvester.throttle[eid] as HarvestThrottle];
-      const capacity = holdFor(kind, throttle.cargoMultiplier);
+      // The navy's Hold Refit, "+20% at every throttle" (docs/systems-progression.md
+      // §2) — on the load, like the throttle, so the bigger hold also keeps the
+      // hauler on the node longer at the throttle's SIG, which is the other half
+      // of what the refit costs.
+      const capacity = holdFor(
+        kind,
+        throttle.cargoMultiplier,
+        world.refits.size === 0 ? 1 : refitHoldFactor(world.refits.get(slot))
+      );
       // Idle is a full stop, not a slow cut: sit over the field at Idle SIG and
       // wait the contact out (docs/economy.md §3). Falling through with a hold
       // of zero would read as "full" and start a delivery loop hauling nothing.
