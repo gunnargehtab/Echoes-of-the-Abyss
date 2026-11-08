@@ -48,7 +48,12 @@ import {
   type PropPlacement,
 } from './environment.ts';
 import { envTemplate, type EnvTemplate, type SwayUniforms } from './environmentModels.ts';
-import { decorationPose, freeWaterPlacements } from './freeWaterDecoration.ts';
+import {
+  decorationMatrix,
+  decorationPose,
+  freeWaterPlacements,
+  type DecorationPose,
+} from './freeWaterDecoration.ts';
 import { StippleCloud, type StippleFrame } from './faunaStipple.ts';
 import { FURNITURE_DOT_GAIN } from './ladder.ts';
 import {
@@ -457,10 +462,7 @@ export class EnvironmentLayer {
 
   private writeFixturePose(meshes: readonly InstancedMesh[], p: PropPlacement, i: number): void {
     const pose = decorationPose(p, this.reducedMotion ? 0 : this.matchMs, this.fixtureGround!);
-    TMP_POS.set(pose.x, pose.y, pose.z);
-    TMP_QUAT.setFromAxisAngle(Y_AXIS, pose.yaw);
-    TMP_SCALE.setScalar(p.disabled === true ? 0 : p.scale);
-    TMP_MATRIX.compose(TMP_POS, TMP_QUAT, TMP_SCALE);
+    decorationMatrix(pose, p.motion?.axisM ?? 0, p.disabled === true ? 0 : p.scale, TMP_MATRIX);
     for (const mesh of meshes) {
       mesh.setMatrixAt(i, TMP_MATRIX);
       mesh.instanceMatrix.needsUpdate = true;
@@ -495,7 +497,7 @@ export class EnvironmentLayer {
   }
 
   /** Public authored positions only, for the integrated close-frame evidence. */
-  decorationReading(): { slug: string; x: number; y: number; z: number; yaw: number }[] {
+  decorationReading(): ({ slug: string } & DecorationPose)[] {
     if (this.fixtureGround === null) return [];
     return [...this.fixtureBatches.values()].flatMap(({ list }) =>
       list

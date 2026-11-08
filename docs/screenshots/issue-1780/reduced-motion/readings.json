@@ -1,0 +1,46 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "startDeg": 300,
+  "reducedMotion": true,
+  "rows": [
+    {
+      "t": 0,
+      "name": "t000",
+      "matchS": 0,
+      "loopDeg": 300,
+      "bankDeg": 30,
+      "planShown": 0.71,
+      "screen": [
+        1143,
+        556
+      ],
+      "distanceM": 920,
+      "spanPx": 25.6,
+      "calls": 44,
+      "triangles": 568596,
+      "props": 291
+    },
+    {
+      "t": 0,
+      "name": "held",
+      "matchS": 0,
+      "loopDeg": 300,
+      "bankDeg": 30,
+      "planShown": 0.71,
+      "screen": [
+        1143,
+        556
+      ],
+      "distanceM": 920,
+      "spanPx": 25.6,
+      "calls": 44,
+      "triangles": 568596,
+      "props": 291
+    }
+  ]
+}

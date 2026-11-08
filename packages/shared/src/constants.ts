@@ -56,9 +56,21 @@ export const FREE_WATER_LIFE = {
   /**
    * The ray that glides over the outside rim south-east of the fleet's start,
    * where §9's opening reads it (#1777): one loop, 60 m round over 300 s, a
-   * walking pace, at 250 ± 30 m beside the hulls' 300 m.
+   * walking pace, at 250 ± 15 m beside the hulls' 300 m. It banks `bankDeg`
+   * into its turn and stands `startDeg` round its loop when the match starts,
+   * measured as the loop's own phase (0 east, 90 south), so the opening's first
+   * minute sees its back (#1780). Its bank lifts the high wingtip 33 m of depth
+   * over its axis, which is why the swing is half the level ray's ±30 m.
    */
-  RAY: { radiusM: 60, periodS: 300, depthM: 250, depthSwingM: 30, axisM: 0.76 },
+  RAY: {
+    radiusM: 60,
+    periodS: 300,
+    depthM: 250,
+    depthSwingM: 15,
+    axisM: 0.76,
+    bankDeg: 30,
+    startDeg: 300,
+  },
   INNER_RADIUS_SHARE: 0.4,
   /**
    * How far a schooling fish keeps from its school's own point on the shared

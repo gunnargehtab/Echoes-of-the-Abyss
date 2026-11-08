@@ -1,3 +1,4 @@
+import { Matrix4, Quaternion, Vector3 } from 'three';
 import { Biome, FREE_WATER_LIFE } from '@echoes/shared';
 import { propHash, propSpec, type PropPlacement, type TerrainGrid } from './environment.ts';
 import { DEPTH_VISUAL_M_PER_M, depthToWorldY } from './perspectiveTerrain.ts';
@@ -262,16 +263,30 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
   // is nearer than about 550 m and no 4 m body reads there. The ray, 18 m
   // across, glides on one loop south-east of the fleet's start, 810 to 930 m
   // from the eye, where its span draws 26 to 30 px in the open water at the
-  // lower right between the corvette and the legend.
-  life('env-rim-ray', 735, 2210, 1, RAY);
+  // lower right between the corvette and the legend. Level, it showed that
+  // eye a third of its plan and drew as a sliver of lit back where it swam
+  // away from the eye (#1780), so its phase is authored rather than seeded: it
+  // starts where its bank turns its back to the eye, over the dark water past
+  // the rim's edge, for the opening's first minute.
+  const { startDeg, ...ray } = RAY;
+  add('env-rim-ray', 735, 2210, { ...ray, phase: (startDeg * Math.PI) / 180 });
   return slots;
+}
+
+/** Where a decorative body stands at one match time: its level origin, heading and bank. */
+export interface DecorationPose {
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+  roll: number;
 }
 
 export function decorationPose(
   placement: PropPlacement,
   matchMs: number,
   groundY: (xM: number, yM: number) => number
-): { x: number; y: number; z: number; yaw: number } {
+): DecorationPose {
   const motion = placement.motion;
   if (motion === undefined) {
     return {
@@ -279,6 +294,7 @@ export function decorationPose(
       y: groundY(placement.xM, placement.yM),
       z: placement.yM,
       yaw: placement.yawRad,
+      roll: 0,
     };
   }
   const phase = motion.phase + (((matchMs / 1000) % motion.periodS) / motion.periodS) * Math.PI * 2;
@@ -288,6 +304,37 @@ export function decorationPose(
     motion.depthM === null
       ? groundY(x, z)
       : depthToWorldY(motion.depthM + Math.sin(phase) * motion.depthSwingM) - motion.axisM;
-  // Models swim along +X; three's positive yaw turns it toward -Z.
-  return { x, y, z, yaw: -phase - Math.PI / 2 };
+  // Models swim along +X; three's positive yaw turns it toward -Z. Every loop
+  // runs clockwise seen from above, so its centre lies to starboard, +Z, and a
+  // positive roll about +X lowers the starboard wing into the turn.
+  return { x, y, z, yaw: -phase - Math.PI / 2, roll: ((motion.bankDeg ?? 0) * Math.PI) / 180 };
+}
+
+const Y_AXIS = new Vector3(0, 1, 0);
+const X_AXIS = new Vector3(1, 0, 0);
+const TURN = new Quaternion();
+const BANK = new Quaternion();
+const ORIGIN = new Vector3();
+const AXIS = new Vector3();
+const SCALE = new Vector3();
+
+/**
+ * A pose's instance matrix: the heading about +y, then the bank about the
+ * body's own axis, `axisM` over its origin (§5), so a banked body's axis keeps
+ * the path and depth `decorationPose` gives it and only the wings move. A
+ * roll about the origin would carry the axis 0.38 m sideways at the ray's 30
+ * degrees. Bodies draw at scale 1, or 0 for a disabled slot.
+ */
+export function decorationMatrix(
+  pose: DecorationPose,
+  axisM: number,
+  scale: number,
+  out: Matrix4
+): Matrix4 {
+  TURN.setFromAxisAngle(Y_AXIS, pose.yaw);
+  if (pose.roll !== 0) TURN.multiply(BANK.setFromAxisAngle(X_AXIS, pose.roll));
+  ORIGIN.set(0, -axisM, 0)
+    .applyQuaternion(TURN)
+    .add(AXIS.set(pose.x, pose.y + axisM, pose.z));
+  return out.compose(ORIGIN, TURN, SCALE.setScalar(scale));
 }

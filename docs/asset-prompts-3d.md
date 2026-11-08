@@ -2115,9 +2115,11 @@ blunt head, its leading edge nearly straight across to ±2.2 m and swept back fr
 to rounded tips, the trailing edge concave; the body 1.51 m thick at the centreline,
 0.16 m at the last ring. The still pose is the wings mid-stroke, tips raised: the chord
 line climbs from 0 at the centreline to 3.15 m at the last ring and 3.45 m at the tips,
-which with the hump is all the vertical silhouette the opening reads: its eye, pitched
-15°, looks down a 21° sightline at the ray, so the plan is foreshortened to 0.36 of its
-depth. Two short cephalic lobes forward of the head at
+which with the hump is all the vertical silhouette a level body shows the opening: its
+eye, pitched 15°, looks down a 21° sightline at the ray, so the plan is foreshortened to
+0.36 of its depth. The file stays level; the fixture banks it 30° into its turn and
+starts its loop where that bank turns its back to the eye
+([free-water-slice.md](free-water-slice.md) §5, #1780). Two short cephalic lobes forward of the head at
 z ∓1.38, paddles of four six-cornered rings each, 2.0 m long and wider than deep,
 flat-capped; a short whip of a tail from inside the trailing edge, four four-cornered
 rings fanned to a point, 3.7 m of it showing, drooping 0.34 m; two lenses for eyes on the
