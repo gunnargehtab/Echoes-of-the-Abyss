@@ -2219,9 +2219,10 @@ export const PERSISTENCE = {
    * since #1785 for rank too: docs/systems-progression.md §3 pays a survived
    * hit once the fight is over, by this clock (`RANK.QUIET_S`). Both docs say
    * ten seconds, so moving this moves both docs first. A hull hit again within
-   * this many seconds is the same fight, and raises nothing new. The log records the first blow of an
-   * engagement rather than every round of it, and the cue and the log share
-   * this number so the ear and the record cannot disagree.
+   * this many seconds is the same fight, and raises nothing new. The log
+   * records the first blow of an engagement rather than every round of it, and
+   * the cue and the log share this number so the ear and the record cannot
+   * disagree.
    */
   UNDER_FIRE_REARM_S: 10,
   /** Echo Marks: acoustic residue left on the terrain layer. */
