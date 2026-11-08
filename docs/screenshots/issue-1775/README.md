@@ -22,8 +22,10 @@ CONTROL=1 node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost
 
 The before sets are the same two commands with `packages/frontend/src` and
 `packages/shared/src` at `273e35171`, main's head when this branch was cut, into `before/`
-and `control-before/`. All four were taken headless in this container on SwiftShader at
-1,440 × 900 and DPR 1, as each `readings.json` records.
+and `control-before/`; the after sets were taken at `e51ce01ff`. Round 2's fixes change no
+step the drive takes: its notches and drags start at rest, its one order is given to a
+hull already followed, and it never presses the scope. All four were taken headless in
+this container on SwiftShader at 1,440 × 900 and DPR 1, as each `readings.json` records.
 
 Two things about this renderer shape the readings. A frame takes 0.4 to 1.5 s, and the
 study camera steps at most 0.1 s a frame, so its motion runs slower than wall time: read
