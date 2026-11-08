@@ -1037,10 +1037,69 @@ describe("the free-water study's camera feel (#1775)", () => {
       assert.ok(Math.abs(world.conn.frame.xM - moved.x) < 1e-6, 'the focus moved with the hull');
       assert.ok(Math.abs(world.conn.focusDepth() - moved.depth) < 1e-6, 'and dived with it');
 
+      // The wheel dollies toward the hull, not the cursor, and keeps it.
+      const dolly = world.conn.frame.distanceM;
+      world.app.canvas.dispatch('wheel', { deltaY: -1, clientX: 100, clientY: 100 });
+      for (let t = 0; t <= 1000; t += 50) {
+        now += 50;
+        world.frame();
+      }
+      assert.ok(Math.abs(world.conn.frame.distanceM - dolly / 1.1) < 1e-6, 'zoomed in');
+      assert.ok(Math.abs(world.conn.frame.xM - moved.x) < 1e-6, 'toward the hull, not the cursor');
+      assert.deepEqual(world.conn.following, [hull!.id], 'and still following');
+
       world.conn.orbitBy(40, 0);
       assert.deepEqual(world.conn.following, [hull!.id], 'turning about it keeps the follow');
       world.conn.panBy(30, 0);
       assert.deepEqual(world.conn.following, [], 'a pan lets go');
+
+      // Followed again, it leaves the snapshot, sunk or carried: the follow ends.
+      world.conn.follow([hull!.id]);
+      assert.deepEqual(world.conn.following, [hull!.id]);
+      const gone = { ...cannedSnapshot(snapshot.tick + 2), units: rest };
+      world.conn.applySnapshot(gone);
+      world.chart.applySnapshot(gone);
+      now += 50;
+      world.frame();
+      assert.deepEqual(world.conn.following, [], 'the hull left the snapshot');
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('lands an order where the focus depth is going, not where the picture has got to', async () => {
+    // docs/free-camera.md §4, decision 5: a click in the window an ease takes
+    // lands at the depth the hand set.
+    const world = await boot({ controlsStudy: true });
+    let now = 10_000;
+    const clock = mock.method(performance, 'now', () => now);
+    const probe = () =>
+      (
+        globalThis as unknown as {
+          window: { __perspectiveProbe: () => { focus: { depthM: number } } };
+        }
+      ).window.__perspectiveProbe();
+    try {
+      dispatchWindow('keydown', { code: 'Digit0' });
+      world.conn.focusWorld(2000, 2000, 1200);
+      world.conn.raiseFocusBy(world.conn.focusDepth() - 600);
+      world.frame();
+      world.app.canvas.dispatch('wheel', {
+        deltaY: -1,
+        shiftKey: true,
+        clientX: 640,
+        clientY: 360,
+      });
+      now += 16;
+      world.frame();
+      assert.ok(probe().focus.depthM > 500, `the picture is on its way: ${probe().focus.depthM} m`);
+      assert.equal(world.conn.focusDepth(), 450, "the ribbon's tick reads where it is going");
+      press(world, 'pointerdown', 2, 640, 300);
+      press(world, 'pointerup', 2, 640, 300);
+      const order = world.log.calls.filter((call) => call.name === 'onMoveOrder').at(-1);
+      assert.ok(order, `no move order: ${world.log.names()}`);
+      assert.equal(order.args[4], 450, "the order lands at the notch's depth");
     } finally {
       clock.mock.restore();
       world.teardown();
@@ -1058,6 +1117,66 @@ describe("the free-water study's camera feel (#1775)", () => {
       const hulls = selection(world).sort();
       assert.ok(hulls.length > 1);
       assert.deepEqual([...world.conn.following].sort(), hulls, 'two follow the group');
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('glides on a scope press that wobbles inside the click slop, and scrubs past it', async () => {
+    const world = await boot({ controlsStudy: true });
+    let now = 10_000;
+    const clock = mock.method(performance, 'now', () => now);
+    try {
+      world.frame();
+      const scope = (
+        world.chart as unknown as { minimapRect(): { x: number; y: number; size: number } }
+      ).minimapRect();
+      const at = { x: scope.x + scope.size * 0.25, y: scope.y + scope.size * 0.25 };
+      const toWorld = (px: number) => ((px - scope.x) * 4000) / scope.size;
+      const before = world.conn.frame.xM;
+      press(world, 'pointerdown', 0, at.x, at.y);
+      press(world, 'pointermove', 0, at.x + 2, at.y);
+      press(world, 'pointerup', 0, at.x + 2, at.y);
+      assert.equal(world.conn.feelReading!.gliding, true, 'a 2 px wobble is still a press');
+      now += 100;
+      world.frame();
+      const mid = world.conn.frame.xM;
+      const goal = toWorld(at.x);
+      assert.ok(
+        (mid - before) * (goal - before) > 0 && Math.abs(mid - before) < Math.abs(goal - before),
+        `between the two points: ${before} → ${mid} → ${goal}`
+      );
+      // Past the slop it is a scrub, and the focus goes under the hand at once.
+      press(world, 'pointerdown', 0, at.x, at.y);
+      press(world, 'pointermove', 0, at.x + 20, at.y);
+      assert.ok(Math.abs(world.conn.frame.xM - toWorld(at.x + 20)) < 1e-6, 'under the hand');
+      press(world, 'pointerup', 0, at.x + 20, at.y);
+    } finally {
+      clock.mock.restore();
+      world.teardown();
+    }
+  });
+
+  it('glides to a group of structures recalled twice, which has no hull to follow', async () => {
+    const world = await boot({ controlsStudy: true });
+    try {
+      const bastion = cannedSnapshot().structures[0]!;
+      world.conn.focusWorld(bastion.x + 400, bastion.y + 400, 1500);
+      world.frame();
+      const at = world.conn.projectPoint(bastion.x, bastion.y, bastion.depth);
+      assert.ok(at.visible);
+      press(world, 'pointerdown', 0, at.x, at.y);
+      press(world, 'pointerup', 0, at.x, at.y);
+      assert.deepEqual(
+        [...(world.chart as unknown as { selected: Set<number> }).selected],
+        [bastion.id]
+      );
+      dispatchWindow('keydown', { code: 'Digit2', ctrlKey: true });
+      dispatchWindow('keydown', { code: 'Digit2' });
+      dispatchWindow('keydown', { code: 'Digit2' });
+      assert.deepEqual(world.conn.following, [], 'a structure is not followed');
+      assert.equal(world.conn.feelReading!.gliding, true, 'it is glided to, not cut to');
+      assert.equal(world.conn.feelReading!.goal.x, bastion.x);
     } finally {
       world.teardown();
     }

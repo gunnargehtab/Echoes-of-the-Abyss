@@ -1935,9 +1935,14 @@ export class PerspectiveView {
     const { origin, direction } = RAY_TMP.ray;
     // How far along the ray the focus plane is; not positive when there is
     // no plane, when it lies behind the eye, or when the ray runs level with it.
-    const planeless = this.focusDepthM === null;
+    // The plane is where the focus depth is going, not where the picture has
+    // got to (`orderDepthM`).
+    const planeDepthM = this.orderDepthM();
+    const planeless = planeDepthM === null;
     const toPlane =
-      planeless || Math.abs(direction.y) < 1e-6 ? -1 : (this.focusY() - origin.y) / direction.y;
+      planeless || Math.abs(direction.y) < 1e-6
+        ? -1
+        : (depthToWorldY(planeDepthM) - origin.y) / direction.y;
 
     let ground: 'floor' | 'roof' | null = null;
     let x: number;
@@ -2268,6 +2273,7 @@ export class PerspectiveView {
       return;
     }
     this.followIds = null;
+    feel.release(['x', 'z']);
     const d = this.panDelta(dxPx, dyPx);
     feel.goal.x += d.x;
     feel.goal.z += d.z;
@@ -2367,6 +2373,7 @@ export class PerspectiveView {
     }
     if (metres === 0) return;
     this.followIds = null;
+    feel.release(['depthM']);
     const goal = feel.goal;
     const seabed = this.seabedDepthAt(goal.x, goal.z);
     const next = (goal.depthM ?? seabed) - metres;
@@ -2376,19 +2383,35 @@ export class PerspectiveView {
   /**
    * The depth the focus sits at, metres: where a click into open water lands
    * (docs/ui-ux.md §9), and what the depth ribbon's focus tick reads (§8). On
-   * the seabed, the drawn seabed under it.
+   * the seabed, the drawn seabed under it. In the study, where the depth is
+   * going (`orderDepthM`).
    */
   focusDepth(): number {
-    return this.focusDepthM ?? this.seabedDepthAt(this.target.x, this.target.z);
+    const goal = this.feel?.goal;
+    return (
+      this.orderDepthM() ?? this.seabedDepthAt(goal?.x ?? this.target.x, goal?.z ?? this.target.z)
+    );
   }
 
   /**
    * The focus's depth only while it is raised into the column, metres: the
    * command plane with nothing selected (verticalCommand.ts). Null on the
-   * seabed, where there is no plane (docs/free-camera.md §4).
+   * seabed, where there is no plane (docs/free-camera.md §4). In the study,
+   * where the depth is going (`orderDepthM`).
    */
   raisedFocusDepthM(): number | null {
-    return this.focusDepthM;
+    return this.orderDepthM();
+  }
+
+  /**
+   * The focus depth every order reads (docs/free-camera.md §4, "The study's
+   * camera feel", decision 5): where it is going. In the study the drawn depth
+   * eases after a notch and glides after a follow, and a click in that window
+   * must land at the depth the hand set, or at the followed hull's, not at
+   * one on the way. Elsewhere the two are one number. Null on the seabed.
+   */
+  private orderDepthM(): number | null {
+    return this.feel !== null ? this.feel.goal.depthM : this.focusDepthM;
   }
 
   /**
@@ -2618,6 +2641,7 @@ export class PerspectiveView {
       // one zoom. Following, the wheel dollies toward the hull rather than
       // the cursor, which would pull the focus off it.
       const goal = feel.goal;
+      feel.release(this.followIds === null ? ['distance', 'x', 'z'] : ['distance']);
       const next = Math.min(diagonal * 2.2, Math.max(250, goal.distance / factor));
       if (this.followIds === null) {
         const cursor = this.resolveGround(clientX, clientY);
@@ -2858,7 +2882,7 @@ export class PerspectiveView {
 
   /** Rule 5: the parts a drag moved, out of any glide, as they are drawn. */
   private takeParts(parts: readonly OrbitPart[]): void {
-    this.feel?.take(this.drawnPose(), parts, this.seabedDepthAt(this.target.x, this.target.z));
+    this.feel?.take(this.drawnPose(), parts);
   }
 
   /** A verb that frames the camera outright: nothing eases toward it or away. */
@@ -4455,7 +4479,7 @@ export class PerspectiveView {
       if (!this.castPointer(clientX, clientY)) return true;
       if (this.groundHit() !== undefined) return false;
       return (
-        this.focusDepthM === null || this.pickPlane(clientX, clientY, this.focusDepth()) === null
+        this.orderDepthM() === null || this.pickPlane(clientX, clientY, this.focusDepth()) === null
       );
     }
     const rect = this.missionRect();

@@ -153,12 +153,37 @@ describe('the study camera feel, as arithmetic (#1775)', () => {
     for (let i = 0; i < frames / 2; i++) feel.step(drawn, FRAME_S, flatSeabed, false);
     // The hand turns the camera mid-glide: the yaw is its from now on.
     drawn.yaw = -0.4;
-    feel.take(drawn, ['yaw'], flatSeabed());
+    feel.take(drawn, ['yaw']);
     assert.equal(feel.goal.yaw, -0.4);
     for (let i = 0; i < frames; i++) feel.step(drawn, FRAME_S, flatSeabed, false);
     assert.equal(drawn.yaw, -0.4, 'the hand kept what it took');
     assert.equal(drawn.x, 3000, 'and the glide still landed the rest');
     assert.equal(feel.gliding, false);
+  });
+
+  it('eases a step made mid-glide as it would at rest, rather than landing it by the glide', () => {
+    // A notch half way through a glide to a hull: the dolly leaves the glide and
+    // eases (rule 3), so its first frame moves it by the ease's share, not by
+    // the glide's (#1775 round 1: 54.5 m of a 109 m notch landed in one frame).
+    const feel = new OrbitFeel(pose());
+    const drawn = pose();
+    feel.jump(drawn, flatSeabed());
+    feel.goal.x = 3000;
+    for (let t = 0; t < CAMERA_FEEL.GLIDE_S / 2; t += FRAME_S) {
+      feel.step(drawn, FRAME_S, flatSeabed, true);
+    }
+    const before = drawn.distance;
+    feel.release(['distance']);
+    feel.goal.distance = before - 109;
+    feel.step(drawn, FRAME_S, flatSeabed, true);
+    assert.ok(
+      before - drawn.distance <= easeShare(FRAME_S) * 109 + 1e-9,
+      `first frame moved ${before - drawn.distance} m of the notch`
+    );
+    assert.equal(feel.gliding, true, 'the glide still carries the focus');
+    for (let t = 0; t < 2; t += FRAME_S) feel.step(drawn, FRAME_S, flatSeabed, true);
+    assert.equal(drawn.x, 3000, 'and lands it');
+    assert.equal(drawn.distance, before - 109, 'while the dolly eased home');
   });
 
   it('coasts the same distance at every frame rate, and stops', () => {
@@ -206,6 +231,19 @@ describe('the study camera feel, as arithmetic (#1775)', () => {
     drag.move(32, 16, 0);
     assert.ok(Math.abs(drag.release(40).x - 500) < 1e-9);
     assert.deepEqual(drag.release(40), { x: 0, y: 0 }, 'a release forgets the drag');
+    // Kept by time, not by count: a 1,000 px/s flick reads 1,000 px/s from a
+    // mouse polled at 125 Hz and at 4 kHz alike.
+    for (const hz of [125, 1000, 4000, 8000]) {
+      drag.begin(0, 0, 0);
+      const stepMs = 1000 / hz;
+      let atMs = 0;
+      for (let i = 1; i <= hz / 5; i++) {
+        atMs = i * stepMs;
+        drag.move(atMs, atMs, 0);
+      }
+      const read = drag.release(atMs + 1);
+      assert.ok(Math.abs(read.x - 1000) < 1e-6, `${hz} Hz read ${read.x} px/s`);
+    }
   });
 
   it('starts a jump from where the camera is drawn and stops what was carrying it (rule 5)', () => {

@@ -3173,6 +3173,7 @@ export class EchoRenderer {
     };
     this.cancelGesture = () => {
       minimapDrag = false;
+      minimapPress = null;
       sectionDrag = false;
       panning = false;
       orbiting = false;
@@ -3199,6 +3200,13 @@ export class EchoRenderer {
 
     /** True while a press is scrubbing the sonar scope. */
     let minimapDrag = false;
+    /**
+     * Where a press on the scope landed, until the pointer leaves the click
+     * slop. In the free-water study the press glides (docs/free-camera.md §4,
+     * rule 4), and the scrub after it would cut over the glide on its first
+     * pixel, so the scrub waits for `DRAG_SLOP_PX` as the marquee does.
+     */
+    let minimapPress: { x: number; y: number } | null = null;
     /** True while a press is scrubbing a depth off the section scope (#1753). */
     let sectionDrag = false;
 
@@ -3211,6 +3219,7 @@ export class EchoRenderer {
      */
     const endGesture = (e: PointerEvent) => {
       minimapDrag = false;
+      minimapPress = null;
       sectionDrag = false;
       panning = false;
       orbiting = false;
@@ -3264,6 +3273,7 @@ export class EchoRenderer {
       // interpretation happens.
       if (e.button === 0 && this.pressMinimap(e.clientX, e.clientY)) {
         minimapDrag = true;
+        minimapPress = this.controlsStudy ? { x: e.clientX, y: e.clientY } : null;
         capture(e.pointerId);
         return;
       }
@@ -3372,6 +3382,13 @@ export class EchoRenderer {
         rightPress = null;
       }
       if (minimapDrag) {
+        if (
+          minimapPress !== null &&
+          Math.hypot(e.clientX - minimapPress.x, e.clientY - minimapPress.y) <= DRAG_SLOP_PX
+        ) {
+          return;
+        }
+        minimapPress = null;
         this.pressMinimap(e.clientX, e.clientY, false);
         return;
       }
@@ -3424,6 +3441,7 @@ export class EchoRenderer {
       }
       if (minimapDrag) {
         minimapDrag = false;
+        minimapPress = null;
         return;
       }
       if (sectionDrag) {
@@ -3954,15 +3972,16 @@ export class EchoRenderer {
       // In the study the second recall glides to the group and follows it
       // (docs/free-camera.md §4, "Focus and follow"). Only its hulls in the
       // water can be followed; a group of structures, or of hulls all aboard
-      // a transport, is centred on as before.
+      // a transport, is glided to there and cut to elsewhere, as it always was.
       const hulls = alive.filter((id) => this.units.some((u) => u.id === id));
       if (this.controlsStudy && hulls.length > 0) this.conn?.follow(hulls);
-      else this.centreOnSelection();
+      else this.centreOnSelection(this.controlsStudy);
     }
     this.lastGroupRecall = { group, at: now };
   }
 
-  private centreOnSelection(): void {
+  /** Centre on the selection: by a glide when `glide` (the study's jump, rule 4), else a cut. */
+  private centreOnSelection(glide = false): void {
     const members = [...this.selected];
     if (members.length === 0) return;
     let sx = 0;
@@ -3981,7 +4000,8 @@ export class EchoRenderer {
       n++;
     }
     if (n === 0) return;
-    this.conn?.focusWorld(sx / n, sy / n);
+    if (glide) this.conn?.glideTo(sx / n, sy / n);
+    else this.conn?.focusWorld(sx / n, sy / n);
   }
 
   // --- Command bar ----------------------------------------------------------

@@ -28,7 +28,8 @@ export const FLIGHT_CAMERA = {
 /**
  * TUNABLE — docs/free-camera.md §4, "The study's camera feel" (#1775). How the
  * free-water study's orbit moves between the poses the player asks for. Camera
- * only, never hull movement, and never read outside the study.
+ * only, never hull movement; a drag's release is measured on every map, but only
+ * the study's camera eases, coasts or glides by these.
  */
 export const CAMERA_FEEL = {
   /** A step (wheel, arrows, edge) closes its gap by a factor of e in this time. */

@@ -200,12 +200,13 @@ water is, so the two cannot disagree.
 
 ### The study's camera feel (#1775)
 
-**Status: the owner chose the four decisions below on #1775, 7 November 2026,** as their
-options described them: steps easing in about 0.1 s, drags coasting on release, jumps
-gliding in about 0.6 s, a followed hull held centred at its depth until a pan or a focus
-step, and F8 retired with NAV kept and taking clicks. The other numbers and rules are the
-author's, written to carry those choices out, and await the owner's review on the pull
-request that adds this section.
+**Status: the owner chose the five decisions below at the keyboard while #1775 was worked,
+7 and 8 November 2026,** as their options described them: steps easing in about 0.1 s,
+drags coasting on release, jumps gliding in about 0.6 s, a followed hull held centred at
+its depth until a pan or a focus step, F8 retired with NAV kept and taking clicks, and
+orders read where the focus depth is going. Pull request #1784 records the options. The
+other numbers and rules are the author's, written to carry those choices out, and await
+the owner's review on that pull request.
 
 The owner's re-acceptance of 6 November 2026 found the camera cumbersome and clunky (#1694).
 Nothing eased. A wheel notch jumped the dolly by a factor of 1.1 and `Shift` + wheel jumped
@@ -218,8 +219,8 @@ F8, then F9 for keys, at a constant 200 m/s with no momentum
 "Moves like space, Homeworld-style" names the owner's reference by its camera model, not
 its keys. Classic Homeworld has no free pan: its camera is bound to a ship or a group and
 turns about it, and it moves between them by travelling. Space is the feel of that travel:
-motion carries and then settles. This ocean adds drag, so a camera let go coasts and stops
-within a second, as a hull does. The camera's argument is depth's: it glides down to a
+motion carries and then settles. This ocean adds drag, so a camera let go coasts and
+settles within about a second, as a hull does. The camera's argument is depth's: it glides down to a
 hull's band and holds the hull there while the player turns about it.
 
 | Decision | Taken | Rejected |
@@ -228,10 +229,12 @@ hull's band and holds the hull there while the player turns about it.
 | 2. Follow | Double-click a hull: it selects the class as before, then glides to that hull and follows it | Middle-click a hull, which needs a middle button |
 | 3. Orbit | A right drag past the click slop orbits; a right click still orders | `Shift` + middle drag alone; middle drag orbiting with `Shift` + middle drag panning |
 | 4. Flight | F8 and FLIGHT retire. NAV is the way into flight, and takes the keys but not the mouse: the keys fly, and clicks on the world still select and order through the rolled view | NAV refusing world clicks, which would end ordering through a rolled view (#1706); keeping FLIGHT |
+| 5. Order depth | Orders read where the focus depth is going: the click plane, the depth ribbon's focus tick and the command plane take the depth the hand set, or the followed hull's, while the picture eases or glides after it | Orders at the drawn depth, which land up to 127 m short in an ease's first frame; no easing on depth, which brings back the 150 m jump |
 
-The rest of this section holds in the free-water study only, under both of its entry
-flags (`?study=free-water` and `?freeWaterControls=1`). Shipped maps keep the instant
-camera above, and promoting the feel to them is a separate decision.
+The rest of this section holds in the free-water study only, under either of its entry
+flags (`?study=free-water` and `?freeWaterControls=1`, which turns it on over a shipped
+map). Without either flag every map keeps the instant camera above, and promoting the feel
+to them is a separate decision.
 
 **Motion.** Six rules, in the order a gesture meets them:
 
@@ -244,7 +247,8 @@ camera above, and promoting the feel to them is a separate decision.
    (`COAST_STILL_MS`). The release speed is capped at **1,200 pixels a second**
    (`COAST_MAX_PX_S`), so a flick coasts the orbit just over half a revolution at most. The
    focus depth never coasts: it is where the next order goes, so it moves only while the
-   hand does.
+   hand does, and an order reads the depth the hand last set, not the one the picture has
+   eased to (decision 5).
 3. **Steps ease.** A wheel notch, a `Shift` + wheel notch, the arrows and the screen edge
    say where the camera is going. The drawn camera closes the gap by a factor of e every
    **0.1 s** (`EASE_S`), settling in about 0.3 s instead of in one frame. Notches add to the
@@ -259,7 +263,8 @@ camera above, and promoting the feel to them is a separate decision.
    the camera is drawn, and a glide under way carries the rest to their end: `Home` still
    arrives at north while the player pans, and a glide to a hull still lands on it while
    they turn. A jump starts from where the camera is drawn, not from where it was going.
-   A step adds to where the camera is going, as rule 3 says.
+   A step adds to where the camera is going, as rule 3 says, and takes the numbers it
+   changes out of a glide under way, so they ease after it as they would at rest.
 6. **Nothing turns by itself.** Every motion above finishes a gesture the player made, and
    following moves the focus without turning the camera. §5's rule holds: no effect rotates
    the projection, and the sway stays a translation.
@@ -269,8 +274,8 @@ eye's 25 m clamp and the focus's clamps hold on every frame of an ease, a coast 
 
 **Reduced motion** ([ui-ux.md](ui-ux.md) §11) keeps every input and takes the motion out:
 a step arrives in the frame it is made, a jump or a change into or out of NAV cuts, and a
-release does not coast. A followed hull is still held, from the frame it is chosen. The motion carries no
-information the pose it ends on does not, so nothing is lost with it.
+release does not coast. A followed hull is still held, from the frame it is chosen. The
+motion carries no information the pose it ends on does not, so nothing is lost with it.
 
 **Focus and follow.** Double-clicking an own hull still selects every visible hull of its
 class ([ui-ux.md](ui-ux.md) §9), and in the study it also glides the focus to the hull
@@ -279,10 +284,10 @@ the centre of its hulls, where it used to cut. While following, the focus sits o
 at its depth, drawn between Echo ticks as the hull itself is (`ownMotion.ts`).
 
 - **The plane follows too.** The focus depth is where a click into open water lands
-  ([ui-ux.md](ui-ux.md) §9), so while a hull is followed an order lands at its depth, and
-  the depth ribbon's focus tick says so. Following the lead selected hull puts the click
-  plane on the command plane its foot rings mark ([free-water-slice.md](free-water-slice.md)
-  §9).
+  ([ui-ux.md](ui-ux.md) §9), so while a hull is followed an order lands at its depth, from
+  the double-click on and through the glide to it (decision 5), and the depth ribbon's
+  focus tick says so. Following the lead selected hull puts the click plane on the command
+  plane its foot rings mark ([free-water-slice.md](free-water-slice.md) §9).
 - **Turning and zooming keep the follow.** The wheel then dollies toward the hull, not the
   cursor, since a zoom about the cursor would pull the focus off it.
 - **Anything else that moves the focus ends it.** A pan of any kind ends following: a

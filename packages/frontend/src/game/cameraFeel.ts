@@ -20,6 +20,8 @@ export interface OrbitPose {
 /** One of the orbit's numbers, as a drag names the ones it moves. */
 export type OrbitPart = keyof OrbitPose;
 
+const ORBIT_PARTS: readonly OrbitPart[] = ['x', 'z', 'depthM', 'yaw', 'pitch', 'distance'];
+
 /** A pointer's place at a moment, for measuring the speed a drag ends at. */
 export interface PointerSample {
   atMs: number;
@@ -111,8 +113,18 @@ export class DragSpeed {
 
   move(atMs: number, x: number, y: number): void {
     this.samples.push({ atMs, x, y });
-    // Only the last `COAST_STILL_MS` is ever read; a few more cover coalescing.
-    if (this.samples.length > 16) this.samples.shift();
+    // Only the last `COAST_STILL_MS` before the newest is ever read, so that
+    // is what is kept: by time, not by count, since a mouse polled at 4 kHz
+    // fills sixteen samples in four milliseconds, under `MIN_SPAN_MS`, and no
+    // release would ever coast.
+    let drop = 0;
+    while (
+      drop < this.samples.length - 1 &&
+      atMs - this.samples[drop]!.atMs > CAMERA_FEEL.COAST_STILL_MS
+    ) {
+      drop++;
+    }
+    if (drop > 0) this.samples.splice(0, drop);
   }
 
   /** The release speed, and the drag forgotten. */
@@ -145,6 +157,12 @@ export class OrbitFeel {
   readonly orbitCoast = { x: 0, y: 0 };
   /** The pose a jump left from, its depth resolved to metres. */
   private glideFrom: OrbitPose | null = null;
+  /**
+   * The numbers a glide still carries along its path. A jump hands it all six;
+   * a drag takes back what it moves (`take`) and a step what it changes
+   * (`release`), and those ease instead (rules 3 and 5).
+   */
+  private readonly glideParts = new Set<OrbitPart>();
   private glideT = 0;
   /**
    * Whether a followed hull's focus has reached it. From then on the focus is
@@ -178,9 +196,14 @@ export class OrbitFeel {
    */
   settle(drawn: OrbitPose): void {
     Object.assign(this.goal, drawn);
-    this.glideFrom = null;
+    this.endGlide();
     this.held = false;
     this.stopCoasts();
+  }
+
+  private endGlide(): void {
+    this.glideFrom = null;
+    this.glideParts.clear();
   }
 
   stopCoasts(): void {
@@ -194,21 +217,28 @@ export class OrbitFeel {
    * Rule 5: a drag takes the numbers it moves out of a glide under way, so the
    * hand owns them at once, and the glide carries the rest to their end: Home
    * still arrives at north while the player pans, and a followed hull's focus
-   * still arrives on it while they turn. `seabedM` stands in for a seabed
-   * depth, as in `jump`. No glide, nothing to take.
+   * still arrives on it while they turn. No glide, nothing to take.
    */
-  take(drawn: OrbitPose, parts: readonly OrbitPart[], seabedM: number): void {
-    const from = this.glideFrom;
-    if (from === null) return;
+  take(drawn: OrbitPose, parts: readonly OrbitPart[]): void {
+    if (this.glideFrom === null) return;
     for (const part of parts) {
-      if (part === 'depthM') {
-        from.depthM = drawn.depthM ?? seabedM;
-        this.goal.depthM = drawn.depthM;
-      } else {
-        from[part] = drawn[part];
-        this.goal[part] = drawn[part];
-      }
+      this.glideParts.delete(part);
+      if (part === 'depthM') this.goal.depthM = drawn.depthM;
+      else this.goal[part] = drawn[part];
     }
+    if (this.glideParts.size === 0) this.endGlide();
+  }
+
+  /**
+   * Rule 3 inside a glide: a step changes where some numbers are going while
+   * the glide carries them. Those leave the glide and ease toward their new
+   * end from where they are drawn, so a notch mid-glide eases as it does at
+   * rest, rather than landing at once by however far the glide had got.
+   */
+  release(parts: readonly OrbitPart[]): void {
+    if (this.glideFrom === null) return;
+    for (const part of parts) this.glideParts.delete(part);
+    if (this.glideParts.size === 0) this.endGlide();
   }
 
   /**
@@ -220,6 +250,8 @@ export class OrbitFeel {
     Object.assign(this.goal, drawn);
     this.stopCoasts();
     this.glideFrom = { ...drawn, depthM: drawn.depthM ?? seabedM };
+    this.glideParts.clear();
+    for (const part of ORBIT_PARTS) this.glideParts.add(part);
     this.glideT = 0;
     this.held = false;
   }
@@ -246,12 +278,12 @@ export class OrbitFeel {
   }
 
   /**
-   * One frame: move `drawn` toward the goal. A glide runs its eased path
-   * (rule 4); otherwise each number closes its gap by the ease (rule 3).
-   * `seabedAt` reads the seabed under a plan point, for a focus easing to or
-   * from the ground. `holding` is a followed hull's focus: once the focus has
-   * reached it, by a glide's end or by easing within `HELD_M`, it is held on
-   * it exactly from then on rather than eased after.
+   * One frame: move `drawn` toward the goal. The numbers a glide still
+   * carries run its eased path (rule 4); the rest close their gap by the ease
+   * (rule 3). `seabedAt` reads the seabed under a plan point, for a focus
+   * easing to or from the ground. `holding` is a followed hull's focus: once
+   * the focus has reached it, by a glide's end or by easing within `HELD_M`,
+   * it is held on it exactly from then on rather than eased after.
    */
   step(
     drawn: OrbitPose,
@@ -261,28 +293,16 @@ export class OrbitFeel {
   ): void {
     const goal = this.goal;
     const from = this.glideFrom;
+    const k = easeShare(dtS);
+    let s = 0;
     if (from !== null) {
       this.glideT = Math.min(1, this.glideT + dtS / CAMERA_FEEL.GLIDE_S);
-      const s = glideShare(this.glideT);
-      drawn.x = from.x + (goal.x - from.x) * s;
-      drawn.z = from.z + (goal.z - from.z) * s;
-      drawn.yaw = from.yaw + shortArc(from.yaw, goal.yaw) * s;
-      drawn.pitch = from.pitch + (goal.pitch - from.pitch) * s;
-      drawn.distance = from.distance + (goal.distance - from.distance) * s;
-      const toDepth = goal.depthM ?? seabedAt(drawn.x, drawn.z);
-      drawn.depthM = from.depthM! + (toDepth - from.depthM!) * s;
-      if (this.glideT >= 1) {
-        this.glideFrom = null;
-        drawn.yaw = goal.yaw;
-        drawn.depthM = goal.depthM;
-        this.held = holding;
-      }
-      return;
+      s = glideShare(this.glideT);
     }
+    const glides = (part: OrbitPart) => from !== null && this.glideParts.has(part);
 
-    const k = easeShare(dtS);
     if (!holding) this.held = false;
-    else if (!this.held) {
+    else if (!this.held && !glides('x')) {
       this.held =
         Math.hypot(goal.x - drawn.x, goal.z - drawn.z) < HELD_M &&
         Math.abs(
@@ -294,14 +314,40 @@ export class OrbitFeel {
       drawn.z = goal.z;
       drawn.depthM = goal.depthM;
     } else {
-      drawn.x = approach(drawn.x, goal.x, k, ARRIVED_M);
-      drawn.z = approach(drawn.z, goal.z, k, ARRIVED_M);
-      drawn.depthM = easeDepth(drawn, goal, k, seabedAt);
+      drawn.x = glides('x')
+        ? from!.x + (goal.x - from!.x) * s
+        : approach(drawn.x, goal.x, k, ARRIVED_M);
+      drawn.z = glides('z')
+        ? from!.z + (goal.z - from!.z) * s
+        : approach(drawn.z, goal.z, k, ARRIVED_M);
+      if (glides('depthM')) {
+        const toDepth = goal.depthM ?? seabedAt(drawn.x, drawn.z);
+        drawn.depthM = from!.depthM! + (toDepth - from!.depthM!) * s;
+      } else {
+        drawn.depthM = easeDepth(drawn, goal, k, seabedAt);
+      }
     }
-    const turn = shortArc(drawn.yaw, goal.yaw);
-    drawn.yaw = Math.abs(turn) < ARRIVED_RAD ? goal.yaw : drawn.yaw + turn * k;
-    drawn.pitch = approach(drawn.pitch, goal.pitch, k, ARRIVED_RAD);
-    drawn.distance = approach(drawn.distance, goal.distance, k, ARRIVED_M);
+    if (glides('yaw')) drawn.yaw = from!.yaw + shortArc(from!.yaw, goal.yaw) * s;
+    else {
+      const turn = shortArc(drawn.yaw, goal.yaw);
+      drawn.yaw = Math.abs(turn) < ARRIVED_RAD ? goal.yaw : drawn.yaw + turn * k;
+    }
+    drawn.pitch = glides('pitch')
+      ? from!.pitch + (goal.pitch - from!.pitch) * s
+      : approach(drawn.pitch, goal.pitch, k, ARRIVED_RAD);
+    drawn.distance = glides('distance')
+      ? from!.distance + (goal.distance - from!.distance) * s
+      : approach(drawn.distance, goal.distance, k, ARRIVED_M);
+
+    if (from !== null && this.glideT >= 1) {
+      // What the glide carried arrives exactly, not by floating-point nearly.
+      for (const part of this.glideParts) {
+        if (part === 'depthM') drawn.depthM = goal.depthM;
+        else drawn[part] = goal[part];
+      }
+      if (holding && this.glideParts.has('x')) this.held = true;
+      this.endGlide();
+    }
   }
 }
 
