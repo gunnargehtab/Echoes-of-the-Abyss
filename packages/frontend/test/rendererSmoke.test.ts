@@ -1010,6 +1010,9 @@ describe("the free-water study's camera feel (#1775)", () => {
       }
       assert.deepEqual(world.conn.following, [hull!.id]);
       assert.ok(selection(world).includes(hull!.id), 'and selected');
+      // Orders read the hull's depth from the double-click on, before the
+      // glide has carried the picture there (decision 5).
+      assert.equal(world.conn.focusDepth(), hull!.depth, 'the click plane is at once the hull');
       const mid: number[] = [];
       for (let t = 0; t <= 1000; t += 50) {
         now += 50;
@@ -1136,6 +1139,13 @@ describe("the free-water study's camera feel (#1775)", () => {
       const before = world.conn.frame.xM;
       press(world, 'pointerdown', 0, at.x, at.y);
       press(world, 'pointermove', 0, at.x + 2, at.y);
+      // Inside the slop the wobble is not a scrub: nothing has cut the focus
+      // to the pointer, and the glide still runs to the point pressed.
+      assert.equal(world.conn.frame.xM, before, 'no cut to the wobble');
+      assert.ok(
+        Math.abs(world.conn.feelReading!.goal.x - toWorld(at.x)) < 1e-6,
+        'gliding to the press'
+      );
       press(world, 'pointerup', 0, at.x + 2, at.y);
       assert.equal(world.conn.feelReading!.gliding, true, 'a 2 px wobble is still a press');
       now += 100;

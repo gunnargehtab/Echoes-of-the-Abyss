@@ -263,8 +263,9 @@ to them is a separate decision.
    the camera is drawn, and a glide under way carries the rest to their end: `Home` still
    arrives at north while the player pans, and a glide to a hull still lands on it while
    they turn. A jump starts from where the camera is drawn, not from where it was going.
-   A step adds to where the camera is going, as rule 3 says, and takes the numbers it
-   changes out of a glide under way, so they ease after it as they would at rest.
+   A step adds to where the camera is going, as rule 3 says. On a number a glide is
+   carrying, the glide still runs to the end it had and the step's own change eases on top
+   of it, so neither arrives in one frame.
 6. **Nothing turns by itself.** Every motion above finishes a gesture the player made, and
    following moves the focus without turning the camera. §5's rule holds: no effect rotates
    the projection, and the sway stays a translation.

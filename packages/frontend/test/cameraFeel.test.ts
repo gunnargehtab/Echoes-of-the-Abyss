@@ -173,7 +173,7 @@ describe('the study camera feel, as arithmetic (#1775)', () => {
       feel.step(drawn, FRAME_S, flatSeabed, true);
     }
     const before = drawn.distance;
-    feel.release(['distance']);
+    feel.beforeStep(['distance']);
     feel.goal.distance = before - 109;
     feel.step(drawn, FRAME_S, flatSeabed, true);
     assert.ok(
@@ -184,6 +184,68 @@ describe('the study camera feel, as arithmetic (#1775)', () => {
     for (let t = 0; t < 2; t += FRAME_S) feel.step(drawn, FRAME_S, flatSeabed, true);
     assert.equal(drawn.x, 3000, 'and lands it');
     assert.equal(drawn.distance, before - 109, 'while the dolly eased home');
+  });
+
+  it('keeps a stepped number on its glide and eases only the step on top (rules 3 and 4)', () => {
+    // #1775 round 2: a step that turned the rest of a glide into an ease landed
+    // 15% of it in one frame, 446 m after a 3 km scope press. Every frame here
+    // moves no more than the glide's own largest frame plus the ease's share of
+    // the step, and both arrive.
+    const frames = Math.ceil((CAMERA_FEEL.GLIDE_S + 1.5) / FRAME_S);
+    const notchAt = Math.round(0.1 / FRAME_S);
+    const k = easeShare(FRAME_S);
+    const press = (shift: number | null) => {
+      const feel = new OrbitFeel(pose());
+      const drawn = pose();
+      feel.jump(drawn, flatSeabed());
+      feel.goal.x = 5000;
+      const steps: number[] = [];
+      for (let i = 0; i < frames; i++) {
+        if (shift !== null && i === notchAt) {
+          // A wheel notch about a cursor: the dolly and the anchor's shift.
+          feel.beforeStep(['distance', 'x', 'z']);
+          feel.goal.x += shift;
+          feel.goal.distance /= 1.1;
+        }
+        const was = drawn.x;
+        feel.step(drawn, FRAME_S, flatSeabed, false);
+        steps.push(Math.abs(drawn.x - was));
+      }
+      return { steps, drawn };
+    };
+    const alone = Math.max(...press(null).steps);
+    const notched = press(200);
+    notched.steps.forEach((step, i) =>
+      assert.ok(step <= alone + k * 200 + 1e-6, `frame ${i} moved ${step} m, glide alone ${alone}`)
+    );
+    assert.equal(notched.drawn.x, 5200, 'the press and the shift both arrive');
+    assert.equal(notched.drawn.distance, 1200 / 1.1);
+
+    // A Shift + wheel notch 0.1 s into a deep follow glide, which it ends.
+    const deep = () => 2400;
+    const follow = (notch: boolean) => {
+      const feel = new OrbitFeel(pose());
+      const drawn = pose();
+      feel.jump(drawn, deep());
+      feel.goal.depthM = 1100;
+      const steps: number[] = [];
+      for (let i = 0; i < frames; i++) {
+        if (notch && i === notchAt) {
+          feel.beforeStep(['depthM']);
+          feel.goal.depthM = 950;
+        }
+        const was = drawn.depthM!;
+        feel.step(drawn, FRAME_S, deep, !notch || i < notchAt);
+        steps.push(Math.abs(drawn.depthM! - was));
+      }
+      return { steps, drawn };
+    };
+    const glideOnly = Math.max(...follow(false).steps);
+    const stepped = follow(true);
+    stepped.steps.forEach((step, i) =>
+      assert.ok(step <= glideOnly + k * 150 + 1e-6, `frame ${i} moved ${step} m of depth`)
+    );
+    assert.equal(stepped.drawn.depthM, 950, "the notch's depth arrives");
   });
 
   it('coasts the same distance at every frame rate, and stops', () => {

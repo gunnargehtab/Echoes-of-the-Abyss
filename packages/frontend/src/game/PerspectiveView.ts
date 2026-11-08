@@ -2273,7 +2273,7 @@ export class PerspectiveView {
       return;
     }
     this.followIds = null;
-    feel.release(['x', 'z']);
+    feel.beforeStep(['x', 'z']);
     const d = this.panDelta(dxPx, dyPx);
     feel.goal.x += d.x;
     feel.goal.z += d.z;
@@ -2373,7 +2373,7 @@ export class PerspectiveView {
     }
     if (metres === 0) return;
     this.followIds = null;
-    feel.release(['depthM']);
+    feel.beforeStep(['depthM']);
     const goal = feel.goal;
     const seabed = this.seabedDepthAt(goal.x, goal.z);
     const next = (goal.depthM ?? seabed) - metres;
@@ -2641,7 +2641,7 @@ export class PerspectiveView {
       // one zoom. Following, the wheel dollies toward the hull rather than
       // the cursor, which would pull the focus off it.
       const goal = feel.goal;
-      feel.release(this.followIds === null ? ['distance', 'x', 'z'] : ['distance']);
+      feel.beforeStep(this.followIds === null ? ['distance', 'x', 'z'] : ['distance']);
       const next = Math.min(diagonal * 2.2, Math.max(250, goal.distance / factor));
       if (this.followIds === null) {
         const cursor = this.resolveGround(clientX, clientY);

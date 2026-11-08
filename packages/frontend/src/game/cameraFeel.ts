@@ -158,11 +158,18 @@ export class OrbitFeel {
   /** The pose a jump left from, its depth resolved to metres. */
   private glideFrom: OrbitPose | null = null;
   /**
-   * The numbers a glide still carries along its path. A jump hands it all six;
-   * a drag takes back what it moves (`take`) and a step what it changes
-   * (`release`), and those ease instead (rules 3 and 5).
+   * The numbers a glide still carries along its path. A jump hands it all six,
+   * and a drag takes back what it moves (`take`), which the hand then owns.
    */
   private readonly glideParts = new Set<OrbitPart>();
+  /**
+   * For a gliding number a step has moved since the jump (`beforeStep`): the
+   * end its glide still runs to, and the step's own change easing on top of
+   * the glide's path (rule 3 inside rule 4). When the glide ends, what is left
+   * of the change goes on easing, from wherever the two have got to.
+   */
+  private readonly glideEnds = new Map<OrbitPart, number | null>();
+  private readonly stepOffsets = new Map<OrbitPart, number>();
   private glideT = 0;
   /**
    * Whether a followed hull's focus has reached it. From then on the focus is
@@ -204,6 +211,8 @@ export class OrbitFeel {
   private endGlide(): void {
     this.glideFrom = null;
     this.glideParts.clear();
+    this.glideEnds.clear();
+    this.stepOffsets.clear();
   }
 
   stopCoasts(): void {
@@ -223,6 +232,8 @@ export class OrbitFeel {
     if (this.glideFrom === null) return;
     for (const part of parts) {
       this.glideParts.delete(part);
+      this.glideEnds.delete(part);
+      this.stepOffsets.delete(part);
       if (part === 'depthM') this.goal.depthM = drawn.depthM;
       else this.goal[part] = drawn[part];
     }
@@ -230,15 +241,20 @@ export class OrbitFeel {
   }
 
   /**
-   * Rule 3 inside a glide: a step changes where some numbers are going while
-   * the glide carries them. Those leave the glide and ease toward their new
-   * end from where they are drawn, so a notch mid-glide eases as it does at
-   * rest, rather than landing at once by however far the glide had got.
+   * Rule 3 inside rule 4: a step is about to move where these numbers are
+   * going. One a glide still carries keeps its glide to the end it had, and
+   * the step's own change eases on top of the glide's path. So a notch
+   * mid-glide neither lands at once by however far the glide had got nor
+   * turns the rest of the glide into an ease (#1775 rounds 1 and 2). Call it
+   * before the step writes the goal.
    */
-  release(parts: readonly OrbitPart[]): void {
+  beforeStep(parts: readonly OrbitPart[]): void {
     if (this.glideFrom === null) return;
-    for (const part of parts) this.glideParts.delete(part);
-    if (this.glideParts.size === 0) this.endGlide();
+    for (const part of parts) {
+      if (!this.glideParts.has(part) || this.glideEnds.has(part)) continue;
+      this.glideEnds.set(part, this.goal[part]);
+      this.stepOffsets.set(part, 0);
+    }
   }
 
   /**
@@ -315,14 +331,19 @@ export class OrbitFeel {
       drawn.depthM = goal.depthM;
     } else {
       drawn.x = glides('x')
-        ? from!.x + (goal.x - from!.x) * s
+        ? this.along('x', from!, s, k)
         : approach(drawn.x, goal.x, k, ARRIVED_M);
       drawn.z = glides('z')
-        ? from!.z + (goal.z - from!.z) * s
+        ? this.along('z', from!, s, k)
         : approach(drawn.z, goal.z, k, ARRIVED_M);
       if (glides('depthM')) {
-        const toDepth = goal.depthM ?? seabedAt(drawn.x, drawn.z);
-        drawn.depthM = from!.depthM! + (toDepth - from!.depthM!) * s;
+        const end = this.glideEnds.has('depthM') ? this.glideEnds.get('depthM')! : goal.depthM;
+        const seabed = seabedAt(drawn.x, drawn.z);
+        const toDepth = end ?? seabed;
+        drawn.depthM =
+          from!.depthM! +
+          (toDepth - from!.depthM!) * s +
+          this.offsetToward('depthM', (goal.depthM ?? seabed) - toDepth, k);
       } else {
         drawn.depthM = easeDepth(drawn, goal, k, seabedAt);
       }
@@ -336,18 +357,40 @@ export class OrbitFeel {
       ? from!.pitch + (goal.pitch - from!.pitch) * s
       : approach(drawn.pitch, goal.pitch, k, ARRIVED_RAD);
     drawn.distance = glides('distance')
-      ? from!.distance + (goal.distance - from!.distance) * s
+      ? this.along('distance', from!, s, k)
       : approach(drawn.distance, goal.distance, k, ARRIVED_M);
 
     if (from !== null && this.glideT >= 1) {
       // What the glide carried arrives exactly, not by floating-point nearly.
+      // A number a step moved mid-glide stays where it is drawn, its glide done
+      // and its step's change still easing, from here as an ordinary ease.
       for (const part of this.glideParts) {
+        if (this.glideEnds.has(part)) continue;
         if (part === 'depthM') drawn.depthM = goal.depthM;
         else drawn[part] = goal[part];
       }
-      if (holding && this.glideParts.has('x')) this.held = true;
+      if (holding && this.glideParts.has('x') && !this.glideEnds.has('x')) this.held = true;
       this.endGlide();
     }
+  }
+
+  /**
+   * A gliding number's place this frame: its path to the end it had, and a
+   * step's change easing on top when a step came mid-glide (`beforeStep`).
+   */
+  private along(part: 'x' | 'z' | 'distance', from: OrbitPose, s: number, k: number): number {
+    const goal = this.goal[part];
+    const end = this.glideEnds.has(part) ? (this.glideEnds.get(part) as number) : goal;
+    return from[part] + (end - from[part]) * s + this.offsetToward(part, goal - end, k);
+  }
+
+  /** A step's change on a gliding number, eased one frame toward `change` (rule 3). */
+  private offsetToward(part: OrbitPart, change: number, k: number): number {
+    const now = this.stepOffsets.get(part);
+    if (now === undefined) return 0;
+    const next = approach(now, change, k, ARRIVED_M);
+    this.stepOffsets.set(part, next);
+    return next;
   }
 }
 
