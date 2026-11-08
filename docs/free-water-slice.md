@@ -562,7 +562,7 @@ spend what a shipped map may not; shipped maps keep 400,000. Reserve at most 30 
 decision 5 on #1748 (§9). The authored list totals at
 most 569,728 triangles: 56 new kelp stands at at most 9,000 each (504,000), 16 retained
 clusters (6,208), wildlife (59,520: 58,720 since #1771, from 31,680, and the one rim ray's
-800 since #1778), and zero other dressing.
+800 since #1777), and zero other dressing.
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
 opening list's contract; per-model triangle limits remain ceilings. Share instanced
 batches per template/material; no per-fish draw or further relaxation of this study's
