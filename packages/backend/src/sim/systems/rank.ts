@@ -1,21 +1,23 @@
 /**
  * Earning a rank — docs/systems-progression.md §3.
  *
- * Not a per-tick system. Experience is credited where damage lands, by the
- * systems that land it, through the two functions here, so the combat,
- * ordnance and fauna passes cannot disagree about what counts or about what a
- * rank does to the hull. §3's four rulings (#1785) are the whole of it:
+ * Experience is credited where damage lands, by the systems that land it,
+ * through the two functions here, so the combat, ordnance and fauna passes
+ * cannot disagree about what counts or about what a rank does to the hull.
+ * The one per-tick part is `rankSystem`, which pays a survivor once its fight
+ * is over. §3's four rulings (#1785) are the whole of it:
  *
  *   - **dealt** is the hull's own *gun*, in the hull it removes. Only
  *     `combat.ts` calls `creditDealt`: a torpedo, a mine or a depth charge
  *     earns its launcher nothing, because rule 3 prices a shooter's exposure at
  *     its own position when the blow lands, and by then a launcher has moved
  *     on and a layer was never there;
- *   - **taken** is any hit from an enemy weapon or a creature that the hull
- *     lives through, at half. Gun, torpedo, mine, depth charge and bite call
- *     `creditTaken`; crush, hazards, the Lid and the Standing Wave — which
- *     "harms everyone equally" and is owned by nobody — are the water, and
- *     never do;
+ *   - **taken** is any hit from an enemy weapon or a creature, at half, once
+ *     the hull has *survived the fight*: banked as it lands and paid after
+ *     `RANK.QUIET_S` without another hit. Gun, torpedo, mine, depth charge and
+ *     bite call `creditTaken`; crush, hazards, the Lid and the Standing Wave —
+ *     which "harms everyone equally" and is owned by nobody — are the water,
+ *     and never do;
  *   - thresholds are the **listed** hull's (`rankForExperience`);
  *   - a rank's hull **multiplies** the Plate's (`promote`).
  *
@@ -25,6 +27,7 @@
  */
 
 import { hasComponent } from 'bitecs';
+import { defineQuery } from '../query.ts';
 import {
   RANK,
   rankForExperience,
@@ -35,6 +38,8 @@ import {
 } from '@echoes/shared';
 import { Fauna, Health, Ordnance, Owner, Structure, Unit, Veterancy } from '../components.ts';
 import type { SimWorld } from '../world.ts';
+
+const veterans = defineQuery([Veterancy, Health]);
 
 /**
  * Hull points a blow actually removed: never more than the target had.
@@ -72,13 +77,48 @@ export function creditDealt(
 }
 
 /**
- * `eid` took a hit that removed `removed` hull. Credited at half, and only if
- * it is still afloat: "taken and survived". A hull the hit sank earns nothing,
- * and would lose it with the hull if it did.
+ * `eid` took a hit that removed `removed` hull. Half of it is banked against
+ * the fight, and the fight's clock starts again: "taken and survived" is paid
+ * when the hull has survived the *fight* (§3's second ruling), which is a hull
+ * the guns have stopped finding. A hull the hit sank banks nothing.
+ *
+ * Banked rather than credited, for docs/systems-combat.md §9: credited as it
+ * landed, two fresh Corvettes in a duel each earned 75 an exchange and both
+ * ranked on the sixth, so the rank's heal added a cycle to the fight every
+ * player has most often. Banked, the winner ranks on its killing shot, from
+ * its gun alone, and the loser never does.
  */
 export function creditTaken(world: SimWorld, eid: number, removed: number): void {
   if (removed <= 0 || !hasComponent(world, Veterancy, eid)) return;
-  gain(world, eid, removed * RANK.TAKEN_SHARE);
+  if (Health.hp[eid]! <= 0) return;
+  Veterancy.banked[eid] = Veterancy.banked[eid]! + removed * RANK.TAKEN_SHARE;
+  Veterancy.quietS[eid] = RANK.QUIET_S;
+}
+
+/**
+ * Pay every hull whose fight is over what it banked surviving it.
+ *
+ * Every tick, after every pass that lands a hit: a hit this tick restarted its
+ * hull's clock before this counts it down. A hull sunk before its clock ran out
+ * is paid nothing — `gain` refuses a hull with no hull — and the reaper takes
+ * the bank with it. A linear walk of the hulls, one comparison each for a hull
+ * with nothing banked, which is nearly all of them.
+ */
+export function rankSystem(world: SimWorld): void {
+  const hulls = veterans(world);
+  for (let i = 0; i < hulls.length; i++) {
+    const eid = hulls[i]!;
+    const banked = Veterancy.banked[eid]!;
+    if (banked <= 0) continue;
+    const left = Veterancy.quietS[eid]! - world.dt;
+    if (left > 0) {
+      Veterancy.quietS[eid] = left;
+      continue;
+    }
+    Veterancy.quietS[eid] = 0;
+    Veterancy.banked[eid] = 0;
+    gain(world, eid, banked);
+  }
 }
 
 function gain(world: SimWorld, eid: number, experience: number): void {

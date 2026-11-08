@@ -188,10 +188,12 @@ Four rulings say what the table leaves open. All four are SPEC (#1785):
   lands the launcher has moved on, or the layer was never there, and rule 3 prices the
   exposure of a shooter at its own position when the blow lands.
 - **Taken is any hit the hull lives through**, from an enemy weapon or a creature: a gun, a
-  torpedo, a mine, a depth charge, a bite. Half of it is credited as it lands, and only if the
-  hull is still afloat after it. Crush, hazards and the Lid are the water, not a fight, and
-  earn nothing. Any hull ranks, armed or not: a Harvester repaired under fire earns its plate
-  from half of what it lived through.
+  torpedo, a mine, a depth charge, a bite. Survived means survived the *fight*: half of each
+  hit is banked, and paid once the hull has gone 10 s without another, the engagement the
+  under-fire alert already counts ([ui-ux.md](ui-ux.md) §5). A hull sunk first is paid
+  nothing. Crush, hazards and the Lid are the water, not a fight, and earn nothing. Any hull
+  ranks, armed or not: a Harvester repaired under fire earns its rank from half of what it
+  lived through.
 - **"Own max hull" is the listed one**, the stat block's figure. A Plate Refit does not slow a
   hull's ranking, and a rank's own hull does not raise the next threshold.
 - **A rank and the Plate multiply.** A rank's share is of the hull's maximum with the plate in
@@ -249,7 +251,7 @@ under fire, and fire is what the map already heard.
 | Knight instant refits are a silent tech-up | Sounded: SIG 80 for 15 s from the Bastion, the loudest single event a Knight base makes short of a ping. Everyone hears the Order harden its hulls, and where from |
 | Refits erode the asymmetry | No SIG refit, no HYD refit, no weapon class, no damage type. The four things the factions differ on are exactly the four things the list cannot buy |
 | Veterancy snowballs | Three ranks and a hard ceiling; the ranks die with the hull; experience is hull points, so a rank-3 hull has been *hit* for three times its own hull and lived, which is not a state a snowball is in |
-| Rank breaks the TTK bands | The bands in [systems-combat.md](systems-combat.md) §9 are rank-0 figures. At rank 3 against rank 0, a Corvette kills a Corvette in about 10 s and dies to one in about 20, both inside the row's neighbours; the per-rank figures are sized so no band moves by more than a third, and the test that holds the bands should hold that too |
+| Rank breaks the TTK bands | The bands in [systems-combat.md](systems-combat.md) §9 are rank-0 figures, and a fight between fresh hulls stays one: a survived hit is paid when the fight ends (§3), so a duel's winner ranks on its killing shot and the loser never does. Paid as each hit landed, two fresh Corvettes both ranked on their sixth exchange and the duel ran 16.2 s. At rank 3 against rank 0, a Corvette kills a Corvette in about 10 s and dies to one in about 20, both inside the row's neighbours; the per-rank figures are sized so no band moves by more than a third, and the test that holds the bands should hold that too |
 | Rank bonuses make a hull quiet-strong | Rule 2 and rule 3 together: nothing quieter, and nothing that was not paid for in exposure the map already heard — the hull's own discharges, or the ones that hit it (§3). A hull that is never in a fight never ranks |
 | Progression becomes a chore | Five refits, once each; three ranks, earned by playing. A commander who ignores this document entirely plays a coherent rank-0, refit-0 game and loses to arithmetic in the late game, which is what progression is for |
 
@@ -268,7 +270,7 @@ struck at the Bastion.
 | --- | --- | --- |
 | Refits (§2) | **Built** — all five | `REFIT_STATS` and `refitPriceFor` in `packages/shared/src/refits.ts`, priced through the same `priceOf`, `affords` and `charge` as a hull (economy.md §8). `Match.refit` takes a refit onto the Slipway's line, and `world.refits`, a per-player set, is what every system reads. `grantRefit` in `packages/backend/src/sim/systems/refit.ts` writes the two that a hull carries, a Pressure Refit's rating and a Plate's hull, to every hull afloat, and `spawnUnit` gives both and a Magazine's three torpedoes to each later launch. The movement, depth, rearm and harvest systems read the Drive, the Magazine and the Hold live, and the acoustics pass adds each refit's SIG. `test/refit.test.ts` covers them |
 | Each navy's terms (§2) | **Built** | `REFIT_TERMS` in `packages/shared/src/refits.ts` is the table's *Refits* column, each navy's rates for every refit; `PRESSURE_REFIT_TERMS` is its *Pressure Refit* column, with the Commune's PR-2 cap, the Directorate's refusal and the Knights' own terms. `refittedPressureRating` applies the cap. The Knights' instant, sounded Pressure Refit is struck at the Bastion by `Match.refit`, at SIG 80 for 15 s, and their other four are bought on the line |
-| Rank (§3) | **Built** | `RANK` in `packages/shared/src/constants.ts` is §3's table, and `packages/shared/src/rank.ts` reads it. `Veterancy` is the component on each hull, and `sim/systems/rank.ts` credits it where damage lands: `combat.ts` both halves, `ordnance.ts` and `fauna.ts` a hit survived. A rank-up writes the hull, and `profileFor` in `combat.ts` reads the rank into the gun. Rank crosses the wire as `OwnUnit.rank` and as `Contact.rank` at Track only, which `echoLayer.ts` writes with the plate left out of the hull. `test/rank.test.ts` covers it |
+| Rank (§3) | **Built** | `RANK` in `packages/shared/src/constants.ts` is §3's table, and `packages/shared/src/rank.ts` reads it. `Veterancy` is the component on each hull, and `sim/systems/rank.ts` credits it where damage lands: `combat.ts` both halves, `ordnance.ts` and `fauna.ts` a hit survived, which `rankSystem` banks until the fight ends. A rank-up writes the hull, and `profileFor` in `combat.ts` reads the rank into the gun. Rank crosses the wire as `OwnUnit.rank` and as `Contact.rank` at Track only, which `echoLayer.ts` writes with the plate left out of the hull. `test/rank.test.ts` covers it |
 | Guard-rails (§4) | **Not built** | `test/ttkBands.test.ts` grows a rank-3 row per band |
 
 ---

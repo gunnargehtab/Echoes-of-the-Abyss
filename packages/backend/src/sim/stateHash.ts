@@ -226,6 +226,8 @@ export function hashWorld(world: SimWorld): number {
     if (hasComponent(world, Veterancy, eid)) {
       h = mixFloat(h, Veterancy.experience[eid]!);
       h = mixU32(h, Veterancy.rank[eid]!);
+      h = mixFloat(h, Veterancy.banked[eid]!);
+      h = mixFloat(h, Veterancy.quietS[eid]!);
     }
     if (hasComponent(world, Posture, eid)) {
       h = mixU32(h, Posture.hold[eid]!);

@@ -3080,6 +3080,18 @@ export const RANK = {
    * survived". The share of a survived hit that counts.
    */
   TAKEN_SHARE: 0.5,
+  /**
+   * SPEC — §3's second ruling: survived means survived the *fight*, so a
+   * survived hit is banked and credited once the hull has gone this long
+   * without another. The fight is the under-fire alert's engagement, the one
+   * number the game already uses for "the same fight" (#1785), so the ear, the
+   * log and the ledger agree about when a fight ends.
+   *
+   * It is why a fresh duel stays inside docs/systems-combat.md §9's band:
+   * credited as it landed, half of each hit taken ranked both Corvettes on
+   * their sixth exchange and healed them into a seventh cycle, 16.2 s.
+   */
+  QUIET_S: PERSISTENCE.UNDER_FIRE_REARM_S,
 } as const;
 
 /**

@@ -197,10 +197,17 @@ export const Health = defineComponent({
  * which is the second.
  */
 export const Veterancy = defineComponent({
-  /** Hull points: gun damage dealt, plus half of every hit survived. */
+  /** Hull points: gun damage dealt, plus half of every fight survived. */
   experience: Types.f32,
   /** 0 to `RANK.MAX`. Written only by `sim/systems/rank.ts`. */
   rank: Types.ui8,
+  /**
+   * Half of the hits taken in the fight still going on, not yet experience:
+   * survived means survived the fight (§3), and the fight is not over.
+   */
+  banked: Types.f32,
+  /** Seconds left before the fight counts as over and `banked` is paid. */
+  quietS: Types.f32,
 });
 
 /** Which player slot owns this entity. */

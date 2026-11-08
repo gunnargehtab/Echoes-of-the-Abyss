@@ -1149,6 +1149,8 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, Veterancy, eid);
   Veterancy.experience[eid] = 0;
   Veterancy.rank[eid] = 0;
+  Veterancy.banked[eid] = 0;
+  Veterancy.quietS[eid] = 0;
 
   addComponent(world, Owner, eid);
   Owner.slot[eid] = opts.slot;

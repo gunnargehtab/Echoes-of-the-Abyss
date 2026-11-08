@@ -7,7 +7,9 @@
  * number in a table:
  *
  *   - experience is **gun damage dealt plus half of every hit survived**, in the
- *     hull a blow removed, against the hull's **listed** maximum (§3's rulings);
+ *     hull a blow removed, against the hull's **listed** maximum (§3's rulings),
+ *     and a survived hit is **paid when the fight is over**, so a fresh duel's
+ *     winner ranks on its killing shot and stays inside §9's band;
  *   - a torpedo or a mine earns its launcher **nothing**, and shooting one down
  *     earns its gun nothing either;
  *   - a rank's hull **arrives as current hull** and **multiplies** the Plate's,
@@ -42,7 +44,7 @@ import { Terrain } from '../src/sim/terrain.ts';
 import { spawnFauna, spawnOrdnance, spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { orderTarget } from '../src/sim/systems/chase.ts';
 import { grantRefit } from '../src/sim/systems/refit.ts';
-import { creditTaken } from '../src/sim/systems/rank.ts';
+import { creditTaken, rankSystem } from '../src/sim/systems/rank.ts';
 import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -89,11 +91,20 @@ function duel(match: Match): { shooter: number; target: number } {
   return { shooter, target };
 }
 
+/**
+ * Credit a hull `experience` as a fight survived, paid now: banked through
+ * `creditTaken`, the fight's clock run out, and `rankSystem` left to pay it.
+ */
+function survive(match: Match, eid: number, experience: number): void {
+  // Taken is credited at half, so twice the experience.
+  creditTaken(match.world, eid, experience / RANK.TAKEN_SHARE);
+  Veterancy.quietS[eid] = 0;
+  rankSystem(match.world);
+}
+
 /** Rank a Corvette by credit alone, as if it had lived through the hits. */
 function rankTo(match: Match, eid: number, rank: number): void {
-  const needed = RANK.THRESHOLDS[rank]! * corvette.maxHp - Veterancy.experience[eid]!;
-  // Taken is credited at half, so twice the gap.
-  creditTaken(match.world, eid, needed / RANK.TAKEN_SHARE);
+  survive(match, eid, RANK.THRESHOLDS[rank]! * corvette.maxHp - Veterancy.experience[eid]!);
   assert.equal(Veterancy.rank[eid], rank, 'the premise: the hull ranked');
 }
 
@@ -107,7 +118,7 @@ function snapshotsAfter(match: Match, seconds: number): Map<number, EchoSnapshot
 }
 
 describe('earning a rank', () => {
-  it('credits the gun the hull it removed, and its target half of a hit survived', () => {
+  it('credits the gun the hull it removed, and its target half once the fight is over', () => {
     const match = openWater();
     const { shooter, target } = duel(match);
     orderTarget(shooter, target, Position.x[target]!, Position.y[target]!, true);
@@ -115,8 +126,73 @@ describe('earning a rank', () => {
 
     const lost = corvette.maxHp - Health.hp[target]!;
     assert.equal(lost, corvette.attackDamage, 'the premise: one shell landed');
-    assert.equal(Veterancy.experience[shooter], lost, 'dealt: the hull the shell removed');
-    assert.equal(Veterancy.experience[target], lost * RANK.TAKEN_SHARE, 'taken: half of it');
+    assert.equal(Veterancy.experience[shooter], lost, 'dealt: the hull the shell removed, at once');
+    assert.equal(Veterancy.experience[target], 0, 'taken: not yet — the fight is on');
+    assert.equal(Veterancy.banked[target], lost * RANK.TAKEN_SHARE, 'half of it, banked');
+
+    // Out of the gun's reach, so the shell above is the fight's last.
+    Position.x[target] = 11000;
+    advance(match, RANK.QUIET_S - 0.5);
+    assert.equal(Veterancy.experience[target], 0, 'still inside the fight’s clock');
+    advance(match, 1);
+    assert.equal(Veterancy.experience[target], lost * RANK.TAKEN_SHARE, 'paid when it ended');
+    assert.equal(Veterancy.banked[target], 0);
+  });
+
+  it('restarts the fight’s clock on every hit, and pays nothing to a hull sunk inside it', () => {
+    const match = openWater();
+    const { target } = duel(match);
+    // Out of the shooter's reach: these two hits are the whole fight.
+    Position.x[target] = 11000;
+    creditTaken(match.world, target, 40);
+    advance(match, RANK.QUIET_S - 1);
+    creditTaken(match.world, target, 40);
+    advance(match, 2);
+    assert.equal(Veterancy.experience[target], 0, 'the second hit is the same fight');
+    advance(match, RANK.QUIET_S);
+    assert.equal(Veterancy.experience[target], 40, 'half of both, once it ended');
+
+    creditTaken(match.world, target, 100);
+    Health.hp[target] = 0;
+    rankSystem(match.world);
+    Veterancy.quietS[target] = 0;
+    rankSystem(match.world);
+    assert.equal(Veterancy.experience[target], 40, 'sunk before the fight ended: nothing');
+  });
+
+  it('ranks a fresh duel’s winner on its killing shot, and never its loser', () => {
+    // docs/systems-combat.md §9, held by combatBeat.test.ts in snapshots: a
+    // Corvette duel is 12–15 s. Credited as it landed, both hulls ranked on the
+    // sixth exchange and healed into a seventh cycle.
+    const match = openWater();
+    const a = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Pelagia,
+      x: 6000,
+      y: 6000,
+    });
+    const b = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 6300,
+      y: 6000,
+    });
+    let killedAt = -1;
+    for (let i = 0; i < 30 * SIM.TICK_HZ && killedAt < 0; i++) {
+      match.update(STEP_MS);
+      if (Health.hp[a]! <= 0 || Health.hp[b]! <= 0) killedAt = match.world.tick;
+      for (const eid of [a, b]) {
+        if (Health.hp[eid]! > 0 && killedAt < 0) {
+          assert.equal(Veterancy.rank[eid], 0, `no rank before the kill, tick ${match.world.tick}`);
+        }
+      }
+    }
+    assert.ok(killedAt > 0, 'the premise: the duel ended');
+    const winner = Health.hp[a]! > 0 ? a : b;
+    assert.equal(Veterancy.rank[winner], 1, 'the kill was 420 of its own gun: rank 1');
+    assert.equal(Veterancy.experience[winner], corvette.maxHp, 'its gun alone, so far');
   });
 
   it('counts only the hull a last shot removed, and nothing to the hull it sank', () => {
@@ -168,11 +244,7 @@ describe('earning a rank', () => {
       [corvette.maxHp * 6, 3],
       [corvette.maxHp * 60, 3],
     ] as const) {
-      creditTaken(
-        match.world,
-        shooter,
-        (experience - Veterancy.experience[shooter]!) / RANK.TAKEN_SHARE
-      );
+      survive(match, shooter, experience - Veterancy.experience[shooter]!);
       assert.equal(Veterancy.rank[shooter], rank, `${experience} experience`);
     }
     assert.equal(Health.max[shooter], rankedHull(corvette.maxHp, 3), '+30% at the ceiling');
@@ -257,7 +329,8 @@ describe('what a launcher and a layer earn', () => {
       y: 6000,
     });
     match.orderMove(1, victim, 6600, 6000);
-    advance(match, 25);
+    // Past the blast and past the fight's clock after it.
+    advance(match, 25 + RANK.QUIET_S);
 
     const lost = corvette.maxHp - Health.hp[victim]!;
     assert.ok(Health.hp[victim]! > 0 && lost > 0, 'the premise: §9 — survives one, wounded');
