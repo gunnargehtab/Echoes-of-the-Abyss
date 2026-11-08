@@ -693,7 +693,7 @@ its ink with them:
   cell, bounds how far an edge moves. Every cell centre stands at least 40 m inside its
   own kind: where the rounding would carry an edge nearer, the edge bends round the centre
   within 110 m of it. The bowl's rim lies within 35 m of its authored circle, where the
-  cells stair up to 129 m off it.
+  cells stair up to 165 m off it.
 - **Ramps and faces.** The floor climbs across the rounded edge as a scarp about 80 m
   wide, and a rock face rises from a gentle foot to a steep lip. Within half a cell
   of the roofed cut nothing rounds, easing in over the next cell, because the roof's
