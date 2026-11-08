@@ -27,7 +27,31 @@
       },
       "distance": 10000,
       "calls": 45,
-      "triangles": 594970
+      "triangles": 594970,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-rim-crab": 32,
+        "env-outer-fish": 16,
+        "env-kelp-cluster": 16,
+        "env-deep-fish": 26,
+        "env-shoal-fry": 144,
+        "env-rim-ray": 1
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     },
     {
       "name": "low",
@@ -49,7 +73,27 @@
       },
       "distance": 1600,
       "calls": 26,
-      "triangles": 587001
+      "triangles": 587001,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-rim-crab": 32,
+        "env-outer-fish": 16,
+        "env-kelp-cluster": 16,
+        "env-deep-fish": 26,
+        "env-shoal-fry": 144,
+        "env-rim-ray": 1
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     }
   ]
 }

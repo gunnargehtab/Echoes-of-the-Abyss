@@ -53,7 +53,7 @@ full size, or lift them, to compare the ground.
 | Bowl | 45 → 45 | 568,986 → 594,970 |
 | Wall | 26 → 26 | 561,017 → 587,001 |
 | Rim | 44 → 44 | 568,586 → 593,674 |
-| Control, survey | 76 → 76 | 163,878 → 163,878 |
+| Control, survey | 75 → 75 | 163,878 → 163,878 |
 | Control, low | 75 → 75 | 160,006 → 160,006 |
 
 `ground.eroded` reads true at every study pose and false on the control, before and after.
@@ -62,6 +62,15 @@ become 32,768. The map's skirt (512) and the roof over the cut (448, drawn twice
 translucent two-sided mesh) stand on its vertices and take the rest of the 25,984; the rim
 pose has the roof out of view. Every pose stays under the study's 720,000
 (free-water-slice §7). The ink is drawn in the ground's own shader, so the rounding adds no call.
+
+The rest of §7's record reads the same before and after at every pose, in each
+`readings.json`. The study draws 291 instances (56 kelp stands, 16 clusters, 32 crabs, 144
+fry, 16 outer and 26 deep fish, one ray) and the control none. The passes are the same, and
+the targets hold 22,422,976 bytes for the halo, 5,184,000 for the split and 344,064 for
+the environment. The renderer holds 15 textures at every study pose either side: the
+study's pass samples its survey floor, 1,048,576 bytes, where the cells' pass sampled the
+16 × 16 cell texture, 256 bytes, which the study's never reads and so never uploads. A
+study frame's texture memory rises by 1,048,320 bytes.
 
 ## Gate 7: the ink alone
 
@@ -101,8 +110,9 @@ gate 7)?
 
 Not read. The GPU rows (`docs/screenshots/issue-1713/gpu.mjs`, DPR 1 and 1.5 on named
 hardware) need a GPU, and this session had SwiftShader and no computer to reach. What the
-study's frame adds, counted: no call; 25,984 triangles; one float texture of the survey
-floor, 512 × 512, 1,048,576 bytes, which free-water-slice §4 now allows; and on each
+study's frame adds, counted: no call; 25,984 triangles; the survey floor's float texture,
+512 × 512, in place of the cell texture, 1,048,320 bytes more, which free-water-slice §4
+now allows; and on each
 terrain fragment, four texel fetches and six biome fields' derivatives. The arch study
 read fragment work of this kind as GPU time on and off (graphics-standards.md, gate 6),
 and that reading is owed.
@@ -113,9 +123,10 @@ and that reading is owed.
   cut, where nothing rounds within half a cell and the rounding eases in over the next, so
   the corner over the west jamb rounds half way. The south-east corner, two cells off,
   rounds whole.
-- **The bowl's rim is not the circle.** Its edge is a curve within 34 m of the authored
-  1,250 m circle, where the cells stair up to 129 m off it: up to 10 m outside it 13°
-  off the axes and 34 m inside it 30° off them, so the rim reads a little square.
+- **The bowl's rim is not the circle.** Away from the junctions where three kinds meet,
+  its edge is a curve within 35 m of the authored 1,250 m circle, where the cells stair up
+  to 165 m off it: 35 m outside it on the east lobes, 45° off the axis, and 34 m inside
+  it 30° off.
 - **The pocket stays a rounded square.** Its ellipse is six cells across, and a 115 m
   licence rounds its corners without making it a circle.
 - **Steep curved cliffs still waver by about a pixel.** The ink contours the bake's 7.8 m

@@ -21,13 +21,37 @@
         "depthM": null
       },
       "eye": {
-        "xM": 1989,
-        "zM": 2364,
-        "depthM": -43036
+        "xM": 2011,
+        "zM": 2328,
+        "depthM": -43042
       },
       "distance": 10000,
       "calls": 45,
-      "triangles": 594970
+      "triangles": 594970,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     },
     {
       "name": "low",
@@ -43,13 +67,33 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 1999,
+        "xM": 2002,
         "zM": 3565,
-        "depthM": -664
+        "depthM": -673
       },
       "distance": 1600,
       "calls": 26,
-      "triangles": 587001
+      "triangles": 587001,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     },
     {
       "name": "bowl",
@@ -65,13 +109,37 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2001,
-        "zM": 3530,
-        "depthM": -16848
+        "xM": 2000,
+        "zM": 3542,
+        "depthM": -16827
       },
       "distance": 4500,
       "calls": 45,
-      "triangles": 594970
+      "triangles": 594970,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     },
     {
       "name": "wall",
@@ -87,13 +155,33 @@
         "depthM": 900
       },
       "eye": {
-        "xM": 2126,
+        "xM": 2124,
         "zM": 2196,
-        "depthM": 128
+        "depthM": 124
       },
       "distance": 700,
       "calls": 26,
-      "triangles": 587001
+      "triangles": 587001,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     },
     {
       "name": "rim",
@@ -110,66 +198,90 @@
       },
       "eye": {
         "xM": 1679,
-        "zM": 1874,
-        "depthM": -172
+        "zM": 1876,
+        "depthM": -166
       },
       "distance": 700,
       "calls": 44,
-      "triangles": 593674
+      "triangles": 593674,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-kelp-cluster": 16,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     },
     {
       "name": "bowl-pan",
       "strip": [
         {
-          "tMs": 110399,
+          "tMs": 121028,
           "focus": {
             "xM": 2000,
             "zM": 2000,
             "depthM": null
           },
           "eye": {
-            "xM": 2003,
-            "zM": 3544,
-            "depthM": -16825
+            "xM": 2001,
+            "zM": 3546,
+            "depthM": -16822
           }
         },
         {
-          "tMs": 123229,
+          "tMs": 134914,
           "focus": {
             "xM": 2146,
             "zM": 2000,
             "depthM": null
           },
           "eye": {
-            "xM": 2151,
-            "zM": 3535,
-            "depthM": -16840
+            "xM": 2141,
+            "zM": 3532,
+            "depthM": -16845
           }
         },
         {
-          "tMs": 136147,
+          "tMs": 148490,
           "focus": {
             "xM": 2291,
             "zM": 2000,
             "depthM": null
           },
           "eye": {
-            "xM": 2289,
-            "zM": 3530,
-            "depthM": -16843
+            "xM": 2286,
+            "zM": 3533,
+            "depthM": -16838
           }
         },
         {
-          "tMs": 149012,
+          "tMs": 162586,
           "focus": {
             "xM": 2437,
             "zM": 2000,
             "depthM": null
           },
           "eye": {
-            "xM": 2431,
-            "zM": 3535,
-            "depthM": -16827
+            "xM": 2438,
+            "zM": 3546,
+            "depthM": -16809
           }
         }
       ]

@@ -77,6 +77,12 @@ export default async ({ page, shot }) => {
       distance: p.distance,
       calls: p.drawCalls,
       triangles: p.triangles,
+      // The rest of free-water-slice §7's record: instances, the passes
+      // drawn, the textures the renderer holds and the targets' bytes.
+      instances: p.fixtureAssets,
+      passes: p.passes,
+      textures: p.textures,
+      targetBytes: { halo: p.haloBytes, split: p.splitBytes, environment: p.environmentBytes },
     });
     dir = dirname(await shot(name));
   }

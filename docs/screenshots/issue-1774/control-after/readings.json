@@ -21,13 +21,29 @@
         "depthM": null
       },
       "eye": {
-        "xM": 1999,
-        "zM": 2340,
-        "depthM": -42805
+        "xM": 2011,
+        "zM": 2328,
+        "depthM": -42807
       },
       "distance": 10000,
-      "calls": 76,
-      "triangles": 163878
+      "calls": 75,
+      "triangles": 163878,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 21,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     },
     {
       "name": "low",
@@ -43,13 +59,29 @@
         "depthM": 850
       },
       "eye": {
-        "xM": 2000,
-        "zM": 3566,
-        "depthM": -651
+        "xM": 1998,
+        "zM": 3564,
+        "depthM": -675
       },
       "distance": 1600,
       "calls": 75,
-      "triangles": 160006
+      "triangles": 160006,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 21,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
     }
   ]
 }
