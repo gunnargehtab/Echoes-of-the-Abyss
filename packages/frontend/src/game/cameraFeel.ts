@@ -163,7 +163,7 @@ export class OrbitFeel {
    */
   private readonly glideParts = new Set<OrbitPart>();
   /**
-   * For a gliding number a step has moved since the jump (`beforeStep`): the
+   * For a gliding number a step has moved since this glide's jump (`beforeStep`): the
    * end its glide still runs to, and the step's own change easing on top of
    * the glide's path (rule 3 inside rule 4). When the glide ends, what is left
    * of the change goes on easing, from wherever the two have got to.
@@ -263,6 +263,11 @@ export class OrbitFeel {
    * focus, so a glide that leaves the ground has a depth to start from.
    */
   jump(drawn: OrbitPose, seabedM: number): void {
+    // Nothing of a glide this one interrupts carries over: its ends and a
+    // step's offsets on it already sit in the drawn pose this one starts from
+    // (rule 5), and kept, they ran this glide to the old end and added the old
+    // offset twice (#1775 round 3: Home moved x 418 m in its first frame).
+    this.endGlide();
     Object.assign(this.goal, drawn);
     this.stopCoasts();
     this.glideFrom = { ...drawn, depthM: drawn.depthM ?? seabedM };

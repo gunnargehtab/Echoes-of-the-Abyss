@@ -162,9 +162,10 @@ describe('the study camera feel, as arithmetic (#1775)', () => {
   });
 
   it('eases a step made mid-glide as it would at rest, rather than landing it by the glide', () => {
-    // A notch half way through a glide to a hull: the dolly leaves the glide and
-    // eases (rule 3), so its first frame moves it by the ease's share, not by
-    // the glide's (#1775 round 1: 54.5 m of a 109 m notch landed in one frame).
+    // A notch half way through a glide to a hull: the dolly stays on its glide,
+    // which does not move it here, and only the notch's change eases on top
+    // (rule 3), so its first frame moves it by the ease's share, not by the
+    // glide's (#1775 round 1: 54.5 m of a 109 m notch landed in one frame).
     const feel = new OrbitFeel(pose());
     const drawn = pose();
     feel.jump(drawn, flatSeabed());
@@ -246,6 +247,61 @@ describe('the study camera feel, as arithmetic (#1775)', () => {
       assert.ok(step <= glideOnly + k * 150 + 1e-6, `frame ${i} moved ${step} m of depth`)
     );
     assert.equal(stepped.drawn.depthM, 950, "the notch's depth arrives");
+  });
+
+  it('starts a jump clean after a step made mid-glide (rule 5)', () => {
+    // #1775 round 3: a jump kept the glide ends and step offsets of the glide
+    // it interrupted, so Home after a notch mid-glide moved x 418 m in its
+    // first frame, and a follow begun so trailed its hull for good.
+    const notchAt = Math.round(0.1 / FRAME_S);
+    const jumpAt = Math.round(0.3 / FRAME_S);
+    const glideThenNotch = () => {
+      const feel = new OrbitFeel(pose());
+      const drawn = pose();
+      feel.jump(drawn, flatSeabed());
+      feel.goal.x = 5000;
+      for (let i = 0; i < jumpAt; i++) {
+        if (i === notchAt) {
+          feel.beforeStep(['distance', 'x', 'z']);
+          feel.goal.x += 200;
+          feel.goal.distance /= 1.1;
+        }
+        feel.step(drawn, FRAME_S, flatSeabed, false);
+      }
+      return { feel, drawn };
+    };
+
+    // (a) A Home-shaped jump: only the angles and the depth travel.
+    {
+      const { feel, drawn } = glideThenNotch();
+      feel.jump(drawn, flatSeabed());
+      feel.goal.yaw = 0;
+      feel.goal.pitch = 0.9;
+      feel.goal.depthM = null;
+      const x = drawn.x;
+      const distance = drawn.distance;
+      for (let t = 0; t < CAMERA_FEEL.GLIDE_S + 0.5; t += FRAME_S) {
+        feel.step(drawn, FRAME_S, flatSeabed, false);
+        assert.equal(drawn.x, x, 'Home leaves the place where it is drawn');
+        assert.equal(drawn.distance, distance, 'and the dolly');
+      }
+      assert.equal(drawn.pitch, 0.9);
+    }
+
+    // (b) A follow onto a hull moving 12 m/s north, held once the glide ends.
+    {
+      const { feel, drawn } = glideThenNotch();
+      feel.jump(drawn, flatSeabed());
+      let hullZ = 2000;
+      for (let t = 0; t < CAMERA_FEEL.GLIDE_S + 1; t += FRAME_S) {
+        hullZ -= 12 * FRAME_S;
+        feel.goal.x = 2600;
+        feel.goal.z = hullZ;
+        feel.step(drawn, FRAME_S, flatSeabed, true);
+      }
+      assert.equal(drawn.x, 2600, 'on the hull');
+      assert.equal(drawn.z, hullZ, 'and held there as it moves');
+    }
   });
 
   it('coasts the same distance at every frame rate, and stops', () => {
