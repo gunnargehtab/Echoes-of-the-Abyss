@@ -15,6 +15,7 @@ export * from './echoDelta.js';
 export * from './units.js';
 export * from './structures.js';
 export * from './refits.js';
+export * from './rank.js';
 export * from './ordnance.js';
 export * from './combat.js';
 export * from './fauna.js';

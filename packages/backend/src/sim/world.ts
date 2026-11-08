@@ -65,6 +65,7 @@ import {
   UnderConstruction,
   Unit,
   Velocity,
+  Veterancy,
   Weapon,
   Posture,
 } from './components.ts';
@@ -1142,6 +1143,12 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, Health, eid);
   Health.max[eid] = stats.maxHp * refitHullFactor(refits);
   Health.hp[eid] = Health.max[eid]!;
+
+  // Rank 0 from the keel, whatever held this id before: rank dies with the
+  // hull (docs/systems-progression.md §3), and a recycled id is a new hull.
+  addComponent(world, Veterancy, eid);
+  Veterancy.experience[eid] = 0;
+  Veterancy.rank[eid] = 0;
 
   addComponent(world, Owner, eid);
   Owner.slot[eid] = opts.slot;

@@ -187,6 +187,22 @@ export const Health = defineComponent({
   max: Types.f32,
 });
 
+/**
+ * A hull's rank and the experience that earned it — docs/systems-progression.md
+ * §3. Hulls only: a turret is a Corvette bolted down and fauna belong to no
+ * navy, and §3 ranks "per hull".
+ *
+ * On the entity, so it dies with the hull and nothing can transfer it, which
+ * is the whole of §3's first rule. A repair touches `Health` and never this,
+ * which is the second.
+ */
+export const Veterancy = defineComponent({
+  /** Hull points: gun damage dealt, plus half of every hit survived. */
+  experience: Types.f32,
+  /** 0 to `RANK.MAX`. Written only by `sim/systems/rank.ts`. */
+  rank: Types.ui8,
+});
+
 /** Which player slot owns this entity. */
 export const Owner = defineComponent({
   slot: Types.ui8,

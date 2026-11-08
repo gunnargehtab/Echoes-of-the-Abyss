@@ -3047,6 +3047,42 @@ export const FLIGHT = {
 } as const;
 
 /**
+ * Rank — docs/systems-progression.md §3, the veterancy half of the rung.
+ *
+ * Per hull, three ranks, earned and never bought. Every figure is §3's table
+ * or one of its four rulings (#1785), so all of it is SPEC. The readers are in
+ * `rank.ts`; the server credits experience in `sim/systems/rank.ts`.
+ */
+export const RANK = {
+  /**
+   * SPEC — §3: the third rank "is the ceiling".
+   */
+  MAX: 3,
+  /**
+   * SPEC — §3's table, the experience each rank needs, in multiples of the
+   * hull's *listed* maximum hull (ruling 3: neither a Plate Refit nor an
+   * earlier rank raises the bar). Indexed by rank, so rank 0 needs nothing.
+   */
+  THRESHOLDS: [0, 1.0, 3.0, 6.0],
+  /**
+   * SPEC — §3's table: +10% max hull a rank, from rank 0. Multiplied with the
+   * Plate's 1.15 rather than added to it (ruling 4), so a purchase and a rank
+   * compound in whichever order they came.
+   */
+  HULL_FACTOR: [1, 1.1, 1.2, 1.3],
+  /**
+   * SPEC — §3's table: +5% gun damage a rank. Guns only: "torpedo damage is
+   * untouched", so a rank multiplies the endless weapon and not the decisive one.
+   */
+  GUN_FACTOR: [1, 1.05, 1.1, 1.15],
+  /**
+   * SPEC — §3: experience is "damage dealt, plus half the damage taken and
+   * survived". The share of a survived hit that counts.
+   */
+  TAKEN_SHARE: 0.5,
+} as const;
+
+/**
  * What the room will accept off the socket, before anything reads it — #628.
  *
  * Both numbers are bounds rather than balance: they say how much a *client*

@@ -104,6 +104,7 @@ import {
   Structure,
   UnderConstruction,
   Unit,
+  Veterancy,
   Weapon,
 } from './components.ts';
 import { EchoLayer } from './systems/echoLayer.ts';
@@ -3490,6 +3491,10 @@ export class Match {
         pressureBonus: Pressure.bonus[eid]!,
         unhealableDamage: Pressure.unhealable[eid]!,
       };
+      // Own-force, and only when earned (docs/systems-progression.md §3): the
+      // owner's chevrons. Its hull is in `maxHp` already.
+      const rank = Veterancy.rank[eid]!;
+      if (rank > 0) unit.rank = rank;
       const queue = queueView(this.world, eid);
       if (queue !== undefined) {
         unit.queuedOrders = queue.map((order) =>
