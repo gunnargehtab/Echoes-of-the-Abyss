@@ -36,9 +36,8 @@ an attack-move into the Draymaws east of the base, and the camera was put on the
 
 The real client at `121ab076`, two seats in one match on the Ventfront Divide at 1440 × 900 and
 device pixel ratio 1. Seat A is the Bathyarch Consortium and seat B the Pelagia Commune, which
-joined by room code. A scratch two-browser script drove both. A's two opening Caissons crossed to
-B's seat in Silent Running and were ordered onto B's Bastion. B's hulls stayed home and pinged
-every pass.
+joined by room code. A scratch two-browser script drove both. A's two opening Caissons were moved
+toward B's seat, then ordered onto B's Bastion. B's hulls stayed home and pinged every pass.
 
 - [`rank-chevrons-track-contact.png`](rank-chevrons-track-contact.png): B's view at T+04:04. A's
   Caisson is a Track contact over B's Bastion, with the Consortium's glyph, its health bar in
