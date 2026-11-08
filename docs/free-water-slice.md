@@ -698,6 +698,10 @@ its ink with them:
   wide, and a rock face rises from a gentle foot to a steep lip. Within half a cell
   of the roofed cut nothing rounds, easing in over the next cell, because the roof's
   curtains stand on the cell edges; each jamb keeps its step on them.
+- **Mesh.** The study draws its ground at 8 vertices a cell, one every 31.25 m, where a
+  shipped map keeps 4 ([three-layer-ocean.md](three-layer-ocean.md) §5). An 80 m scarp
+  that curves across vertices 62.5 m apart saw-tooths, in its lip and in its isobaths. The
+  finer mesh adds 25,984 triangles to a study frame, inside §7's 720,000.
 - **Terraces.** Coral's blocks become benches cut in the relief's own depth, so their edges
   wander with the ground rather than marching on the 90 m grid. Every shipped map keeps
   the blocks.
