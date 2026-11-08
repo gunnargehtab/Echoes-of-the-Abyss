@@ -671,8 +671,8 @@ mechanisms draw them:
 
 The study may reshape the drawn floor, rock faces and roof between cell centres, so that
 cell edges read as eroded rock. The override adds nothing to the authored floor at a cell
-centre, a solid cell stays rock at its centre, and the drawn floor stays between the four
-centres it blends.
+centre, a solid cell stays rock at its centre, and the drawn floor stays between the
+shallowest and the deepest of the cells within a cell of it.
 The flight eye already sweeps the drawn triangles, so its clearance follows the override,
 and a test in #1750 proves it. No new model: rock props would be a separate `shape-work`
 child.
