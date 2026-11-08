@@ -263,10 +263,11 @@ export class OrbitFeel {
    * focus, so a glide that leaves the ground has a depth to start from.
    */
   jump(drawn: OrbitPose, seabedM: number): void {
-    // Nothing of a glide this one interrupts carries over: its ends and a
-    // step's offsets on it already sit in the drawn pose this one starts from
-    // (rule 5), and kept, they ran this glide to the old end and added the old
-    // offset twice (#1775 round 3: Home moved x 418 m in its first frame).
+    // Nothing of a glide this one interrupts carries over. What it and a
+    // step's offsets on it had moved already sits in the drawn pose this one
+    // starts from, and where it was still going is dropped (rule 5). Kept, its
+    // ends ran this glide to the old end and its offsets were added twice
+    // (#1775 round 3: Home moved x 418 m in its first frame).
     this.endGlide();
     Object.assign(this.goal, drawn);
     this.stopCoasts();
