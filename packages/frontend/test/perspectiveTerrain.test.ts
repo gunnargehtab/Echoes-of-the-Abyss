@@ -523,8 +523,8 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     // The bowl is authored as an ellipse of 1,250 m radius about 2,250 / 2,250
     // (freeWaterSlice.ts). From that centre, ray by ray across its east and
     // west sides, the radius at which the bowl's kelp gives way to the rim's
-    // coral. Read off the cells it stairs up to half a cell off the circle and
-    // kinks at every corner of the stair; drawn, it stays near the circle and
+    // coral. Read off the cells it stairs more than half a cell off the circle
+    // and kinks at every corner of the stair; drawn, it stays near the circle and
     // turns without a kink. Every centre's margin bends it where a centre
     // stands close to the circle, so it does not lie on it. A kink is the
     // second difference over rays half a degree apart.
@@ -543,10 +543,12 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
       return g.coastM < 0 && drawnBiome(g.biomeM) === Biome.CoralRuins;
     };
     const reading = { cellsOff: 0, cellsKink: 0, drawnOff: 0, drawnKink: 0 };
-    // Past 150 and 210 degrees the ray meets the wall's coast and the garden's,
-    // where three kinds meet, rather than the bowl's own.
+    // Past 45 degrees south of east the ray meets the wall's rock, and past 150
+    // and 210 degrees the wall's coast and the garden's, where three kinds
+    // meet, rather than the bowl's own. Within them, the east lobes at ±45
+    // degrees, where the cells stand furthest off the circle.
     for (const [from, to] of [
-      [-34, 34],
+      [-45, 45],
       [150, 210],
     ] as const) {
       const cellsR: number[] = [];

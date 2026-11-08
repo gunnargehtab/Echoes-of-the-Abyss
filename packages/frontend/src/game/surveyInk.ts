@@ -225,10 +225,10 @@ export function surveyCellTexture(
 /**
  * The free-water study's survey floor as a texture its pass reads: one float
  * a sample, nearest, no mipmaps — the bake's own floor at each pixel it reads
- * (seabed.ts `BakeOptions.eroded.floors`). The study's ramps are about a
- * hundred metres across, under two vertex steps, so contoured from the
- * vertices each would step along the vertex grid wherever it crossed it at
- * an angle, the foot of a ramp most, where the floor leaves its plain. The
+ * (seabed.ts `BakeOptions.eroded.floors`). The study's ramps are about 80 m
+ * across, under three of its vertex steps, so contoured from the vertices
+ * each would step along the vertex grid wherever it crossed it at an angle,
+ * the foot of a ramp most, where the floor leaves its plain. The
  * pass blends the four samples round a fragment itself, since a float
  * texture is not filtered on every device. The coastlines need no such grid:
  * their fields are distances, which a triangle carries straight.

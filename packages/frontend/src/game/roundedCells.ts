@@ -18,9 +18,10 @@
  * the centre instead, inside `CENTRE_BEND_M` of it (#1774). So the edge
  * follows the authored curve wherever no centre stands close to it.
  *
- * The field holds each kind's rounded signed distance on a grid finer than
- * the heightfield's, and every cell centre is one of its samples, so a reader
- * at a centre reads the margin the bend gave it exactly
+ * The field holds each kind's rounded signed distance on the study mesh's
+ * own grid (perspectiveTerrain.ts `ERODED_VERTS_PER_CELL`), every vertex and
+ * every cell centre one of its samples, so a reader at a centre reads the
+ * margin the bend gave it exactly
  * (`roundedDistances`). Between samples it reads them blended, which keeps
  * the edge the blur's own curve: adding the cells' exact distance to a
  * blended move instead put that distance's ridge back into the edge, a bend
