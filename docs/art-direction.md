@@ -917,7 +917,9 @@ speak:
   biomes' hues, and nowhere else: the coast the survey ink dashes on the edge is still the
   PF line, so which biome holds a cell is read from the ink, never from the band. A hard cut
   printed the 250 m grid back onto every authored ramp, vein and dome as a staircase of
-  colour. Rock keeps its solid coast and takes no band.
+  colour. Rock keeps its solid coast and takes no band. The free-water study draws its
+  band and its coast on its rounded edge instead ([map-visuals.md](map-visuals.md) §4, the
+  study's clause).
 - **Ground you cannot enter speaks in the interface voice.** Whether ground blocks you is not
   a property of the ground, it is a relationship between the ground and *your* hulls: a ridge
   that stops a deep raider is open water to a scout. So it is drawn only while something is
@@ -953,6 +955,8 @@ Within a region, the ground is allowed **texture, not information**. The rendere
 deterministic detail relief under the authored floor and lights it with the shared key
 light, so a vent field reads as broken ground, the trench floor as pressure-eroded stone,
 and coral ruins as terraced right angles — "Environmental Shapes" below, become pixels.
+The free-water study cuts its coral as wandering benches instead
+([free-water-slice.md](free-water-slice.md) §9, "Crater walls").
 Its amplitude belongs to the biome (SPEC: the per-biome table lives in
 `packages/frontend/src/game/seabed.ts`, values TUNABLE), it is centred on the authored fill
 rather than drawn under it (below), and it is **render-only**: the simulation never reads it,

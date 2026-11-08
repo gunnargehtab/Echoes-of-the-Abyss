@@ -78,6 +78,9 @@ describe('free-water flight boundary', () => {
     const seed = seabedSeed(terrain);
     const plain = buildHeightGrid(terrain, seed);
     const eroded = buildHeightGrid(terrain, seed, undefined, true);
+    // The study's grid is finer (`ERODED_VERTS_PER_CELL`), so each shipped
+    // vertex is set against the study's vertex at the same point.
+    const k = Math.round(plain.stepM / eroded.stepM);
     let best = -1;
     let gap = 0;
     for (let iz = 1; iz < plain.vertsZ - 1; iz++) {
@@ -86,7 +89,7 @@ describe('free-water flight boundary', () => {
         const x = ix * plain.stepM + 1;
         const z = iz * plain.stepM + 1;
         if (flightInterval(terrain, plain, x, z) === null) continue;
-        const d = Math.abs(plain.y[i]! - eroded.y[i]!);
+        const d = Math.abs(plain.y[i]! - eroded.y[iz * k * eroded.vertsX + ix * k]!);
         if (d > gap) {
           gap = d;
           best = i;

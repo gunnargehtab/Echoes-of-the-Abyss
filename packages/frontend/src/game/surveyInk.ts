@@ -11,7 +11,10 @@
  * - **The thermocline isobath** is a major line at the layer's depth, drawn
  *   as a double rule so it is not read as a band edge.
  * - **Coastlines** run on the cell edges where the ground changes kind: solid
- *   against rock, dashed between two biomes.
+ *   against rock, dashed between two biomes. In the free-water study they run
+ *   where its rounded ground changes kind instead (§4, the study's clause),
+ *   read from fields its heightfield carries per vertex (`installSurveyInk`'s
+ *   `drawn`).
  *
  * Both are drawn inside the terrain's own fragment shader, so the ink costs
  * no draw call and no triangle (gate 6), keeps a constant pixel width at
@@ -23,13 +26,33 @@
  *
  * What it reads is public map data and nothing else (rule 2): the authored
  * floor, smoothed (perspectiveTerrain.ts `authoredFloorAtM`), and each cell's
- * biome and rock flag. Never the detail field (rule 1), never a contact,
- * never the veil's field.
+ * biome and rock flag — or, in the study, the same cells rounded
+ * (seabed.ts `erodedGroundAtM`). Never the detail field (rule 1), never a
+ * contact, never the veil's field.
  */
 
-import { type Material, DataTexture, NearestFilter, RedFormat, UnsignedByteType } from 'three';
+import {
+  type Material,
+  DataTexture,
+  FloatType,
+  NearestFilter,
+  RedFormat,
+  UnsignedByteType,
+} from 'three';
 import { DEPTH, DEPTH_BANDS, THERMOCLINE } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
+
+/**
+ * A floor sampled on a regular grid, row-major north to south: sample `i, j`
+ * stands at `originM + i * stepM, originM + j * stepM`.
+ */
+export interface SurveyFloorSamples {
+  nx: number;
+  nz: number;
+  stepM: number;
+  originM: number;
+  data: Float32Array<ArrayBuffer>;
+}
 
 /**
  * The ink — SPEC by reference (docs/map-visuals.md §4), values TUNABLE. One
@@ -199,6 +222,32 @@ export function surveyCellTexture(
   return texture;
 }
 
+/**
+ * The free-water study's survey floor as a texture its pass reads: one float
+ * a sample, nearest, no mipmaps — the bake's own floor at each pixel it reads
+ * (seabed.ts `BakeOptions.eroded.floors`). The study's ramps are about 80 m
+ * across, under three of its vertex steps, so contoured from the vertices
+ * each would step along the vertex grid wherever it crossed it at an angle,
+ * the foot of a ramp most, where the floor leaves its plain. The
+ * pass blends the four samples round a fragment itself, since a float
+ * texture is not filtered on every device. The coastlines need no such grid:
+ * their fields are distances, which a triangle carries straight.
+ */
+export function surveyFloorTexture(samples: SurveyFloorSamples): DataTexture {
+  const texture = new DataTexture(samples.data, samples.nx, samples.nz, RedFormat, FloatType);
+  texture.magFilter = NearestFilter;
+  texture.minFilter = NearestFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/** What the study's pass reads beside the cells: its floor, and the grid it lies on. */
+export interface DrawnSurvey {
+  floor: DataTexture;
+  samples: SurveyFloorSamples;
+}
+
 const VERTEX_PARS = [
   'attribute float surveyFloor;',
   'varying float vSurveyFloor;',
@@ -208,6 +257,26 @@ const VERTEX_PARS = [
 const VERTEX_MAIN = [
   'vSurveyFloor = surveyFloor;',
   'vSurveyXZ = ( modelMatrix * vec4( transformed, 1.0 ) ).xz;',
+].join('\n');
+
+/**
+ * The free-water study's coast fields, per vertex (perspectiveTerrain.ts
+ * `HeightGrid.coast` and `.biomes`): the signed distance to the drawn rock
+ * coast, and to each of the six biomes' drawn edges, three to an attribute.
+ */
+const DRAWN_VERTEX_PARS = [
+  'attribute float surveyCoast;',
+  'attribute vec3 surveyBiomeA;',
+  'attribute vec3 surveyBiomeB;',
+  'varying float vSurveyCoast;',
+  'varying vec3 vSurveyBiomeA;',
+  'varying vec3 vSurveyBiomeB;',
+].join('\n');
+
+const DRAWN_VERTEX_MAIN = [
+  'vSurveyCoast = surveyCoast;',
+  'vSurveyBiomeA = surveyBiomeA;',
+  'vSurveyBiomeB = surveyBiomeB;',
 ].join('\n');
 
 function fragmentPars(): string {
@@ -293,6 +362,76 @@ function fragmentPars(): string {
   ].join('\n');
 }
 
+/**
+ * The study's helpers: a line along the zero of a field the vertices carry,
+ * its distance in pixels taken off the field's own screen gradient. The
+ * field is linear across a triangle, so within one this is the exact pixel
+ * distance to the zero, and the line keeps its pixel width at every zoom
+ * (rule 4) as the cell edges' does.
+ */
+const DRAWN_FRAGMENT_PARS = [
+  'uniform sampler2D uSurveyFloor;',
+  'uniform vec4 uSurveyFloorGrid;',
+  'varying float vSurveyCoast;',
+  'varying vec3 vSurveyBiomeA;',
+  'varying vec3 vSurveyBiomeB;',
+  // The study's floor at a plan point, its four samples blended.
+  'float surveyFloorAt( vec2 xz ) {',
+  '  vec2 g = clamp( ( xz - uSurveyFloorGrid.w ) / uSurveyFloorGrid.z, vec2( 0.0 ), uSurveyFloorGrid.xy - 1.0 );',
+  '  ivec2 i = min( ivec2( floor( g ) ), ivec2( uSurveyFloorGrid.xy ) - 2 );',
+  '  vec2 f = g - vec2( i );',
+  '  float a = texelFetch( uSurveyFloor, i, 0 ).r;',
+  '  float b = texelFetch( uSurveyFloor, i + ivec2( 1, 0 ), 0 ).r;',
+  '  float c = texelFetch( uSurveyFloor, i + ivec2( 0, 1 ), 0 ).r;',
+  '  float d = texelFetch( uSurveyFloor, i + ivec2( 1, 1 ), 0 ).r;',
+  '  return mix( mix( a, b, f.x ), mix( c, d, f.x ), f.y );',
+  '}',
+  'float surveyFieldPx( float f, float dx, float dy ) {',
+  '  return abs( f ) / max( length( vec2( dx, dy ) ), 1e-6 );',
+  '}',
+  // Whether a field climbs at least a quarter as fast as a distance does,
+  // in the plan: its screen gradient taken back through the inverse of the
+  // plan's (`xzDx`, `xzDy`, their determinant `det`), both sides scaled by
+  // it. A triangle whose three vertices all lie on its edge — at a corner
+  // the roof holds on the cells (roundedCells.ts) — carries a field of
+  // nothing there, which no line can be read off, and would otherwise ink
+  // the whole triangle; its neighbours still draw their half of the line.
+  'bool surveyFieldSound( float dx, float dy, vec2 xzDx, vec2 xzDy, float det ) {',
+  '  float gX = dx * xzDy.y - dy * xzDx.y;',
+  '  float gZ = dy * xzDx.x - dx * xzDy.x;',
+  '  return gX * gX + gZ * gZ > 0.0625 * det * det;',
+  '}',
+  // The nearest of the six biome edges, with its gradient, for the dash.
+  'void surveyNearestBorder( float f, float dx, float dy, inout float px, inout vec2 grad ) {',
+  '  float p = surveyFieldPx( f, dx, dy );',
+  '  if ( p < px ) { px = p; grad = vec2( dx, dy ); }',
+  '}',
+].join('\n');
+
+/** The isobaths over water of a floor `d`, shared by both kinds of coast. */
+const isobaths = (d: string) =>
+  [
+    `    float thermoPx = surveyThermoclinePx( ${d}, perPx );`,
+    // The minor at the layer's depth would fill the rule's gap and read as one
+    // thick line; a scarp's averaged band is cut there too, so the rule still
+    // shows as a clear seam across it.
+    `    minor = surveyIsobaths( ${d}, perPx ) * smoothstep( ${glslFloat(THERMOCLINE_GAP_EDGE_PX)}, ${glslFloat(THERMOCLINE_RULE_GAP_PX / 2)}, thermoPx );`,
+    `    major = surveyMajors( ${d}, perPx );`,
+    '    thermocline = surveyThermocline( thermoPx );',
+  ].join('\n');
+
+/** The strongest stroke at a pixel, blended in encoded space, shared by both. */
+const INK = [
+  // The strongest stroke at this pixel wins rather than all four stacking:
+  // a major isobath running along a coast is one line, not two.
+  `  float ink = max( max( minor * ${glslFloat(SURVEY_ALPHA.minor)}, major * ${glslFloat(SURVEY_ALPHA.major)} ),`,
+  `                   max( border * ${glslFloat(SURVEY_ALPHA.border)}, coast * ${glslFloat(SURVEY_ALPHA.coast)} ) );`,
+  `  ink = max( ink, thermocline * ${glslFloat(SURVEY_ALPHA.thermocline)} );`,
+  '  if ( ink > 0.0 ) {',
+  '    diffuseColor.rgb = surveyDecode( mix( surveyEncode( diffuseColor.rgb ), uSurveyInk, ink ) );',
+  '  }',
+].join('\n');
+
 const FRAGMENT_MAIN = [
   '{',
   // Derivatives first, outside every branch: fwidth in non-uniform control
@@ -310,13 +449,7 @@ const FRAGMENT_MAIN = [
   '  float thermocline = 0.0;',
   // Rock has no floor to measure (rule 7).
   '  if ( here < 0.99 ) {',
-  '    float thermoPx = surveyThermoclinePx( vSurveyFloor, perPx );',
-  // The minor at the layer's depth would fill the rule's gap and read as one
-  // thick line; a scarp's averaged band is cut there too, so the rule still
-  // shows as a clear seam across it.
-  `    minor = surveyIsobaths( vSurveyFloor, perPx ) * smoothstep( ${glslFloat(THERMOCLINE_GAP_EDGE_PX)}, ${glslFloat(THERMOCLINE_RULE_GAP_PX / 2)}, thermoPx );`,
-  '    major = surveyMajors( vSurveyFloor, perPx );',
-  '    thermocline = surveyThermocline( thermoPx );',
+  isobaths('vSurveyFloor'),
   '  }',
   '  float coast = 0.0;',
   '  float border = 0.0;',
@@ -324,25 +457,80 @@ const FRAGMENT_MAIN = [
   '  surveyEdge( here, cell + ivec2( 1, 0 ), gridMax, ( 1.0 - f.x ) * cellM, mPerPx.x, vSurveyXZ.y, coast, border );',
   '  surveyEdge( here, cell + ivec2( 0, -1 ), gridMax, f.y * cellM, mPerPx.y, vSurveyXZ.x, coast, border );',
   '  surveyEdge( here, cell + ivec2( 0, 1 ), gridMax, ( 1.0 - f.y ) * cellM, mPerPx.y, vSurveyXZ.x, coast, border );',
-  // The strongest stroke at this pixel wins rather than all four stacking:
-  // a major isobath running along a coast is one line, not two.
-  `  float ink = max( max( minor * ${glslFloat(SURVEY_ALPHA.minor)}, major * ${glslFloat(SURVEY_ALPHA.major)} ),`,
-  `                   max( border * ${glslFloat(SURVEY_ALPHA.border)}, coast * ${glslFloat(SURVEY_ALPHA.coast)} ) );`,
-  `  ink = max( ink, thermocline * ${glslFloat(SURVEY_ALPHA.thermocline)} );`,
-  '  if ( ink > 0.0 ) {',
-  '    diffuseColor.rgb = surveyDecode( mix( surveyEncode( diffuseColor.rgb ), uSurveyInk, ink ) );',
+  INK,
+  '}',
+].join('\n');
+
+/**
+ * The study's pass (docs/map-visuals.md §4, the study's clause): the same
+ * isobaths, of its rounded floor read from the finer samples
+ * (`DrawnSurvey`), and the coastlines on the zeros of its coast fields rather
+ * than on the cell edges. Water is the coast field's negative side, so rock
+ * still takes no isobaths (rule 7) and a biome's dash stops at the stone.
+ */
+const DRAWN_FRAGMENT_MAIN = [
+  '{',
+  // Derivatives first, outside every branch, as the cell pass takes them.
+  '  float surveyFloorM = surveyFloorAt( vSurveyXZ );',
+  '  float perPx = max( fwidth( surveyFloorM ), 1e-4 );',
+  '  vec2 xzDx = dFdx( vSurveyXZ );',
+  '  vec2 xzDy = dFdy( vSurveyXZ );',
+  '  float det = xzDx.x * xzDy.y - xzDx.y * xzDy.x;',
+  '  float coastDx = dFdx( vSurveyCoast );',
+  '  float coastDy = dFdy( vSurveyCoast );',
+  '  float coastPx = surveyFieldPx( vSurveyCoast, coastDx, coastDy );',
+  '  bool coastSound = surveyFieldSound( coastDx, coastDy, xzDx, xzDy, det );',
+  '  vec3 aDx = dFdx( vSurveyBiomeA );',
+  '  vec3 aDy = dFdy( vSurveyBiomeA );',
+  '  vec3 bDx = dFdx( vSurveyBiomeB );',
+  '  vec3 bDy = dFdy( vSurveyBiomeB );',
+  '  float borderPx = 1e9;',
+  '  vec2 borderGrad = vec2( 0.0 );',
+  '  surveyNearestBorder( vSurveyBiomeA.x, aDx.x, aDy.x, borderPx, borderGrad );',
+  '  surveyNearestBorder( vSurveyBiomeA.y, aDx.y, aDy.y, borderPx, borderGrad );',
+  '  surveyNearestBorder( vSurveyBiomeA.z, aDx.z, aDy.z, borderPx, borderGrad );',
+  '  surveyNearestBorder( vSurveyBiomeB.x, bDx.x, bDy.x, borderPx, borderGrad );',
+  '  surveyNearestBorder( vSurveyBiomeB.y, bDx.y, bDy.y, borderPx, borderGrad );',
+  '  surveyNearestBorder( vSurveyBiomeB.z, bDx.z, bDy.z, borderPx, borderGrad );',
+  '  float minor = 0.0;',
+  '  float major = 0.0;',
+  '  float thermocline = 0.0;',
+  '  bool water = vSurveyCoast < 0.0;',
+  // Rock has no floor to measure (rule 7).
+  '  if ( water ) {',
+  isobaths('surveyFloorM'),
   '  }',
+  `  float coast = coastSound ? surveyLine( coastPx, ${glslFloat(SURVEY_WIDTH_PX.coast)} ) : 0.0;`,
+  '  float border = 0.0;',
+  '  if ( water && surveyFieldSound( borderGrad.x, borderGrad.y, xzDx, xzDy, det ) ) {',
+  // The dash runs in world metres along whichever world axis the edge runs
+  // nearer, as the cell pass's does along its edge, so it never crawls
+  // under a pan. The field's gradient in the world, up to its sign and
+  // scale, is its screen gradient through the inverse of the plan's.
+  '    float gX = borderGrad.x * xzDy.y - borderGrad.y * xzDx.y;',
+  '    float gZ = borderGrad.y * xzDx.x - borderGrad.x * xzDy.x;',
+  '    float along = abs( gX ) > abs( gZ ) ? vSurveyXZ.y : vSurveyXZ.x;',
+  `    float dash = 1.0 - step( ${glslFloat(BORDER_DASH_ON)}, fract( along / ${glslFloat(BORDER_DASH_M)} ) );`,
+  `    border = surveyLine( borderPx, ${glslFloat(SURVEY_WIDTH_PX.border)} ) * dash;`,
+  '  }',
+  INK,
   '}',
 ].join('\n');
 
 /**
  * Patch the terrain's material to draw the survey. The geometry must carry a
- * `surveyFloor` attribute — `HeightGrid.floor`, one float per vertex.
+ * `surveyFloor` attribute — `HeightGrid.floor`, one float per vertex — and,
+ * `drawn`, the free-water study's coast fields too: `surveyCoast` from
+ * `HeightGrid.coast`, and `surveyBiomeA` and `surveyBiomeB` from the first
+ * and last three of `HeightGrid.biomes`. Drawn, the coastlines run on those
+ * fields' zeros rather than the cell edges, and the isobaths contour the
+ * floor `drawn` hands over (docs/map-visuals.md §4, the study's clause).
  */
 export function installSurveyInk(
   material: Material,
   terrain: TerrainPayload,
-  cells: DataTexture
+  cells: DataTexture,
+  drawn: DrawnSurvey | null = null
 ): SurveyInkUniforms {
   const uniforms: SurveyInkUniforms = {
     uSurveyCells: { value: cells },
@@ -355,18 +543,35 @@ export function installSurveyInk(
       ],
     },
   };
+  const vertexPars = drawn ? `${VERTEX_PARS}\n${DRAWN_VERTEX_PARS}` : VERTEX_PARS;
+  const vertexMain = drawn ? `${VERTEX_MAIN}\n${DRAWN_VERTEX_MAIN}` : VERTEX_MAIN;
+  const fragmentMain = drawn ? DRAWN_FRAGMENT_MAIN : FRAGMENT_MAIN;
+  const drawnUniforms =
+    drawn === null
+      ? {}
+      : {
+          uSurveyFloor: { value: drawn.floor },
+          uSurveyFloorGrid: {
+            value: [drawn.samples.nx, drawn.samples.nz, drawn.samples.stepM, drawn.samples.originM],
+          },
+        };
   material.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, uniforms);
+    Object.assign(shader.uniforms, uniforms, drawnUniforms);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>\n${VERTEX_PARS}`)
-      .replace('#include <begin_vertex>', `#include <begin_vertex>\n${VERTEX_MAIN}`);
+      .replace('#include <common>', `#include <common>\n${vertexPars}`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>\n${vertexMain}`);
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${fragmentPars()}`)
-      .replace('#include <color_fragment>', `#include <color_fragment>\n${FRAGMENT_MAIN}`);
+      .replace(
+        '#include <common>',
+        `#include <common>\n${fragmentPars()}${drawn ? `\n${DRAWN_FRAGMENT_PARS}` : ''}`
+      )
+      .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain}`);
   };
   // Keyed apart from every unpatched MeshBasicMaterial in the scene — three
-  // keys compiled programs by material type.
-  material.customProgramCacheKey = () => 'survey-ink';
+  // keys compiled programs by material type — and the study's pass from the
+  // cells', which reads attributes the cells' never declares.
+  const key = drawn ? 'survey-ink-drawn' : 'survey-ink';
+  material.customProgramCacheKey = () => key;
   material.needsUpdate = true;
   return uniforms;
 }

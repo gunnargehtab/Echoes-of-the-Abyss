@@ -91,16 +91,16 @@ reference, the way `WATER_RAMP` is: the values are TUNABLE, the shape is not.
   Edges on the map's own perimeter are the rim's, not the coast's. The fills either side
   ease into each other across 60 m of the edge ([art-direction.md](art-direction.md),
   "Reading the Sea Floor"); the dashed coast is what states the boundary, so the ink stays
-  on the edge whatever the fill does beside it.
+  on the edge whatever the fill does beside it. The free-water study is the one exception
+  (the study's clause below).
 
 Seven rules ride with the ink, and each is a review question:
 
 1. **Ink traces the authored floor, never the texture.** The detail relief is render-only
    texture; contouring it would dress noise up as measurement. The floor the isobaths read is
-   the same bilinear upsample the heightfield uses, minus the detail field. Where a
-   development study reshapes its heightfield between cell centres, as the free-water study
-   does ([free-water-slice.md](free-water-slice.md) §9, "Crater walls"), the ink keeps the
-   bilinear: the reshaping is texture with a third dimension, not ground.
+   the same bilinear upsample the heightfield uses, minus the detail field. The free-water
+   study upsamples its cells another way, rounded (the study's clause below), and its ink
+   traces that floor: a second reading of the same cells, not texture laid on them.
 2. **Ink reveals nothing a client does not already hold.** The floor, the ceiling and the biome
    of every cell are public map data. Ink reads nothing else — no contact, no field, no veil.
 3. **Ink is hue-neutral.** One colour, near-grey with the canvas's blue memory, no more
@@ -121,6 +121,21 @@ The isobaths are drawn from the smoothed floor, so a contour rounds a cell corne
 simulation keeps square. That is the same half-cell licence the heightfield already takes
 ([three-layer-ocean.md](three-layer-ocean.md) §5). A visual slope never opens a route the grid
 refuses. Coastlines take no such licence, because they mark sound rather than shape.
+
+**The free-water study's clause.** The owner rejected the study's survey frame on 6 November
+2026 because its floor showed squares
+([#1774](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1774)). Each authored
+ellipse, painted by cell centre, arrives as a staircase of 250 m cells, and the coastlines,
+the isobaths and the fills all drew that staircase. In the study alone, by the owner's call
+in session on 7 November 2026, recorded in #1787, coastlines take the half-cell licence
+too. The drawn ground rounds the staircase between cell centres
+([free-water-slice.md](free-water-slice.md) §9, "Crater walls"). Every centre keeps its
+own floor and kind, and no edge moves as far as half a cell. The coastlines
+run where that ground changes kind, the isobaths contour its floor without the relief, and
+the fills ease across its edges, so the ink agrees with the ground it lies on. Rules 2 to 7
+hold unchanged. The PF boundary the simulation prices is still the cell edge, and the
+console's scope still draws the cells square. Every shipped map keeps its coastlines on the
+cell edges. Free water on a shipped map is its own epic, and decides this again.
 
 ## 5. The loudness ladder — SPEC
 

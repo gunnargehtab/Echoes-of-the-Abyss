@@ -27,6 +27,7 @@ import {
   buildHeightGrid,
   DEPTH_VISUAL_M_PER_M,
   depthToWorldY,
+  ERODED_VERTS_PER_CELL,
   rockSurfaceDepthM,
   ROCK_RISE_ABOVE_SHALLOWEST_M,
   rockTopDepthM,
@@ -393,6 +394,36 @@ describe('the eroded brow over a mouth', () => {
     }
     return best;
   };
+
+  it("walks the study's finer grid, a curtain's foot on each of its vertices", () => {
+    // The free-water study draws its ground at `ERODED_VERTS_PER_CELL` a cell
+    // (docs/free-water-slice.md §9, "Crater walls"), and a curtain ends on the
+    // heightfield's own vertices, so the roof walks the study's grid: no slit
+    // opens under a side between them. The cut's west side, x = 1,750, rows
+    // 12 and 13, stands against the wall's rock.
+    const study = terrainFor(FREE_WATER_SLICE).serialize();
+    const studySeed = seabedSeed(study);
+    const studyTop = rockTopDepthM(study);
+    const fine = buildHeightGrid(study, studySeed, studyTop, true);
+    const cut = roofedPassages(study).list[0]!;
+    const roof = buildRoofGeometry(study, cut, fine, studySeed, studyTop, true);
+    assert.equal(fine.stepM, study.cellM / ERODED_VERTS_PER_CELL);
+    const ix = 1750 / fine.stepM;
+    let feet = 0;
+    for (let iz = 3000 / fine.stepM; iz <= 3500 / fine.stepM; iz++) {
+      const footY = fine.y[iz * fine.vertsX + ix]!;
+      let found = false;
+      for (let i = 0; i < roof.positions.length && !found; i += 3) {
+        found =
+          Math.abs(roof.positions[i]! - ix * fine.stepM) < 1e-3 &&
+          Math.abs(roof.positions[i + 2]! - iz * fine.stepM) < 1e-3 &&
+          Math.abs(roof.positions[i + 1]! - footY) < 1e-3;
+      }
+      assert.ok(found, `the curtain's foot at (1750, ${iz * fine.stepM})`);
+      feet++;
+    }
+    assert.equal(feet, 2 * ERODED_VERTS_PER_CELL + 1);
+  });
 
   it('is off unless asked', () => {
     const again = buildRoofGeometry(terrain, passage, grid, seed, rockTop, false);
