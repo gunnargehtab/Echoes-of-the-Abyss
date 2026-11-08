@@ -304,7 +304,7 @@ The rendering contract, matching `TIER_STYLE` in the client scaffold:
 | **1 — Contact** | Soft filled haze with a faint rim | `#4A7A8C` | 0.18 | 90 m | Any edge sharp enough to point at |
 | **2 — Bearing** | Filled blob at the blurred position | `#6FA8BF` | 0.32 | 46 m | Unit type, count, faction colour |
 | **3 — Classification** | Dot plus outer count ring, faction-coloured | `#A8D0E0` → faction | 0.55 | 26 m | Health, facing |
-| **4 — Track** | Crisp dot, heading line, health bar | `#FF6B5B` → faction | 0.90 | 16 m | — |
+| **4 — Track** | Crisp dot, heading line, health bar, and a ranked hull's chevrons | `#FF6B5B` → faction | 0.90 | 16 m | — |
 
 Rules that apply to all tiers:
 
@@ -313,6 +313,11 @@ Rules that apply to all tiers:
 - **The 5 Hz is also the unit a fight is measured in.** A rule about drawing is a rule about deciding: the enemy half of an engagement arrives as a run of discrete snapshots, so a combat band is only as deep as the number of them the losing side can act inside. [systems-combat.md](systems-combat.md) §9.5 counts them per band and lists what a player can change in each, and the rate stays 5 Hz in contact deliberately — a faster tick while fighting would tell the map that fighting was happening.
 - **Faction colour is earned at Tier 3.** Below that, contacts are scope-blue for everyone, because the player does not know whose they are.
 - **Count is an estimate and must look like one.** Tier 3 renders `~4`, never `4`.
+- **A rank is chevrons beside the health bar** ([systems-progression.md](systems-progression.md)
+  §3): one to three, stacked and pointing up, off the bar's right end in the bar's own ink. An own
+  hull wears them whether or not its bar is showing, since a whole veteran is still one. A
+  contact wears them only when the server sent the rank, which it does at Tier 4 alone, so the
+  client never infers a rank from a maximum. Shape carries it, not hue (§11).
 - **The Fields' lie is drawn as a bound.** A contact whose line from the player's nearest
   listening hull crosses scattered cells carries a **scatter envelope**: a soft wedge of ±30°
   about that line and 15% beyond the reported range, in the Tier-1 haze's ink, behind the mark
@@ -1505,6 +1510,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Menu music | Implemented (#194) — the port's own bed on the `music` bus, a different piece from the score |
 | The esc menu | Implemented (§9.5, #187) — settings and the rebinder open over a live match; leaving is armed |
 | Attention on the scope | Implemented (§5, #206, #209) — exposure wedge, under-fire pulse, idle marker, each with its audio half and its reduced-motion equivalent |
+| Rank chevrons (§4) | Implemented (#1785) — `rankChevrons.ts`, on every own hull with a rank and on a Track contact that carries one, in the ink of the bar they sit beside |
 | Faction glyphs | Implemented (§12.5, #207) — one glyph per navy beside the mark's ink at Tier 3 and Tier 4, in the world view; the scope names no faction, so it owes none |
 | Doctrine marks (§12.5) | Implemented — `FactionInk.consoleAccent` carries each navy's accent in all four palettes, held to the style guide's floors by `palette.test.ts`. The selection and command rules take it. The selection card draws the Consortium's mark beside SIG over 60 and the Directorate's beside a depth above 400 m, through the same `damageMultiplierFor` and `inDirectorateShallows` the server reads; on the SOUR line the Directorate's waits, because the `·` after the depth leaves it no room. The card prints §7's speed penalty while a hull runs silent, through the `silentSpeedMultiplierFor` movement reads, on a third line of its own, and the Commune's `SPEED −20%` wears its mark. `ENGAGE` prints the selection's loudest shot through `firingSigFor`, and the Knights' `+10 SIG` wears theirs (`firesEnergy`). `rendererSmoke.test.ts` ("doctrine marks") holds all four |
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
