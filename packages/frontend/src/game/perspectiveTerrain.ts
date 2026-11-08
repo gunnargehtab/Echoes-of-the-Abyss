@@ -49,6 +49,18 @@ export const DEPTH_VISUAL_M_PER_M = 0.22;
 export const VERTS_PER_CELL = 4;
 
 /**
+ * TUNABLE — the free-water study's mesh density, development-only: 8 vertex
+ * steps a cell, one every 31.25 m (docs/free-water-slice.md §9, "Crater
+ * walls"). The study's rounded edges curve across the grid, and a scarp 80 m
+ * wide drawn through vertices 62.5 m apart saw-tooths wherever it crosses them
+ * at an angle: in its lip, and in its isobaths, which contour the bake's finer
+ * floor but lie on the mesh (#1774). A shipped map's edges run along the grid
+ * lines, which 62.5 m draws whole. On the study's 16 × 16 cells this costs
+ * 24,576 triangles, inside its 720,000.
+ */
+export const ERODED_VERTS_PER_CELL = 8;
+
+/**
  * TUNABLE — how far above the map's shallowest open floor a rock mass tops
  * out, in metres of depth. Rock is solid from ceiling to floor, so it reads
  * as ground risen *above* the water around it — a wall, not a plateau of
@@ -202,7 +214,10 @@ export function authoredFloorAtM(terrain: TerrainPayload, xM: number, yM: number
 }
 
 export interface HeightGrid {
-  /** Vertices per side: `cols * VERTS_PER_CELL + 1` × `rows * VERTS_PER_CELL + 1`. */
+  /**
+   * Vertices per side: `cols * VERTS_PER_CELL + 1` × `rows * VERTS_PER_CELL + 1`,
+   * or `ERODED_VERTS_PER_CELL` a cell under the free-water study.
+   */
   vertsX: number;
   vertsZ: number;
   /** World-metre step between vertices. */
@@ -244,9 +259,10 @@ export function buildHeightGrid(
   rockTop = rockTopDepthM(terrain),
   eroded = false
 ): HeightGrid {
-  const vertsX = terrain.cols * VERTS_PER_CELL + 1;
-  const vertsZ = terrain.rows * VERTS_PER_CELL + 1;
-  const stepM = terrain.cellM / VERTS_PER_CELL;
+  const perCell = eroded ? ERODED_VERTS_PER_CELL : VERTS_PER_CELL;
+  const vertsX = terrain.cols * perCell + 1;
+  const vertsZ = terrain.rows * perCell + 1;
+  const stepM = terrain.cellM / perCell;
   const grid: HeightGrid = {
     vertsX,
     vertsZ,
@@ -323,14 +339,11 @@ export function patchHeightGrid(
   eroded = false
 ): { first: number; last: number } {
   const whole = eroded;
-  const ix0 = whole ? 0 : Math.max(0, (touched.col0 - 1) * VERTS_PER_CELL);
-  const iz0 = whole ? 0 : Math.max(0, (touched.row0 - 1) * VERTS_PER_CELL);
-  const ix1 = whole
-    ? grid.vertsX - 1
-    : Math.min(grid.vertsX - 1, (touched.col1 + 2) * VERTS_PER_CELL);
-  const iz1 = whole
-    ? grid.vertsZ - 1
-    : Math.min(grid.vertsZ - 1, (touched.row1 + 2) * VERTS_PER_CELL);
+  const perCell = Math.round(terrain.cellM / grid.stepM);
+  const ix0 = whole ? 0 : Math.max(0, (touched.col0 - 1) * perCell);
+  const iz0 = whole ? 0 : Math.max(0, (touched.row0 - 1) * perCell);
+  const ix1 = whole ? grid.vertsX - 1 : Math.min(grid.vertsX - 1, (touched.col1 + 2) * perCell);
+  const iz1 = whole ? grid.vertsZ - 1 : Math.min(grid.vertsZ - 1, (touched.row1 + 2) * perCell);
   for (let iz = iz0; iz <= iz1; iz++) {
     for (let ix = ix0; ix <= ix1; ix++) readVertex(grid, terrain, seed, rockTop, ix, iz, eroded);
   }

@@ -38,6 +38,7 @@ import {
   patchHeightGrid,
   DEPTH_VISUAL_M_PER_M,
   depthToWorldY,
+  ERODED_VERTS_PER_CELL,
   rockSurfaceDepthM,
   rockTopDepthM,
   ROCK_RISE_ABOVE_SHALLOWEST_M,
@@ -407,11 +408,28 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
   });
 
   it('reshapes the ground between centres: the positive control', () => {
+    // Each shipped vertex against the study's vertex at the same point.
+    const k = Math.round(plain.stepM / eroded.stepM);
     let moved = 0;
-    for (let i = 0; i < plain.y.length; i++) {
-      moved = Math.max(moved, Math.abs(plain.y[i]! - eroded.y[i]!) / DEPTH_VISUAL_M_PER_M);
+    for (let iz = 0; iz < plain.vertsZ; iz++) {
+      for (let ix = 0; ix < plain.vertsX; ix++) {
+        const a = plain.y[iz * plain.vertsX + ix]!;
+        const b = eroded.y[iz * k * eroded.vertsX + ix * k]!;
+        moved = Math.max(moved, Math.abs(a - b) / DEPTH_VISUAL_M_PER_M);
+      }
     }
     assert.ok(moved > 100, `the drawn ground moved at most ${moved} m between centres`);
+  });
+
+  it('draws the study on a finer mesh, every shipped vertex among its own', () => {
+    // docs/free-water-slice.md §9, "Crater walls": a curved scarp drawn
+    // through vertices 62.5 m apart saw-tooths, so the study draws its ground
+    // at `ERODED_VERTS_PER_CELL` a cell, and a shipped map keeps its density.
+    assert.equal(plain.stepM, cellM / VERTS_PER_CELL);
+    assert.equal(eroded.stepM, cellM / ERODED_VERTS_PER_CELL);
+    assert.equal(eroded.vertsX, cols * ERODED_VERTS_PER_CELL + 1);
+    assert.equal(eroded.vertsZ, rows * ERODED_VERTS_PER_CELL + 1);
+    assert.equal(ERODED_VERTS_PER_CELL % VERTS_PER_CELL, 0);
   });
 
   it('stays between the four centres it blends, like the bilinear it replaces', () => {

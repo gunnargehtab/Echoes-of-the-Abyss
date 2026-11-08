@@ -26,7 +26,6 @@ import {
   type HeightGrid,
   rockSurfaceDepthM,
   ROCK_RISE_ABOVE_SHALLOWEST_M,
-  VERTS_PER_CELL,
 } from './perspectiveTerrain.ts';
 import { ROCK_EDGE_GAIN, valueNoise } from './seabed.ts';
 
@@ -417,7 +416,10 @@ export function buildRoofGeometry(
   eroded = false
 ): RoofGeometry {
   const { cols, cellM } = terrain;
-  const n = VERTS_PER_CELL;
+  // The grid's own density: a curtain ends on its vertices, and the
+  // free-water study draws its ground finer than a shipped map
+  // (perspectiveTerrain.ts `ERODED_VERTS_PER_CELL`).
+  const n = Math.round(cellM / grid.stepM);
   const step = cellM / n;
   const face = rgb(ROCK_FACE);
   const shadow = rgb(ROCK_SHADOW);
