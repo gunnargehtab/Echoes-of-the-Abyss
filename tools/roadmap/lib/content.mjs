@@ -312,6 +312,7 @@ export const groups = {
   'Held for a person': 'Waiting on a person',
   'A study in free water': 'A trial of open water',
   'Built when a branch wants it': 'Built when needed',
+  'Fleet progression': 'Refits and ranks for your fleet',
   'Competitive play': 'Playing it against other people',
   'After the game ships': 'After the game ships',
   'The render stack': 'A sharper picture',
@@ -610,6 +611,10 @@ export const items = {
   // Later
   1637: 'Three new looks for the game’s scenes, with the owner choosing which to follow',
   1694: 'A test patch of open water: a crater and a kelp jungle, with a camera and fleet free to move in every direction',
+  1782: 'The extra review rounds granted to the open-water trial reaching all of its later passes',
+  1789: 'The open-water trial’s polygon budget leaving out its newest sea creature',
+  1785: 'The four remaining fleet-wide upgrades and a rank for each ship, from the progression design',
+  1780: 'The open-water trial’s giant ray looking like a sliver instead of a body',
   1777: 'The opening view of the open-water patch showing no sea life large enough to see',
   1600: 'Whether picking and ordering should make any interface sound',
   1601: 'How big the game’s sound files may be, and how they load',
