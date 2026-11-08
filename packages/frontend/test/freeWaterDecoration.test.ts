@@ -5,7 +5,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Box3, Matrix4, MeshStandardMaterial, Vector3 } from 'three';
 import { terrainFor, KELP_LABYRINTH } from '../../backend/src/sim/maps/index.ts';
 import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
-import { decorationPose, freeWaterPlacements } from '../src/game/freeWaterDecoration.ts';
+import {
+  decorationMatrix,
+  decorationPose,
+  freeWaterPlacements,
+} from '../src/game/freeWaterDecoration.ts';
 import {
   ENVIRONMENT_PROPS,
   placeProps,
@@ -86,6 +90,28 @@ const offRow = (a: PropPlacement, b: PropPlacement, c: PropPlacement): number | 
   const t = ((b.xM - a.xM) * acx + (b.yM - a.yM) * acy) / ac2;
   if (t < 0.2 || t > 0.8) return null;
   return Math.abs(acx * (b.yM - a.yM) - acy * (b.xM - a.xM)) / Math.sqrt(ac2);
+};
+
+// How far a swimmer reaches above and below its own axis, rendered metres: a
+// body of Block 4's height and its footprint across, rolled by §5's bank about
+// an axis `axisM` over its origin. Exact above the ray's axis, whose high
+// wingtip is its highest and outermost point at once; below it, and for any
+// other body, a bound.
+const BLOCK_4_HEIGHT_M: Record<string, number> = {
+  'env-rim-crab': 0.6,
+  'env-shoal-fry': 0.15,
+  'env-outer-fish': 1.69,
+  'env-deep-fish': 0.84,
+  'env-rim-ray': 4.05,
+};
+const bankedReach = (p: PropPlacement) => {
+  const m = p.motion!;
+  const bank = ((m.bankDeg ?? 0) * Math.PI) / 180;
+  const half = propSpec(p.slug)!.footprintM / 2;
+  return {
+    above: (BLOCK_4_HEIGHT_M[p.slug]! - m.axisM) * Math.cos(bank) + half * Math.sin(bank),
+    below: m.axisM * Math.cos(bank) + half * Math.sin(bank),
+  };
 };
 
 // The share of the tread's 1,750 m an east-west line meets in outlines.
@@ -302,12 +328,14 @@ describe('authored public decoration', () => {
     // §5 checks paths against public ground. The slot guard reads the literal
     // cell floors, and the drawn floor blends between cell centres, so a patch
     // beside a ramp, as the deep fish along the pocket's north edge stand, is
-    // held here against the floor the view draws, nose and tail included.
+    // held here against the floor the view draws, nose and tail included. A
+    // banked body's low wing reaches under its level origin (`bankedReach`).
     const terrain = ground();
     const groundY = drawnGround(terrain);
     for (const p of freeWaterPlacements(terrain)) {
       if (p.motion === undefined || p.motion.depthM === null) continue;
       const half = propSpec(p.slug)!.footprintM / 2;
+      const { below } = bankedReach(p);
       for (let step = 0; step < 48; step++) {
         const pose = decorationPose(p, (p.motion.periodS * 1000 * step) / 48, groundY);
         for (const [dx, dz] of [
@@ -318,11 +346,70 @@ describe('authored public decoration', () => {
           [0, -half],
         ] as const) {
           assert.ok(
-            pose.y > groundY(pose.x + dx, pose.z + dz),
+            pose.y + p.motion.axisM - below > groundY(pose.x + dx, pose.z + dz),
             `${p.slug} of ${p.xM},${p.yM} meets the floor`
           );
         }
       }
+    }
+  });
+
+  it('banks the ray into its turn about its own axis, from its authored start', () => {
+    // §5: the ray circles clockwise seen from above, stands at (765, 2,158) when
+    // the match starts, and rolls 30 degrees into its turn, starboard wing low,
+    // about its body axis, so the axis keeps the path and depth a level body has.
+    const ray = freeWaterPlacements(ground()).find((p) => p.slug === 'env-rim-ray')!;
+    const m = ray.motion!;
+    assert.equal(m.bankDeg, 30);
+    const start = decorationPose(ray, 0, () => -88);
+    assert.ok(Math.hypot(start.x - 765, start.z - 2158) < 0.5, `starts at ${start.x},${start.z}`);
+    const matrix = new Matrix4();
+    for (let step = 0; step < 24; step++) {
+      const ms = (m.periodS * 1000 * step) / 24;
+      const pose = decorationPose(ray, ms, () => -88);
+      decorationMatrix(pose, m.axisM, 1, matrix);
+      const axis = new Vector3(0, m.axisM, 0).applyMatrix4(matrix);
+      assert.ok(axis.distanceTo(new Vector3(pose.x, pose.y + m.axisM, pose.z)) < 1e-9);
+      const back = new Vector3(0, 1, 0).transformDirection(matrix);
+      const toCentre = new Vector3(ray.xM - pose.x, 0, ray.yM - pose.z).normalize();
+      assert.ok(Math.abs(back.y - Math.cos(Math.PI / 6)) < 1e-9, 'banked 30 degrees');
+      assert.ok(Math.abs(back.dot(toCentre) - 0.5) < 1e-9, 'its back turned into the turn');
+      const later = decorationPose(ray, ms + 1000, () => -88);
+      const heading = new Vector3(later.x - pose.x, 0, later.z - pose.z).normalize();
+      const nose = new Vector3(1, 0, 0).transformDirection(matrix);
+      assert.ok(nose.dot(heading) > 0.999, 'nose along its path');
+      assert.ok(new Vector3().crossVectors(heading, toCentre).y < 0, 'clockwise from above');
+    }
+  });
+
+  it("shows the opening's eye the ray's back through the match's first minute", () => {
+    // §5, Life in the frames: level, the ray showed §9's opening eye about a
+    // third of its plan down a 21 degree sightline. Banked, and started on the
+    // far side of its loop from that eye, it shows 0.63 to 0.75 of its plan
+    // through the first minute, where reduced motion also holds it.
+    const ray = freeWaterPlacements(ground()).find((p) => p.slug === 'env-rim-ray')!;
+    const m = ray.motion!;
+    const yaw = (-34 * Math.PI) / 180;
+    const pitch = (15 * Math.PI) / 180;
+    const eye = new Vector3(
+      Math.sin(yaw) * Math.cos(pitch),
+      Math.sin(pitch),
+      Math.cos(yaw) * Math.cos(pitch)
+    )
+      .multiplyScalar(1200)
+      .add(new Vector3(709, -300 * DEPTH_VISUAL_M_PER_M, 1710));
+    const matrix = new Matrix4();
+    // The share of its plan the eye sees: its back's normal on the line to the eye.
+    const shown = (ms: number, bankDeg: number) => {
+      const pose = decorationPose({ ...ray, motion: { ...m, bankDeg } }, ms, () => -88);
+      decorationMatrix(pose, m.axisM, 1, matrix);
+      const axis = new Vector3(0, m.axisM, 0).applyMatrix4(matrix);
+      return new Vector3(0, 1, 0).transformDirection(matrix).dot(eye.clone().sub(axis).normalize());
+    };
+    for (let s = 0; s <= 60; s += 5) {
+      const banked = shown(s * 1000, m.bankDeg!);
+      assert.ok(banked >= 0.62 && banked <= 0.76, `${s} s in, it shows ${banked} of its plan`);
+      assert.ok(shown(s * 1000, 0) < 0.4, `${s} s in, level, the same path shows a third`);
     }
   });
 
@@ -442,14 +529,7 @@ describe('authored public decoration', () => {
     // §5's placement table, row by row: how far from its centre a body may
     // stand and the depths it may span. A school's fish hold station off its
     // loop, so a path's own radius no longer says the row's bound holds. The
-    // body's extent comes from Block 4's heights and §5's body axes.
-    const heightM: Record<string, number> = {
-      'env-rim-crab': 0.6,
-      'env-shoal-fry': 0.15,
-      'env-outer-fish': 1.69,
-      'env-deep-fish': 0.84,
-      'env-rim-ray': 4.05,
-    };
+    // body's extent comes from Block 4's heights and §5's body axes and banks.
     const at = (x: number, y: number) => (p: { xM: number; yM: number }) =>
       p.xM === x && p.yM === y;
     const rows: {
@@ -485,9 +565,9 @@ describe('authored public decoration', () => {
       const m = p.motion;
       assert.ok(m.radiusM + propSpec(p.slug)!.footprintM / 2 <= row.radiusM, `${p.slug} plan`);
       if (row.band === null || m.depthM === null) continue;
-      const deepest = m.depthM + m.depthSwingM + m.axisM / DEPTH_VISUAL_M_PER_M;
-      const shallowest =
-        m.depthM - m.depthSwingM - (heightM[p.slug]! - m.axisM) / DEPTH_VISUAL_M_PER_M;
+      const { above, below } = bankedReach(p);
+      const deepest = m.depthM + m.depthSwingM + below / DEPTH_VISUAL_M_PER_M;
+      const shallowest = m.depthM - m.depthSwingM - above / DEPTH_VISUAL_M_PER_M;
       assert.ok(deepest <= row.band[1], `${p.slug} of ${p.xM},${p.yM} reaches ${deepest} m`);
       assert.ok(shallowest >= row.band[0], `${p.slug} of ${p.xM},${p.yM} rises to ${shallowest} m`);
     }

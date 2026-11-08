@@ -1,0 +1,114 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "startDeg": 157,
+  "reducedMotion": false,
+  "rows": [
+    {
+      "t": 15,
+      "name": "t015",
+      "matchS": 15,
+      "loopDeg": 175,
+      "bankDeg": 0,
+      "planShown": 0.36,
+      "screen": [
+        1126,
+        614
+      ],
+      "distanceM": 821,
+      "spanPx": 28.7,
+      "calls": 44,
+      "triangles": 568596,
+      "props": 291
+    },
+    {
+      "t": 30,
+      "name": "t030",
+      "matchS": 30,
+      "loopDeg": 193,
+      "bankDeg": 0,
+      "planShown": 0.36,
+      "screen": [
+        1104,
+        601
+      ],
+      "distanceM": 833,
+      "spanPx": 28.2,
+      "calls": 44,
+      "triangles": 568596,
+      "props": 291
+    },
+    {
+      "t": 60,
+      "name": "t060",
+      "matchS": 60,
+      "loopDeg": 229,
+      "bankDeg": 0,
+      "planShown": 0.34,
+      "screen": [
+        1085,
+        574
+      ],
+      "distanceM": 865,
+      "spanPx": 27,
+      "calls": 44,
+      "triangles": 568596,
+      "props": 291
+    },
+    {
+      "t": 120,
+      "name": "t120",
+      "matchS": 120,
+      "loopDeg": 301,
+      "bankDeg": 0,
+      "planShown": 0.32,
+      "screen": [
+        1144,
+        553
+      ],
+      "distanceM": 920,
+      "spanPx": 25.7,
+      "calls": 44,
+      "triangles": 568596,
+      "props": 291
+    },
+    {
+      "t": 170,
+      "name": "t170",
+      "matchS": 170,
+      "loopDeg": 1,
+      "bankDeg": 0,
+      "planShown": 0.33,
+      "screen": [
+        1236,
+        574
+      ],
+      "distanceM": 916,
+      "spanPx": 26.5,
+      "calls": 44,
+      "triangles": 568596,
+      "props": 291
+    },
+    {
+      "t": 240,
+      "name": "t240",
+      "matchS": 240,
+      "loopDeg": 85,
+      "bankDeg": 0,
+      "planShown": 0.36,
+      "screen": [
+        1265,
+        630
+      ],
+      "distanceM": 846,
+      "spanPx": 29,
+      "calls": 44,
+      "triangles": 568596,
+      "props": 291
+    }
+  ]
+}

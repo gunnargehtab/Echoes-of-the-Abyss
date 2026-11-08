@@ -424,6 +424,8 @@ export interface PropPlacement {
     depthM: number | null;
     depthSwingM: number;
     axisM: number;
+    /** Degrees the body rolls into its turn, about its own axis; level when absent. */
+    bankDeg?: number;
   };
 }
 
