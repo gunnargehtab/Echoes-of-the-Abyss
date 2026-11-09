@@ -900,6 +900,7 @@ and no row below is open.
 | A tutorial loading test that timed out once in CI | [#1745](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1745) |
 | A square passage’s route line running across its way | [#1759](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1759) |
 | The mission log standing in the hint line’s row | [#1762](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1762) |
+| The free-water rim ray reading as a body in the opening frame | [#1780](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1780) |
 
 **How the project runs**
 
@@ -991,6 +992,8 @@ takes this one.
 | --- | --- |
 | Epic — fleet command in a free, three-dimensional ocean | [#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694) |
 | No body of canonical size reads in the opening frame | [#1777](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1777) |
+| The extra review rounds reaching the second camera and ground passes | [#1782](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1782) |
+| The free-water triangle total leaving out the rim ray | [#1789](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1789) |
 
 A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shipped map.
 
@@ -1001,6 +1004,12 @@ A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shi
 | The verbs the commander lacked, all built — a vocabulary of 24 of 27 since #1588 exempted `resign`, after #1132 took `followFloor` off both sides | [#703](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/703) |
 
 A verb gets built when a commander branch needs it, not to round a count up.
+
+**Fleet progression**
+
+| Work | Issue |
+| --- | --- |
+| Building the four remaining refits and per-hull rank from the design | [#1785](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1785) |
 
 **Competitive play**
 
