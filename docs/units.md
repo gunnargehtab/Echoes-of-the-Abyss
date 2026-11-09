@@ -1481,8 +1481,8 @@ Next steps
   change, and the build waits for release (ROADMAP.md, under Later)
 - Done (#1785): the five refits of systems-progression.md (#462), as producibles on the
   Slipway's line, which #461 built
-- Transcribe rank, the other half of systems-progression.md (#1785), which needs the TTK band
-  test to grow a rank-3 row
+- Grow the TTK band test a rank-3 row per band, the guard-rail systems-progression.md §4
+  sets for rank, which #1785 built
 - Done: per-unit HYD values are authored in the stat blocks above and transcribed into
   `packages/shared/src/units.ts`
 - Done: `tools/echo-sim` runs these stats through the shared detection model

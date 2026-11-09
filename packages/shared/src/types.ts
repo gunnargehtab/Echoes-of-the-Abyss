@@ -380,6 +380,14 @@ export interface Contact {
   hp?: number;
   maxHp?: number;
   heading?: number;
+  /**
+   * A hull's rank, 1 to 3, at Tier 4 only and absent at rank 0
+   * (docs/systems-progression.md §3). A phantom claims none, so a ranked
+   * return is plainly a hull, as a hurt one is (docs/systems-echo.md §3):
+   * both were earned under fire the map already heard. Absent rather than 0
+   * so a rank-0 return carries exactly the fields a phantom does.
+   */
+  rank?: number;
   /** Server tick this contact was resolved on, for ghost-marker decay. */
   tick: number;
 }
@@ -669,6 +677,12 @@ export interface OwnUnit {
    * draw it differently.
    */
   unhealableDamage: number;
+  /**
+   * The hull's rank, 1 to 3, absent at rank 0 (docs/systems-progression.md
+   * §3). Own-force information: the owner draws it as chevrons beside the
+   * health bar, and its hull is already in `maxHp`.
+   */
+  rank?: number;
   /**
    * Orders waiting behind the current one, oldest first.
    *

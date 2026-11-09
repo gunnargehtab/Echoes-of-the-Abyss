@@ -73,6 +73,7 @@ import {
 import { applyFiringSpike } from './acoustics.ts';
 import { creditWound, isDriven, wound } from './fauna.ts';
 import { wakeSpared } from './spared.ts';
+import { creditTaken, removedHull } from './rank.ts';
 import { raiseSelfEvent, spawnOrdnance, type SimWorld } from '../world.ts';
 import { suppressKelpAt } from './hazards.ts';
 
@@ -223,7 +224,12 @@ function detonate(world: SimWorld, eid: number, target: number, destroyed: numbe
   // A driven creature takes the hit and none of the damage — the gun's rule
   // (combat.ts, `isDriven`), and the torpedo is spent either way.
   if (!isDriven(world, target)) {
-    Health.hp[target] = Health.hp[target]! - damage;
+    const hpBefore = Health.hp[target]!;
+    Health.hp[target] = hpBefore - damage;
+    // A hit survived is experience for the hull that survived it, at half
+    // (docs/systems-progression.md §3). Its launcher earns nothing: it is not
+    // tracked, and it was not at the target's gun range when this landed.
+    creditTaken(world, target, removedHull(hpBefore, hpBefore - Health.hp[target]!));
     // Damage is a sound (`wound`, #353). The launcher is not tracked and is
     // spent from wherever it fired, so the wound carries no direction: a
     // Hollow answers with a lunge at whatever it can hear.
@@ -654,7 +660,11 @@ function blast(
     // Linear falloff to zero at the rim (docs/systems-combat.md §6), so a
     // minefield kills in numbers or not at all: one mine is a warning.
     const share = 1 - distance / options.radiusM;
-    Health.hp[other] = Health.hp[other]! - options.damage * share;
+    const hpBefore = Health.hp[other]!;
+    Health.hp[other] = hpBefore - options.damage * share;
+    // Surviving a blast is a hit survived (docs/systems-progression.md §3); the
+    // layer, long gone, earns nothing for it.
+    creditTaken(world, other, removedHull(hpBefore, hpBefore - Health.hp[other]!));
     // Damage is a sound (`wound`, #353), and a blast has no hull behind it.
     wound(world, other, 0);
     // A mine is laid by somebody, and what it kills is theirs to render

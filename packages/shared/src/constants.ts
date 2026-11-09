@@ -2233,11 +2233,15 @@ export const PERSISTENCE = {
    */
   LIVE_TRACK_S: 0.4,
   /**
-   * TUNABLE — what one "engagement" is, for the under-fire alert
-   * (docs/ui-ux.md §5, §11): a hull hit again within this many seconds is the
-   * same fight, and raises nothing new. The log records the first blow of an
-   * engagement rather than every round of it, and the cue and the log share
-   * this number so the ear and the record cannot disagree.
+   * SPEC — docs/ui-ux.md §5: "a hull hit again within ten seconds is the same
+   * fight". What one "engagement" is, for the under-fire alert (§5, §11), and
+   * since #1785 for rank too: docs/systems-progression.md §3 pays a survived
+   * hit once the fight is over, by this clock (`RANK.QUIET_S`). Both docs say
+   * ten seconds, so moving this moves both docs first. A hull hit again within
+   * this many seconds is the same fight, and raises nothing new. The log
+   * records the first blow of an engagement rather than every round of it, and
+   * the cue and the log share this number so the ear and the record cannot
+   * disagree.
    */
   UNDER_FIRE_REARM_S: 10,
   /** Echo Marks: acoustic residue left on the terrain layer. */
@@ -3063,6 +3067,54 @@ export const FLIGHT = {
    * its carrier rather than as a stack on top of it.
    */
   STATION_RING_M: 260,
+} as const;
+
+/**
+ * Rank — docs/systems-progression.md §3, the veterancy half of the rung.
+ *
+ * Per hull, three ranks, earned and never bought. Every figure is §3's table
+ * or one of its four rulings (#1785), so all of it is SPEC. The readers are in
+ * `rank.ts`; the server credits experience in `sim/systems/rank.ts`.
+ */
+export const RANK = {
+  /**
+   * SPEC — §3: the third rank "is the ceiling".
+   */
+  MAX: 3,
+  /**
+   * SPEC — §3's table, the experience each rank needs, in multiples of the
+   * hull's *listed* maximum hull (ruling 3: neither a Plate Refit nor an
+   * earlier rank raises the bar). Indexed by rank, so rank 0 needs nothing.
+   */
+  THRESHOLDS: [0, 1.0, 3.0, 6.0],
+  /**
+   * SPEC — §3's table: +10% max hull a rank, from rank 0. Multiplied with the
+   * Plate's 1.15 rather than added to it (ruling 4), so a purchase and a rank
+   * compound in whichever order they came.
+   */
+  HULL_FACTOR: [1, 1.1, 1.2, 1.3],
+  /**
+   * SPEC — §3's table: +5% gun damage a rank. Guns only: "torpedo damage is
+   * untouched", so a rank multiplies the endless weapon and not the decisive one.
+   */
+  GUN_FACTOR: [1, 1.05, 1.1, 1.15],
+  /**
+   * SPEC — §3: experience is "damage dealt, plus half the damage taken and
+   * survived". The share of a survived hit that counts.
+   */
+  TAKEN_SHARE: 0.5,
+  /**
+   * SPEC — §3's second ruling: survived means survived the *fight*, so a
+   * survived hit is banked and credited once the hull has gone this long
+   * without another. The fight is the under-fire alert's engagement, the one
+   * number the game already uses for "the same fight" (#1785), so the ear, the
+   * log and the ledger agree about when a fight ends.
+   *
+   * It is why a fresh duel stays inside docs/systems-combat.md §9's band:
+   * credited as it landed, half of each hit taken ranked both Corvettes on
+   * their sixth exchange and healed them into a tenth shot, 16.2 s.
+   */
+  QUIET_S: PERSISTENCE.UNDER_FIRE_REARM_S,
 } as const;
 
 /**

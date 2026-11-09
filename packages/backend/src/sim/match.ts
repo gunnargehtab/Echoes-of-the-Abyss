@@ -104,6 +104,7 @@ import {
   Structure,
   UnderConstruction,
   Unit,
+  Veterancy,
   Weapon,
 } from './components.ts';
 import { EchoLayer } from './systems/echoLayer.ts';
@@ -111,6 +112,7 @@ import { cadencePingSystem } from './systems/cadencePing.ts';
 import { seedSpore, siegeSystem, startSong } from './systems/siege.ts';
 import { acousticsSystem } from './systems/acoustics.ts';
 import { aurasSystem } from './systems/auras.ts';
+import { rankSystem } from './systems/rank.ts';
 import { standingWaveSystem } from './systems/standingWave.ts';
 import { combatSystem } from './systems/combat.ts';
 import { orderTarget } from './systems/chase.ts';
@@ -2609,6 +2611,9 @@ export class Match {
     sowingSystem(this.world);
     bioReactorSystem(this.world);
     faunaSystem(this.world, this.destroyedScratch);
+    // After every pass that lands a hit, and before reap: a fight that ended
+    // this tick pays its survivors, and a hull sunk this tick is paid nothing.
+    rankSystem(this.world);
     this.driftTick();
     // After the health tick, so a region restocks against the water as it is
     // this tick rather than as it was before this tick's noise wore it.
@@ -3490,6 +3495,10 @@ export class Match {
         pressureBonus: Pressure.bonus[eid]!,
         unhealableDamage: Pressure.unhealable[eid]!,
       };
+      // Own-force, and only when earned (docs/systems-progression.md §3): the
+      // owner's chevrons. Its hull is in `maxHp` already.
+      const rank = Veterancy.rank[eid]!;
+      if (rank > 0) unit.rank = rank;
       const queue = queueView(this.world, eid);
       if (queue !== undefined) {
         unit.queuedOrders = queue.map((order) =>

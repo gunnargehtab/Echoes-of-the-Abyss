@@ -49,6 +49,7 @@ import {
   type OrdnanceKind,
   Faction,
   RefitKind,
+  rankedHull,
   type StructureKind,
   UnitKind,
   type UnitStats,
@@ -65,6 +66,7 @@ import {
   Structure,
   Unit,
   Velocity,
+  Veterancy,
 } from '../components.ts';
 import { hasBow } from '../directional.ts';
 import { SpatialHash } from '../spatialHash.ts';
@@ -1896,12 +1898,21 @@ export class EchoLayer {
           // the hull reads its kind's maximum to the bit, as a phantom does;
           // hurt, it reads its share at f32, the precision every hull is kept
           // at, so the precision sorts nothing either (#1294).
+          //
+          // A rank is told, with its hull (docs/systems-progression.md §3): it
+          // was earned under fire, as a wound is, and a phantom claims none,
+          // so a ranked return sorts from the lies as a hurt one does. A plated
+          // veteran reads its kind's maximum times its rank's — the rank in,
+          // the plate still out — which is `rankedHull`, the number an
+          // unplated veteran's `Health.max` holds to the bit (`promote`).
+          const rank = hasComponent(world, Veterancy, eid) ? Veterancy.rank[eid]! : 0;
+          if (rank > 0) contact.rank = rank;
           const plated =
             world.refits.size !== 0 &&
             hasComponent(world, Unit, eid) &&
             world.refits.get(Owner.slot[eid]!)?.has(RefitKind.Plate) === true;
           if (plated) {
-            const own = UNIT_STATS[Unit.kind[eid] as UnitKind].maxHp;
+            const own = rankedHull(UNIT_STATS[Unit.kind[eid] as UnitKind].maxHp, rank);
             contact.maxHp = own;
             contact.hp = Math.fround((Health.hp[eid]! / Health.max[eid]!) * own);
           } else {

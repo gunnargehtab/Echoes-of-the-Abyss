@@ -44,6 +44,7 @@ import {
   Spore,
   Structure,
   Unit,
+  Veterancy,
   Weapon,
 } from './components.ts';
 import { FNV_OFFSET, mixFloat, mixString, mixU32 } from './fnv.ts';
@@ -219,6 +220,14 @@ export function hashWorld(world: SimWorld): number {
       h = mixU32(h, Pressure.rating[eid]!);
       h = mixU32(h, Pressure.bonus[eid]!);
       h = mixFloat(h, Pressure.unhealable[eid]!);
+    }
+    // Experience as well as rank: two runs that credited one hit differently
+    // have diverged before either hull ranks (docs/systems-progression.md §3).
+    if (hasComponent(world, Veterancy, eid)) {
+      h = mixFloat(h, Veterancy.experience[eid]!);
+      h = mixU32(h, Veterancy.rank[eid]!);
+      h = mixFloat(h, Veterancy.banked[eid]!);
+      h = mixFloat(h, Veterancy.quietS[eid]!);
     }
     if (hasComponent(world, Posture, eid)) {
       h = mixU32(h, Posture.hold[eid]!);

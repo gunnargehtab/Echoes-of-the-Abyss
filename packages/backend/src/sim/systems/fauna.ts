@@ -56,6 +56,7 @@ import {
 } from '../components.ts';
 import { directionalFactorFor } from '../directional.ts';
 import { activeCurrentAt } from './hazards.ts';
+import { creditTaken, removedHull } from './rank.ts';
 import { raiseSelfEvent, type SimWorld } from '../world.ts';
 import { anySongRunning, songWeightAt } from './siege.ts';
 
@@ -446,7 +447,11 @@ function transit(
     const nearY = py - segY * t;
     if (nearX * nearX + nearY * nearY > reach * reach) continue;
 
-    Health.hp[other] = Health.hp[other]! - damage;
+    const hpBefore = Health.hp[other]!;
+    Health.hp[other] = hpBefore - damage;
+    // Fauna violence, not weather, so a hull that lives through it has earned
+    // half of it (docs/systems-progression.md §3).
+    creditTaken(world, other, removedHull(hpBefore, hpBefore - Health.hp[other]!));
     // A transit crush is fauna violence, not weather: the owner is told
     // (docs/ui-ux.md §5), where a hazard would instead announce itself.
     raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: other });
@@ -968,7 +973,11 @@ function act(
   if (Fauna.species[eid] === FaunaSpecies.Sounder && !isStructure) return;
   if (!isStructure && !hasComponent(world, Unit, target)) return;
 
-  Health.hp[target] = Health.hp[target]! - stats.damagePerS * dt;
+  const hpBefore = Health.hp[target]!;
+  Health.hp[target] = hpBefore - stats.damagePerS * dt;
+  // A bite survived is a hit survived (docs/systems-progression.md §3): half
+  // of it, a tick at a time, to a hull still afloat.
+  creditTaken(world, target, removedHull(hpBefore, hpBefore - Health.hp[target]!));
   // Being eaten is being attacked (docs/ui-ux.md §5). The mixer collapses a
   // sustained bite to one cue per engagement, so raising per sim tick is safe.
   raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });

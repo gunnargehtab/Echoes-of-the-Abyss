@@ -153,6 +153,7 @@ import {
 } from './ladder.ts';
 import { fieldRadiusM } from './environment.ts';
 import { roofedPassages } from './passages.ts';
+import { drawRankChevrons, rankChevronReachPx } from './rankChevrons.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -8194,6 +8195,17 @@ export class EchoRenderer {
               color,
               alpha,
             });
+            // Told at Tier 4 and no lower (docs/systems-progression.md §3):
+            // the field is present only when the server sent it.
+            drawRankChevrons(
+              sg,
+              contact.rank,
+              width / 2,
+              barY + 1.5 * inverseScale,
+              inverseScale,
+              color,
+              alpha
+            );
           }
           break;
         }
@@ -8332,10 +8344,12 @@ export class EchoRenderer {
       const collar =
         collarRadius(radius, SELECTION_GAP_M.HULL) * p.pxPerM + LOUDNESS_COLLAR.HALO_OUTER_PX / 2;
       const reach = Math.max(collar, radius * 1.2 * p.pxPerM);
+      // A veteran's chevrons sit off the bar's right end, so its slot is wider.
+      const reachRight = Math.max(reach, radius * 1.2 * p.pxPerM + rankChevronReachPx(unit.rank));
       this.figureFootprints.push(
         p.x - reach,
         Math.min(p.y - collar, p.y - radius * p.pxPerM - 12),
-        p.x + reach,
+        p.x + reachRight,
         p.y + collar
       );
 
@@ -8412,6 +8426,19 @@ export class EchoRenderer {
           });
         }
       }
+      // A rank, beside the bar's slot whether or not the bar is drawn
+      // (docs/systems-progression.md §3): a whole veteran is still one. In
+      // the bar's own ink and weight, since it is the same reading — what this
+      // hull has lived through.
+      drawRankChevrons(
+        g,
+        unit.rank,
+        radius * 1.2,
+        -radius - 10.5 * inverseScale,
+        inverseScale,
+        UI.friendly,
+        INSTRUMENT_OUTLINE_ALPHA.readingBar
+      );
     }
 
     for (const shot of this.ordnance) {

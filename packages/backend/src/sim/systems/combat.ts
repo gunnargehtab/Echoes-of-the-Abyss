@@ -27,6 +27,7 @@ import {
   damageMultiplierFor,
   faunaStatsFor,
   firingSigFor,
+  rankGunFactor,
   statsFor,
   structureStatsFor,
   type FaunaSpecies,
@@ -49,6 +50,7 @@ import {
   Velocity,
   UnderConstruction,
   Unit,
+  Veterancy,
   Weapon,
   Posture,
 } from '../components.ts';
@@ -56,6 +58,7 @@ import { applyFiringSpike } from './acoustics.ts';
 import { creditWound, isDriven, wound } from './fauna.ts';
 import { wakeSpared } from './spared.ts';
 import { isInterceptable } from './ordnance.ts';
+import { creditDealt, creditTaken, removedHull } from './rank.ts';
 import { raiseSelfEvent } from '../world.ts';
 import type { SimWorld } from '../world.ts';
 
@@ -131,13 +134,19 @@ interface WeaponProfile {
  *
  * Structures take the same doctrine as the navy that built them: a Consortium
  * Sentinel Turret is a Consortium gun.
+ *
+ * A hull's rank multiplies its gun here too (docs/systems-progression.md §3),
+ * both numbers, as the Klaxon does: "+5% gun damage" a rank, and the two
+ * compound, which is §3's Consortium row. Only here, because only a gun
+ * passes through here — "torpedo damage is untouched". A turret has no rank.
  */
 function profileFor(world: SimWorld, eid: number): WeaponProfile {
   const faction = Owner.faction[eid] as Faction;
-  const multiplier = damageMultiplierFor(faction, Acoustic.sig[eid] ?? 0);
+  const doctrine = damageMultiplierFor(faction, Acoustic.sig[eid] ?? 0);
 
   if (hasComponent(world, Unit, eid)) {
     const stats = statsFor(Unit.kind[eid] as UnitKind);
+    const multiplier = doctrine * rankGunFactor(Veterancy.rank[eid] ?? 0);
     return {
       damage: stats.attackDamage * multiplier,
       // A hull that says nothing about walls hits one exactly as hard as it
@@ -155,10 +164,10 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
   }
   const stats = structureStatsFor(Structure.kind[eid] as StructureKind);
   return {
-    damage: (stats.attackDamage ?? 0) * multiplier,
+    damage: (stats.attackDamage ?? 0) * doctrine,
     // No structure in the roster is a siege engine, so a turret shoots a wall
     // with the same shell it shoots a hull with.
-    structureDamage: (stats.attackDamage ?? 0) * multiplier,
+    structureDamage: (stats.attackDamage ?? 0) * doctrine,
     rangeM: stats.attackRangeM ?? 0,
     cooldownS: stats.attackCooldownS ?? 1,
     firingSig: firingSigFor(faction, stats.sigFiringBurst ?? 0),
@@ -611,10 +620,18 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       profile.loudTargetSig !== undefined && Acoustic.sig[target]! > profile.loudTargetSig
         ? profile.loudTargetMultiplier
         : 1;
+    const hpBefore = Health.hp[target]!;
     Health.hp[target] =
-      Health.hp[target]! -
+      hpBefore -
       (hasComponent(world, Structure, target) ? profile.structureDamage : profile.damage) *
         loudBonus;
+    // Experience, both halves, in the hull the shell removed (§3): the gun's
+    // own, and half of it to a target still afloat. A point-defence shot
+    // credits nothing — `creditDealt` refuses ordnance, and ordnance has no
+    // rank to be credited.
+    const removed = removedHull(hpBefore, hpBefore - Health.hp[target]!);
+    creditDealt(world, eid, target, removed);
+    creditTaken(world, target, removed);
     // Damage is a sound: a creature that gave hull is told what shot it, and
     // the Hollow answers a gun that outranges its trigger (`wound`, #353).
     wound(world, target, eid);
