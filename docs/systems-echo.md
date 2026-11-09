@@ -339,13 +339,14 @@ left. Were the plate's maximum told, every true return of a plated navy would so
 phantoms of §3, which claim their kind's own maximum because a phantom that carried the enemy's
 purchases would announce them (#1785).
 
-The share does tell the plate to a listener who holds Track through a fight, and that is accepted
-(#1792). A hit takes 1/1.15 as much off a plated hull's reading as off an unplated one's — a
-50-point shell takes 43.5 off a plated Corvette's 420, not 50 — and the plated hull lives through
-more hits. The plate stays hidden from a glance, from every phantom and on every hull nobody has
-fired on; the listener who learns it paid with a fight the map already heard, as with a rank.
-Reading the damage taken instead would match an unplated hull hit for hit, but would tell the plate
-the moment it is bought, when every hurt hull afloat reads lower at once.
+The share does tell the plate to a listener who holds Track while the hull changes, and that is
+accepted (#1792). Every fixed-size change moves a plated hull's reading 1/1.15 as far as an
+unplated one's: a hit, the deep's crush, a hazard, a creature, a Tender's weld. A 50-point shell
+takes 43.5 off a plated Corvette's 420, not 50, and the plated hull lives through more hits. What
+stays hidden is the glance, every phantom, and any hull whose condition holds while it is held at
+Track: learning the plate costs a listener the time and the sonar to keep a hull lit while it
+changes. Reading the damage taken instead would match an unplated hull change for change, but would
+tell the plate the moment it is bought, when every hurt hull afloat reads lower at once.
 
 A rank is told, with its hull ([systems-progression.md](systems-progression.md) §3). It was earned
 under fire, as a wound is, so a ranked return reads its kind's maximum times its rank's, the
