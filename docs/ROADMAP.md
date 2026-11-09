@@ -1010,6 +1010,7 @@ A verb gets built when a commander branch needs it, not to round a count up.
 | Work | Issue |
 | --- | --- |
 | Building the four remaining refits and per-hull rank from the design | [#1785](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1785) |
+| A hurt plated hull reading differently from an unplated one at Track | [#1792](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1792) |
 
 **Competitive play**
 
