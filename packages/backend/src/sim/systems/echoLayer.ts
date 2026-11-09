@@ -1897,7 +1897,11 @@ export class EchoLayer {
           // announce it (#1785). At full health the ratio is exactly one, so
           // the hull reads its kind's maximum to the bit, as a phantom does;
           // hurt, it reads its share at f32, the precision every hull is kept
-          // at, so the precision sorts nothing either (#1294).
+          // at, so the precision sorts nothing either (#1294). The share does
+          // tell the plate to a listener holding Track through a fight — a hit
+          // takes 1/1.15 as much off it — and §4 accepts that (#1792): reading
+          // the damage instead would drop every hurt hull's reading the moment
+          // the plate is bought, which tells it without a fight.
           //
           // A rank is told, with its hull (docs/systems-progression.md §3): it
           // was earned under fire, as a wound is, and a phantom claims none,

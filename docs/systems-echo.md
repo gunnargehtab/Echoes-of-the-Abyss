@@ -332,12 +332,20 @@ Detection is **graded**, not binary. This is the system's most important design 
 | **4 — Track** | Full resolution: exact unit, health, facing | 4× threshold, or active sonar |
 
 Health at Track is the hull's condition. A Plate Refit's extra hull
-([systems-progression.md](systems-progression.md) §2) is its owner's purchase and is never told:
-a plated hull reads its condition against its kind's own maximum, so at full health it reads
-exactly as an unplated hull of its kind, and hurt it reads the share of its hull it has left.
-Were the plate told, every true return of a plated navy would sort from the phantoms of §3, which
-claim their kind's own maximum because a phantom that carried the enemy's purchases would announce
-them (#1785).
+([systems-progression.md](systems-progression.md) §2) is its owner's purchase, and a glance does
+not tell it: a plated hull reads its condition against its kind's own maximum, so at full health
+it reads exactly as an unplated hull of its kind, and hurt it reads the share of its hull it has
+left. Were the plate's maximum told, every true return of a plated navy would sort from the
+phantoms of §3, which claim their kind's own maximum because a phantom that carried the enemy's
+purchases would announce them (#1785).
+
+The share does tell the plate to a listener who holds Track through a fight, and that is accepted
+(#1792). A hit takes 1/1.15 as much off a plated hull's reading as off an unplated one's — a
+50-point shell takes 43.5 off a plated Corvette's 420, not 50 — and the plated hull lives through
+more hits. The plate stays hidden from a glance, from every phantom and on every hull nobody has
+fired on; the listener who learns it paid with a fight the map already heard, as with a rank.
+Reading the damage taken instead would match an unplated hull hit for hit, but would tell the plate
+the moment it is bought, when every hurt hull afloat reads lower at once.
 
 A rank is told, with its hull ([systems-progression.md](systems-progression.md) §3). It was earned
 under fire, as a wound is, so a ranked return reads its kind's maximum times its rank's, the
