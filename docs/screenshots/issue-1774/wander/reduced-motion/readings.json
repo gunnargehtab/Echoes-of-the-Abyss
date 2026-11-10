@@ -29,13 +29,13 @@
       "calls": 45,
       "triangles": 594970,
       "instances": {
-        "env-kelp-stand": 56,
-        "env-rim-crab": 32,
         "env-kelp-cluster": 16,
-        "env-rim-ray": 1,
-        "env-deep-fish": 26,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
         "env-outer-fish": 16,
-        "env-shoal-fry": 144
+        "env-kelp-stand": 56,
+        "env-rim-ray": 1,
+        "env-deep-fish": 26
       },
       "passes": [
         "canvas",
@@ -75,13 +75,13 @@
       "calls": 26,
       "triangles": 587001,
       "instances": {
-        "env-kelp-stand": 56,
-        "env-rim-crab": 32,
         "env-kelp-cluster": 16,
-        "env-rim-ray": 1,
-        "env-deep-fish": 26,
+        "env-rim-crab": 32,
+        "env-shoal-fry": 144,
         "env-outer-fish": 16,
-        "env-shoal-fry": 144
+        "env-kelp-stand": 56,
+        "env-rim-ray": 1,
+        "env-deep-fish": 26
       },
       "passes": [
         "canvas",

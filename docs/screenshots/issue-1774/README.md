@@ -152,7 +152,9 @@ a straight run of cells nowhere, so the garden, the wall and the pool kept ruled
 `wanderEdges` in `roundedCells.ts` now reads the rounded field through a slow warp of the
 plan: 75 m at most, less wherever the rounding has already spent the 115 m licence, and
 nothing where the roof holds the cell edges. The roof's hold now eases off over half a
-cell rather than a whole one, so more of the wall either side of the cut can move.
+cell rather than a whole one, so more of the wall either side of the cut can move. The
+warp's seed was picked for this map, the best of 160 by its least-bowed side: the first
+tried left the garden's south side within 12 m of its line.
 
 Reproduce with the commands above and `--out docs/screenshots/issue-1774/wander/after`.
 `wander/before/` is the same run at `c889bd645`, main's head. Same rasteriser, viewport
@@ -160,10 +162,10 @@ and DPR as the first instalment.
 
 | Row | Before | After | Reads as |
 | --- | --- | --- | --- |
-| Survey | [before](wander/before/01-survey.png) | [after](wander/after/01-survey.png) | The garden's north, west and east sides bow and dip where they were ruled lines, and the bowl's lobes swell unevenly. The pocket's south-west step is shorter. The wall and the pool still read as slabs: within 250 m of the cut their edges are held or easing |
-| Low | [before](wander/before/02-low.png) | [after](wander/after/02-low.png) | As before at this range: the garden's far lip moves by a pixel or two |
-| Bowl | [before](wander/before/03-bowl.png) | [after](wander/after/03-bowl.png) | The pocket's west cliff bulges into the pit, and the garden's sides meander, their isobaths with them |
-| Wall | [before](wander/before/04-wall.png) | [after](wander/after/04-wall.png) | The cut's mouth and jambs as before: the hold keeps them. The wall's lip either side waves a little where it was level |
+| Survey | [before](wander/before/01-survey.png) | [after](wander/after/01-survey.png) | The garden's four sides bow and tilt where they were ruled lines, its north side slanting, and the bowl's lobes and the pocket swell unevenly. The pocket's south-west step is shorter. The wall and the pool still read as slabs: within 250 m of the cut their edges are held or easing |
+| Low | [before](wander/before/02-low.png) | [after](wander/after/02-low.png) | Much as before at this range: the garden's lip bends a little where it ran level |
+| Bowl | [before](wander/before/03-bowl.png) | [after](wander/after/03-bowl.png) | The scarp under the garden's south side dips and climbs across the frame where it ran level, the pocket's cliffs bend, and the east lobe's rim wavers, the isobaths with each |
+| Wall | [before](wander/before/04-wall.png) | [after](wander/after/04-wall.png) | The cut's mouth and jambs as before: the hold keeps them. The wall's lip either side reads as it did at this range |
 | Rim | [before](wander/before/05-rim.png) | [after](wander/after/05-rim.png) | Mostly water, as before |
 
 Calls, triangles, instances, passes, textures and target bytes read the same before and
@@ -182,13 +184,14 @@ plateaus the unlined fields, and the rock the field inside a solid coast.
 
 What changed in the limits above:
 
-- **The bowl's rim** lies within 38 m of its circle over the same rays, where it lay
-  within 35 m.
+- **The bowl's rim** still lies within 35 m of its circle rounded, and the wander
+  carries it up to 56 m off over the same rays. That is the wander doing its work, not
+  the stair coming back: the rim's kink reads 2 m either way, the cells' 22.
 - **The pocket's south-west corner** rounds further. The hold is whole within 125 m of
   the cut and now gone 250 m from it, where it was gone at 375 m. The step that is left
   is the 125 m the hold keeps on the cell edge above the west jamb.
 - **A scarp's width varies.** The warp stretches or squeezes the rounded field: by a
-  fifth on average and four fifths at most at its full 75 m, read over a 16 km plan. So
+  fifth on average and nine tenths at most at its full 75 m, read over a 16 km plan. So
   a scarp is no longer 80 m wide everywhere.
 - **The wander is bounded by the licence, so it is modest.** A side bows by tens of
   metres on a 250 m cell. The garden is still a rectangle's descendant, not a free
@@ -210,6 +213,9 @@ Gate 6 on hardware is still owed, for both instalments. This one adds no fragmen
   bends the edge round its centre, and a T settles into a Y. Of the wander: a straight
   edge meanders within 75 m, rounded and wandered no edge passes the licence, and the
   warp folds nowhere.
+- `perspectiveTerrain.test.ts`, for the wander: the garden's north coast bows either side
+  of its line; the wander alone carries each long side of the garden, the pocket and the
+  bowl across 40 m or more; and wandered, each kind holds as many pieces as rounded.
 - `passages.test.ts`: the roof walks the study's finer grid, a curtain's foot on each of
   its vertices. `flightCamera.test.ts`: the flight eye clears the drawn ground.
 - `surveyInk.test.ts`, "the study's pass", and `seabedRegion.test.ts`, the bake's floor.

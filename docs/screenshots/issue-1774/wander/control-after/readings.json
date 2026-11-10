@@ -21,8 +21,8 @@
         "depthM": null
       },
       "eye": {
-        "xM": 2007,
-        "zM": 2328,
+        "xM": 2009,
+        "zM": 2327,
         "depthM": -42807
       },
       "distance": 10000,
@@ -60,8 +60,8 @@
       },
       "eye": {
         "xM": 1998,
-        "zM": 3565,
-        "depthM": -670
+        "zM": 3564,
+        "depthM": -675
       },
       "distance": 1600,
       "calls": 75,
