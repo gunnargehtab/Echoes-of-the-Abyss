@@ -28,7 +28,9 @@ import {
   buildRoundedCells,
   forgetRoundedCells,
   ROUNDED_CELLS,
+  type RoundedCells,
   roundedCellsOf,
+  roundedDistances,
 } from '../src/game/roundedCells.ts';
 import {
   authoredFloorAtM,
@@ -365,6 +367,14 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     }
     return best;
   };
+  /** The kind a field's ground holds at a point: the one with the largest rounded distance. */
+  const heldBy = (field: RoundedCells, x: number, y: number) => {
+    const s = new Float64Array(field.kinds.length);
+    roundedDistances(field, x, y, s);
+    let best = 0;
+    for (let k = 1; k < s.length; k++) if (s[k]! > s[best]!) best = k;
+    return best;
+  };
   /** The drawn biome at a point: the one whose drawn edge it lies furthest inside. */
   const drawnBiome = (biomeM: readonly number[]) =>
     biomeM.reduce((best, v, b) => (v > biomeM[best]! ? b : best), 0);
@@ -525,11 +535,12 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     // (freeWaterSlice.ts). From that centre, ray by ray across its east and
     // west sides, the radius at which the bowl's kelp gives way to the rim's
     // coral. Read off the cells it stairs more than half a cell off the circle
-    // and kinks at every corner of the stair; drawn, it stays near the circle and
-    // turns without a kink. Every centre's margin bends it where a centre
-    // stands close to the circle, and the wander carries it a little either
-    // side, so it does not lie on it. A kink is the second difference over
-    // rays half a degree apart.
+    // and kinks at every corner of the stair. Rounded, it stays near the
+    // circle and turns without a kink; every centre's margin bends it where a
+    // centre stands close to the circle, so it does not lie on it. Wandered,
+    // as it is drawn, it leaves the circle by the wander besides, which is the
+    // wander's purpose, and still turns without a kink. A kink is the second
+    // difference over rays half a degree apart.
     const centre = { x: 2250, y: 2250 };
     const radius = 1250;
     const rim = (inCoral: (x: number, y: number) => boolean, deg: number) => {
@@ -540,38 +551,48 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
       return Number.NaN;
     };
     const cells = (x: number, y: number) => terrain.biomes[cellAt(x, y)] === Biome.CoralRuins;
+    const held = (field: RoundedCells) => (x: number, y: number) => {
+      const kind = field.kinds[heldBy(field, x, y)]!;
+      return !kind.rock && kind.biome === Biome.CoralRuins;
+    };
     const drawn = (x: number, y: number) => {
       const g = erodedGroundAtM(terrain, rockTop, x, y);
       return g.coastM < 0 && drawnBiome(g.biomeM) === Biome.CoralRuins;
     };
-    const reading = { cellsOff: 0, cellsKink: 0, drawnOff: 0, drawnKink: 0 };
-    // Past 45 degrees south of east the ray meets the wall's rock, and past 150
-    // and 210 degrees the wall's coast and the garden's, where three kinds
-    // meet, rather than the bowl's own. Within them, the east lobes at ±45
-    // degrees, where the cells stand furthest off the circle.
-    for (const [from, to] of [
-      [-45, 45],
-      [150, 210],
-    ] as const) {
-      const cellsR: number[] = [];
-      const drawnR: number[] = [];
-      for (let deg = from; deg <= to; deg += 0.5) {
-        cellsR.push(rim(cells, deg));
-        drawnR.push(rim(drawn, deg));
+    const readings = [cells, held(buildRoundedCells(terrain, 0)), drawn].map((inCoral) => {
+      const reading = { off: 0, kink: 0 };
+      // Past 45 degrees south of east the ray meets the wall's rock, and past
+      // 150 and 210 degrees the wall's coast and the garden's, where three
+      // kinds meet, rather than the bowl's own. Within them, the east lobes
+      // at ±45 degrees, where the cells stand furthest off the circle.
+      for (const [from, to] of [
+        [-45, 45],
+        [150, 210],
+      ] as const) {
+        const radii: number[] = [];
+        for (let deg = from; deg <= to; deg += 0.5) radii.push(rim(inCoral, deg));
+        for (let i = 0; i < radii.length; i++) {
+          reading.off = Math.max(reading.off, Math.abs(radii[i]! - radius));
+          if (i === 0 || i === radii.length - 1) continue;
+          reading.kink = Math.max(
+            reading.kink,
+            Math.abs(radii[i - 1]! - 2 * radii[i]! + radii[i + 1]!)
+          );
+        }
       }
-      for (let i = 0; i < cellsR.length; i++) {
-        reading.cellsOff = Math.max(reading.cellsOff, Math.abs(cellsR[i]! - radius));
-        reading.drawnOff = Math.max(reading.drawnOff, Math.abs(drawnR[i]! - radius));
-        if (i === 0 || i === cellsR.length - 1) continue;
-        const kink = (r: number[]) => Math.abs(r[i - 1]! - 2 * r[i]! + r[i + 1]!);
-        reading.cellsKink = Math.max(reading.cellsKink, kink(cellsR));
-        reading.drawnKink = Math.max(reading.drawnKink, kink(drawnR));
-      }
-    }
-    const said = JSON.stringify(reading);
-    assert.ok(reading.cellsOff > cellM / 2 - 5, `the premise, the cells' stair: ${said}`);
-    assert.ok(reading.drawnOff < 50, `the drawn rim strays from the circle: ${said}`);
-    assert.ok(reading.drawnKink < reading.cellsKink / 3, `the drawn rim kinks: ${said}`);
+      return reading;
+    });
+    const [onCells, rounded, wandered] = readings as [
+      (typeof readings)[0],
+      (typeof readings)[0],
+      (typeof readings)[0],
+    ];
+    const said = JSON.stringify({ onCells, rounded, wandered });
+    assert.ok(onCells.off > cellM / 2 - 5, `the premise, the cells' stair: ${said}`);
+    assert.ok(rounded.off < 50, `the rounded rim strays from the circle: ${said}`);
+    assert.ok(rounded.kink < onCells.kink / 3, `the rounded rim kinks: ${said}`);
+    assert.ok(wandered.off <= rounded.off + ROUNDED_CELLS.WANDER_M, `the wander's bound: ${said}`);
+    assert.ok(wandered.kink < onCells.kink / 3, `the drawn rim kinks: ${said}`);
   });
 
   it("wanders the garden's north edge, a ruled line on the cells and rounded alone", () => {
@@ -579,7 +600,8 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     // run of eight cells along y = 500, and rounding moves a straight run
     // nowhere: from the survey dolly the garden read as a box with its
     // corners off (#1774). Drawn, the edge between the garden's kelp and the
-    // rim's coral meanders about that line, inside the wander.
+    // rim's coral, the line the dashed coast inks, bows either side of that
+    // line, inside the wander.
     const edgeY = 500;
     const inGarden = (x: number, y: number) => {
       const g = erodedGroundAtM(terrain, rockTop, x, y);
@@ -595,7 +617,7 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     const least = Math.min(...off);
     const most = Math.max(...off);
     const said = `from ${least} to ${most} m`;
-    assert.ok(most - least > 30, `the edge is still a ruled line: ${said}`);
+    assert.ok(most > 10 && least < -10, `the edge keeps to one side of its line: ${said}`);
     assert.ok(
       most <= ROUNDED_CELLS.WANDER_M + 1 && least >= -ROUNDED_CELLS.WANDER_M - 1,
       `the edge strays past the wander: ${said}`
@@ -604,6 +626,103 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     for (let i = 1; i < off.length; i++) {
       assert.ok(Math.abs(off[i]! - off[i - 1]!) <= 12.5, `a kink at x=${1375 + 12.5 * i}`);
     }
+  });
+
+  it('leaves no long side ruled: the garden, the pocket and the bowl each bow', () => {
+    // Value noise has calm stretches, and a seed can lay one along a whole
+    // side: the first seed left the garden's south side within 12 m of its
+    // line. `WANDER_SEED` was picked so that each long straight run of the
+    // study's cells bows, and this holds it: along each, the wander alone
+    // carries the edge across a span of 40 m or more. The edge is read on the
+    // field, since the garden and the bowl are one biome and draw no coast
+    // between them, only the scarp.
+    const rounded = buildRoundedCells(terrain, 0);
+    const wandered = roundedCellsOf(terrain);
+    // Each run: the axis it lies along, its ends, its line, and which way is in.
+    const runs = [
+      ["the garden's north side", 'x', 1300, 2700, 500, 1],
+      ["the garden's south side", 'x', 1300, 2700, 1500, -1],
+      ["the garden's west side", 'y', 700, 1300, 1000, 1],
+      ["the garden's east side", 'y', 700, 1300, 3000, -1],
+      ["the pocket's west side", 'y', 1900, 2600, 1500, 1],
+      ["the pocket's east side", 'y', 1900, 2600, 3000, -1],
+      ["the bowl's west side", 'y', 1900, 2600, 1000, 1],
+      ["the bowl's east side", 'y', 1900, 2600, 3500, -1],
+    ] as const;
+    const half = cellM / 2 - 1;
+    for (const [name, axis, from, to, line, inward] of runs) {
+      /** How far out of its line the edge stands at `t` along the run, metres, outward positive. */
+      const edge = (field: RoundedCells, t: number) => {
+        const at = (d: number) =>
+          axis === 'x' ? heldBy(field, t, line + inward * d) : heldBy(field, line + inward * d, t);
+        const inside = at(half);
+        let d = half;
+        while (d > -half && at(d) === inside) d -= 1;
+        return -d;
+      };
+      let least = Number.POSITIVE_INFINITY;
+      let most = Number.NEGATIVE_INFINITY;
+      for (let t = from; t <= to; t += 25) {
+        const moved = edge(wandered, t) - edge(rounded, t);
+        least = Math.min(least, moved);
+        most = Math.max(most, moved);
+      }
+      assert.ok(most - least >= 40, `${name} is carried from ${least} to ${most} m: still ruled`);
+    }
+  });
+
+  it('sheds no island: wandered, each kind holds as many pieces as rounded', () => {
+    // A warp steeper than one folds the ground over itself, and an edge then
+    // cusps or pinches a piece off. The warp's own slope is held on the plan
+    // (roundedCells.test.ts); here, with its amplitude rising and falling
+    // across the study as the licence allows, every kind's ground is still
+    // the pieces the rounding left it in.
+    const pieces = (field: RoundedCells) => {
+      const stepM = 12.5;
+      const nx = Math.round((cols * cellM) / stepM);
+      const ny = Math.round((rows * cellM) / stepM);
+      const held = new Int16Array(nx * ny);
+      for (let j = 0; j < ny; j++) {
+        for (let i = 0; i < nx; i++) {
+          held[j * nx + i] = heldBy(field, (i + 0.5) * stepM, (j + 0.5) * stepM);
+        }
+      }
+      const count = new Array<number>(field.kinds.length).fill(0);
+      const seen = new Uint8Array(nx * ny);
+      const stack: number[] = [];
+      for (let start = 0; start < nx * ny; start++) {
+        if (seen[start]) continue;
+        const kind = held[start]!;
+        count[kind]!++;
+        seen[start] = 1;
+        stack.push(start);
+        while (stack.length > 0) {
+          const at = stack.pop()!;
+          const i = at % nx;
+          const j = Math.floor(at / nx);
+          for (const [di, dj] of [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+          ] as const) {
+            const [ni, nj] = [i + di, j + dj];
+            if (ni < 0 || nj < 0 || ni >= nx || nj >= ny) continue;
+            const next = nj * nx + ni;
+            if (seen[next] || held[next] !== kind) continue;
+            seen[next] = 1;
+            stack.push(next);
+          }
+        }
+      }
+      return count;
+    };
+    const rounded = pieces(buildRoundedCells(terrain, 0));
+    assert.deepEqual(pieces(roundedCellsOf(terrain)), rounded);
+    assert.ok(
+      rounded.some((n) => n > 1),
+      'the premise: some kind is in pieces, the bowl either side of the pocket'
+    );
   });
 
   it('holds the cell edges within half a cell of the roofed cut', () => {

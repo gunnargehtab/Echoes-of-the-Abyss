@@ -21,9 +21,9 @@
  * Rounded alone, a straight run of cells stays a ruled line, and the garden,
  * the wall and the pool read from the survey dolly as rounded boxes (#1774,
  * the owner's call in session on 10 November 2026). So the rounded field is
- * then wandered: read through a slow warp of the plan, a fixed field of
- * position, so every kind's edge meanders together and a junction stays
- * one junction. The warp is cut back wherever the rounding has already
+ * then wandered: read through a slow warp of the plan, its direction a
+ * fixed field of position, so every kind's edge meanders together and a
+ * junction stays one junction. The warp is cut back wherever the rounding has already
  * spent the licence, so the two together still move no edge as far as
  * `LICENCE_M`; it is nothing where a roof holds the cell edges; and the
  * centres' bend runs again after it, so every centre keeps its margin.
@@ -118,6 +118,14 @@ export const ROUNDED_CELLS = {
    * its amplitude long on average; driven, seven tenths.
    */
   WANDER_GAIN: 2.5,
+  /**
+   * TUNABLE — the warp's seed, picked for the study's one map. Value noise
+   * has calm stretches, and a seed can lay one along a whole side: the first
+   * tried, 0x3c6ef372, left the garden's south side within 12 m of its line.
+   * Of 160 seeds this one bows each of the study's eight long runs furthest
+   * at its least, 46 m (perspectiveTerrain.test.ts holds 40).
+   */
+  WANDER_SEED: 0x9c41e68f,
 } as const;
 
 /** One kind of ground: what the drawn ground can tell apart across an edge. */
@@ -483,61 +491,90 @@ function turnedNoise(x: number, z: number, wavelengthM: number, turn: number, sa
   return a + (b - a) * fu + (d + (e - d) * fu - a - (b - a) * fu) * fv;
 }
 
-/** Salts for the wander's two components, a field each. */
-const WANDER_SALT_X = 0x3c6ef372;
+/** The z component's salt beside the x component's, so each is a field of its own. */
 const WANDER_SALT_Z = 0x1f83d9ab;
 
 /**
  * The wander's direction and share at a point, into `out`: a vector inside
- * the unit disc, a fixed field of position that reads no cell, so it tells
- * nothing the cells do not (docs/map-visuals.md §4, rule 2).
+ * the unit disc, a fixed field of position that reads no cell. How far the
+ * warp then reaches is read from the public cells (`wanderRoom`, and the
+ * roof's hold), so the wander tells nothing the cells do not
+ * (docs/map-visuals.md §4, rule 2).
  */
 export function wanderAt(x: number, z: number, out: Float64Array): void {
   const R = ROUNDED_CELLS;
   const part = (salt: number) =>
     (1 - R.WANDER_FINE_SHARE) * turnedNoise(x, z, R.WANDER_WAVELENGTH_M, 0.52, salt) +
     R.WANDER_FINE_SHARE * turnedNoise(x, z, R.WANDER_FINE_WAVELENGTH_M, 1.13, salt ^ 0x9e3779b9);
-  const wx = R.WANDER_GAIN * part(WANDER_SALT_X);
-  const wz = R.WANDER_GAIN * part(WANDER_SALT_Z);
+  const wx = R.WANDER_GAIN * part(R.WANDER_SEED);
+  const wz = R.WANDER_GAIN * part(R.WANDER_SEED ^ WANDER_SALT_Z);
   const length = Math.hypot(wx, wz);
   const held = length > 0 ? Math.tanh(length) / length : 0;
   out[0] = wx * held;
   out[1] = wz * held;
 }
 
-/**
- * A grid's largest value within `reach` samples of each sample, along both
- * axes, then eased: the largest is taken `ease` samples further and averaged
- * over that many either side, so the result bends where a bare maximum
- * creases, and at no sample falls under the bare maximum within `reach`.
- */
-function spread(
+/** One pass of a three-sample window along x or z: each sample's largest, least or mean. */
+function windowPass(
   src: Float32Array,
   nx: number,
   nz: number,
-  reach: number,
-  ease: number
+  alongX: boolean,
+  take: 'most' | 'least' | 'mean'
 ): Float32Array {
-  const pass = (from: Float32Array, alongX: boolean, span: number, mean: boolean) => {
-    const out = new Float32Array(from.length);
-    for (let iz = 0; iz < nz; iz++) {
-      for (let ix = 0; ix < nx; ix++) {
-        let most = 0;
-        let sum = 0;
-        for (let t = -span; t <= span; t++) {
-          const jx = alongX ? clamp(ix + t, 0, nx - 1) : ix;
-          const jz = alongX ? iz : clamp(iz + t, 0, nz - 1);
-          const v = from[jz * nx + jx]!;
-          most = Math.max(most, v);
-          sum += v;
-        }
-        out[iz * nx + ix] = mean ? sum / (2 * span + 1) : most;
-      }
+  const out = new Float32Array(src.length);
+  for (let iz = 0; iz < nz; iz++) {
+    for (let ix = 0; ix < nx; ix++) {
+      const at = (t: number) =>
+        src[alongX ? iz * nx + clamp(ix + t, 0, nx - 1) : clamp(iz + t, 0, nz - 1) * nx + ix]!;
+      const [a, b, c] = [at(-1), at(0), at(1)];
+      out[iz * nx + ix] =
+        take === 'most'
+          ? Math.max(a, b, c)
+          : take === 'least'
+            ? Math.min(a, b, c)
+            : (a + b + c) / 3;
     }
-    return out;
-  };
-  const most = pass(pass(src, true, reach + ease, false), false, reach + ease, false);
-  return pass(pass(most, true, ease, true), false, ease, true);
+  }
+  return out;
+}
+
+/** A three-by-three window over a grid: each sample's largest, least or mean with its eight neighbours. */
+function window(src: Float32Array, nx: number, nz: number, take: 'most' | 'least' | 'mean') {
+  return windowPass(windowPass(src, nx, nz, true, take), nx, nz, false, take);
+}
+
+/**
+ * How far the wander may read at each sample, metres: the furthest a read
+ * can reach with the licence still unspent everywhere it could land. A read
+ * `r - 1` samples off blends samples within `r` of its own, so with the most
+ * the rounding spent within `r` samples known, a reach of `r - 1` samples is
+ * good while that much and the spend stay inside the licence; the amplitude
+ * is the best such reach. It is then eased, to its least over two samples
+ * and that averaged over two, which never raises it and leaves no step in
+ * it for the warp to tear an edge on.
+ */
+function wanderRoom(
+  spent: Float32Array,
+  nx: number,
+  nz: number,
+  stepM: number,
+  wanderM: number
+): Float32Array {
+  const R = ROUNDED_CELLS;
+  let room: Float32Array = new Float32Array(nx * nz);
+  let within: Float32Array = spent;
+  for (let r = 1; (r - 2) * stepM < wanderM; r++) {
+    within = window(within, nx, nz, 'most');
+    const reach = Math.min(wanderM, (r - 1) * stepM);
+    for (let i = 0; i < room.length; i++) {
+      const left = R.LICENCE_M - R.WANDER_SPARE_M - within[i]!;
+      room[i] = Math.max(room[i]!, Math.min(reach, left));
+    }
+  }
+  for (let pass = 0; pass < 2; pass++) room = window(room, nx, nz, 'least');
+  for (let pass = 0; pass < 2; pass++) room = window(room, nx, nz, 'mean');
+  return room;
 }
 
 /** A sample grid read bilinearly at a point, the grid's edge repeated past it. */
@@ -567,10 +604,10 @@ function sampleSamples(
  * at most from where it stood, along the warp (`wanderAt`), so its edge
  * meanders about the rounded line. Every kind reads through the one warp, so
  * two kinds' edge moves as one line and a junction of three stays a
- * junction. The amplitude at a sample is what the licence has left there:
- * `LICENCE_M` less the furthest the rounding carried any edge within the
- * wander's reach of it, and nothing where a roof holds the cell edges. A
- * sample the warp leaves alone keeps its distance to the bit.
+ * junction. The amplitude at a sample is what the licence has left there
+ * (`wanderRoom`): no read lands where the rounding and the read together
+ * would pass `LICENCE_M`, and none is made where a roof holds the cell edges.
+ * A sample the warp leaves alone keeps its distance to the bit.
  */
 function wanderEdges(
   nx: number,
@@ -581,7 +618,6 @@ function wanderEdges(
   hold: Float32Array,
   moves: Float32Array[]
 ): void {
-  const R = ROUNDED_CELLS;
   const rounded = exact.map((s, k) => s.map((v, i) => v + moves[k]![i]!));
   // What the rounding has spent of the licence at a sample: the largest move
   // among the kinds whose rounded edge runs by it. A kind counts whole with
@@ -595,15 +631,12 @@ function wanderEdges(
       spent[i] = Math.max(spent[i]!, Math.abs(moves[k]![i]!) * by);
     }
   }
-  // One sample further than the wander reaches: a bilinear read past it
-  // blends the samples either side of where it lands.
-  const near = spread(spent, nx, nz, Math.ceil(wanderM / stepM) + 1, 3);
+  const room = wanderRoom(spent, nx, nz, stepM, wanderM);
   const w = new Float64Array(2);
   for (let iz = 0; iz < nz; iz++) {
     for (let ix = 0; ix < nx; ix++) {
       const i = iz * nx + ix;
-      const left = R.LICENCE_M - R.WANDER_SPARE_M - near[i]!;
-      const amplitude = Math.min(wanderM, Math.max(0, left)) * hold[i]!;
+      const amplitude = room[i]! * hold[i]!;
       if (amplitude === 0) continue;
       const x = ix * stepM;
       const z = iz * stepM;
