@@ -1889,15 +1889,19 @@ export class EchoLayer {
 
         if (resolved.tier >= ResolutionTier.Track) {
           // Health is the hull's condition (docs/systems-echo.md §4), and a
-          // Plate's extra hull is never told: a plated hull reads its condition
-          // against its kind's own maximum. The plate is its owner's purchase
+          // Plate's extra hull is not told at a glance: a plated hull reads its
+          // condition against its kind's own maximum. The plate is its owner's purchase
           // (docs/systems-progression.md §2); told, it would sort every true
           // return of a plated navy from §3's phantoms, which claim the kind's
           // own maximum because a phantom that carried a purchase would
           // announce it (#1785). At full health the ratio is exactly one, so
           // the hull reads its kind's maximum to the bit, as a phantom does;
           // hurt, it reads its share at f32, the precision every hull is kept
-          // at, so the precision sorts nothing either (#1294).
+          // at, so the precision sorts nothing either (#1294). The share does
+          // tell the plate to a listener holding Track while the hull changes —
+          // a hit, the crush or a weld moves it 1/1.15 as far — and §4 accepts
+          // that (#1792): reading the damage instead would drop every hurt
+          // hull's reading the moment the plate is bought, unprompted.
           //
           // A rank is told, with its hull (docs/systems-progression.md §3): it
           // was earned under fire, as a wound is, and a phantom claims none,
