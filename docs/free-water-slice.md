@@ -714,17 +714,21 @@ its ink with them:
   into a Y rather than one kind spiking into the others. A licence of 115 m, inside half a
   cell, bounds how far an edge moves. Every cell centre stands at least 40 m inside its
   own kind: where the rounding would carry an edge nearer, the edge bends round the centre
-  within 110 m of it. The bowl's rim lies within 38 m of its authored circle, where the
-  cells stair up to 165 m off it.
+  within 110 m of it. Rounded, the bowl's rim lies within 35 m of its authored circle,
+  where the cells stair up to 165 m off it.
 - **Wandering edges.** Rounding moves a straight run of cells nowhere, so the garden, the
   wall and the pool kept ruled sides and read from the survey dolly as boxes with their
   corners off. The owner chose to wander them, in session on 10 November 2026. The
   rounded ground is read through a slow warp of the plan, 75 m at most, bowing over about
-  800 m and broken by a finer 340 m. The warp is one fixed field of position for every
-  kind, so an edge moves as one line and tells nothing the cells do not. It has only what
-  the licence has left: the whole 75 m on a straight run, less wherever the rounding has
-  already moved an edge, so no edge moves 115 m. Every centre still stands 40 m inside
-  its kind.
+  800 m and broken by a finer 340 m. Every kind reads through the one warp, so an edge
+  moves as one line. Its direction is a fixed field of position and its reach is read
+  from the cells, so it tells nothing the cells do not. It has only what the licence has
+  left: the whole 75 m on a straight run, less wherever the rounding has already moved
+  an edge, so no edge moves 115 m. Every centre still stands 40 m inside its kind. The
+  warp's seed was picked for this one map: the wander alone carries each long side of
+  the garden, the pocket and the bowl across 40 m or more, and the bowl's rim up to
+  56 m off its circle. Within 250 m of the roofed cut the wall's and the pool's sides
+  stay ruled or nearly, by the hold below.
 - **Ramps and faces.** The floor climbs across the rounded edge as a scarp about 80 m
   wide, and a rock face rises from a gentle foot to a steep lip. Within half a cell
   of the roofed cut nothing rounds or wanders, easing in over the next half, because the
