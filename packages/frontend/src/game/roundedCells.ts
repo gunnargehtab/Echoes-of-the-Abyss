@@ -121,9 +121,10 @@ export const ROUNDED_CELLS = {
   /**
    * TUNABLE — the warp's seed, picked for the study's one map. Value noise
    * has calm stretches, and a seed can lay one along a whole side: the first
-   * tried, 0x3c6ef372, left the garden's south side within 12 m of its line.
-   * Of 160 seeds this one bows each of the study's eight long runs furthest
-   * at its least, 46 m (perspectiveTerrain.test.ts holds 40).
+   * field tried, under other salts, left the garden's south side within 12 m
+   * of its line. Of 160 seeds this one bowed the study's eight long runs
+   * furthest at its least: 43 m, the garden's east side, as
+   * perspectiveTerrain.test.ts reads it, and that test holds 40.
    */
   WANDER_SEED: 0x9c41e68f,
 } as const;

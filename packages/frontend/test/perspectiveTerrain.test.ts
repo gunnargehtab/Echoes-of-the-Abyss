@@ -630,9 +630,9 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
 
   it('leaves no long side ruled: the garden, the pocket and the bowl each bow', () => {
     // Value noise has calm stretches, and a seed can lay one along a whole
-    // side: the first seed left the garden's south side within 12 m of its
-    // line. `WANDER_SEED` was picked so that each long straight run of the
-    // study's cells bows, and this holds it: along each, the wander alone
+    // side: the first field tried left the garden's south side within 12 m
+    // of its line. `WANDER_SEED` was picked so that each long straight run of
+    // the study's cells bows, and this holds it: along each, the wander alone
     // carries the edge across a span of 40 m or more. The edge is read on the
     // field, since the garden and the bowl are one biome and draw no coast
     // between them, only the scarp.

@@ -153,8 +153,9 @@ a straight run of cells nowhere, so the garden, the wall and the pool kept ruled
 plan: 75 m at most, less wherever the rounding has already spent the 115 m licence, and
 nothing where the roof holds the cell edges. The roof's hold now eases off over half a
 cell rather than a whole one, so more of the wall either side of the cut can move. The
-warp's seed was picked for this map, the best of 160 by its least-bowed side: the first
-tried left the garden's south side within 12 m of its line.
+warp's seed was picked for this map, the best of 160 by its least-bowed side, the
+garden's east at 43 m. The first field tried left the garden's south side within 12 m
+of its line.
 
 Reproduce with the commands above and `--out docs/screenshots/issue-1774/wander/after`.
 `wander/before/` is the same run at `c889bd645`, main's head. Same rasteriser, viewport
