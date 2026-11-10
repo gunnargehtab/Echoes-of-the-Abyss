@@ -1,0 +1,87 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "readings": [
+    {
+      "name": "survey",
+      "look": "standard",
+      "ground": {
+        "eroded": false
+      },
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2008,
+        "zM": 2327,
+        "depthM": -42807
+      },
+      "distance": 10000,
+      "calls": 75,
+      "triangles": 163878,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 21,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
+    },
+    {
+      "name": "low",
+      "look": "standard",
+      "ground": {
+        "eroded": false
+      },
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 1998,
+        "zM": 3565,
+        "depthM": -668
+      },
+      "distance": 1600,
+      "calls": 75,
+      "triangles": 160006,
+      "instances": {},
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 21,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
+    }
+  ]
+}
