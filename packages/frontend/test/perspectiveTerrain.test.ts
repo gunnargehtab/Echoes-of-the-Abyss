@@ -336,7 +336,8 @@ describe('authored floor for the survey ink', () => {
  * centres, the cells' staircase rounded; nothing is added to the authored
  * floor at a centre, and a solid cell stays rock at its centre; the drawn
  * step stays between the cells within a cell of it; within half a cell of the
- * roofed cut nothing rounds, and each jamb keeps its step; the study's ink traces the
+ * roofed cut nothing rounds, and each jamb keeps its step; a straight run of
+ * cells wanders rather than drawing a ruled line; the study's ink traces the
  * rounded ground (docs/map-visuals.md §4, the study's clause); the shipped
  * ground is untouched. The picture is the run-game frames' to review.
  */
@@ -526,8 +527,9 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     // coral. Read off the cells it stairs more than half a cell off the circle
     // and kinks at every corner of the stair; drawn, it stays near the circle and
     // turns without a kink. Every centre's margin bends it where a centre
-    // stands close to the circle, so it does not lie on it. A kink is the
-    // second difference over rays half a degree apart.
+    // stands close to the circle, and the wander carries it a little either
+    // side, so it does not lie on it. A kink is the second difference over
+    // rays half a degree apart.
     const centre = { x: 2250, y: 2250 };
     const radius = 1250;
     const rim = (inCoral: (x: number, y: number) => boolean, deg: number) => {
@@ -570,6 +572,38 @@ describe('the rounded ground (docs/free-water-slice.md §9)', () => {
     assert.ok(reading.cellsOff > cellM / 2 - 5, `the premise, the cells' stair: ${said}`);
     assert.ok(reading.drawnOff < 50, `the drawn rim strays from the circle: ${said}`);
     assert.ok(reading.drawnKink < reading.cellsKink / 3, `the drawn rim kinks: ${said}`);
+  });
+
+  it("wanders the garden's north edge, a ruled line on the cells and rounded alone", () => {
+    // The garden is authored as a rectangle, so its north edge is a straight
+    // run of eight cells along y = 500, and rounding moves a straight run
+    // nowhere: from the survey dolly the garden read as a box with its
+    // corners off (#1774). Drawn, the edge between the garden's kelp and the
+    // rim's coral meanders about that line, inside the wander.
+    const edgeY = 500;
+    const inGarden = (x: number, y: number) => {
+      const g = erodedGroundAtM(terrain, rockTop, x, y);
+      return drawnBiome(g.biomeM) === Biome.KelpForest;
+    };
+    const off: number[] = [];
+    // Clear of the corners, which the rounding has already cut.
+    for (let x = 1375; x <= 2625; x += 12.5) {
+      let y = edgeY - cellM / 2;
+      while (!inGarden(x, y)) y += 1;
+      off.push(y - edgeY);
+    }
+    const least = Math.min(...off);
+    const most = Math.max(...off);
+    const said = `from ${least} to ${most} m`;
+    assert.ok(most - least > 30, `the edge is still a ruled line: ${said}`);
+    assert.ok(
+      most <= ROUNDED_CELLS.WANDER_M + 1 && least >= -ROUNDED_CELLS.WANDER_M - 1,
+      `the edge strays past the wander: ${said}`
+    );
+    // And it turns without a kink: no step between rays 12.5 m apart.
+    for (let i = 1; i < off.length; i++) {
+      assert.ok(Math.abs(off[i]! - off[i - 1]!) <= 12.5, `a kink at x=${1375 + 12.5 * i}`);
+    }
   });
 
   it('holds the cell edges within half a cell of the roofed cut', () => {
