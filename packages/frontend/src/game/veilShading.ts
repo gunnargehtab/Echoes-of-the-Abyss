@@ -93,7 +93,7 @@ export function readsDisplayVeil(material: Material): boolean {
   return material.customProgramCacheKey().includes(VEIL_SHADING_KEY);
 }
 
-const INSTANCE_COLOR_LINE = 'vColor.xyz *= instanceColor.xyz;';
+const INSTANCE_COLOR_LINE = 'vColor.rgb *= instanceColor.rgb;';
 if (!ShaderChunk.color_vertex.includes(INSTANCE_COLOR_LINE)) {
   throw new Error('three moved the instance colour out of color_vertex: installPropVeil reads it');
 }
