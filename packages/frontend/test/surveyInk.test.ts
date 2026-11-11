@@ -139,7 +139,7 @@ describe('survey ink levels', () => {
    * strokes are drawn over ground the lit world pass drew, and the lit ground
    * carries none. The Low quality's patch is the one every build drew.
    */
-  describe('the three modes (#1801)', () => {
+  describe('the modes (#1801)', () => {
     const terrain: TerrainPayload = {
       cols: 1,
       rows: 1,
@@ -148,7 +148,7 @@ describe('survey ink levels', () => {
       floor: [1000],
       ceiling: [0],
     };
-    const compile = (mode?: 'ground' | 'overlay' | 'carrier') => {
+    const compile = (mode?: 'ground' | 'overlay' | 'carrier' | 'plate') => {
       const material = new MeshBasicMaterial();
       const cells = surveyCellTexture(terrain, surveyCellClasses(terrain));
       if (mode === undefined) installSurveyInk(material, terrain, cells);
@@ -210,6 +210,49 @@ describe('survey ink levels', () => {
       assert.ok(!carrier.shader.fragmentShader.includes(STROKE));
       assert.ok(carrier.shader.fragmentShader.includes('vec3 surveyEncode( vec3 c )'));
       assert.ok(carrier.shader.vertexShader.includes('vSurveyXZ = ( modelMatrix'));
+    });
+
+    it('draws where the strokes’ plates stand: wider than a stroke, and hidden as it is', () => {
+      // art-direction.md, "The plate under a mark": survey ink carries one,
+      // "every stroke, with a margin either side, fading into the water as
+      // the stroke does and hidden by the world as the stroke is".
+      const ground = compile('ground');
+      const plate = compile('plate');
+      assert.equal(plate.material.customProgramCacheKey(), 'survey-ink-plate');
+      const source = plate.shader.fragmentShader;
+      // Every stroke, whatever its alpha: a faint one needs its ground as
+      // much as a strong one.
+      assert.ok(
+        source.includes(
+          'float ink = max( max( minor, major ), max( max( border, coast ), thermocline ) );'
+        )
+      );
+      assert.ok(!source.includes(MIX), 'it draws no ink');
+      // A plate's line is its stroke's, grown: whole past the stroke's edge,
+      // then gone over a soft one. The stroke itself is not grown.
+      assert.ok(
+        source.includes(
+          'return 1.0 - smoothstep( widthPx * 0.5 + uPlateReach.x, widthPx * 0.5 + uPlateReach.x + uPlateReach.y, px );'
+        )
+      );
+      assert.ok(
+        ground.shader.fragmentShader.includes(
+          'return 1.0 - smoothstep( widthPx * 0.5 - 0.5, widthPx * 0.5 + 0.5, px );'
+        )
+      );
+      // It swims out as the overlay's stroke does, and is hidden by the
+      // world's depth, which the mask does not have.
+      assert.ok(
+        source.includes('plateCover *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );')
+      );
+      assert.ok(source.includes('texture2D( uPlateDepth, gl_FragCoord.xy * uPlateTexel ).r'));
+      assert.ok(!source.includes('#include <fog_fragment>'));
+      // What it hands the mask is coverage, not a colour through the curve.
+      assert.ok(source.includes('gl_FragColor = vec4( vec3( plateCover ), 1.0 );'));
+      for (const name of ['uPlateDepth', 'uPlateTexel', 'uPlateReach']) {
+        assert.ok(plate.shader.uniforms[name] !== undefined, `${name} is the plate pass’s to set`);
+        assert.equal(ground.shader.uniforms[name], undefined, 'and no other mode carries it');
+      }
     });
   });
 

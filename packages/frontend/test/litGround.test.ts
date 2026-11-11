@@ -8,35 +8,19 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { MeshBasicMaterial, ShaderLib } from 'three';
-import { Biome, HIGH_GRAPHICS, MODEL_LIGHTING, TERRAIN_LIFT } from '@echoes/shared';
+import { Biome, HIGH_GRAPHICS, MODEL_LIGHTING } from '@echoes/shared';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
-import {
-  BIOME_COLOR,
-  LID_GLOW,
-  PALETTE_NAMES,
-  PALETTES,
-  type Palette,
-  type PaletteName,
-  ROCK_FACE,
-  scaleRgb,
-  WORLD_LIGHT,
-} from '../src/game/palette.ts';
-import {
-  agentFloorLift,
-  furnitureFloorLift,
-  instrumentFloorLift,
-  strokeLift,
-  unselectedRingLift,
-} from '../src/game/ladder.ts';
+import { BIOME_COLOR, LID_GLOW, ROCK_FACE } from '../src/game/palette.ts';
+import { encodedLuminance } from '../src/game/ladder.ts';
 import {
   installLitGround,
   installLitRoof,
   LIT_GROUND_GLSL,
-  LIT_GROUND_MOST,
   LIT_IRRADIANCE_GLSL,
   litGroundBytes,
   litGroundSurface,
 } from '../src/game/litGround.ts';
+import { PLATE_LEVEL } from '../src/game/markPlates.ts';
 import {
   BIOME_RELIEF,
   LIT_ALBEDO_GAIN,
@@ -47,13 +31,7 @@ import {
   shadeSeabed,
 } from '../src/game/seabed.ts';
 import { DEPTH_VISUAL_M_PER_M } from '../src/game/perspectiveTerrain.ts';
-import {
-  installSurveyInk,
-  SURVEY_ALPHA,
-  SURVEY_INK_COLOR,
-  surveyCellClasses,
-  surveyCellTexture,
-} from '../src/game/surveyInk.ts';
+import { installSurveyInk, surveyCellClasses, surveyCellTexture } from '../src/game/surveyInk.ts';
 import { installDisplayVeil } from '../src/game/veilShading.ts';
 
 const decode = (byte: number): number => {
@@ -263,7 +241,7 @@ describe('the lit ground’s material (#1801)', () => {
     assert.ok(shader.vertexShader.includes('vLitWorldY = ( modelMatrix'));
     const key = material.customProgramCacheKey();
     assert.ok(key.startsWith('survey-ink-carrier'), key);
-    assert.ok(key.endsWith(':lit-ground-3'), key);
+    assert.ok(key.endsWith(':lit-ground-4'), key);
   });
 
   it('lights the ground from the Lid’s glow: from above, from no quarter, dimmed by depth', () => {
@@ -321,109 +299,47 @@ describe('the lit ground’s material (#1801)', () => {
     );
   };
   /**
-   * The brightest ground each light can show: every albedo, level and
-   * unshadowed, under `hue` at the ground's ceiling (`LIT_GROUND_MOST`), which
-   * the shader holds whatever the Lid and the pools sum to.
+   * The brightest ground the Lid alone lights: every albedo, level and
+   * unshadowed, at the Lid itself, where no water has taken any of its glow.
    */
-  const brightestUnder = (hue: number): number[] => {
-    const rgb = [(hue >> 16) & 0xff, (hue >> 8) & 0xff, hue & 0xff].map(decode);
-    const scale = LIT_GROUND_MOST / (0.2126 * rgb[0]! + 0.7152 * rgb[1]! + 0.0722 * rgb[2]!);
-    return albedos().map((albedo) => shown(albedo.map((a, k) => (a * rgb[k]! * scale) / Math.PI)));
+  const brightestUnderLid = (): number[] => {
+    const rgb = [(LID_GLOW >> 16) & 0xff, (LID_GLOW >> 8) & 0xff, LID_GLOW & 0xff].map(decode);
+    return albedos().map((albedo) =>
+      shown(albedo.map((a, k) => (a * rgb[k]! * HIGH_GRAPHICS.LID.IRRADIANCE) / Math.PI))
+    );
   };
 
-  /**
-   * The ladder's own comparisons for rungs 4 to 7 over one ground
-   * (test/ladder.test.ts): the first that fails, or null where its order
-   * holds. The ink reads, under rung 5's floor and under the unselected ring;
-   * rung 6's floor clears rung 5's; and rung 7's floor on the chart reads.
-   * Rung 7's floor clearing rung 6's is not asked: the ladder records where
-   * it does not, over every ground (docs/map-visuals.md §10).
-   */
-  const rungOrderBreak = (palette: Palette, ground: number): string | null => {
-    const ink = Object.values(SURVEY_ALPHA).map((alpha) =>
-      strokeLift(SURVEY_INK_COLOR, alpha, ground)
+  it('adds a source’s pool to the Lid’s glow, with nothing holding the sum down', () => {
+    // art-direction.md, "What is built at High": "A pool lifts the ground as
+    // far as its light reaches: the ceiling that first held the lit ground
+    // under the marks is gone, and the plates hold limit 6 instead"
+    // (test/markPlates.test.ts).
+    const sum = LIT_GROUND_GLSL.indexOf(
+      'vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;'
     );
-    const rung5 = furnitureFloorLift(palette, ground);
-    if (Math.min(...ink) <= 0) return 'the ink reads';
-    if (Math.max(...ink) >= rung5) return 'the ink under rung 5';
-    if (Math.max(...ink) >= unselectedRingLift(palette, ground)) return 'the ink under the ring';
-    if (instrumentFloorLift(palette, ground) <= rung5) return 'rung 6 clears rung 5';
-    if (agentFloorLift(palette, ground) <= 0) return 'rung 7 reads';
-    return null;
-  };
-
-  it('never lights ground past its ceiling, whatever the Lid and the pools sum to', () => {
-    // HIGH_GRAPHICS.GROUND.LIGHT_CEILING: a share of what level ground takes
-    // at the Lid, by luminance, clamped after the pools are added and before
-    // the albedo and the occlusion, which only darken.
-    const lid = [(LID_GLOW >> 16) & 0xff, (LID_GLOW >> 8) & 0xff, LID_GLOW & 0xff].map(decode);
-    const level =
-      HIGH_GRAPHICS.LID.IRRADIANCE * (0.2126 * lid[0]! + 0.7152 * lid[1]! + 0.0722 * lid[2]!);
-    assert.ok(Math.abs(LIT_GROUND_MOST - HIGH_GRAPHICS.GROUND.LIGHT_CEILING * level) < 1e-6);
-    assert.ok(HIGH_GRAPHICS.GROUND.LIGHT_CEILING <= 1);
-    const clamp = LIT_GROUND_GLSL.indexOf(
-      'irradiance *= min( 1.0, most / max( 1e-5, dot( irradiance, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );'
+    const out = LIT_GROUND_GLSL.indexOf('return albedo * irradiance * relief.g');
+    assert.ok(sum > 0 && out > sum);
+    assert.equal(
+      LIT_GROUND_GLSL.slice(sum, out)
+        .split('\n')
+        .filter((line) => line.includes('irradiance')).length,
+      1,
+      'the sum is what the albedo takes'
     );
-    assert.ok(clamp > LIT_GROUND_GLSL.indexOf('texture2D( uLitPools, uv ).rgb'), 'after the pools');
-    assert.ok(clamp < LIT_GROUND_GLSL.indexOf('return albedo * irradiance'), 'before the albedo');
-    assert.ok(LIT_GROUND_GLSL.includes(`float most = ${LIT_GROUND_MOST.toFixed(6)};`));
   });
 
-  it('keeps every lit ground under the marks, a pool’s included, in all four palettes (limit 6)', () => {
-    // art-direction.md limit 6: "Each tactical rung's floor still reads over
-    // the brightest lit ground the look puts under it, in all four palettes."
-    // The brightest ground is the ceiling's, in the Lid's hue or in a
-    // source's: a pool is clamped with the glow it joins. Over each, the
-    // ladder's own comparisons for rungs 4 to 7 (test/ladder.test.ts) are run
-    // again: the ink reads, under rung 5's floor and under the unselected
-    // ring; rung 6's floor clears rung 5's; and rung 7's floor reads.
-    const lights = { 'lid-glow': LID_GLOW, ...WORLD_LIGHT };
-    for (const [light, hue] of Object.entries(lights)) {
-      for (const ground of brightestUnder(hue)) {
-        for (const name of PALETTE_NAMES) {
-          assert.equal(
-            rungOrderBreak(PALETTES[name], ground),
-            null,
-            `${name}, under ${light}, over #${ground.toString(16).padStart(6, '0')}`
-          );
-        }
-      }
-    }
-  });
-
-  it('is held that low by the ladder: its rung order breaks over paler ground', () => {
-    // art-direction.md, "The lit ground under the marks": the figures it
-    // gives, a palette, for the palest grey ground the ladder's rung order
-    // holds over, and what gives first past it. A pool that reads as light on
-    // the ground stands past the first of them.
-    const holds = (name: PaletteName) => {
-      for (let byte = 1; byte < 256; byte++) {
-        const broke = rungOrderBreak(PALETTES[name], (byte << 16) | (byte << 8) | byte);
-        if (broke !== null)
-          return { percent: Number((((byte - 1) / 255) * 100).toFixed(1)), broke };
-      }
-      return { percent: 100, broke: '' };
-    };
-    assert.deepEqual(holds('tritanopia'), { percent: 11.8, broke: 'rung 6 clears rung 5' });
-    assert.deepEqual(holds('deuteranopia'), { percent: 17.3, broke: 'rung 7 reads' });
-    assert.deepEqual(holds('protanopia'), { percent: 17.3, broke: 'rung 7 reads' });
-    assert.deepEqual(holds('standard'), { percent: 18.8, broke: 'rung 7 reads' });
-  });
-
-  it('lights the ground as bright as that leaves it: near the palest ground the ladder weighs', () => {
-    // Not held needlessly dark: the brightest ground the Lid lights is within
-    // a third of the palest pixel the Low ground draws, the palest fill lifted
-    // by the terrain cap (test/ladder.test.ts, `LIFTED_GROUND`).
-    const encoded = (hex: number) =>
-      (0.2126 * ((hex >> 16) & 0xff) + 0.7152 * ((hex >> 8) & 0xff) + 0.0722 * (hex & 0xff)) / 255;
-    const palest = Object.values(BIOME_COLOR).reduce((a, b) => (encoded(a) >= encoded(b) ? a : b));
-    const weighed = encoded(scaleRgb(palest, 1 + TERRAIN_LIFT.MAX));
-    const brightest = Math.max(...brightestUnder(LID_GLOW).map(encoded));
+  it('lights no ground a plate would change with the Lid’s glow alone', () => {
+    // A mark's plate holds the world to the palest ground the ladder weighs
+    // (markPlates.ts `PLATE_LEVEL`). The Lid's level is set so its brightest
+    // ground is no paler than that, so a plate bites only where a source of
+    // the world's stands, and a mark over open ground looks as it does at
+    // Low. Not held needlessly dark either: within a quarter of it.
+    const brightest = Math.max(...brightestUnderLid().map(encodedLuminance));
     assert.ok(
-      brightest <= weighed,
-      `${(brightest * 100).toFixed(1)}% past ${(weighed * 100).toFixed(1)}%`
+      brightest <= PLATE_LEVEL,
+      `${(brightest * 100).toFixed(1)}% past ${(PLATE_LEVEL * 100).toFixed(1)}%`
     );
-    assert.ok(brightest > (2 / 3) * weighed, `only ${(brightest * 100).toFixed(1)}%`);
+    assert.ok(brightest > 0.75 * PLATE_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
   });
 
   it('lights a roof from its own face, by the ground’s gain', () => {

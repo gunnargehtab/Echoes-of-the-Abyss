@@ -109,16 +109,6 @@ export const LIT_IRRADIANCE_GLSL = [
   '}',
 ].join('\n');
 
-/**
- * The most light the ground takes, as the luminance of its irradiance: the
- * ceiling's share of what level ground takes at the Lid
- * (`HIGH_GRAPHICS.GROUND.LIGHT_CEILING`).
- */
-export const LIT_GROUND_MOST = (() => {
-  const lid = new Color(LID_GLOW).multiplyScalar(HIGH_GRAPHICS.LID.IRRADIANCE);
-  return HIGH_GRAPHICS.GROUND.LIGHT_CEILING * (0.2126 * lid.r + 0.7152 * lid.g + 0.0722 * lid.b);
-})();
-
 /** The ground's half: the bake's slope and occlusion under that light. */
 export const LIT_GROUND_GLSL = [
   'uniform sampler2D uLitRelief;',
@@ -132,19 +122,14 @@ export const LIT_GROUND_GLSL = [
   '  vec2 slope = relief.rb * 2.0 - 1.0;',
   '  vec3 normal = vec3( slope.x, sqrt( max( 0.0, 1.0 - dot( slope, slope ) ) ), slope.y );',
   // The world's own sources pool on it (worldLights.ts): light from beside
-  // the ground, which the water above it does not take.
+  // the ground, which the water above it does not take. Nothing holds the sum
+  // down here: a mark carries its own ground (markPlates.ts; limit 6).
   '  vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;',
-  // Never more light, by luminance, than a share of what level ground takes
-  // at the Lid: a pool lifts ground as far as depth has darkened it and no
-  // further, so the ground stays under the marks whatever stands on it
-  // (docs/art-direction.md, limit 6).
-  `  float most = ${glsl(LIT_GROUND_MOST)};`,
-  '  irradiance *= min( 1.0, most / max( 1e-5, dot( irradiance, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );',
   '  return albedo * irradiance * relief.g * 0.3183098861837907;',
   '}',
 ].join('\n');
 
-const LIT_GROUND_KEY = ':lit-ground-3';
+const LIT_GROUND_KEY = ':lit-ground-4';
 const LIT_ROOF_KEY = ':lit-roof-1';
 
 /** The unlit sum the patch replaces: three's basic material, r187. */

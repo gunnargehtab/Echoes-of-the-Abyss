@@ -32,12 +32,14 @@
  */
 
 import {
+  type DepthTexture,
   type Material,
   DataTexture,
   FloatType,
   NearestFilter,
   RedFormat,
   UnsignedByteType,
+  Vector2,
 } from 'three';
 import { DEPTH, DEPTH_BANDS, THERMOCLINE } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
@@ -203,6 +205,18 @@ export interface SurveyInkUniforms {
 }
 
 /**
+ * What the `plate` mode reads of the frame it is drawn into (markPlates.ts
+ * `PlatePass`): the world pass's depth and one of its texels, so a plate is
+ * hidden by the world as its stroke is, and how far past a stroke its plate
+ * stands whole and then fades, in the frame's own pixels.
+ */
+export interface SurveyInkPlateUniforms {
+  uPlateDepth: { value: DepthTexture | null };
+  uPlateTexel: { value: Vector2 };
+  uPlateReach: { value: Vector2 };
+}
+
+/**
  * The cell classes as a texture the fragment shader can `texelFetch`: one
  * red byte per cell, nearest-sampled, no mipmaps — a class is a label, and
  * a filtered label is a lie. Row 0 is the map's north edge, as in the bake.
@@ -279,9 +293,19 @@ const DRAWN_VERTEX_MAIN = [
   'vSurveyBiomeB = surveyBiomeB;',
 ].join('\n');
 
-function fragmentPars(): string {
+function fragmentPars(plate = false): string {
   const majors = MAJOR_ISOBATHS_M.map(glslFloat).join(', ');
+  // A plate's line is its stroke's, whole to `uPlateReach.x` pixels past the
+  // stroke's edge and gone `uPlateReach.y` further out.
+  const edge = plate ? 'widthPx * 0.5 + uPlateReach.x' : 'widthPx * 0.5 - 0.5';
+  const gone = plate ? 'widthPx * 0.5 + uPlateReach.x + uPlateReach.y' : 'widthPx * 0.5 + 0.5';
+  const minorPx = plate
+    ? `( ${glslFloat(SURVEY_WIDTH_PX.minor)} + 2.0 * uPlateReach.x )`
+    : glslFloat(SURVEY_WIDTH_PX.minor);
   return [
+    ...(plate
+      ? ['uniform sampler2D uPlateDepth;', 'uniform vec2 uPlateTexel;', 'uniform vec2 uPlateReach;']
+      : []),
     'uniform sampler2D uSurveyCells;',
     'uniform vec3 uSurveyGrid;',
     'uniform vec3 uSurveyInk;',
@@ -309,7 +333,7 @@ function fragmentPars(): string {
     '',
     // Coverage of a line `px` pixels from its centre, anti-aliased over one pixel.
     'float surveyLine( float px, float widthPx ) {',
-    '  return 1.0 - smoothstep( widthPx * 0.5 - 0.5, widthPx * 0.5 + 0.5, px );',
+    `  return 1.0 - smoothstep( ${edge}, ${gone}, px );`,
     '}',
     '',
     // Every multiple of the interval. Where the lines fall closer than the
@@ -321,7 +345,7 @@ function fragmentPars(): string {
     '  float distM = abs( fract( x + 0.5 ) - 0.5 ) * interval;',
     '  float spacing = interval / perPx;',
     `  float line = surveyLine( distM / perPx, ${glslFloat(SURVEY_WIDTH_PX.minor)} );`,
-    `  float average = min( 1.0, ${glslFloat(SURVEY_WIDTH_PX.minor)} / spacing );`,
+    `  float average = min( 1.0, ${minorPx} / spacing );`,
     '  return mix( average, line, smoothstep( 2.0, 4.0, spacing ) );',
     '}',
     '',
@@ -449,15 +473,30 @@ const INK_OVERLAY = [
 ].join('\n');
 
 /**
+ * A stroke's plate (`SurveyInkMode`, `plate`; docs/art-direction.md, "The
+ * plate under a mark"): how whole a plate stands at this pixel, whichever
+ * stroke it is under. A stroke's alpha is not in it: a faint stroke needs
+ * its ground as much as a strong one.
+ */
+const INK_PLATE = [
+  // No discard here: the patch takes a derivative after this, and the mask
+  // keeps the greater of what is drawn into it, so nothing is nothing.
+  '  float ink = max( max( minor, major ), max( max( border, coast ), thermocline ) );',
+  '  diffuseColor = vec4( vec3( 1.0 ), ink );',
+].join('\n');
+
+/**
  * What the patch draws. `ground` is the Low graphics quality's and every
  * build's before it: the strokes mixed into the material's own ground.
  * The High quality splits the two (docs/art-direction.md, "Two layers, two
  * laws"): `overlay` draws the strokes alone, over ground the lit world pass
  * drew, fading into the water by coverage rather than by colour; `carrier`
  * draws none, and gives a lit ground the varyings and the encode pair the
- * silt detail reads (seabedDetail.ts).
+ * silt detail reads (seabedDetail.ts); `plate` draws where the strokes'
+ * plates stand, into the plate pass's mask (markPlates.ts), and returns the
+ * uniforms that pass sets.
  */
-export type SurveyInkMode = 'ground' | 'overlay' | 'carrier';
+export type SurveyInkMode = 'ground' | 'overlay' | 'carrier' | 'plate';
 
 const FRAGMENT_MAIN = [
   '{',
@@ -559,8 +598,17 @@ export function installSurveyInk(
   cells: DataTexture,
   drawn: DrawnSurvey | null = null,
   mode: SurveyInkMode = 'ground'
-): SurveyInkUniforms {
-  const uniforms: SurveyInkUniforms = {
+): SurveyInkUniforms & Partial<SurveyInkPlateUniforms> {
+  const plate: SurveyInkPlateUniforms | null =
+    mode === 'plate'
+      ? {
+          uPlateDepth: { value: null },
+          uPlateTexel: { value: new Vector2(1, 1) },
+          uPlateReach: { value: new Vector2(0, 1) },
+        }
+      : null;
+  const uniforms: SurveyInkUniforms & Partial<SurveyInkPlateUniforms> = {
+    ...(plate ?? {}),
     uSurveyCells: { value: cells },
     uSurveyGrid: { value: [terrain.cols, terrain.rows, terrain.cellM] },
     uSurveyInk: {
@@ -575,7 +623,13 @@ export function installSurveyInk(
   const vertexMain = drawn ? `${VERTEX_MAIN}\n${DRAWN_VERTEX_MAIN}` : VERTEX_MAIN;
   const strokes = drawn ? DRAWN_FRAGMENT_MAIN : FRAGMENT_MAIN;
   const fragmentMain =
-    mode === 'carrier' ? '' : mode === 'overlay' ? strokes.replace(INK, INK_OVERLAY) : strokes;
+    mode === 'carrier'
+      ? ''
+      : mode === 'overlay'
+        ? strokes.replace(INK, INK_OVERLAY)
+        : mode === 'plate'
+          ? strokes.replace(INK, INK_PLATE)
+          : strokes;
   const drawnUniforms =
     drawn === null
       ? {}
@@ -593,7 +647,7 @@ export function installSurveyInk(
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        `#include <common>\n${fragmentPars()}${drawn ? `\n${DRAWN_FRAGMENT_PARS}` : ''}`
+        `#include <common>\n${fragmentPars(mode === 'plate')}${drawn ? `\n${DRAWN_FRAGMENT_PARS}` : ''}`
       )
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain}`);
     // The strokes swim out by coverage: mixed toward the water's colour as
@@ -606,6 +660,24 @@ export function installSurveyInk(
           '#ifdef USE_FOG',
           '  gl_FragColor.a *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );',
           '#endif',
+        ].join('\n')
+      );
+    }
+    // A plate swims out as its stroke does, and is hidden by the world as its
+    // stroke is: the mask has no depth of its own, so the world pass's is
+    // read, with the slope's own share of a pixel as the margin. What is left
+    // is the plate's coverage, untouched by the curve the material ran.
+    if (mode === 'plate') {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <fog_fragment>',
+        [
+          'float plateCover = diffuseColor.a;',
+          '#ifdef USE_FOG',
+          '  plateCover *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );',
+          '#endif',
+          'float plateSlope = fwidth( gl_FragCoord.z );',
+          'if ( gl_FragCoord.z > texture2D( uPlateDepth, gl_FragCoord.xy * uPlateTexel ).r + 2.0 * plateSlope + 1e-6 ) discard;',
+          'gl_FragColor = vec4( vec3( plateCover ), 1.0 );',
         ].join('\n')
       );
     }

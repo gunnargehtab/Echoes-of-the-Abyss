@@ -135,12 +135,14 @@ import { buildTemplate, instantiate } from '../src/game/rosterModels.ts';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { graphicsQualityStatus } from '../src/game/graphicsQuality.ts';
+import { PLATE_HOLD_GLSL } from '../src/game/markPlates.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FACTION_PALETTE, FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
 import {
   BufferAttribute,
   FogExp2,
+  MaxEquation,
   Mesh,
   MeshBasicMaterial,
   Points,
@@ -2271,10 +2273,12 @@ describe('renderer smoke test: the conn view', () => {
           targetBytes: 0,
           groundBytes: 0,
           worldLights: 0,
+          plates: 0,
           frameGpuBudgetMs: 8,
         },
         'Low holds nothing of High’s'
       );
+      assert.equal(world.conn.markPlates(), null, 'and the chart hands it no plate');
       const lowDraws = drawsOf(world.gl)[0]!;
       // What a draw is, to the GPU: the kind of object, and its material by
       // type, program and the two flags that pick its curve and its fog. A
@@ -2311,15 +2315,20 @@ describe('renderer smoke test: the conn view', () => {
         'high-scatter',
         'high-occlusion',
         'high-bloom',
+        'high-plates',
         'high-composite',
         'high-tactical',
       ]);
-      // The world, the scatter and the chain draw into targets: the
-      // occlusion, the bloom's prefilter, three levels down and three back
-      // up. The composite and the tactical pass draw to the canvas.
+      // The world, the scatter, the chain and the plates draw into targets:
+      // the occlusion, the bloom's prefilter, three levels down and three
+      // back up, then the plates' mask. The composite and the tactical pass
+      // draw to the canvas.
       const [target, scatter, ...after] = world.gl.frameTargets;
       const chain = after.slice(0, 8);
-      const rest = after.slice(8);
+      const mask = after[8];
+      const rest = after.slice(9);
+      assert.ok(mask !== null && mask !== undefined, 'the plate pass has its mask');
+      assert.deepEqual([mask.width, mask.height], [1280, 720], 'at the frame’s own size');
       assert.deepEqual(
         chain.map((t) => t?.width),
         [640, 640, 320, 160, 80, 160, 320, 640],
@@ -2336,14 +2345,15 @@ describe('renderer smoke test: the conn view', () => {
         1280 * 720 * 12 * 5 +
           640 * 360 * 8 +
           640 * 360 * 4 +
-          (640 * 360 + 320 * 180 + 160 * 90 + 80 * 45) * 8
+          (640 * 360 + 320 * 180 + 160 * 90 + 80 * 45) * 8 +
+          1280 * 720 * 4
       );
       assert.ok((quality(high).groundBytes as number) > 0, 'the lit ground holds its pixels');
 
       const draws = drawsOf(world.gl);
       const [worldPass, volumes] = draws as [Object3D[], Object3D[]];
-      const [composite, tactical] = draws.slice(-2) as [Object3D[], Object3D[]];
-      assert.equal(draws.length, 12);
+      const [plated, composite, tactical] = draws.slice(-3) as [Object3D[], Object3D[], Object3D[]];
+      assert.equal(draws.length, 13);
       for (const pass of draws.slice(2, 10)) assert.equal(pass.length, 1, 'one full-screen draw');
       assert.equal(volumes.length, 1, 'every source is one instanced draw');
       assert.equal(composite.length, 1, 'the composite is one full-screen draw');
@@ -2362,6 +2372,44 @@ describe('renderer smoke test: the conn view', () => {
       assert.equal(ink.geometry, ground.geometry);
       assert.equal((ink.material as Material).transparent, true, 'blended over the lit ground');
       assert.equal((ink.material as Material).depthWrite, false);
+
+      // A mark carries a plate (art-direction.md, "The plate under a mark").
+      // The plate pass draws two things into its mask, the greater kept where
+      // they cross: the ink's plate, on the ground's own geometry, and every
+      // band and disc the marks handed over, as one instanced draw. Neither
+      // is drawn by the world pass or the tactical pass.
+      assert.equal(plated.length, 2, 'the ink’s plate and the marks’');
+      const inkPlate = plated.find((o) =>
+        ((o as Mesh).material as Material).customProgramCacheKey().includes('-plate')
+      ) as Mesh | undefined;
+      assert.ok(inkPlate, 'the plate pass draws the ink’s plate');
+      assert.equal(inkPlate.geometry, ground.geometry);
+      for (const object of plated) {
+        const material = (object as Mesh).material as Material;
+        assert.equal(material.blendEquation, MaxEquation, 'the greater of two plates stands');
+        assert.equal(material.depthWrite, false);
+        assert.ok(!worldPass.includes(object) && !tactical.includes(object), 'drawn in its pass');
+      }
+      // The composite holds the world under the mask after its curve, and
+      // before it lays the depth the tactical pass is hidden by.
+      const sum = ((composite[0] as Mesh).material as ShaderMaterial).fragmentShader;
+      assert.ok(sum.includes(PLATE_HOLD_GLSL));
+      assert.ok(sum.indexOf('#include <colorspace_fragment>') < sum.indexOf(PLATE_HOLD_GLSL));
+      assert.ok(sum.indexOf(PLATE_HOLD_GLSL) < sum.indexOf('gl_FragDepth = depth;'));
+      // What stands in the mask: the chart's marks, a group to each layer it
+      // caches, and the lines this view draws. Every own hull and structure
+      // carries a disc; a resource field's rim is traced, and its plate is
+      // taken from the tracer; the map's rim is this view's own line.
+      const plates = world.conn.markPlates();
+      assert.ok(plates, 'at High the chart has somewhere to hand its plates');
+      const fleet = cannedSnapshot();
+      assert.ok(
+        plates.countOf('force') >= fleet.units.length + fleet.structures.length,
+        'a disc under every own hull and structure'
+      );
+      assert.ok(plates.countOf('nodes') > 0, 'a band along every traced rim');
+      assert.ok(plates.countOf('terrain') > 0, 'and along the map’s rim');
+      assert.equal(quality(high).plates, plates.count, 'all of them drawn');
       // The water is the composite's at High: the backdrop is not drawn.
       assert.ok(!worldPass.includes(backdrop) && !tactical.includes(backdrop));
       // "Unchanged at both graphics qualities", by construction: everything
@@ -2391,6 +2439,9 @@ describe('renderer smoke test: the conn view', () => {
       assert.deepEqual(again.passes, ['canvas']);
       assert.equal(quality(again).targetBytes, 0, 'the target goes with High');
       assert.equal(quality(again).groundBytes, 0, 'and the lit ground');
+      assert.equal(world.conn.markPlates(), null, 'and no mark carries a plate');
+      assert.equal(plates.count, 0);
+      assert.equal(quality(again).plates, 0);
       const againDraws = drawsOf(world.gl)[0]!;
       for (const object of againDraws)
         assert.equal(object.layers.mask, 1, 'back on Low’s one layer');

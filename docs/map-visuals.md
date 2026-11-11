@@ -175,9 +175,11 @@ models, and the modelled bodies of rung 5's public life with their light, whose 
 and stipple stay tactical
 ([art-direction.md](art-direction.md#two-layers-two-laws), decided on 11 November 2026). At
 the High graphics quality rung 3's 5–10% band, rung 1's one blue and world light's first
-three rules are released. The order of the rungs is not: each tactical floor still reads
-over the brightest lit ground under it. At Low, and on the chart at both qualities, the
-table stands as written.
+three rules are released. The order of the rungs is not. At High a mark carries a plate,
+under which the lit world is drawn no brighter than the palest ground weighed here, so each
+tactical floor reads as it does at Low
+([art-direction.md](art-direction.md#the-plate-under-a-mark)). At Low, and on the chart at
+both qualities, the table stands as written.
 
 **A mark on the ground ends at the rim.** The rings, fills and lines rungs 5 and 6 lay on the
 seabed have no seabed past the rim: a mission drawn alone ends in the skirt, the deep water the

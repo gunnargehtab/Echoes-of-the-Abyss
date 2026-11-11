@@ -126,7 +126,8 @@ export const HIGH_GRAPHICS = {
    * and no shadow (docs/art-direction.md, limit 1). `IRRADIANCE` is what level
    * ground takes at the Lid, in the renderer's linear units; it is held where
    * the palest ground it lights is no paler than the palest ground the
-   * loudness ladder weighs (limit 6; test/litGround.test.ts). `FALLOFF_M` is
+   * loudness ladder weighs, so a mark's plate changes nothing the Lid alone
+   * lights (test/litGround.test.ts). `FALLOFF_M` is
    * the depth over which the water above takes it to 1/e, so depth still
    * darkens. `HORIZON` is what a vertical face keeps of it.
    */
@@ -138,14 +139,9 @@ export const HIGH_GRAPHICS = {
    * much of a fill's chroma the albedo keeps: a fill authored at 5 to 10%
    * luminance reads as paint when it is lifted whole. `RELIEF_GAIN` steepens
    * the baked slope the light reads: the column is drawn at 0.22, and light
-   * from straight above shades a true slope by a hundredth. `LIGHT_CEILING` is
-   * the most light the ground takes from the Lid and the world's sources
-   * together, by luminance, as a share of what level ground takes at the Lid:
-   * a pool lifts ground only as far as depth has darkened it, so no ground is
-   * paler than the loudness ladder weighs, whatever stands on it (limit 6;
-   * test/litGround.test.ts).
+   * from straight above shades a true slope by a hundredth.
    */
-  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8, LIGHT_CEILING: 0.9 },
+  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8 },
   /**
    * The water. `HUE_REACH` is how far along a sight line, in reaches, the
    * water whose hue a pixel wears stands: most of the light the water adds
@@ -182,6 +178,18 @@ export const HIGH_GRAPHICS = {
     POWER: [1.06, 1.03, 1],
     SATURATION: 1.12,
   },
+  /**
+   * A mark's plate (docs/art-direction.md, "The plate under a mark"): where
+   * the world layer is held under a mark, in CSS pixels at the UI's scale.
+   * The level it is held to is not here: it is derived from the ground the
+   * ladder weighs (markPlates.ts `PLATE_LEVEL`). `LINE_PX` is how far the
+   * plate stands whole either side of a traced line's centre: the widest
+   * stroke is three pixels, and a line reads against what stands beside it.
+   * `INK_PX` is the same for a stroke of survey ink, which is thinner and
+   * everywhere. `AGENT_PX` is how far past an agent's outermost ring its disc
+   * stands whole, and `FEATHER_PX` the soft edge every plate ends in.
+   */
+  PLATE: { LINE_PX: 4, INK_PX: 2, AGENT_PX: 4, FEATHER_PX: 3 },
   /**
    * The world's own sources (docs/style-neon-noir.md "World light"), a family
    * a row: `POWER` is the light level ground takes directly under one source,

@@ -23,25 +23,28 @@ quality with the development switch beside the setting, `__perspectiveQuality`, 
 writes [readings.json](software/readings.json): each frame's passes, calls, triangles and
 the bytes High holds. Reduced motion holds the camera's sway, so two runs frame alike.
 
+[plates.mjs](plates.mjs) is the second module, run the same way with `--out
+docs/screenshots/issue-1801/software/plates`. It sends the three hulls into the garden,
+selects them, and takes the High frame with its marks' plates and without them, by
+`__perspectivePlates`. [read.py](software/plates/read.py) reads a pair.
+
 ## The frames beside the target
 
 ![The target frame](../issue-1799/target.png)
 
 | Camera | Low | High | What High shows so far |
 | --- | --- | --- | --- |
-| Home | [low](software/01-low-home.png) | [high](software/04-high-home.png) | The garden beyond the rim glowing in the flora's own green: its stands scatter in the water over it, and the glow blooms. The rim under the hulls is dark, lit by the Lid's glow alone, with the survey ink over it |
+| Home | [low](software/01-low-home.png) | [high](software/04-high-home.png) | The garden beyond the rim glowing in the flora's own green: its stands pool on the ground and scatter in the water over it, and the glow blooms. The rim under the hulls is dark, lit by the Lid's glow alone, with the survey ink over it |
 | Close | [low](software/02-low-close.png) | [high](software/05-high-close.png) | The rim in the foreground, the three hulls across the frame, and the bowl's open water behind, the water in the Coral Ruins' hue. No source of the world's stands near this camera, so the frame is as dark as Low's |
-| Survey | [low](software/03-low-survey.png) | [high](software/06-high-survey.png) | Depth still reads as luminance: the rim, the garden, the bowl's flanks and the black pocket. Each of the garden's stands has its glow in the water; its pool on the ground is held under the ceiling below |
+| Survey | [low](software/03-low-survey.png) | [high](software/06-high-survey.png) | Depth still reads as luminance: the rim, the garden, the bowl's flanks and the black pocket. Each of the garden's stands has its pool on the ground and its glow in the water |
 
 The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camera moved
 from Home to Close at High, at 1280 × 720 and twice the speed the rasteriser drew it.
 
 What the target shows and these do not: the searchlights of the player's own hulls and
 their pools, which are the target's brightest light and the issue's next step; shadow
-cast between the rocks; and life at work in the water. And one thing the limits hold
-back: light that reads on the ground. "The lit ground under the marks" below says why, and
-[art-direction.md](../../art-direction.md#what-is-built-at-high) puts the call to the
-owner.
+cast between the rocks; and life at work in the water. No mark stands over a light in
+these three frames. "The plate under a mark" below has the frames where three do.
 
 ## What the frame costs
 
@@ -49,16 +52,18 @@ Counted, not timed: a software rasteriser's milliseconds measure the rasteriser.
 
 | Camera | Low: calls, triangles | High: calls, triangles | High's passes |
 | --- | --- | --- | --- |
-| Home | 44, 593,684 | 54, 626,610 | `high-world`, `high-scatter`, `high-occlusion`, `high-bloom`, `high-composite`, `high-tactical`, then the halo's and the split's |
-| Close | 44, 593,684 | 54, 626,610 | The same |
-| Survey | 45, 594,970 | 55, 627,896 | The same |
+| Home | 44, 593,684 | 56, 660,440 | `high-world`, `high-scatter`, `high-occlusion`, `high-bloom`, `high-plates`, `high-composite`, `high-tactical`, then the halo's and the split's |
+| Close | 44, 593,684 | 56, 660,440 | The same |
+| Survey | 45, 594,970 | 57, 661,726 | The same |
 
-High draws ten calls more. It drops the water backdrop. It adds the survey ink's own
-draw, which is the ground's 32,768 triangles a second time, one instanced draw for the
-crater's 71 sources, and nine full-screen draws: the occlusion, the bloom's seven and the
-composite. At 1920 × 1080 its targets hold 136,145,280 bytes: four samples of half-float
-colour and of depth and one resolve of each, and the half-size and smaller targets of the
-scatter, the occlusion and the bloom. The lit ground's two textures hold 2,796,203. Gate 6 bounds
+High draws twelve calls more. It drops the water backdrop. It adds the survey ink's own
+draw, which is the ground's 32,768 triangles a second time, and the ink's plate, which
+is those triangles a third. It adds one instanced draw for the crater's 71 sources and
+one for the 531 bands and discs of the marks' plates, and nine full-screen draws: the
+occlusion, the bloom's seven and the composite. At 1920 × 1080 its targets hold
+144,439,680 bytes: four samples of half-float colour and of depth and one resolve of
+each, the half-size and smaller targets of the scatter, the occlusion and the bloom, and
+the plates' mask at the frame's size. The lit ground's two textures hold 2,796,203. Gate 6 bounds
 High by GPU time, at most 8 ms read queued and unpaced on the named GPU. That reading is
 owed: the capture takes it on a GPU and records `insideBudget` beside it.
 
@@ -74,12 +79,13 @@ mean, over the world area, of each pixel's largest channel difference, out of 25
 
 | Camera | `main` against `main` | `main` against the branch | Calls and triangles |
 | --- | --- | --- | --- |
-| Home | 0.07 | 0.19 | 44 and 593,684, both |
+| Home | 0.07 | 0.18 | 44 and 593,684, both |
 | Close | 0.15 | 0.36 | 44 and 593,684, both |
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
 
 The branch's Home and Close figures move run to run with the snow: the same comparison
-read 0.15 and 0.31 at this pull request's first commit and 0.04 and 0.08 at its second.
+read 0.15 and 0.31 at this pull request's first commit, 0.04 and 0.08 at its second and
+0.19 and 0.36 at its third.
 
 The difference maps paint a pixel red where any channel moved by more than 2. At Close
 both maps are marine snow and nothing else: the motes sink, and a later frame finds them
@@ -91,25 +97,56 @@ In counted work, `packages/frontend/test/rendererSmoke.test.ts` holds the rest: 
 frame is the canvas pass it was, and at High every draw of the tactical pass is one Low
 makes, in a material of the kind Low makes it in.
 
-## The lit ground under the marks
+## The plate under a mark
 
-Limit 6 of [art-direction.md](../../art-direction.md#two-layers-two-laws) holds the lit
-ground under the tactical layer. A ceiling holds it there, and
-`packages/frontend/test/litGround.test.ts` runs the loudness ladder's comparisons for
-rungs 4 to 7 over the brightest ground the ceiling leaves, in the Lid's hue and each
-family's, in all four palettes. The same file pins how pale a ground those comparisons
-hold over: 11.8% in tritanopia, 17.3% in deuteranopia and protanopia, 18.8% in the
-standard palette.
+The owner took the third reading of limit 6 on 11 November 2026: a mark carries its own
+ground ([art-direction.md](../../art-direction.md#the-plate-under-a-mark)). Under a
+mark's plate the world layer is shown no brighter than the palest ground the ladder
+weighs, 11.6% encoded luminance, which is 29.6 of 255. The ceiling that first held the
+lit ground is gone, so a stand's pool now reads on the ground: over the garden at Survey
+the 99th percentile of encoded luminance is 14.8% at Low and 30.4% at High, and the
+cores reach 45.4% at the 99.9th. That is past every figure the ladder holds to, which is
+what the plates are for.
 
-In these frames the 99th percentile of the world area's luma, out of 255, is 64 at Low
-and 60 at High at Home, 70 and 69 at Close, and 55 and 56 at Survey.
+`plates.mjs` puts three marks over that light: the hulls sent into the garden and
+selected, so each wears its selection ring and collar, and the selected hulls' detection
+ring crosses the glow.
 
-Light in the water is not ground, and is not under that ceiling. Over the garden at
-Survey the 99th percentile of encoded luminance is 14.8% at Low and 24.6% at High, and
-the glow's cores reach 33.7% at the 99.9th. That is past all four figures. Whether limit
-6 binds it is put to the owner in
-[art-direction.md](../../art-direction.md#the-lit-ground-under-the-marks). The frames this
-pull request's second commit drew, 270b64727, show the ground's pools before the ceiling.
+| Camera | With plates | Without | The pair's centre | Where they differ, ×12 |
+| --- | --- | --- | --- | --- |
+| Over the garden | [plates](software/plates/01-garden-plates.png) | [bare](software/plates/02-garden-bare.png) | [zoom](software/plates/garden-zoom.png) | [map](software/plates/garden-diff.png) |
+| Survey | [plates](software/plates/03-survey-plates.png) | [bare](software/plates/04-survey-bare.png) | [zoom](software/plates/survey-zoom.png) | [map](software/plates/survey-diff.png) |
+
+![The pair's centre over the garden: plates left, bare right](software/plates/garden-zoom.png)
+
+Read by `read.py` over the world area:
+
+| Camera | Pixels held | Brighter with plates | Held pixels' median, bare | With plates |
+| --- | --- | --- | --- | --- |
+| Over the garden | 15,609, 0.99% | none | 40.9 of 255 | 29.7 |
+| Survey | 2,352, 0.15% | none | 52.2 | 32.6 |
+
+The difference map over the garden is two things: a disc under each hull that stands in
+the glow, and the band along the detection ring where it crosses the glow. At Survey it
+is the discs and the garden's north rim, where the ink's plate crosses the brightest
+stands. A plate changes no pixel that was under the level, so the rest of each pair is
+the same to the byte: 18,997 of the world area's 1,570,560 pixels differ at all over the
+garden, and 2,690 at Survey.
+
+The held pixels that still stand over the level are, by this session's reading of the
+pair, a plate's soft edge and what the tactical pass blends over the world after the
+hold: a ring's stroke, a lamp's halo and the marine snow. The counted half of that claim
+is `packages/frontend/test/rendererSmoke.test.ts`: the composite holds the world under
+the mask before the tactical pass draws.
+
+`packages/frontend/test/markPlates.test.ts` holds the level to the ground the ladder
+weighs and runs the ladder's comparisons for rungs 4 to 7 at every grey from black to
+it, in all four palettes. It also pins how pale a ground those comparisons hold over:
+11.8% in tritanopia, 17.3% in deuteranopia and protanopia, 18.8% in the standard
+palette.
+
+In the three frames beside the target, the 99th percentile of the world area's luma, out
+of 255, is 64 at Low and 60 at High at Home, 70 and 69 at Close, and 55 and 59 at Survey.
 
 ## Gate 7, asked of the lit frames
 
@@ -124,15 +161,17 @@ built them, on a software rasteriser:
 | Home | Yes. The three hulls stand in their navy's green under their rings on the dark rim, each ring's arc short, which is quiet. The garden's glow is beyond them, and nothing of theirs stands over it | Not the survey's question at this dolly |
 | Close | Yes. Each hull fills its ring, its lamps and its ring's arc say quiet, and no world light is in the frame | Not the survey's question at this dolly |
 | Survey | Yes. The three hulls and their rings read on the west rim as at Low | Yes. The coast round the rim, the pocket, the garden and the rock wall, and the isobaths down each scarp, are drawn as at Low |
+| Over the garden, with plates | Yes. Each hull stands on a dark disc inside its white selection ring, its collar's green arc over the disc and not over the glow. Without plates the upper hull's ring and collar cross the flora's green, which sits near the Pelagia hulls' own | Not the survey's question at this dolly |
 
-One case these frames do not hold: an own hull over the garden. The flora's green sits
-near the Pelagia hulls' own, and the glow there is past the ladder's figures above.
+The frames taken on the named GPU are where this is judged. One thing to look for there:
+a disc is as wide as a hull's collar, so three hulls close together make one dark patch.
 
-The ink was checked directly, since at this dolly it is faint at both qualities.
+The ink was checked directly, since at the survey dolly it is faint at both qualities.
 [ink-survey.png](software/ink-survey.png) is the Survey frame at High less the same frame
 with the ink's draw hidden by a switch that was not committed, amplified twelve times: the
-coastlines and the scarps' isobaths, and nothing else. The ink moves 1.80% of the world
-area's pixels by more than 2 of 255 there, and 0.46% at Home.
+coastlines and the scarps' isobaths, and nothing else. It was taken at this pull
+request's third commit, where the ink moved 1.80% of the world area's pixels by more than
+2 of 255 at Survey, and 0.46% at Home.
 
 ## Related
 

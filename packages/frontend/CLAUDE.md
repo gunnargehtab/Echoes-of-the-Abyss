@@ -33,7 +33,9 @@ curve and lays the world's depth, then everything else on the canvas exactly as 
 draws it. An object is the world pass's by its three layer (`WORLD_LAYER`); a material
 drawn there outputs scene-referred light, and the fog chunk's High half only attenuates
 (`water.ts`). The tactical layer is unchanged by construction: a mark, a lamp or the
-survey ink never moves into the world pass.
+survey ink never moves into the world pass. At High a mark also carries a plate
+(`markPlates.ts`): the chart hands the view a band or a disc in world space for each mark
+it draws, and the composite holds the world's light under them before the tactical pass.
 
 ## Tests run under a Vite shim
 
