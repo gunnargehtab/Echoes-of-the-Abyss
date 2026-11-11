@@ -400,7 +400,8 @@ browser's compositor and a weaker card.
   [ui-ux.md](ui-ux.md)'s Settings with High's first increment, since that list holds only
   what is wired. The default stays Low until the owner accepts a High frame and says the
   default moves. A player can therefore choose High before it is accepted, and until then
-  the control names it as in development.
+  the control names it as in development. The hosted playtest build hides the control
+  until then.
 - **Low keeps its counts.** A frame-time ceiling at today's cost was the other reading of
   the decision. Counts are what Low's tests already hold, and the next line holds its
   cost.

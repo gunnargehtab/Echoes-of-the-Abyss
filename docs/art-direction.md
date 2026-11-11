@@ -17,8 +17,9 @@ The art direction should communicate three things instantly:
 [#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694). Nothing in this
 section is built. The shipped renderer is the Low graphics quality
 ([graphics-standards.md](graphics-standards.md) gate 6), and every rule released below
-still binds it. Limits 5 and 7 are the author's, written to carry the decision out, and
-await the owner's review on the pull request that adds this section.*
+still binds it. Limits 5 and 7 were the author's, written to carry the decision out, and
+the owner confirmed both on the same day
+([#1798](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1798)).*
 
 The owner turned the look down three times in two weeks. Three proposed designs "seem
 lifeless" (26 October, #1637). The free-water slice was "a map editor, not an ocean" on

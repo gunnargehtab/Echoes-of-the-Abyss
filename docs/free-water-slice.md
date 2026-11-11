@@ -614,6 +614,11 @@ biome's hue, a new full-screen pass, glow on terrain, and the retained 5–10% g
 the projection stay refused. This section stays the record of the study as built, which is
 the Low quality's.
 
+The owner parked the study's re-acceptance the same day. The merged ground of #1774 stands
+and is judged again at High, against
+[the target frame](screenshots/issue-1799/README.md). The two-player fight, #1754, waits
+until a look is accepted.
+
 | Decision | Taken | Rejected | Child |
 | --- | --- | --- | --- |
 | 1. Light | Stay inside the canon: no sunlight below the Lid | Sunlit water in the manner of the owner's ocean reference, which would first amend [world.md](world.md) and art direction's "Shallow caustics" | Every child |
