@@ -129,8 +129,13 @@ ellipse, painted by cell centre, arrives as a staircase of 250 m cells, and the 
 the isobaths and the fills all drew that staircase. In the study alone, by the owner's call
 in session on 7 November 2026, recorded in #1787, coastlines take the half-cell licence
 too. The drawn ground rounds the staircase between cell centres
-([free-water-slice.md](free-water-slice.md) §9, "Crater walls"). Every centre keeps its
-own floor and kind, and no edge moves as far as half a cell. The coastlines
+([free-water-slice.md](free-water-slice.md) §9, "Crater walls"), and since the owner's
+call in session on 10 November 2026 wanders its straight runs, so no long side of the
+garden, the pocket or the bowl is a ruled line. Within 250 m of the roofed cut the roof
+holds the cell edges, and the wall's and the pool's sides stay ruled or nearly. The
+wander reads only the public cells and the position, so it tells nothing hidden
+(rule 2). Every centre keeps its own floor and kind, and no edge moves as far as half a
+cell, rounded and wandered together. The coastlines
 run where that ground changes kind, the isobaths contour its floor without the relief, and
 the fills ease across its edges, so the ink agrees with the ground it lies on. Rules 2 to 7
 hold unchanged. The PF boundary the simulation prices is still the cell edge, and the

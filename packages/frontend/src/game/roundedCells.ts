@@ -18,6 +18,16 @@
  * the centre instead, inside `CENTRE_BEND_M` of it (#1774). So the edge
  * follows the authored curve wherever no centre stands close to it.
  *
+ * Rounded alone, a straight run of cells stays a ruled line, and the garden,
+ * the wall and the pool read from the survey dolly as rounded boxes (#1774,
+ * the owner's call in session on 10 November 2026). So the rounded field is
+ * then wandered: read through a slow warp of the plan, its direction a
+ * fixed field of position, so every kind's edge meanders together and a
+ * junction stays one junction. The warp is cut back wherever the rounding has already
+ * spent the licence, so the two together still move no edge as far as
+ * `LICENCE_M`; it is nothing where a roof holds the cell edges; and the
+ * centres' bend runs again after it, so every centre keeps its margin.
+ *
  * The field holds each kind's rounded signed distance on the study mesh's
  * own grid (perspectiveTerrain.ts `ERODED_VERTS_PER_CELL`), every vertex and
  * every cell centre one of its samples, so a reader at a centre reads the
@@ -73,12 +83,50 @@ export const ROUNDED_CELLS = {
    */
   SEARCH_CELLS: 3,
   /**
-   * TUNABLE — within half a cell of a roofed cell nothing rounds, and the hold
-   * eases off over the next cell. The roof over a passage stands its curtains
-   * on the cell edges (passages.ts), so the ground under them keeps them.
+   * TUNABLE — within half a cell of a roofed cell nothing rounds or wanders,
+   * and the hold eases off over the next half. The roof over a passage stands
+   * its curtains on the cell edges (passages.ts), so the ground under them
+   * keeps them. The ease was a whole cell until the wander (#1774): it held
+   * half the wall either side of the cut at or near its ruled edges.
    */
   ROOF_HOLD_CELLS: 0.5,
-  ROOF_EASE_CELLS: 1,
+  ROOF_EASE_CELLS: 0.5,
+  /**
+   * TUNABLE — the most the wander moves an edge, metres, where the rounding
+   * has moved it nowhere: a straight run of cells. A centre stands half a
+   * cell from that run, so 75 m leaves it 50 m inside its kind, past the
+   * margin. Where the rounding has moved an edge the wander has what the
+   * licence has left, less `WANDER_SPARE_M` for the field's own sampling.
+   */
+  WANDER_M: 75,
+  WANDER_SPARE_M: 5,
+  /**
+   * TUNABLE — the wander's two wavelengths, metres, and the finer one's share
+   * of it. The slow one bows a run of several cells; the finer breaks the
+   * bow, and is still four times a scarp's width (seabed.ts `erodedReachM`,
+   * twice over) and ten of the study mesh's 31.25 m steps, so the mesh draws
+   * it. Neither is a multiple of the cell, so no bow repeats on the grid.
+   * Shorter, or driven harder, and the warp folds (roundedCells.test.ts):
+   * 560 and 230 m at a gain of 3.2 cusped the garden's north edge.
+   */
+  WANDER_WAVELENGTH_M: 800,
+  WANDER_FINE_WAVELENGTH_M: 340,
+  WANDER_FINE_SHARE: 0.25,
+  /**
+   * How hard the warp's noise is driven before it is held to the unit disc:
+   * value noise seldom nears its bounds. Undriven the warp is two fifths of
+   * its amplitude long on average; driven, seven tenths.
+   */
+  WANDER_GAIN: 2.5,
+  /**
+   * TUNABLE — the warp's seed, picked for the study's one map. Value noise
+   * has calm stretches, and a seed can lay one along a whole side: the first
+   * field tried, under other salts, left the garden's south side within 12 m
+   * of its line. Of 160 seeds this one bowed the study's eight long runs
+   * furthest at its least: 43 m, the garden's east side, as
+   * perspectiveTerrain.test.ts reads it, and that test holds 40.
+   */
+  WANDER_SEED: 0x9c41e68f,
 } as const;
 
 /** One kind of ground: what the drawn ground can tell apart across an edge. */
@@ -102,7 +150,10 @@ export interface RoundedCells {
   readonly nx: number;
   readonly nz: number;
   readonly stepM: number;
-  /** Per kind, per sample: how far the rounding moves that kind's signed distance, metres. */
+  /**
+   * Per kind, per sample: how far the rounding and the wander move that
+   * kind's signed distance, metres.
+   */
   readonly moves: readonly Float32Array[];
   /** Per kind, per sample: the rounded signed distance itself, the exact one plus its move. */
   readonly rounded: readonly Float32Array[];
@@ -411,8 +462,204 @@ function bendRoundCentres(
   }
 }
 
-/** Build the field for a map's cells as they stand. */
-export function buildRoundedCells(terrain: TerrainPayload): RoundedCells {
+/** Integer-lattice hash to [-1, 1], as seabed.ts `latticeNoise`: stateless, identical everywhere. */
+function latticeNoise(ix: number, iz: number, salt: number): number {
+  let h = Math.imul(ix, 0x27d4eb2d) ^ Math.imul(iz, 0x165667b1) ^ salt;
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h ^= h >>> 16;
+  return (h >>> 0) / 0x7fffffff - 1;
+}
+
+/**
+ * Value noise in [-1, 1] on a lattice turned `turn` radians off the plan's
+ * axes: a lattice square with the cells would bow every run of cells along
+ * its own lines, and put the grid back in the ground's edges.
+ */
+function turnedNoise(x: number, z: number, wavelengthM: number, turn: number, salt: number) {
+  const c = Math.cos(turn);
+  const s = Math.sin(turn);
+  const u = (x * c + z * s) / wavelengthM;
+  const v = (z * c - x * s) / wavelengthM;
+  const iu = Math.floor(u);
+  const iv = Math.floor(v);
+  const fu = smooth(u - iu);
+  const fv = smooth(v - iv);
+  const a = latticeNoise(iu, iv, salt);
+  const b = latticeNoise(iu + 1, iv, salt);
+  const d = latticeNoise(iu, iv + 1, salt);
+  const e = latticeNoise(iu + 1, iv + 1, salt);
+  return a + (b - a) * fu + (d + (e - d) * fu - a - (b - a) * fu) * fv;
+}
+
+/** The z component's salt beside the x component's, so each is a field of its own. */
+const WANDER_SALT_Z = 0x1f83d9ab;
+
+/**
+ * The wander's direction and share at a point, into `out`: a vector inside
+ * the unit disc, a fixed field of position that reads no cell. How far the
+ * warp then reaches is read from the public cells (`wanderRoom`, and the
+ * roof's hold), so the wander tells nothing the cells do not
+ * (docs/map-visuals.md §4, rule 2).
+ */
+export function wanderAt(x: number, z: number, out: Float64Array): void {
+  const R = ROUNDED_CELLS;
+  const part = (salt: number) =>
+    (1 - R.WANDER_FINE_SHARE) * turnedNoise(x, z, R.WANDER_WAVELENGTH_M, 0.52, salt) +
+    R.WANDER_FINE_SHARE * turnedNoise(x, z, R.WANDER_FINE_WAVELENGTH_M, 1.13, salt ^ 0x9e3779b9);
+  const wx = R.WANDER_GAIN * part(R.WANDER_SEED);
+  const wz = R.WANDER_GAIN * part(R.WANDER_SEED ^ WANDER_SALT_Z);
+  const length = Math.hypot(wx, wz);
+  const held = length > 0 ? Math.tanh(length) / length : 0;
+  out[0] = wx * held;
+  out[1] = wz * held;
+}
+
+/** One pass of a three-sample window along x or z: each sample's largest, least or mean. */
+function windowPass(
+  src: Float32Array,
+  nx: number,
+  nz: number,
+  alongX: boolean,
+  take: 'most' | 'least' | 'mean'
+): Float32Array {
+  const out = new Float32Array(src.length);
+  for (let iz = 0; iz < nz; iz++) {
+    for (let ix = 0; ix < nx; ix++) {
+      const at = (t: number) =>
+        src[alongX ? iz * nx + clamp(ix + t, 0, nx - 1) : clamp(iz + t, 0, nz - 1) * nx + ix]!;
+      const [a, b, c] = [at(-1), at(0), at(1)];
+      out[iz * nx + ix] =
+        take === 'most'
+          ? Math.max(a, b, c)
+          : take === 'least'
+            ? Math.min(a, b, c)
+            : (a + b + c) / 3;
+    }
+  }
+  return out;
+}
+
+/** A three-by-three window over a grid: each sample's largest, least or mean with its eight neighbours. */
+function window(src: Float32Array, nx: number, nz: number, take: 'most' | 'least' | 'mean') {
+  return windowPass(windowPass(src, nx, nz, true, take), nx, nz, false, take);
+}
+
+/**
+ * How far the wander may read at each sample, metres: the furthest a read
+ * can reach with the licence still unspent everywhere it could land. A read
+ * `r - 1` samples off blends samples within `r` of its own, so with the most
+ * the rounding spent within `r` samples known, a reach of `r - 1` samples is
+ * good while that much and the spend stay inside the licence; the amplitude
+ * is the best such reach. It is then eased, to its least over two samples
+ * and that averaged over two, which never raises it and leaves no step in
+ * it for the warp to tear an edge on.
+ */
+function wanderRoom(
+  spent: Float32Array,
+  nx: number,
+  nz: number,
+  stepM: number,
+  wanderM: number
+): Float32Array {
+  const R = ROUNDED_CELLS;
+  let room: Float32Array = new Float32Array(nx * nz);
+  let within: Float32Array = spent;
+  for (let r = 1; (r - 2) * stepM < wanderM; r++) {
+    within = window(within, nx, nz, 'most');
+    const reach = Math.min(wanderM, (r - 1) * stepM);
+    for (let i = 0; i < room.length; i++) {
+      const left = R.LICENCE_M - R.WANDER_SPARE_M - within[i]!;
+      room[i] = Math.max(room[i]!, Math.min(reach, left));
+    }
+  }
+  for (let pass = 0; pass < 2; pass++) room = window(room, nx, nz, 'least');
+  for (let pass = 0; pass < 2; pass++) room = window(room, nx, nz, 'mean');
+  return room;
+}
+
+/** A sample grid read bilinearly at a point, the grid's edge repeated past it. */
+function sampleSamples(
+  grid: Float32Array,
+  nx: number,
+  nz: number,
+  stepM: number,
+  x: number,
+  z: number
+): number {
+  const gx = clamp(x / stepM, 0, nx - 1);
+  const gz = clamp(z / stepM, 0, nz - 1);
+  const ix = Math.min(nx - 2, Math.floor(gx));
+  const iz = Math.min(nz - 2, Math.floor(gz));
+  const fx = gx - ix;
+  const fz = gz - iz;
+  const a = grid[iz * nx + ix]!;
+  const b = grid[iz * nx + ix + 1]!;
+  const c = grid[(iz + 1) * nx + ix]!;
+  const d = grid[(iz + 1) * nx + ix + 1]!;
+  return a + (b - a) * fx + (c + (d - c) * fx - a - (b - a) * fx) * fz;
+}
+
+/**
+ * Wander the rounded edges: each kind's rounded distance is read `wanderM`
+ * at most from where it stood, along the warp (`wanderAt`), so its edge
+ * meanders about the rounded line. Every kind reads through the one warp, so
+ * two kinds' edge moves as one line and a junction of three stays a
+ * junction. The amplitude at a sample is what the licence has left there
+ * (`wanderRoom`): no read lands where the rounding and the read together
+ * would pass `LICENCE_M`, and none is made where a roof holds the cell edges.
+ * A sample the warp leaves alone keeps its distance to the bit.
+ */
+function wanderEdges(
+  nx: number,
+  nz: number,
+  stepM: number,
+  wanderM: number,
+  exact: readonly Float32Array[],
+  hold: Float32Array,
+  moves: Float32Array[]
+): void {
+  const rounded = exact.map((s, k) => s.map((v, i) => v + moves[k]![i]!));
+  // What the rounding has spent of the licence at a sample: the largest move
+  // among the kinds whose rounded edge runs by it. A kind counts whole with
+  // its edge within two samples, and for nothing past four: it has no edge
+  // here for the warp to carry, whatever its distance moved by.
+  const spent = new Float32Array(nx * nz);
+  for (let i = 0; i < nx * nz; i++) {
+    for (let k = 0; k < moves.length; k++) {
+      const off = Math.abs(rounded[k]![i]!) / stepM;
+      const by = 1 - smooth(clamp((off - 2) / 2, 0, 1));
+      spent[i] = Math.max(spent[i]!, Math.abs(moves[k]![i]!) * by);
+    }
+  }
+  const room = wanderRoom(spent, nx, nz, stepM, wanderM);
+  const w = new Float64Array(2);
+  for (let iz = 0; iz < nz; iz++) {
+    for (let ix = 0; ix < nx; ix++) {
+      const i = iz * nx + ix;
+      const amplitude = room[i]! * hold[i]!;
+      if (amplitude === 0) continue;
+      const x = ix * stepM;
+      const z = iz * stepM;
+      wanderAt(x, z, w);
+      const px = x + amplitude * w[0]!;
+      const pz = z + amplitude * w[1]!;
+      for (let k = 0; k < moves.length; k++) {
+        moves[k]![i] = sampleSamples(rounded[k]!, nx, nz, stepM, px, pz) - exact[k]![i]!;
+      }
+    }
+  }
+}
+
+/**
+ * Build the field for a map's cells as they stand. `wanderM` is the wander's
+ * amplitude: the study's unless a reader asks for the rounding alone, as a
+ * test of the rounding does.
+ */
+export function buildRoundedCells(
+  terrain: TerrainPayload,
+  wanderM: number = ROUNDED_CELLS.WANDER_M
+): RoundedCells {
   const { cols, rows, cellM } = terrain;
   const { kinds, kindOf } = groundKinds(terrain);
   const { edges, byCell } = kindEdges(cols, rows, cellM, kindOf);
@@ -498,6 +745,11 @@ export function buildRoundedCells(terrain: TerrainPayload): RoundedCells {
     }
   }
   bendRoundCentres(cols, rows, per, nx, nz, stepM, kindOf, exact, moves);
+  if (wanderM > 0) {
+    wanderEdges(nx, nz, stepM, wanderM, exact, hold, moves);
+    // The warp may carry an edge toward a centre the rounding left alone.
+    bendRoundCentres(cols, rows, per, nx, nz, stepM, kindOf, exact, moves);
+  }
   for (let i = 0; i < nx * nz; i++) {
     for (const m of moves) most[i] = Math.max(most[i]!, Math.abs(m[i]!));
   }
@@ -529,18 +781,7 @@ export function forgetRoundedCells(terrain: TerrainPayload): void {
 
 /** A field's sample grid read bilinearly at a point. */
 function sampleGrid(field: RoundedCells, grid: Float32Array, x: number, z: number): number {
-  const { nx, nz, stepM } = field;
-  const gx = clamp(x / stepM, 0, nx - 1);
-  const gz = clamp(z / stepM, 0, nz - 1);
-  const ix = Math.min(nx - 2, Math.floor(gx));
-  const iz = Math.min(nz - 2, Math.floor(gz));
-  const fx = gx - ix;
-  const fz = gz - iz;
-  const a = grid[iz * nx + ix]!;
-  const b = grid[iz * nx + ix + 1]!;
-  const c = grid[(iz + 1) * nx + ix]!;
-  const d = grid[(iz + 1) * nx + ix + 1]!;
-  return a + (b - a) * fx + (c + (d - c) * fx - a - (b - a) * fx) * fz;
+  return sampleSamples(grid, field.nx, field.nz, field.stepM, x, z);
 }
 
 /**

@@ -391,8 +391,8 @@ export function mottleFactor(xM: number, yM: number, seed: number, mottle: numbe
  * development-only (docs/free-water-slice.md §9, "Crater walls"). Off on every
  * shipped map.
  *
- * The study rounds its cells (roundedCells.ts) and draws its ground across
- * the rounded edges: a floor that climbs across each, a rock face with a foot
+ * The study rounds its cells and wanders their edges (roundedCells.ts), and
+ * draws its ground across those edges: a floor that climbs across each, a rock face with a foot
  * in the water and a lip in the stone. Every profile is whole at one centre
  * and nothing at the next, so an open centre keeps its authored floor and a
  * solid cell stays rock at its centre. The study's ink traces the same edges
@@ -519,9 +519,11 @@ let shares = new Float64Array(16);
  * the roof stands a curtain there (passages.ts), and the hold keeps that
  * edge where the cells put it (roundedCells.ts `ROOF_HOLD_CELLS`).
  *
- * Deterministic from the cells alone, with no noise in it: the relief and
- * the benches laid on it are the texture. Render-only like the detail field:
- * the server's cells stay the truth about where a hull fits.
+ * Deterministic from the cells and the point alone: the one noise in it is
+ * the wander of the rounded edges (roundedCells.ts `wanderAt`), a fixed field
+ * of position, and the relief and the benches laid on it are the texture.
+ * Render-only like the detail field: the server's cells stay the truth about
+ * where a hull fits.
  */
 export function erodedGroundAtM(
   terrain: TerrainPayload,

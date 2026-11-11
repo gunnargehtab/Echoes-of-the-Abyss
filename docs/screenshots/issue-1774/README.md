@@ -11,6 +11,10 @@ coastlines on the drawn ground's edges and contours its floor from the seabed ba
 (`installSurveyInk`'s drawn pass in `surveyInk.ts`). Every centre keeps its authored floor
 and kind, and every shipped map draws as it did.
 
+The second instalment wanders the straight runs the rounding left ruled; its frames and
+readings are under [Wandering edges](#wandering-edges), and everything above that
+heading describes the first instalment as #1787 merged it.
+
 ## Reproduce
 
 Run the dev servers, then the frames module. It walks §9's survey and low poses and three
@@ -141,17 +145,78 @@ and that reading is owed.
   pass draws no line in it rather than inking the triangle whole, and its neighbours draw
   their half.
 
+## Wandering edges
+
+The second instalment, the owner's call in session on 10 November 2026. Rounding moves
+a straight run of cells nowhere, so the garden, the wall and the pool kept ruled sides.
+`wanderEdges` in `roundedCells.ts` now reads the rounded field through a slow warp of the
+plan: 75 m at most, less wherever the rounding has already spent the 115 m licence, and
+nothing where the roof holds the cell edges. The roof's hold now eases off over half a
+cell rather than a whole one, so more of the wall either side of the cut can move. The
+warp's seed was picked for this map, the best of 160 by its least-bowed side, the
+garden's east at 43 m. The first field tried left the garden's south side within 12 m
+of its line.
+
+Reproduce with the commands above and `--out docs/screenshots/issue-1774/wander/after`.
+`wander/before/` is the same run at `c889bd645`, main's head. Same rasteriser, viewport
+and DPR as the first instalment.
+
+| Row | Before | After | Reads as |
+| --- | --- | --- | --- |
+| Survey | [before](wander/before/01-survey.png) | [after](wander/after/01-survey.png) | The garden's four sides bow and tilt where they were ruled lines, its north side slanting, and the bowl's lobes and the pocket swell unevenly. The pocket's south-west step is shorter. The wall and the pool still read as slabs: within 250 m of the cut their edges are held or easing |
+| Low | [before](wander/before/02-low.png) | [after](wander/after/02-low.png) | Much as before at this range: the garden's lip bends a little where it ran level |
+| Bowl | [before](wander/before/03-bowl.png) | [after](wander/after/03-bowl.png) | The scarp under the garden's south side dips and climbs across the frame where it ran level, the pocket's cliffs bend, and the east lobe's rim wavers, the isobaths with each |
+| Wall | [before](wander/before/04-wall.png) | [after](wander/after/04-wall.png) | The cut's mouth and jambs as before: the hold keeps them. The wall's lip either side reads as it did at this range |
+| Rim | [before](wander/before/05-rim.png) | [after](wander/after/05-rim.png) | Mostly water, as before |
+
+Calls, triangles, instances, passes, textures and target bytes read the same before and
+after at every pose, in each `readings.json`: survey and bowl 45 calls and 594,970
+triangles, low and wall 26 and 587,001, rim 44 and 593,674. The wander moves vertices and
+the values the bake writes, and adds no vertex, texture, call or shader line. The Kelp
+Labyrinth control reads 75 calls and 163,878 triangles at survey, 160,006 at low, in
+[control-before](wander/control-before/02-survey.png) and
+[control-after](wander/control-after/02-survey.png). The pan is
+[bowl-pan-0](wander/after/06-bowl-pan-0.png) to [bowl-pan-3](wander/after/09-bowl-pan-3.png),
+and reduced motion [survey](wander/reduced-motion/01-survey.png) and
+[low](wander/reduced-motion/02-low.png).
+
+Gate 7 reads as it did: the trench is still the field ringed by the densest bands, the
+plateaus the unlined fields, and the rock the field inside a solid coast.
+
+What changed in the limits above:
+
+- **The bowl's rim** still lies within 35 m of its circle rounded, and the wander
+  carries it up to 56 m off over the same rays. That is the wander doing its work, not
+  the stair coming back: the rim's kink reads 2 m either way, the cells' 22.
+- **The pocket's south-west corner** rounds further. The hold is whole within 125 m of
+  the cut and now gone 250 m from it, where it was gone at 375 m. The step that is left
+  is the 125 m the hold keeps on the cell edge above the west jamb.
+- **A scarp's width varies.** The warp stretches or squeezes the rounded field: by a
+  fifth on average and nine tenths at most at its full 75 m, read over a 16 km plan. So
+  a scarp is no longer 80 m wide everywhere.
+- **The wander is bounded by the licence, so it is modest.** A side bows by tens of
+  metres on a 250 m cell. The garden is still a rectangle's descendant, not a free
+  shape; a free shape would re-cut the literal, which §9 rules out.
+
+Gate 6 on hardware is still owed, for both instalments. This one adds no fragment work.
+
 ## Tests
 
 - `perspectiveTerrain.test.ts`, "the rounded ground": each centre's floor, kind and biome;
   the positive control; the finer mesh; the step between the cells within a cell; no seam but the
   jambs; no edge past the licence; the bowl's rim near its circle and without the stair's
-  kinks; the roof's hold; the jamb; the wall's foot and lip; the ink's fields at every
+  kinks; the garden's north edge wandering; the roof's hold; the jamb; the wall's foot and
+  lip; the ink's fields at every
   vertex; the cells as the only input (§4 rule 2); the delta path; the forgotten terrain;
   the benches.
-- `roundedCells.test.ts`: a straight edge moves nowhere, a corner rounds inside the
-  licence, each centre keeps its kind with the margin to spare, a lone cell bends the edge
-  round its centre, and a T settles into a Y.
+- `roundedCells.test.ts`: a straight edge moves nowhere by rounding, a corner rounds
+  inside the licence, each centre keeps its kind with the margin to spare, a lone cell
+  bends the edge round its centre, and a T settles into a Y. Of the wander: a straight
+  edge meanders within 75 m, rounded and wandered no edge passes the licence, and the
+  warp folds nowhere.
+- `perspectiveTerrain.test.ts`, for the wander: the garden's north coast bows either side
+  of its line; the wander alone carries each long side of the garden, the pocket and the
+  bowl across 40 m or more; and wandered, each kind holds as many pieces as rounded.
 - `passages.test.ts`: the roof walks the study's finer grid, a curtain's foot on each of
   its vertices. `flightCamera.test.ts`: the flight eye clears the drawn ground.
 - `surveyInk.test.ts`, "the study's pass", and `seabedRegion.test.ts`, the bake's floor.

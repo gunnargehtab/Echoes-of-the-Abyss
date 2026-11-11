@@ -1,0 +1,290 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "readings": [
+    {
+      "name": "survey",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 1991,
+        "zM": 2360,
+        "depthM": -43037
+      },
+      "distance": 10000,
+      "calls": 45,
+      "triangles": 594970,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-rim-crab": 32,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1,
+        "env-kelp-cluster": 16
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
+    },
+    {
+      "name": "low",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 12,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": 850
+      },
+      "eye": {
+        "xM": 1999,
+        "zM": 3565,
+        "depthM": -664
+      },
+      "distance": 1600,
+      "calls": 26,
+      "triangles": 587001,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-rim-crab": 32,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1,
+        "env-kelp-cluster": 16
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
+    },
+    {
+      "name": "bowl",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 70,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2002,
+        "zM": 3530,
+        "depthM": -16848
+      },
+      "distance": 4500,
+      "calls": 45,
+      "triangles": 594970,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-rim-crab": 32,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1,
+        "env-kelp-cluster": 16
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
+    },
+    {
+      "name": "wall",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 14,
+      "yawDeg": 180,
+      "focus": {
+        "xM": 2125,
+        "zM": 2875,
+        "depthM": 900
+      },
+      "eye": {
+        "xM": 2126,
+        "zM": 2196,
+        "depthM": 129
+      },
+      "distance": 700,
+      "calls": 26,
+      "triangles": 587001,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-rim-crab": 32,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1,
+        "env-kelp-cluster": 16
+      },
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
+    },
+    {
+      "name": "rim",
+      "look": "free-water",
+      "ground": {
+        "eroded": true
+      },
+      "pitchDeg": 14,
+      "yawDeg": 90,
+      "focus": {
+        "xM": 1000,
+        "zM": 1875,
+        "depthM": 603
+      },
+      "eye": {
+        "xM": 1679,
+        "zM": 1874,
+        "depthM": -172
+      },
+      "distance": 700,
+      "calls": 44,
+      "triangles": 593674,
+      "instances": {
+        "env-kelp-stand": 56,
+        "env-shoal-fry": 144,
+        "env-outer-fish": 16,
+        "env-rim-crab": 32,
+        "env-deep-fish": 26,
+        "env-rim-ray": 1,
+        "env-kelp-cluster": 16
+      },
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "textures": 15,
+      "targetBytes": {
+        "halo": 22422976,
+        "split": 5184000,
+        "environment": 344064
+      }
+    },
+    {
+      "name": "bowl-pan",
+      "strip": [
+        {
+          "tMs": 109664,
+          "focus": {
+            "xM": 2000,
+            "zM": 2000,
+            "depthM": null
+          },
+          "eye": {
+            "xM": 2005,
+            "zM": 3546,
+            "depthM": -16821
+          }
+        },
+        {
+          "tMs": 122849,
+          "focus": {
+            "xM": 2146,
+            "zM": 2000,
+            "depthM": null
+          },
+          "eye": {
+            "xM": 2151,
+            "zM": 3537,
+            "depthM": -16836
+          }
+        },
+        {
+          "tMs": 136182,
+          "focus": {
+            "xM": 2291,
+            "zM": 2000,
+            "depthM": null
+          },
+          "eye": {
+            "xM": 2289,
+            "zM": 3530,
+            "depthM": -16843
+          }
+        },
+        {
+          "tMs": 149229,
+          "focus": {
+            "xM": 2437,
+            "zM": 2000,
+            "depthM": null
+          },
+          "eye": {
+            "xM": 2430,
+            "zM": 3536,
+            "depthM": -16825
+          }
+        }
+      ]
+    }
+  ]
+}

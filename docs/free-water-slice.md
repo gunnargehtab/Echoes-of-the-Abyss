@@ -592,7 +592,8 @@ matrix is satisfied, not merely until this document or the camera lands.
 ## 9. Feel pass: the approved look target
 
 **Status: decisions 1–7 approved by the owner on #1748, 4 November 2026, and decision
-4's clause for #1774 in session on 7 November 2026, recorded in #1787.** Three parts
+4's clause for #1774 in session on 7 November 2026, recorded in #1787, with its wandering
+edges in session on 10 November 2026.** Three parts
 below are the author's, written to carry those decisions out, and await the owner's
 review on the pull request that adds this section: the kelp flanks under decision 5, and
 the #1753 and #1754 designs under decision 6. The integrated slice passed §7 and still
@@ -610,7 +611,7 @@ nothing for balance.
 | 1. Light | Stay inside the canon: no sunlight below the Lid | Sunlit water in the manner of the owner's ocean reference, which would first amend [world.md](world.md) and art direction's "Shallow caustics" | Every child |
 | 2. Opening camera | A low orbit behind the fleet at hull depth | Today's opening at Home pitch from 2,600 m; opening in flight, which §6 rules out by keeping the bounded orbit as the default | #1752 |
 | 3. Water medium | Reach and near-eye particulate, inside the existing ramp | Light shafts, caustics, hue in the water, or a new full-screen pass | #1749 |
-| 4. Crater walls | Reshape the drawn cell transitions, adding nothing at a cell centre; since #1774 rounded, with the study's ink on them | Changing the rim's biome, which changes its PF; re-cutting the literal; keeping the ink on the cell edges under a rounded floor | #1750, #1774 |
+| 4. Crater walls | Reshape the drawn cell transitions, adding nothing at a cell centre; since #1774 rounded and wandered, with the study's ink on them | Changing the rim's biome, which changes its PF; re-cutting the literal; keeping the ink on the cell edges under a rounded floor; leaving straight runs ruled | #1750, #1774 |
 | 5. Kelp | The prop reservation may rise to 600,000 triangles; the flanks fill to the clearing, the author's call pending review | Scaling stands up, which breaks canonical scale; stands in the clearing, which breaks §5 | #1751 |
 | 6. HUD and vertical command | A one-line legend and the camera panel by the console; vertical instruments, the author's design pending review | Leaving vertical reading to flight | #1752, #1753, #1754 |
 | 7. Iteration cap | Five rounds per change, every loop, held in `dev-loop` | The default three | Every child |
@@ -713,12 +714,25 @@ its ink with them:
   into a Y rather than one kind spiking into the others. A licence of 115 m, inside half a
   cell, bounds how far an edge moves. Every cell centre stands at least 40 m inside its
   own kind: where the rounding would carry an edge nearer, the edge bends round the centre
-  within 110 m of it. The bowl's rim lies within 35 m of its authored circle, where the
-  cells stair up to 165 m off it.
+  within 110 m of it. Rounded, the bowl's rim lies within 35 m of its authored circle,
+  where the cells stair up to 165 m off it.
+- **Wandering edges.** Rounding moves a straight run of cells nowhere, so the garden, the
+  wall and the pool kept ruled sides and read from the survey dolly as boxes with their
+  corners off. The owner chose to wander them, in session on 10 November 2026. The
+  rounded ground is read through a slow warp of the plan, 75 m at most, bowing over about
+  800 m and broken by a finer 340 m. Every kind reads through the one warp, so an edge
+  moves as one line. Its direction is a fixed field of position and its reach is read
+  from the cells, so it tells nothing the cells do not. It has only what the licence has
+  left: the whole 75 m on a straight run, less wherever the rounding has already moved
+  an edge, so no edge moves 115 m. Every centre still stands 40 m inside its kind. The
+  warp's seed was picked for this one map: the wander alone carries each long side of
+  the garden, the pocket and the bowl across 40 m or more, and the bowl's rim up to
+  56 m off its circle. Within 250 m of the roofed cut the wall's and the pool's sides
+  stay ruled or nearly, by the hold below.
 - **Ramps and faces.** The floor climbs across the rounded edge as a scarp about 80 m
   wide, and a rock face rises from a gentle foot to a steep lip. Within half a cell
-  of the roofed cut nothing rounds, easing in over the next cell, because the roof's
-  curtains stand on the cell edges; each jamb keeps its step on them.
+  of the roofed cut nothing rounds or wanders, easing in over the next half, because the
+  roof's curtains stand on the cell edges; each jamb keeps its step on them.
 - **Mesh.** The study draws its ground at 8 vertices a cell, one every 31.25 m, where a
   shipped map keeps 4 ([three-layer-ocean.md](three-layer-ocean.md) §5). An 80 m scarp
   that curves across vertices 62.5 m apart saw-tooths, in its lip and in its isobaths. The
@@ -878,7 +892,7 @@ each child's frames answer what it shows.
 | Opening | 300 m ahead of the hulls' centroid on the centroid-to-A line, at 300 m; 1,200 m; 15 degrees; heading about 34 degrees east of north (`yawDeg` −34) | [01-home.png](screenshots/issue-1713/dpr-1/01-home.png): 542 / 1,958, 2,600 m, 55 degrees, seabed | The three hulls in the lower third, the ray gliding lower right of them, the garden canopy beyond them, water rather than clear colour above the far rim, and the legend as one line in its corner |
 | Garden close | 1,875 / 1,125 in the clearing, 250 m, 12 degrees, 275 m; heading west along it (`yawDeg` 90) | Captured on its base by the first child that touches this row; no committed frame has this pose, and the nearest is [02-garden-close.png](screenshots/issue-1713/dpr-1/02-garden-close.png), the yaw-0 station | Kelp at canonical scale as one forest on both flanks of a bare clearing, with near stands separated from far ones by the water |
 | Low | 2,000 / 2,000, 1,600 m, 12 degrees, 850 m | [03-low.png](screenshots/issue-1713/dpr-1/03-low.png) | Water visibly between the eye and the floor, the bowl's drawn edges as eroded rock terraces rather than 250 m boxes under ink that follows them, and depth still darkening downward |
-| Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the crater as ground rather than squares: no 250 m staircase in the coastlines, isobaths or fills, and no 90 m block grid on the rim ([map-visuals.md](map-visuals.md) §4, the study's clause) |
+| Survey | 2,000 / 2,000, 10,000 m, 88 degrees, seabed | [04-survey.png](screenshots/issue-1713/dpr-1/04-survey.png) | Decoration below tactical ink, own hulls and contacts readable, and the crater as ground rather than squares: no 250 m staircase in the coastlines, isobaths or fills, no ruled side on the garden, and no 90 m block grid on the rim ([map-visuals.md](map-visuals.md) §4, the study's clause) |
 
 Two pose calls were taken here. For the opening, a focus ahead of the hulls puts them in
 the lower third; keeping the focus on their centroid would centre them, because the orbit
@@ -886,7 +900,7 @@ aims at its focus. For garden close, a pose along the clearing shows both flanks
 yaw-0 station looks north from over the clearing, so its south flank is behind the eye.
 A survey frame without the cell-edge outline is an ink change. The owner made it for
 issue #1774 in session on 7 November 2026, recorded in #1787, with map-visuals.md §4
-amended first. Since #1771 the garden
+amended first, and added the wandering edges on 10 November 2026. Since #1771 the garden
 close and the low frame also carry life, and since #1777 the opening carries the ray,
 18 m across, gliding at the lower right between the corvette and the legend, besides two
 of the low pose's deep-fish patches at its right edge as pinpricks (§5, Life in the
