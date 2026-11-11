@@ -8,6 +8,12 @@ visual change that cannot answer yes to all of them does not merge.
 The register throughout is the game's own: detail is something you **own**, never
 something you are shown, and glow is never decoration — it is loudness made visible.
 
+Since 11 November 2026 the picture is two layers under two laws
+([art-direction.md](art-direction.md#two-layers-two-laws)). The gates below bind the
+tactical layer at both graphics qualities, and the world layer at Low. At High the world
+layer is lit, inside that section's seven limits. No gate is retired: gates 1 to 5, 7 and
+8 bind a High change as they bind any other, and gate 6 bounds it by frame time.
+
 ## The pipeline of record
 
 There is exactly one way a hull or structure gets its shipped look, with one documented
@@ -295,6 +301,14 @@ at intake by gate 2's inverted emissive rule. The two regimes must never blur: i
 of terrain glow starts encoding a number, it has become an instrument and belongs to the
 HUD, not the ground.
 
+At the High graphics quality this gate is unchanged where it matters: an own lamp keeps
+its faction hue and the strength its SIG set, whatever passes run after it, and loudness
+is still read from the lamp, its halo and the collar alone. What High releases is the
+sentence above that makes the halo the only pass spreading light. Other passes may spread
+light there: world light in hues no faction owns, and an own lamp's only as far as its SIG
+says, as the halo does ([art-direction.md](art-direction.md#two-layers-two-laws), limits
+3 and 5).
+
 ### 4. Palette discipline — hue belongs to the faction constant
 
 Every colour on screen traces to a source of truth: faction palettes to the four-row table
@@ -360,6 +374,45 @@ and is not decoration: a faction's livery can match the biome it is sitting in, 
 edge is what keeps a track readable when it does.
 
 ### 6. Performance: one world scene, on measured budgets
+
+#### Two graphics qualities
+
+*Decided by the owner in session on 11 November 2026
+([art-direction.md](art-direction.md#two-layers-two-laws)). High is not built.*
+
+This gate bounded one renderer by what it draws. It now bounds two, the second by what a
+frame costs.
+
+| Quality | What it is | Budget | Status |
+| --- | --- | --- | --- |
+| **Low** | The shipped renderer, as this gate and [art-direction.md](art-direction.md) specify it | "Low: the counted budgets" below, unchanged: at most 150 draw calls and 400,000 triangles a frame, pixel ratio capped at 1.5, and every reservation | Shipped, and the default |
+| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped | Not built. The 8 ms is TUNABLE until the first frame the owner accepts |
+
+A count is a proxy for what a frame costs, and the cost itself is read now. On the named
+GPU the free-water study's frame takes at most 2.07 ms of GPU time at its four stations,
+queued or not, at pixel ratio 1 and 1.5
+([issue-1752](screenshots/issue-1752/README.md#hardware)). That is an eighth of the
+interval, at up to 547,936 triangles, which is past the 400,000 a shipped map is allowed.
+Eight milliseconds is about half the interval. The rest is left to the overlay, the
+browser's compositor and a weaker card.
+
+- **High is a player's choice.** A Graphics quality control joins
+  [ui-ux.md](ui-ux.md)'s Settings with High's first increment, since that list holds only
+  what is wired. The default stays Low until the owner accepts a High frame and says the
+  default moves. A player can therefore choose High before it is accepted, and until then
+  the control names it as in development.
+- **Low keeps its counts.** A frame-time ceiling at today's cost was the other reading of
+  the decision. Counts are what Low's tests already hold, and the next line holds its
+  cost.
+- **Low does not move.** A High change shows Low's frames and readings unchanged at the
+  same cameras, as its non-target control.
+- **High is production code behind the setting**, not behind a development URL flag. The
+  arch study and the free-water study each stayed behind one, and neither has reached a
+  player.
+- **The ceiling is a constant** in `packages/shared/src/constants.ts` from the first code
+  that reads it, tagged as this table tags it.
+
+#### Low: the counted budgets
 
 The conn view renders the world at runtime — the terrain heightfield and the player's
 *own* roster models — inside the budgets the Phase-1 measurement pinned
@@ -802,6 +855,11 @@ The ground is held to it at the survey dolly as well. Its shape there comes from
 ([map-visuals.md](map-visuals.md) §4), not from brighter fills, and the question is again one
 question: **from the ink alone, can you name the plateau, the trench and the rock?**
 
+At the High graphics quality this gate is the limit on the lit world
+([art-direction.md](art-direction.md#two-layers-two-laws), limit 6). The glance test and
+both review questions are asked of the lit frame, and a lit ground that fails one is too
+bright or too busy, whatever it cost to draw.
+
 "At every zoom" is load-bearing, and true metre scale cannot satisfy it on its own: a 60 m
 hull against kilometres of ground is a speck at survey distance. The conn view answers with
 the far-zoom readability scale specified in [art-direction.md](art-direction.md) ("Camera &
@@ -902,7 +960,10 @@ there is a picture to review.
   style docs (gate 4)
 - [ ] Enemy-facing rendering still caps at tier fidelity; own-force-only detail stayed
   own-force-only (gate 5)
-- [ ] Draw calls and triangles stay inside the gate-6 budgets, counted over every pass of
+- [ ] The change names the graphics quality it touches. A High change stays inside the
+  gate-6 frame time and shows Low unchanged at the same cameras; a look change shows its
+  frames beside its target frame (the `dev-loop` skill, "Look work")
+- [ ] At Low, draw calls and triangles stay inside the gate-6 budgets, counted over every pass of
   the frame (`__perspectiveProbe` sums every pass and lists them as `passes`), and the map
   density contracts (`4` / `1.5` px/m) are untouched or changed on both sides at once
 - [ ] A render-stack change reports the frame's GPU time, every pass summed, on the named

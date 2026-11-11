@@ -15,6 +15,10 @@ presentation plate, a briefing panel — the same place can be drawn for what it
 budget the engine will not spend. Each brief below says which lane a thing belongs in, because
 the failure mode of "make it beautiful" is a seabed that shouts and a terrain that glows.
 
+Since 11 November 2026 the darkness budget this brief cites is the Low graphics quality's
+([art-direction.md](art-direction.md#two-layers-two-laws)). A habitat built at High is briefed
+again against a lit world, and nothing below is rewritten until one is.
+
 ---
 
 ## 1. What Beauty Is Down Here

@@ -440,6 +440,20 @@ Unflagged
 - The moorages' flag, and the fifth `Faction` value it would be: a party to the war, game-controlled, never a seat (mercenaries.md). An unflagged hull is one of the three commons and is PR-2 exactly, carries no navy's doctrine, and names no employer at any tier.
 - Not *nobody's*. The commons on the four bars are nobody's by lock and fly their builder's flag (units.md); an unflagged hull flies the moorage's.
 
+Tactical layer · World layer
+
+- The two halves of the picture since 11 November 2026 (art-direction.md, "Two layers, two laws"). The tactical layer is everything a player reads to command: survey ink, map furniture, public life's field marks and stipple, instruments, agents' marks and lamps, contacts, the scope and the HUD. The world layer is the place it is read in: water, stone, ground, flora, the modelled bodies of public life and the surfaces of every model.
+- Not the Echo Layer, which is the detection system and computes what the tactical layer shows. Not the three-layer ocean either, which is the water column's three bands (three-layer-ocean.md).
+
+Graphics quality
+
+- The renderer a player chooses: Low or High (graphics-standards.md gate 6). Low is the shipped renderer on its counted budgets. High is the lit world layer on a frame-time budget, and is not built.
+- A *quality*, never a tier: Tier is the Echo Layer's word for how well a contact is resolved, and it keeps it.
+
+Target frame · Look work
+
+- Look work is a change accepted on how a frame reads: light, water, surfaces, effects, and the assets a look needs. Its target frame is the one reference image the owner named for it, committed with the camera it is judged at. The frame is locked before the work starts and the owner alone accepts against it (the `dev-loop` skill, "Look work").
+
 Related
 
 - [mercenaries.md](mercenaries.md) — the moorages, the hire, and the Likeness

@@ -24,6 +24,7 @@ first step of every round:
 | A mission | `docs/mission-<name>.md`, beat by beat |
 | A screen or a panel | The numbered section of `docs/ui-ux.md` it implements |
 | Anything visual | The gates in `docs/graphics-standards.md`, and the committed concept art and renders in `docs/concept-art/`, never a fresh generation |
+| A look | Its target frame, locked first ("Look work" below) |
 | A hull, structure or prop | Its `UNIT —` or `STRUCTURE —` block in `docs/asset-prompts-3d.md` |
 | The mix | `docs/audio-direction.md`, against readings from `tools/audio-meter` |
 | Tooling, CI, these files | The issue's acceptance criteria, and the file's own header |
@@ -39,6 +40,43 @@ A staged visual reboot starts with [art direction](../art-direction/SKILL.md):
 one shared brief, with the game, map, world, unit and material workflows feeding it.
 Those specialists do not start additional loops. The playable target and their concrete
 outputs are recorded together, as in `docs/visual-reboot.md`.
+
+## Look work: the frame is the target
+
+The owner set this in session on 11 November 2026. The free-water slice had been refused
+twice (#1694) with every evidence row passing: the loops built against written rules
+that could not produce the look. **Look work** is a change accepted
+on how a frame reads: light, water, surfaces, effects, and the assets a look needs. A
+panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets those.
+
+- **The target is a frame, locked first.** One reference image the owner named, committed
+  under `docs/screenshots/` with the camera it is judged at. No look work starts without
+  it. A brief may explain the frame; it never replaces it.
+- **The frame comes before the SPEC.** Build to a frame the owner accepts, then write the
+  look's numbers into `docs/` from it, in the pull request that promotes it. Until then
+  they are TUNABLE, live behind the High graphics quality (`docs/graphics-standards.md`
+  gate 6), and the doc says the look is in development. This does not reach the laws:
+  what no look may do is in `docs/art-direction.md`, "Two layers, two laws", and changing
+  that is still a doc first and the owner's call.
+- **Look at your own frames.** A session that cannot open an image does no look work. It
+  says so and stops. On #1637 one captured a baseline it could not view.
+- **Evidence is three frames and a clip.** Home, close and survey beside the target at
+  the same cameras, with the HUD present, and one clip of the camera moving. Frames
+  handed for acceptance are taken on a real GPU. A software rasteriser's frames may guide
+  a round; they are labelled so and never offered for acceptance. Colour-vision palettes,
+  reduced motion and the GPU station table run once, at promotion.
+- **Low does not move.** Each increment shows the Low quality's frame unchanged at the
+  same cameras, as its non-target control.
+- **A refusal names one cause.** When the owner refuses a frame, write the one cause that
+  produces their remarks before filing anything. On #1694 the first refusal became one
+  issue per remark (#1749 to #1753), each closed, and the frame was refused again two
+  days later.
+- **Acceptance is the owner's.** No loop, critic or reading accepts a look. A round ends
+  with its frames in the pull request, and the look is done when the owner says so on the
+  issue. Unattended, a firing may build a look increment; it never accepts or promotes one.
+
+The round, the critic, the cap and "Three things the loop must never do" are unchanged.
+What changes is what a round is graded against.
 
 ## The round
 
@@ -80,6 +118,7 @@ doc; a passing critic says nothing about the build.
 | Echo Layer, detection, propagation | A `tools/echo-sim` scenario, committed beside its `.expected.json` |
 | Simulation, missions, combat | The backend test file, run alone: `npm -w packages/backend exec -- node --import tsx --test test/<file>.test.ts` |
 | Anything rendered, HUD or world | A screenshot through [`run-game`](../run-game/SKILL.md), against a real match |
+| A look | "Look work" above: three frames beside the target frame, one clip, and Low's frame unchanged |
 | A shader on a material already drawn | Frames at `tools/render-stack/capture.mjs`' four cameras, on and off, and gate 6's queued `avgGpuMs` from an unpaced run on the named GPU |
 | A screen, a panel, a control | Its frontend test, plus the accessibility path (`docs/ui-ux.md` §11) |
 | A hull, structure or prop | [`hull-intake`](../hull-intake/SKILL.md)'s bake and report; for an existing model, `node tools/hull-models/diff.mjs <slug>`, the lit sheet `node tools/hull-renders/inspect.mjs <slug> --before <base-sha>` and the sweep `node tools/hull-models/contacts.mjs <slug>` |
@@ -101,7 +140,8 @@ says why.
 The critic reads what you hand it, and a vague brief costs it an hour. Give it,
 as text:
 
-- **Target:** the doc path and section, or the issue's acceptance criteria.
+- **Target:** the doc path and section, or the issue's acceptance criteria. For look
+  work, the target frame's path and the paths of the round's frames.
 - **Diff:** `git diff origin/main...HEAD` right after `git fetch origin main` (a
   stale ref turns fourteen files into four hundred), or name the base sha; from
   round 2, also the delta since the last verdict (`git diff <sha>..HEAD`).
@@ -154,6 +194,8 @@ Stop when **all** hold:
   stop signal, not a finding.
 - The change is still one instalment.
 - The verification pass has covered every edit made after the last verdict.
+- For look work, the round's frames stand beside the target frame in the pull request.
+  The owner's acceptance is not a criterion a loop can meet: stop there and wait for it.
 
 Do not run a round for polish. There is no score to maximise.
 

@@ -25,6 +25,12 @@ a ping — is how you are found. So the style rule is the game rule:
    damage, rain-on-glass reflection on every panel. The HUD is a pressure hull
    with instruments, not a website.
 
+Since 11 November 2026 principles 1 and 3 are scoped by layer
+([art-direction.md](art-direction.md#two-layers-two-laws)). Principle 1's 85–90 % and 95 %
+are the Low graphics quality's, and the chart's at both. Principle 3 is the tactical
+layer's at both: loudness is read from an agent's lamps, halo and collar, in its
+faction's hue. At High the world's own light is not loudness and wears no faction hue.
+
 The reference plates: the four Pressure Cartography survey plates
 (I–IV) establish the dark-paper / neon-linework language, and the two
 presentation plates (V–VI) establish the saturated neon register for key art
@@ -585,6 +591,15 @@ families, and nothing else on the ground ever emits:
 | `civic-lamp` | `#B8875A` | Coral Ruins with a floor at 350 m or shallower — the Upper Concourse; in the arch study, its landmark ([licence](#the-arch-studys-licence)) | A steady tallow point standing low over the terminus, about one cell in three and never more than twelve to a map |
 | `ore-trace` | `#7A5634` | Resource fields, any biome — the nodule bed | A dull glint in the crust of a few nodules on each bed: facets the size of a lump, never a lit drift. The same charge a crystal seam carries whole, in the trace of it the ore keeps ([economy.md](economy.md) §2's two modelled resources are one substance at two grades) |
 
+**These rules are the Low graphics quality's, and the chart's at both.** Since 11 November
+2026 the world layer may be lit at High
+([art-direction.md](art-direction.md#two-layers-two-laws)): rules 1 to 3 are released
+there, save rule 1's sentence that keeps terrain light out of the lamp halo's source.
+That section's "Move smoothly" answers rule 3's reason. Rules 4 and 5 bind both
+qualities. A world-owned source High adds, such as the Lid's glow, and each biome's water
+hue take their tokens in this section before they are drawn. An own hull's searchlight is
+agent light and keeps its navy's glow.
+
 Every family obeys the same five rules, and they are gates, not suggestions:
 
 1. **World light is points and seams, never area glow.** No lit ground, no
@@ -666,7 +681,9 @@ the ladder in [map-visuals.md](map-visuals.md) §5. So public life's glow belong
 to neither an agent nor an instrument, and rung 5 bounds it instead: soft,
 additive dots, each at a furniture gain `ladder.ts` holds. An animal is an agent
 only as a contact, on rung 7 (§8 there). Either way its colour comes from the
-palette tables above.
+palette tables above. Rung 5 bounds public life's stipple at both graphics qualities. At
+High its modelled bodies and their light are world layer
+([art-direction.md](art-direction.md#two-layers-two-laws)).
 
 The planned [free-water slice](free-water-slice.md) §5 applies this same public-life
 point channel to its decorative deep fish, not to a gameplay animal: non-emissive

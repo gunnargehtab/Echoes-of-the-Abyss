@@ -163,9 +163,10 @@ to pass. All three doc gates block, so a dead link in `docs/` fails the build.
 ## Contributing
 
 `CONTRIBUTING.md` is the contract: branches, commits, labels, pull requests, and the gates
-to run first. Anything visual also clears `docs/graphics-standards.md`. The template is
-`.github/PULL_REQUEST_TEMPLATE.md` — upper case is the only spelling here, so a probe for
-`.github/pull_request_template.md` finds nothing and proves nothing.
+to run first. Anything visual also clears `docs/graphics-standards.md` and
+`docs/art-direction.md`'s "Two layers, two laws", and a look runs as `dev-loop`'s "Look
+work". The template is `.github/PULL_REQUEST_TEMPLATE.md` — upper case is the only spelling
+here, so a probe for `.github/pull_request_template.md` finds nothing and proves nothing.
 
 - **Push in instalments.** A session can hit a context or session limit and lose its
   container. Commit and push at every self-contained step; open the pull request once an
