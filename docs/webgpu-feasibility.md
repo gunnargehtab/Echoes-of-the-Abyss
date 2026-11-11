@@ -7,8 +7,9 @@ view to `WebGPURenderer` and TSL would touch, what each shader patch becomes, an
 new renderer behaves differently enough to break a SPEC. [art-direction.md](art-direction.md)
 row 8 defers the migration until that decision. Nothing here changes the shipped renderer.
 
-**Read against** three **r169**: `packages/frontend/package.json` asks for `^0.169.0` and
-`node_modules/three` resolves 0.169.0. The client is read at `9e3bfae`. Every renderer fact
+**Read against** three **r169**: `packages/frontend/package.json` asked for `^0.169.0` and
+`node_modules/three` resolved 0.169.0 when the client was read, at `9e3bfae`. The client
+has run r187 since #1800, and this note has not been re-read against it. Every renderer fact
 below names a file under `node_modules/three/src`. A migration on a later release re-reads
 each one there.
 

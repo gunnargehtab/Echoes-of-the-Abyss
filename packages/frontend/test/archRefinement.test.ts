@@ -124,7 +124,7 @@ describe('the landmark’s surface under the study (§11)', () => {
       if (!bounced) continue;
       assert.ok(fragment.includes(from), `${material.name} from the south, below level`);
       assert.ok(
-        fragment.includes('BRDF_Lambert( material.diffuseColor )'),
+        fragment.includes('BRDF_Lambert( material.diffuseContribution )'),
         'the ambient’s Lambert'
       );
       assert.equal(uniforms.uBounce, study.uniforms!.uBounce);
