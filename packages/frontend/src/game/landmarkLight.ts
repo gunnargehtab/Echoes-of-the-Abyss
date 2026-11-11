@@ -279,7 +279,7 @@ const BOUNCE_DEFINE = 'ARCH_BOUNCE';
  * normal, through the same Lambert the ambient takes (three's
  * `getAmbientLightIrradiance` and `BRDF_Lambert`), so at full incidence a
  * face takes that many more of what the ambient gives it. It skips the
- * specular-energy term r187's ambient also takes. Since r187,
+ * specular-energy term r187's ambient also takes. Since r182,
  * `diffuseContribution` is the albedo less its metal, what `diffuseColor` was. +Z is south in the model (Block 4b), and the
  * landmark stands at its anchor's yaw alone, so the model's south is the
  * court's. Taken off the normal before any displacement: the sway turns a
