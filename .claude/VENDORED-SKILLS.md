@@ -37,25 +37,23 @@ are repo-authored, in the `material-design` skill.
 | `pixijs-scene-text` | `pixijs/pixijs-skills` | `6aae70d` | MIT |
 | `pixijs-performance` | `pixijs/pixijs-skills` | `6aae70d` | MIT |
 | `pixijs-ticker` | `pixijs/pixijs-skills` | `6aae70d` | MIT |
-| `threejs-geometry` | `cloudai-x/threejs-skills` | `b1c6230` | MIT |
-| `threejs-materials` | `cloudai-x/threejs-skills` | `b1c6230` | MIT |
-| `threejs-loaders` | `cloudai-x/threejs-skills` | `b1c6230` | MIT |
-| `threejs-postprocessing` | `cloudai-x/threejs-skills` | `b1c6230` | MIT |
+| `threejs-geometry` | `cloudai-x/threejs-skills` | `0e18186` | MIT |
+| `threejs-materials` | `cloudai-x/threejs-skills` | `0e18186` | MIT |
+| `threejs-loaders` | `cloudai-x/threejs-skills` | `0e18186` | MIT |
+| `threejs-postprocessing` | `cloudai-x/threejs-skills` | `0e18186` | MIT |
 | `accessibility` | `addyosmani/web-quality-skills` | `afa8da9` | MIT |
 | `colyseus` | `colyseus/skill` | `9e3ce13` | MIT |
 
 Licence texts are in `.claude/vendor-licenses/`. `cloudai-x/threejs-skills`
-ships no `LICENSE` file; its README states MIT, and that statement is quoted in
-`threejs-skills.NOTICE`.
+ships a `LICENSE` file at `0e18186` (added in `9652c10`), so it replaced the README
+quote that stood in for one.
 
-**The three.js upstream moved on 19 October, and the copies here did not (#1450).**
-`cloudai-x/threejs-skills` is at `0e18186`: every skill rewritten to target three r186,
-a WebGPU and TSL section in each, three new skills and a `LICENSE` file. The client pinned
-`three@^0.169.0` then, so a re-sync would have traded the r169 drift listed below for
-r186 advice that did not run here. The client has run r187 since #1800, which bumped
-`three` alone, changing no look, so the four are still at `b1c6230`. #1804 re-syncs
-them, re-applies their `LOCAL` notes against r187, and swaps the NOTICE for the
-upstream `LICENSE`. Until it lands, the drift below is read against r169.
+**The three.js copies target r186, and the client runs r187 (#1804).** Upstream
+rewrote every skill for r186 on 19 October (#1450) and added a `LICENSE` and three
+skills not taken here. The copies waited at `b1c6230` until the client left r169
+(#1800), because r186 advice would not have run on it. Each copy now carries a WebGPU
+and TSL section, a twentieth to a sixth of it, which a WebGL client cannot use. Their
+four descriptions grew from 94 words to 167, which every session now pays.
 
 Why each one earns its context:
 
@@ -78,16 +76,19 @@ Why each one earns its context:
   repository happens, only through the primitives `tools/hull-models/kit.mjs`
   builds from.
 
-  Several samples predate `three@^0.169`. In materials, the `aoMap` sample copies
-  UVs into `uv2`, which a map reads only when its texture's `channel` is 2, and the
-  `ShaderMaterial` sample omits `<colorspace_fragment>`. Loaders sets a
-  per-material `envMapIntensity` that `scene.environmentIntensity` overrides on
-  any material without its own `envMap`. Post-processing ends a chain in
-  `GammaCorrectionShader` rather than `OutputPass`, passes `FilmPass` four
-  arguments where it takes two, and imports a `three/addons/nodes/Nodes.js` that
-  does not exist. Geometry calls a `BufferGeometryUtils.computeTangents` that is
-  not exported. Where the conn view's tone mapping departs from these samples is
-  in `packages/frontend/CLAUDE.md` and the `material-design` skill.
+  The commits up to `0e18186` fixed the drift the `b1c6230` copies had: the `uv2`
+  aoMap sample, the per-material `envMapIntensity`, the `GammaCorrectionShader`
+  chain end, `FilmPass`'s four arguments, a missing `Nodes.js` and an unexported
+  `computeTangents`. Two samples still cut against this repository, and the
+  `LOCAL` notes name them: the materials `ShaderMaterial` sample omits
+  `<colorspace_fragment>`, and the loaders samples keep only `.texture` from
+  `PMREMGenerator`. The hull scripts are the one place the r186 text runs ahead of
+  the code. `tools/hull-models` stays on the root's `three@0.169.0` pin (#1805), so
+  geometry advice there is read against r169: the skill's `CapsuleGeometry` takes
+  `height` and `heightSegments`, which r176 brought, where r169's takes `length`.
+  `tools/hull-renders` runs r187, like the client. Where the conn view's tone
+  mapping departs from these samples is in `packages/frontend/CLAUDE.md` and the
+  `material-design` skill.
 - **accessibility** is WCAG 2.2 with two reference files, and `docs/ui-ux.md`
   §11 already calls accessibility "a correctness requirement, not a feature
   tier". The overlap is direct: §11 owes contrast, motion and flash limits, a
@@ -234,9 +235,9 @@ the router's note said so, and a session that loaded a sub-skill directly never 
   upstream sibling `web-quality-audit`, which is not vendored here. Since #974,
   `threejs-postprocessing`, `threejs-loaders` and `threejs-materials` each open
   with a `LOCAL NOTE` on where this repository departs from their samples: a
-  composer moves tone mapping, an environment belongs to the view that bakes it,
-  and a lamp's emission goes after the curve. Each points at the `material-design`
-  skill.
+  composer or a half-float output buffer moves tone mapping, an environment
+  belongs to the view that bakes it, and a lamp's emission goes after the curve.
+  Each points at the `material-design` skill. #1804 checked each against r187.
 - **A personal copy wins.** Claude Code prefers a personal skill
   (`~/.claude/skills/`) to a project skill of the same name, and `skillOverrides`
   matches names only, so it cannot choose between them. On a machine that also
@@ -293,5 +294,7 @@ Recorded so the next search does not repeat this one.
   extension flags. The r186 rewrite fixes all three. What is left is narrower: its
   extension example still assigns `onBeforeCompile` over any earlier patch, the rule
   `material-design` and `packages/frontend/test/modelLighting.test.ts` hold, and a
-  fifth of it is WebGPU and TSL, which a WebGL client cannot use. Revisit with a
-  `.claude/skill-eval/` probe on a shader-patch issue, or when `three` reaches r186.
+  fifth of it is WebGPU and TSL, which a WebGL client cannot use. The client
+  reached r187 in #1800, which was the second revisit trigger; both objections
+  hold at any version, so #1804 left it out. Revisit with a `.claude/skill-eval/`
+  probe on a shader-patch issue.
