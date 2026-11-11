@@ -121,27 +121,45 @@ export const HIGH_GRAPHICS = {
   /** The exposure the world layer's light is tone-mapped at, before the curve. */
   EXPOSURE: 1,
   /**
-   * How the water above the ground takes the scene's light: the metres of
-   * depth over which it falls to 1/e. The ground stands under the rig the
-   * models already do (`MODEL_LIGHTING`), and depth still darkens it.
+   * The Lid's glow (`lid-glow`, docs/style-neon-noir.md "World light"): the
+   * light the ground takes from the whole water above it, with no direction
+   * and no shadow (docs/art-direction.md, limit 1). `IRRADIANCE` is what level
+   * ground takes at the Lid, in the renderer's linear units; it is held where
+   * the palest ground it lights is no paler than the palest ground the
+   * loudness ladder weighs (limit 6; test/litGround.test.ts). `FALLOFF_M` is
+   * the depth over which the water above takes it to 1/e, so depth still
+   * darkens. `HORIZON` is what a vertical face keeps of it.
    */
-  LIGHT_FALLOFF_M: 1100,
+  LID: { IRRADIANCE: 3, FALLOFF_M: 3000, HORIZON: 0.3 },
   /**
    * The lit ground. `ALBEDO_LUMINANCE` is the linear luminance the palest
    * biome fill is lifted to as an albedo; every fill and the stone take the
    * same gain, so their hues and their order hold. `ALBEDO_SATURATION` is how
    * much of a fill's chroma the albedo keeps: a fill authored at 5 to 10%
    * luminance reads as paint when it is lifted whole. `RELIEF_GAIN` steepens
-   * the baked slope the light reads, since the column is drawn at 0.22 and a
-   * true normal would shade nothing.
+   * the baked slope the light reads: the column is drawn at 0.22, and light
+   * from straight above shades a true slope by a hundredth.
    */
-  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 3 },
+  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8 },
   /**
-   * Round 1's water, until the medium is authored: the Low ramp's colour as
-   * in-scattered light, lifted by this so the tone curve's toe does not take
-   * it to black.
+   * The world's own sources (docs/style-neon-noir.md "World light"), a family
+   * a row: `POWER` is the light level ground takes directly under one source,
+   * in the renderer's linear units, as the rig's key gives 1.8 face on;
+   * `RADIUS_M` how far its pool and its volume reach; `HEIGHT_M` how high over
+   * the ground its light stands, which is also how wide its pool is: a kelp
+   * stand's tips and a chimney's column are tens of metres up. `MAX` caps the
+   * sources a ground draws, brightest first, and `VOLUME` scales the light a
+   * source scatters in the water against the light it puts on the ground.
    */
-  WATER_GAIN: 2.4,
+  WORLD_LIGHT: {
+    vent: { POWER: 8, RADIUS_M: 160, HEIGHT_M: 25 },
+    flora: { POWER: 4, RADIUS_M: 120, HEIGHT_M: 35 },
+    crystal: { POWER: 4, RADIUS_M: 110, HEIGHT_M: 20 },
+    ore: { POWER: 1.5, RADIUS_M: 70, HEIGHT_M: 12 },
+    civic: { POWER: 6, RADIUS_M: 140, HEIGHT_M: 15 },
+    MAX: 192,
+    VOLUME: 0.2,
+  },
 } as const;
 
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */

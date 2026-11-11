@@ -15,6 +15,7 @@ import {
   graphicsQualityOffered,
   graphicsQualityStatus,
   graphicsQualityUnavailableReason,
+  highRefusal,
   publishGraphicsQualityStatus,
   subscribeGraphicsQualityStatus,
 } from '../src/game/graphicsQuality.ts';
@@ -62,6 +63,24 @@ describe('the Graphics quality', () => {
     unsubscribe();
     publishGraphicsQualityStatus('low');
     assert.equal(seen.length, 2, 'an unsubscribed listener hears nothing more');
+  });
+
+  it('reaches a match drawn alone on the standard surface, and says why not elsewhere', () => {
+    // graphics-standards.md gate 6: "High reaches a match drawn alone, on the
+    // standard surface ... A mission placed in the continuous world and
+    // Sorrowgate's own surface draw Low, and Settings says so".
+    const alone = { dreamStudy: false, placed: false };
+    assert.equal(highRefusal({ ...alone, look: 'standard' }), null);
+    assert.equal(highRefusal({ ...alone, look: 'free-water' }), null, 'the crater it is judged in');
+    assert.equal(highRefusal({ ...alone, look: 'sorrowgate' }), 'Sorrowgate is not lit yet');
+    assert.equal(
+      highRefusal({ dreamStudy: false, placed: true, look: 'standard' }),
+      'the world map is not lit yet'
+    );
+    assert.equal(
+      highRefusal({ dreamStudy: true, placed: false, look: 'standard' }),
+      'the Dream Loop study draws its own light'
+    );
   });
 
   it("holds gate 6's frame time as the constant its table tags", () => {

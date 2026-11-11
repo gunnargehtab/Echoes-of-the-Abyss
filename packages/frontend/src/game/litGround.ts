@@ -5,10 +5,12 @@
  * At Low the ground is one unlit material over a bake that has its light
  * shaded in (seabed.ts). At High the same mesh takes light instead: the bake
  * hands over each pixel's albedo, slope and occlusion beside the skin
- * (`BakeOptions.lit`), and this patch lights them with the rig the models
- * already stand under (`MODEL_LIGHTING`: the ambient, the key and the rim),
- * so the ground and the hulls over it are lit from one quarter. The water
- * above the ground takes that light with depth, so depth still darkens.
+ * (`BakeOptions.lit`), and this patch lights them with the Lid's glow, light
+ * from the whole water above, and with what the world's own sources pool on
+ * the ground (worldLights.ts). There is no sun below the Lid
+ * (docs/art-direction.md, limit 1), so nothing here has a direction: ground
+ * takes the glow by how far it faces up, and the water above it takes the
+ * glow with depth, so depth still darkens.
  *
  * The result is scene-referred: the material draws only in the High world
  * pass, into a linear target, and that pass's composite owns the tone curve
@@ -28,12 +30,12 @@ import {
   type MeshBasicMaterial,
   RGBAFormat,
   SRGBColorSpace,
+  type Texture,
   UnsignedByteType,
-  Vector3,
 } from 'three';
-import { HIGH_GRAPHICS, MODEL_LIGHTING } from '@echoes/shared';
+import { HIGH_GRAPHICS } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { MODEL_KEY_FROM, MODEL_RIM_FROM } from './modelLighting.ts';
+import { LID_GLOW } from './palette.ts';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
 import { SEABED_PX_PER_CELL, type LitBake } from './seabed.ts';
 
@@ -88,34 +90,29 @@ const glsl = (value: number): string => {
   return text.includes('.') ? text : `${text}.0`;
 };
 
-const toLight = (from: readonly [number, number, number]): string => {
-  const d = new Vector3(...from).normalize();
-  return `vec3( ${glsl(d.x)}, ${glsl(d.y)}, ${glsl(d.z)} )`;
-};
-
 const radiance = (hex: number, intensity: number): string => {
   const c = new Color(hex).multiplyScalar(intensity);
   return `vec3( ${glsl(c.r)}, ${glsl(c.g)}, ${glsl(c.b)} )`;
 };
 
 /**
- * The rig's light on a surface facing `normal` at world height `worldY`, as
- * three lights a model: Lambert's irradiance, and the water over the surface
- * taking it on the way down. Literals, since the rig is the SPEC's and static.
+ * The Lid's glow on a surface facing `normal` at world height `worldY`: light
+ * from the whole water above, so a surface takes it by how far it faces up
+ * and from no quarter, and the water over the surface takes it on the way
+ * down. Literals, since the token and its numbers are static.
  */
 export const LIT_IRRADIANCE_GLSL = [
   'vec3 echoesLitIrradiance( vec3 normal, float worldY ) {',
-  `  vec3 irradiance = ${radiance(MODEL_LIGHTING.AMBIENT_COLOR, MODEL_LIGHTING.AMBIENT)}`,
-  `    + ${radiance(MODEL_LIGHTING.KEY_COLOR, MODEL_LIGHTING.KEY)} * max( 0.0, dot( normal, ${toLight(MODEL_KEY_FROM)} ) )`,
-  `    + ${radiance(MODEL_LIGHTING.RIM_COLOR, MODEL_LIGHTING.RIM)} * max( 0.0, dot( normal, ${toLight(MODEL_RIM_FROM)} ) );`,
+  `  float facing = mix( ${glsl(HIGH_GRAPHICS.LID.HORIZON)}, 1.0, max( 0.0, normal.y ) );`,
   `  float depthM = max( 0.0, - worldY / ${glsl(DEPTH_VISUAL_M_PER_M)} );`,
-  `  return irradiance * exp( - depthM / ${glsl(HIGH_GRAPHICS.LIGHT_FALLOFF_M)} );`,
+  `  return ${radiance(LID_GLOW, HIGH_GRAPHICS.LID.IRRADIANCE)} * facing * exp( - depthM / ${glsl(HIGH_GRAPHICS.LID.FALLOFF_M)} );`,
   '}',
 ].join('\n');
 
 /** The ground's half: the bake's slope and occlusion under that light. */
 export const LIT_GROUND_GLSL = [
   'uniform sampler2D uLitRelief;',
+  'uniform sampler2D uLitPools;',
   'varying float vLitWorldY;',
   LIT_IRRADIANCE_GLSL,
   // The slope is the bake's, steepened there; the occlusion is the rim, the
@@ -124,11 +121,14 @@ export const LIT_GROUND_GLSL = [
   '  vec4 relief = texture2D( uLitRelief, uv );',
   '  vec2 slope = relief.rb * 2.0 - 1.0;',
   '  vec3 normal = vec3( slope.x, sqrt( max( 0.0, 1.0 - dot( slope, slope ) ) ), slope.y );',
-  '  return albedo * echoesLitIrradiance( normal, worldY ) * relief.g * 0.3183098861837907;',
+  // The world's own sources pool on it (worldLights.ts): light from beside
+  // the ground, which the water above it does not take.
+  '  vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;',
+  '  return albedo * irradiance * relief.g * 0.3183098861837907;',
   '}',
 ].join('\n');
 
-const LIT_GROUND_KEY = ':lit-ground-1';
+const LIT_GROUND_KEY = ':lit-ground-2';
 const LIT_ROOF_KEY = ':lit-roof-1';
 
 /** The unlit sum the patch replaces: three's basic material, r187. */
@@ -138,12 +138,19 @@ const UNLIT_SUM = 'vec3 outgoingLight = reflectedLight.indirectDiffuse;';
  * Light this ground material. Its `map` is the lit albedo, and its geometry's
  * `uv` spans the map as the skin's does. Install it last, after the ink's
  * carrier, the veil and the silt detail, which all shape the albedo it
- * lights; it chains their hooks and suffixes their key.
+ * lights; it chains their hooks and suffixes their key. `pools` is the light
+ * the world's own sources put on the ground (worldLights.ts `poolTexture`),
+ * as a uniform the caller keeps, so the dressing can hand over a new texture
+ * without a new program.
  */
-export function installLitGround(material: MeshBasicMaterial, relief: DataTexture): void {
+export function installLitGround(
+  material: MeshBasicMaterial,
+  relief: DataTexture,
+  pools: { value: Texture }
+): void {
   const before = material.onBeforeCompile;
   const key = material.customProgramCacheKey();
-  const uniforms = { uLitRelief: { value: relief } };
+  const uniforms = { uLitRelief: { value: relief }, uLitPools: pools };
   material.onBeforeCompile = (shader, renderer) => {
     before.call(material, shader, renderer);
     if (!shader.fragmentShader.includes(UNLIT_SUM)) {

@@ -8,18 +8,21 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { MeshBasicMaterial, ShaderLib } from 'three';
-import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
+import { Biome, HIGH_GRAPHICS, MODEL_LIGHTING, TERRAIN_LIFT } from '@echoes/shared';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
-import { BIOME_COLOR, ROCK_FACE } from '../src/game/palette.ts';
+import { BIOME_COLOR, LID_GLOW, ROCK_FACE, scaleRgb } from '../src/game/palette.ts';
 import {
   installLitGround,
   installLitRoof,
   LIT_GROUND_GLSL,
+  LIT_IRRADIANCE_GLSL,
   litGroundBytes,
   litGroundSurface,
 } from '../src/game/litGround.ts';
 import {
+  BIOME_RELIEF,
   LIT_ALBEDO_GAIN,
+  ROCK_RELIEF,
   SEABED_PX_PER_CELL,
   seabedRange,
   seabedSeed,
@@ -212,9 +215,11 @@ describe('the lit ground’s material (#1801)', () => {
     const cells = surveyCellTexture(terrain, surveyCellClasses(terrain));
     installSurveyInk(material, terrain, cells, null, 'carrier');
     installDisplayVeil(material);
-    installLitGround(material, surface.relief);
+    const pools = { value: surface.relief };
+    installLitGround(material, surface.relief, pools);
     const shader = compile(material);
     assert.equal(shader.uniforms.uLitRelief !== undefined, true, 'the relief is bound');
+    assert.equal(shader.uniforms.uLitPools, pools, 'and the pools, by the caller’s own uniform');
     assert.ok(shader.fragmentShader.includes(LIT_GROUND_GLSL));
     assert.ok(
       shader.fragmentShader.includes(
@@ -234,20 +239,80 @@ describe('the lit ground’s material (#1801)', () => {
     assert.ok(shader.vertexShader.includes('vLitWorldY = ( modelMatrix'));
     const key = material.customProgramCacheKey();
     assert.ok(key.startsWith('survey-ink-carrier'), key);
-    assert.ok(key.endsWith(':lit-ground-1'), key);
+    assert.ok(key.endsWith(':lit-ground-2'), key);
   });
 
-  it('stands the ground under the rig the models stand under, dimmed by depth', () => {
-    // art-direction.md "Shared model lighting": ambient 0.75, key 1.8, rim
-    // 1.6, in three's linear units; the falloff is HIGH_GRAPHICS's.
-    assert.ok(LIT_GROUND_GLSL.includes(`/ ${HIGH_GRAPHICS.LIGHT_FALLOFF_M.toFixed(6)}`));
-    assert.ok(LIT_GROUND_GLSL.includes(`/ ${DEPTH_VISUAL_M_PER_M.toFixed(6)}`));
-    // The key's direction, from where the view stands it (modelLighting.ts).
-    const length = Math.hypot(-1400, 2600, -900);
+  it('lights the ground from the Lid’s glow: from above, from no quarter, dimmed by depth', () => {
+    // art-direction.md limit 1: "No sun below the Lid ... Light from above is
+    // the Lid's glow, from everywhere and nowhere in particular." So the
+    // light reads the normal's height alone, and no direction is in it.
+    assert.ok(LIT_IRRADIANCE_GLSL.includes('max( 0.0, normal.y )'));
+    assert.ok(!LIT_IRRADIANCE_GLSL.includes('dot('), 'no light stands in a quarter');
+    assert.ok(LIT_IRRADIANCE_GLSL.includes(`/ ${HIGH_GRAPHICS.LID.FALLOFF_M.toFixed(6)}`));
+    assert.ok(LIT_IRRADIANCE_GLSL.includes(`/ ${DEPTH_VISUAL_M_PER_M.toFixed(6)}`));
+    // The token is the rig's own cold ambient, so the ground under the Lid
+    // and the hulls in it stand in one light (style-neon-noir.md, `lid-glow`).
+    assert.equal(LID_GLOW, MODEL_LIGHTING.AMBIENT_COLOR);
+    assert.ok(LIT_GROUND_GLSL.includes(LIT_IRRADIANCE_GLSL));
+    // And what the world's own sources pool on the ground is added to it,
+    // under the same occlusion: light from beside, which depth does not take.
     assert.ok(
-      LIT_GROUND_GLSL.includes((2600 / length).toFixed(6)),
-      'the key stands where the rig’s does'
+      LIT_GROUND_GLSL.includes(
+        'echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb'
+      )
     );
+  });
+
+  it('holds the Lid-lit ground no paler than the palest ground the ladder weighs (limit 6)', () => {
+    // art-direction.md limit 6: "Each tactical rung's floor still reads over
+    // the brightest lit ground the look puts under it, in all four palettes."
+    // The ladder weighs every rung over the palest fill lifted by the terrain
+    // cap, in all four palettes (test/ladder.test.ts, `LIFTED_GROUND`), and
+    // the ground is one colour in all four. So the brightest ground the Lid
+    // can light is held under that pixel: the palest albedo at its mottle's
+    // top, level, unshadowed, with no water over it, through the composite's
+    // curve. What a source's pool adds on top is not weighed here.
+    const encoded = (hex: number) =>
+      (0.2126 * ((hex >> 16) & 0xff) + 0.7152 * ((hex >> 8) & 0xff) + 0.0722 * (hex & 0xff)) / 255;
+    const palest = Object.values(BIOME_COLOR).reduce((a, b) => (encoded(a) >= encoded(b) ? a : b));
+    const weighed = encoded(scaleRgb(palest, 1 + TERRAIN_LIFT.MAX));
+    // three's ACESFilmicToneMapping, its two matrices and its fit, then sRGB.
+    const fit = (v: number) =>
+      (v * (v + 0.0245786) - 0.000090537) / (v * (0.983729 * v + 0.432951) + 0.238081);
+    const curve = ([r, g, b]: number[]): number[] => {
+      const k = (HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE) / 0.6;
+      const [x, y, z] = [r! * k, g! * k, b! * k];
+      const a = [
+        fit(0.59719 * x + 0.35458 * y + 0.04823 * z),
+        fit(0.076 * x + 0.90834 * y + 0.01566 * z),
+        fit(0.0284 * x + 0.13383 * y + 0.83777 * z),
+      ];
+      return [
+        1.60475 * a[0]! - 0.53108 * a[1]! - 0.07367 * a[2]!,
+        -0.10208 * a[0]! + 1.10813 * a[1]! - 0.00605 * a[2]!,
+        -0.00327 * a[0]! - 0.07276 * a[1]! + 1.07602 * a[2]!,
+      ].map((c) => Math.min(1, Math.max(0, c)));
+    };
+    const srgb = (l: number) => (l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055);
+    const lid = [(LID_GLOW >> 16) & 0xff, (LID_GLOW >> 8) & 0xff, LID_GLOW & 0xff].map(
+      (byte) => decode(byte) * HIGH_GRAPHICS.LID.IRRADIANCE
+    );
+    const { surface, at } = bakeLit(flatTerrain());
+    let brightest = 0;
+    [...BIOMES.map((b) => BIOME_RELIEF[b].mottle), ROCK_RELIEF.mottle].forEach((mottle, col) => {
+      const i = at(col);
+      const lit = [0, 1, 2].map(
+        (k) => (decode(surface.bake.albedo[i + k]!) * (1 + mottle / 2) * lid[k]!) / Math.PI
+      );
+      const [r, g, b] = curve(lit).map(srgb);
+      brightest = Math.max(brightest, 0.2126 * r! + 0.7152 * g! + 0.0722 * b!);
+    });
+    assert.ok(
+      brightest <= weighed,
+      `the Lid lights ground to ${(brightest * 100).toFixed(1)}%, past the ${(weighed * 100).toFixed(1)}% the ladder weighs`
+    );
+    // And it is not held needlessly dark: within a quarter of that pixel.
+    assert.ok(brightest > 0.75 * weighed, `only ${(brightest * 100).toFixed(1)}%`);
   });
 
   it('lights a roof from its own face, by the ground’s gain', () => {
@@ -262,7 +327,8 @@ describe('the lit ground’s material (#1801)', () => {
 
   it('fails loudly if three moves the unlit sum it replaces', () => {
     const material = new MeshBasicMaterial();
-    installLitGround(material, litGroundSurface(terrain, 1).relief);
+    const relief = litGroundSurface(terrain, 1).relief;
+    installLitGround(material, relief, { value: relief });
     const shader = { ...ShaderLib.basic, uniforms: {}, fragmentShader: 'void main() {}' };
     assert.throws(() => material.onBeforeCompile(shader as never, {} as never), /unlit sum/);
   });

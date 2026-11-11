@@ -44,6 +44,24 @@ export function askedGraphicsQuality(
 }
 
 /**
+ * Why High does not reach a view yet, or null where it does
+ * (docs/graphics-standards.md gate 6, "High reaches a match drawn alone, on
+ * the standard surface"). The slice is built in views drawn alone (#1801):
+ * the continuous world's exterior and Sorrowgate's own surface follow once a
+ * frame is accepted (#1683), and the Dream Loop study replaces the rig.
+ */
+export function highRefusal(view: {
+  dreamStudy: boolean;
+  placed: boolean;
+  look: string;
+}): string | null {
+  if (view.dreamStudy) return 'the Dream Loop study draws its own light';
+  if (view.placed) return 'the world map is not lit yet';
+  if (view.look === 'sorrowgate') return 'Sorrowgate is not lit yet';
+  return null;
+}
+
+/**
  * What the view is drawing. `high` is the lit world layer; `low` is the
  * shipped renderer, asked for or not; `unavailable: <reason>` is High asked
  * for and refused, by the display or by a view High does not reach yet.

@@ -41,6 +41,7 @@
         "drawn": "low",
         "targetBytes": 0,
         "groundBytes": 0,
+        "worldLights": 0,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -83,13 +84,14 @@
         "drawn": "low",
         "targetBytes": 0,
         "groundBytes": 0,
+        "worldLights": 0,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
       "avgGpuMs": null,
       "queued": null,
       "insideBudget": null,
-      "stationFrames": 7,
+      "stationFrames": 6,
       "sway": "held"
     },
     {
@@ -125,6 +127,7 @@
         "drawn": "low",
         "targetBytes": 0,
         "groundBytes": 0,
+        "worldLights": 0,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -139,6 +142,7 @@
       "quality": "high",
       "passes": [
         "high-world",
+        "high-scatter",
         "high-composite",
         "high-tactical",
         "depth-copy",
@@ -162,13 +166,14 @@
       },
       "distance": 1200,
       "waterReachM": 1805,
-      "calls": 45,
-      "triangles": 626452,
+      "calls": 46,
+      "triangles": 626594,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 124416000,
+        "targetBytes": 128563200,
         "groundBytes": 2796203,
+        "worldLights": 71,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -183,6 +188,7 @@
       "quality": "high",
       "passes": [
         "high-world",
+        "high-scatter",
         "high-composite",
         "high-tactical",
         "depth-copy",
@@ -206,13 +212,14 @@
       },
       "distance": 420,
       "waterReachM": 630,
-      "calls": 45,
-      "triangles": 626452,
+      "calls": 46,
+      "triangles": 626594,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 124416000,
+        "targetBytes": 128563200,
         "groundBytes": 2796203,
+        "worldLights": 71,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -227,6 +234,7 @@
       "quality": "high",
       "passes": [
         "high-world",
+        "high-scatter",
         "high-composite",
         "high-tactical",
         "depth-copy",
@@ -250,13 +258,14 @@
       },
       "distance": 10000,
       "waterReachM": 32000,
-      "calls": 46,
-      "triangles": 627738,
+      "calls": 47,
+      "triangles": 627880,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 124416000,
+        "targetBytes": 128563200,
         "groundBytes": 2796203,
+        "worldLights": 71,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",

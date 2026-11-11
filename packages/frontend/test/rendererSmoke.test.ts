@@ -2265,7 +2265,14 @@ describe('renderer smoke test: the conn view', () => {
       assert.deepEqual(low.passes, ['canvas'], 'Low is the canvas pass');
       assert.deepEqual(
         quality(low),
-        { asked: 'low', drawn: 'low', targetBytes: 0, groundBytes: 0, frameGpuBudgetMs: 8 },
+        {
+          asked: 'low',
+          drawn: 'low',
+          targetBytes: 0,
+          groundBytes: 0,
+          worldLights: 0,
+          frameGpuBudgetMs: 8,
+        },
         'Low holds nothing of High’s'
       );
       const lowDraws = drawsOf(world.gl)[0]!;
@@ -2296,28 +2303,41 @@ describe('renderer smoke test: the conn view', () => {
       assert.equal(graphicsQualityStatus(), 'high', 'and Settings is told');
       world.frame(3);
       const high = probes.__perspectiveProbe();
-      assert.deepEqual(high.passes, ['high-world', 'high-composite', 'high-tactical']);
-      // The world pass draws into a target, the other two to the canvas.
-      const [target, ...rest] = world.gl.frameTargets;
+      // The canned ground stands vent embers, which are sources of the
+      // world's own at High, so their light scatters in a pass of its own.
+      assert.ok((quality(high).worldLights as number) > 0, 'the ground’s own sources are lit');
+      assert.deepEqual(high.passes, [
+        'high-world',
+        'high-scatter',
+        'high-composite',
+        'high-tactical',
+      ]);
+      // The world pass and the scatter pass draw into targets, the other two
+      // to the canvas.
+      const [target, scatter, ...rest] = world.gl.frameTargets;
       assert.ok(target !== null && target !== undefined, 'the world pass has a target');
       assert.equal(target.samples, 4, 'multisampled as the canvas is (HIGH_GRAPHICS.SAMPLES)');
       assert.ok(target.depthTexture, 'with the depth the composite lays on the canvas');
+      assert.ok(scatter !== null && scatter !== undefined, 'the scatter pass has its own');
+      assert.deepEqual([scatter.width, scatter.height], [640, 360], 'at half the frame each way');
       assert.deepEqual(rest, [null, null]);
-      assert.equal(quality(high).targetBytes, 1280 * 720 * 12 * 5);
+      assert.equal(quality(high).targetBytes, 1280 * 720 * 12 * 5 + 640 * 360 * 8);
       assert.ok((quality(high).groundBytes as number) > 0, 'the lit ground holds its pixels');
 
-      const [worldPass, composite, tactical] = drawsOf(world.gl) as [
+      const [worldPass, volumes, composite, tactical] = drawsOf(world.gl) as [
+        Object3D[],
         Object3D[],
         Object3D[],
         Object3D[],
       ];
+      assert.equal(volumes.length, 1, 'every source is one instanced draw');
       assert.equal(composite.length, 1, 'the composite is one full-screen draw');
       // Two layers, one draw each: nothing is lit and then drawn again.
       for (const object of worldPass) assert.ok(!tactical.includes(object), 'drawn once');
       // The lit ground is the world's, and its survey ink the tactical layer's,
       // on the one geometry.
       const ground = worldPass.find((o) =>
-        ((o as Mesh).material as Material).customProgramCacheKey().includes(':lit-ground-1')
+        ((o as Mesh).material as Material).customProgramCacheKey().includes(':lit-ground-')
       ) as Mesh | undefined;
       assert.ok(ground, 'the world pass draws the lit ground');
       const ink = tactical.find((o) =>

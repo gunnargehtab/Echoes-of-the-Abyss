@@ -66,6 +66,7 @@ import {
   type Intersection,
   type Material,
   type Object3D,
+  type Texture,
   type WebGLRenderTarget,
 } from 'three';
 import {
@@ -166,12 +167,7 @@ import { GunFire, isSiegeHull } from './gunFire.ts';
 import { SiltPlume, plumeStrength, type PlumeSource } from './siltPlume.ts';
 import { WorkLights } from './workLight.ts';
 import { EnvironmentLayer, type StudySwitches } from './environmentLayer.ts';
-import {
-  createWaterEnvironment,
-  keepsGlowOutsideToneMapping,
-  MODEL_KEY_FROM,
-  MODEL_RIM_FROM,
-} from './modelLighting.ts';
+import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { HighFrame, WORLD_LAYER } from './highFrame.ts';
 import {
   installLitGround,
@@ -181,10 +177,13 @@ import {
   type LitGroundSurface,
 } from './litGround.ts';
 import {
+  highRefusal,
   publishGraphicsQualityStatus,
   type GraphicsQuality,
   type GraphicsQualityState,
 } from './graphicsQuality.ts';
+import { repaintWaterHue, waterHueTexture } from './waterMedium.ts';
+import { poolTexture, volumeInstances, worldLightsOf, type WorldLightSite } from './worldLights.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
 import { VeilField, VEIL_FLOOR_RGB, veilShade, type VeilListener } from './acousticVeil.ts';
 import {
@@ -452,6 +451,16 @@ const PROJECT_TMP = new Vector3();
  * event, `groundQuad` and `applyCamera` per frame, and each used to allocate
  * a Raycaster, a Vector2 and a cloned Vector3 or four on the way.
  */
+/** What the lit ground reads where no source of the world's pools on it. */
+const NO_POOLS = new DataTexture(new Uint8Array(4), 1, 1);
+NO_POOLS.needsUpdate = true;
+
+/**
+ * How much of a source one vent ember is: a field stands scores of sparks,
+ * and a score of them is one chimney's light (worldLights.ts `worldLightsOf`).
+ */
+const EMBER_LIGHT_SHARE = 0.2;
+
 const RAY_TMP = new Raycaster();
 // The High quality moves the ground onto the world pass's layer (highFrame.ts);
 // a pointer still lands on it.
@@ -1158,6 +1167,16 @@ export class PerspectiveView {
   private litMaterial: MeshBasicMaterial | null = null;
   private groundSkin: MeshBasicMaterial | null = null;
   private inkOverlay: Mesh | null = null;
+  /**
+   * The water's hue over this ground, a plan texture (waterMedium.ts), and
+   * the light the world's own sources pool on it (worldLights.ts), under
+   * High alone. `litPools` is the uniform the lit ground reads the pools
+   * through, so the dressing hands over a new texture without a new program.
+   */
+  private waterHue: DataTexture | null = null;
+  private pools: DataTexture | null = null;
+  private readonly litPools: { value: Texture } = { value: NO_POOLS };
+  private worldLightCount = 0;
   /** Stencil bits the canvas got, read once at mount (the halo needs 8). */
   private canvasStencilBits = 0;
   /** The renders that made the last frame, in order (gate 6's pass list). */
@@ -1268,13 +1287,13 @@ export class PerspectiveView {
       MODEL_LIGHTING.KEY_COLOR,
       this.dreamStudy ? 1.2 : MODEL_LIGHTING.KEY
     );
-    key.position.set(...MODEL_KEY_FROM);
+    key.position.set(-1400, 2600, -900);
     this.scene.add(key, key.target);
     const rim = new DirectionalLight(
       this.dreamStudy ? UI.accent : MODEL_LIGHTING.RIM_COLOR,
       this.dreamStudy ? 1.3 : MODEL_LIGHTING.RIM
     );
-    rim.position.set(...MODEL_RIM_FROM);
+    rim.position.set(0, 900, -3000);
     this.scene.add(rim, rim.target);
     // The High quality's world pass draws another layer of this scene under
     // the same rig (highFrame.ts): three takes a light by the camera's layers.
@@ -1520,19 +1539,6 @@ export class PerspectiveView {
     this.applyGraphicsQuality();
   }
 
-  /**
-   * Why High does not reach this view yet, or null where it does. The slice
-   * is built in views drawn alone on the standard surface (#1801): the
-   * continuous world's exterior and Sorrowgate's own surface follow once a
-   * frame is accepted (#1683), and the Dream Loop study replaces the rig.
-   */
-  private highRefusal(): string | null {
-    if (this.dreamStudy) return 'the Dream Loop study draws its own light';
-    if (this.worldRegion !== null) return 'the world map is not lit yet';
-    if (this.look === 'sorrowgate') return 'Sorrowgate is not lit yet';
-    return null;
-  }
-
   /** What the view draws, as Settings and the probe read it. */
   private get qualityState(): GraphicsQualityState {
     const state = this.high.state;
@@ -1545,7 +1551,11 @@ export class PerspectiveView {
     if (renderer === null) return;
     const was = this.high.on;
     if (this.qualityAsked === 'high') {
-      const refusal = this.highRefusal();
+      const refusal = highRefusal({
+        dreamStudy: this.dreamStudy,
+        placed: this.worldRegion !== null,
+        look: this.look,
+      });
       if (refusal !== null) this.high.disable(refusal);
       else this.high.enable(renderer);
     } else {
@@ -1918,7 +1928,7 @@ export class PerspectiveView {
     for (const id of this.residency?.residentIds() ?? []) {
       this.restandDetailProps(this.residency!.get(id)!);
     }
-    // Whether High reaches the view is the look's to say (`highRefusal`).
+    // Whether High reaches the view is the look's to say (graphicsQuality.ts `highRefusal`).
     this.applyGraphicsQuality();
     return true;
   }
@@ -3238,6 +3248,12 @@ export class PerspectiveView {
       this.litSurface?.albedo.dispose();
       this.litSurface?.relief.dispose();
       this.litSurface = null;
+      this.waterHue?.dispose();
+      this.waterHue = null;
+      this.high.setWater(null);
+      this.pools?.dispose();
+      this.pools = null;
+      this.litPools.value = NO_POOLS;
       this.terrainMesh = null;
       this.surveyCells?.dispose();
       this.surveyFloor?.dispose();
@@ -3432,8 +3448,11 @@ export class PerspectiveView {
           duneSource(this.mapId, terrain)
         );
       }
-      installLitGround(lit, this.litSurface.relief);
+      installLitGround(lit, this.litSurface.relief, this.litPools);
       this.litMaterial = lit;
+      // The water over this ground wears its biomes' hues (waterMedium.ts).
+      this.waterHue = waterHueTexture(terrain);
+      this.high.setWater(this.waterHue, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
       this.terrainMesh = new Mesh(geometry, lit);
       this.terrainMesh.layers.set(WORLD_LAYER);
       const ink = new MeshBasicMaterial({
@@ -3569,6 +3588,45 @@ export class PerspectiveView {
     } else {
       this.environment.rebuild(terrain, groundY);
     }
+    this.standWorldLights(terrain);
+  }
+
+  /**
+   * The world's own light at High (worldLights.ts): the vent embers, the
+   * civic lamps and the props that carry a licensed family, as the pools the
+   * lit ground takes and the volumes the water shows. Stood with the dressing
+   * from the same public ground, so it answers nothing a match does
+   * (docs/art-direction.md, "Two layers, two laws", limit 4).
+   */
+  private standWorldLights(terrain: TerrainPayload): void {
+    this.pools?.dispose();
+    this.pools = null;
+    this.litPools.value = NO_POOLS;
+    this.worldLightCount = 0;
+    if (!this.high.on) {
+      this.high.setLights(new Float32Array(0));
+      return;
+    }
+    const sites: WorldLightSite[] = [
+      ...ventEmbers(terrain, this.groundSeed).map((ember) => ({
+        family: 'vent' as const,
+        xM: ember.xM,
+        yM: ember.yM,
+        scale: EMBER_LIGHT_SHARE,
+      })),
+      ...civicLamps(terrain, this.groundSeed).map((lamp) => ({
+        family: 'civic' as const,
+        xM: lamp.xM,
+        yM: lamp.yM,
+      })),
+      ...this.environment.worldLightSites(terrain),
+    ];
+    const lights = worldLightsOf(sites, (xM, yM) => this.groundYAt(xM, yM));
+    this.worldLightCount = lights.length;
+    this.high.setLights(volumeInstances(lights));
+    if (lights.length === 0) return;
+    this.pools = poolTexture(terrain, lights);
+    this.litPools.value = this.pools;
   }
 
   /**
@@ -3637,6 +3695,8 @@ export class PerspectiveView {
       this.litSurface.albedo.needsUpdate = true;
       this.litSurface.relief.needsUpdate = true;
     }
+    // A delta can change a cell's biome, and the water's hue is its biome's.
+    if (this.waterHue !== null) repaintWaterHue(this.waterHue, terrain);
 
     this.rebuildDressing();
     // A ground delta can change a cell's biome, and the biome is the water's
@@ -5946,6 +6006,11 @@ export class PerspectiveView {
         passes.push(
           ...this.high.render(renderer, this.scene, this.camera, {
             focusDepthM: this.focusDepthNowM,
+            // The fog's own reach: the dolly's, over the player's density.
+            reachM:
+              this.scene.fog instanceof FogExp2 && this.scene.fog.density > 0
+                ? 1 / this.scene.fog.density
+                : 0,
           })
         );
       } else {
@@ -6324,6 +6389,8 @@ export class PerspectiveView {
         drawn: this.qualityState,
         targetBytes: this.high.bytes,
         groundBytes: this.litSurface === null ? 0 : litGroundBytes(this.litSurface),
+        // The world's own sources lighting this ground and its water.
+        worldLights: this.worldLightCount,
         frameGpuBudgetMs: HIGH_GRAPHICS.FRAME_GPU_MS,
       },
       textures: info?.memory.textures ?? 0,

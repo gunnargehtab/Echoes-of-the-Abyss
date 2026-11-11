@@ -97,6 +97,10 @@ const WATER_RAMP: readonly WaterStop[] = [
   { depthM: DEPTH.MAX_M, srgb: 0x03080e },
 ];
 
+/** The ramp's depths, for a reader that carries its stops somewhere else
+ * (waterMedium.ts, the High graphics quality's scene-referred levels). */
+export const WATER_RAMP_DEPTHS_M: readonly number[] = WATER_RAMP.map((stop) => stop.depthM);
+
 /** The renderer's working space is linear (`outputColorSpace = SRGBColorSpace`
  * converts on the way out, in `colorspace_fragment`), so every authored sRGB
  * stop is decoded once here rather than per fragment. The fog runs after that

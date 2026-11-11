@@ -129,29 +129,47 @@ High draws the one scene as two layers
 1. **The world pass** draws the world layer into a linear half-float target with the
    canvas's four samples. Nothing in it is tone-mapped, so its light stays
    scene-referred. A fragment there only loses light to the water.
-2. **The composite** is one full-screen draw to the canvas. It adds the water's own light
-   by how much of each pixel the water took, runs the tone curve, and lays the world's
-   depth so the next pass is hidden by the world as it is at Low.
-3. **The tactical pass** draws everything else on the canvas as Low draws it: the same
+2. **The scatter pass** draws what the world's own sources scatter in the water, against
+   the world's depth, at half the frame's size.
+3. **The composite** is one full-screen draw to the canvas. It adds the water's own light
+   by how much of each pixel the water took, and the sources' volumes, runs the tone
+   curve, and lays the world's depth so the next pass is hidden by the world as it is at
+   Low.
+4. **The tactical pass** draws everything else on the canvas as Low draws it: the same
    materials, the same per-material curve, the same fog. The survey ink is drawn here,
    as a layer of its own over the lit ground. The lamp halo and the chromatic split
    follow as they always have.
 
 Built so far:
 
-- **The ground and the stone are lit.** They stand under the rig the models stand under
-  ([Shared model lighting](#shared-model-lighting--abyss-render-stack): the ambient, the
-  key and the rim), so the ground and the hulls over it are lit from one quarter. The
-  water above the ground takes that light with depth, so depth still darkens. The albedo
-  is each biome's fill and the stone, lifted by one gain so their hues and their order
-  hold. The slope and the darkening at a cliff's rim, its lee and a stone's scour come
-  from the seabed bake. No new source and no new hue is drawn, so no token is added.
-- **The props** draw in the world pass under the same rig. Their additive clouds, the
+- **The ground and the stone are lit by the Lid's glow.** It is light from the whole
+  water above, in the `lid-glow` token ([style-neon-noir.md](style-neon-noir.md) "World
+  light"): a surface takes it by how far it faces up and from no quarter, since there is
+  no sun below the Lid (limit 1), and the water above the ground takes it with depth, so
+  depth still darkens. The albedo is each biome's fill and the stone, lifted by one gain
+  so their hues and their order hold. The slope and the darkening at a cliff's rim, its
+  lee and a stone's scour come from the seabed bake.
+- **The glow is held under the loudness ladder** (limit 6). The brightest ground it can
+  light, the palest fill level and unshadowed at the Lid, is no paler than the palest
+  ground the ladder weighs every rung over in all four palettes
+  ([map-visuals.md](map-visuals.md) §5), and a test holds it there.
+- **The water is a medium.** It keeps the depth ramp's brightness
+  ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
+  of the biome under the water its light comes from, in that biome's water token. A pixel
+  takes that light by what the swim cost its own.
+- **The world's own sources light the world.** The vent embers, the civic lamps and each
+  prop that carries a licensed family stand as lights in their family's token. Each pools
+  on the ground and scatters in the water as a volume that stops at the ground. They are
+  placed by the map alone and answer nothing a match does (limits 2 to 4).
+- **The props** draw in the world pass under the shared rig. Their additive clouds, the
   steam, the haze and the sift, stay in the tactical pass.
 
-Not built yet: the water as a medium, which is still the Low ramp's colour, lifted; bloom,
-grading and ambient occlusion; shadow; world-owned sources lighting the ground; and the
-surfaces of hulls and structures, which draw whole in the tactical pass, lamps and all.
+Not built yet: bloom, grading and ambient occlusion; shadow; and the surfaces of hulls and
+structures, which draw whole in the tactical pass, lamps and all.
+
+Owed before a frame is promoted: limit 6 under a source's pool. There the ground is
+brighter than any ground the ladder weighs, and no test or frame yet shows each rung's
+floor reading over it in the four palettes.
 
 ## World Aesthetic
 

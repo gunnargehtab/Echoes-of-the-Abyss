@@ -945,7 +945,6 @@ export function stoneScourGain(
   return 1 - (1 - SEABED_DETAIL.STONE_SCOUR_GAIN) * hollow * keep;
 }
 
-/** A rectangle of cells, inclusive at both ends. */
 const srgbDecode = (byte: number): number => {
   const c = byte / 255;
   return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -1005,6 +1004,7 @@ function writeLit(
   lit.relief[at + 3] = 255;
 }
 
+/** A rectangle of cells, inclusive at both ends. */
 export interface CellRect {
   col0: number;
   row0: number;
