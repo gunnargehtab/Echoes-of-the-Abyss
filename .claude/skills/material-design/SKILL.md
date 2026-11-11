@@ -21,7 +21,7 @@ channels, colour space, mip policy, memory, owner and lifetime.
 example: its float source and PMREM generator are disposed in a `finally` once baked, and
 the one retained target, the probe's `environmentBytes`, goes with the view (gate 6).
 Search the existing material helpers first. Reuse the vendored three.js skills where they
-agree with three 0.169, and prefer this repository's own shader patches to any skill's
+agree with the client's three, r187 since #1800, and prefer this repository's own shader patches to any skill's
 example; do not install another rendering stack.
 
 ## Implement in the actual material pipeline
@@ -102,7 +102,7 @@ detail and seated stones — SPEC". Its rules hold for any cosmetic on that mate
   source, a three-level half-float chain and that masked composite.
 - **The chromatic split copies the finished frame.** It runs last (`chromaticSplit.ts`):
   a resolving blit of the canvas colour into a target of the canvas's own format, RGBA8
-  because three r169 asks every context for alpha, then one full-screen draw back. Its texels are already
+  because three r187 asks every context for alpha, then one full-screen draw back. Its texels are already
   tone-mapped and encoded, so the draw leaves out `<colorspace_fragment>`; a second
   encode would lift every pixel it writes. It discards the middle of the frame, so those
   pixels keep their samples.

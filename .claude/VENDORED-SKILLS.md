@@ -50,11 +50,12 @@ ships no `LICENSE` file; its README states MIT, and that statement is quoted in
 
 **The three.js upstream moved on 19 October, and the copies here did not (#1450).**
 `cloudai-x/threejs-skills` is at `0e18186`: every skill rewritten to target three r186,
-a WebGPU and TSL section in each, three new skills and a `LICENSE` file. The client pins
-`three@^0.169.0` and installs 0.169.0, so a re-sync would trade the r169 drift listed
-below for r186 advice that does not run here: `HDRLoader` (r180), a core `Timer` (r183),
-WebGPU. The four stay at `b1c6230` until `three` is bumped; that bump re-syncs them,
-re-applies their `LOCAL` notes, and swaps the NOTICE for the upstream `LICENSE`.
+a WebGPU and TSL section in each, three new skills and a `LICENSE` file. The client pinned
+`three@^0.169.0` then, so a re-sync would have traded the r169 drift listed below for
+r186 advice that did not run here. The client has run r187 since #1800, which bumped
+`three` alone, changing no look, so the four are still at `b1c6230`. #1804 re-syncs
+them, re-applies their `LOCAL` notes against r187, and swaps the NOTICE for the
+upstream `LICENSE`. Until it lands, the drift below is read against r169.
 
 Why each one earns its context:
 
@@ -280,8 +281,9 @@ Recorded so the next search does not repeat this one.
   are not a gate. The r186 rewrite's IBL recipe still keeps only `.texture` from
   `fromScene`, dropping the render target that
   `packages/frontend/src/game/modelLighting.ts` keeps and disposes, and its
-  corrections name `HDRLoader` and a core `Timer`, which `three@0.169.0` does not
-  ship. Revisit if a production shadow map or a new runtime light type lands.
+  corrections name `HDRLoader` and a core `Timer`, which `three@0.169.0` did not
+  ship and r187 does (#1804). Revisit if a production shadow map or a new runtime
+  light type lands.
 - **`threejs-shaders`** (same upstream and checks). It passes the import half by
   more than it did: at `16c77f45` the client builds ten `ShaderMaterial`s outside
   the Dream Loop study, patches built-in materials through `onBeforeCompile` at nine

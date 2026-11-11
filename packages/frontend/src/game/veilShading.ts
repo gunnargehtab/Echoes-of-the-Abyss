@@ -34,8 +34,9 @@ const PROP_VEIL_KEY = ':prop-veil-1';
 
 /**
  * A linear colour drained by a display-space shade: three's sRGB transfer
- * both ways, which r169 ships only the encoding half of, and the multiply
- * between them.
+ * both ways, and the multiply between them. Written out because r169 shipped
+ * only the encoding half; r187's pair works on vec4, and moving to it would be
+ * a shader edit in an upgrade that changes no look (#1800).
  */
 export const DISPLAY_VEIL_GLSL = `vec3 echoesDisplayVeil( vec3 c, vec3 shade ) {
   vec3 e = mix( c * 12.92, 1.055 * pow( c, vec3( 1.0 / 2.4 ) ) - 0.055, step( 0.0031308, c ) ) * shade;
@@ -92,7 +93,7 @@ export function readsDisplayVeil(material: Material): boolean {
   return material.customProgramCacheKey().includes(VEIL_SHADING_KEY);
 }
 
-const INSTANCE_COLOR_LINE = 'vColor.xyz *= instanceColor.xyz;';
+const INSTANCE_COLOR_LINE = 'vColor.rgb *= instanceColor.rgb;';
 if (!ShaderChunk.color_vertex.includes(INSTANCE_COLOR_LINE)) {
   throw new Error('three moved the instance colour out of color_vertex: installPropVeil reads it');
 }

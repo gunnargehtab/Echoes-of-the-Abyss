@@ -124,9 +124,12 @@ for (const other of (flag('--with', '') || '').split(',').filter(Boolean)) {
 }
 
 // --- three.js and Playwright, as render.mjs finds them -----------------------
-const THREE_VERSION = '0.169.0';
+const THREE_VERSION = '0.187.0';
 const depsDir = join(tmpdir(), 'hull-intake-deps');
-if (!existsSync(join(depsDir, 'node_modules', 'three', 'package.json'))) {
+// The prefix outlives a pin change, so a cached copy of another version is
+// replaced rather than used (#1800).
+const threeAt = join(depsDir, 'node_modules', 'three', 'package.json');
+if (!existsSync(threeAt) || JSON.parse(readFileSync(threeAt, 'utf8')).version !== THREE_VERSION) {
   console.log(`installing three@${THREE_VERSION} into ${depsDir} (first run only)...`);
   mkdirSync(depsDir, { recursive: true });
   const r = spawn('npm', ['install', '--no-audit', '--no-fund', `three@${THREE_VERSION}`], {

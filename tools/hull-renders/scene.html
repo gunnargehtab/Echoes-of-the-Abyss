@@ -270,7 +270,7 @@
           // on it, whatever the key is set to. So metalness stays low enough
           // to keep a diffuse term and the wet look comes from roughness and
           // the environment instead. The environment's weight is
-          // scene.environmentIntensity, left at 1: three r169 ignores a
+          // scene.environmentIntensity, left at 1: three r187 ignores a
           // material's envMapIntensity whenever its map is scene.environment
           // (WebGLRenderer.js), so the 0.95 this page once wrote never
           // applied, and the approved portraits were rendered at 1. Roughness
@@ -629,7 +629,7 @@
       // --- the frame --------------------------------------------------------
       /**
        * Drawn the way the conn view's canvas pass is (#1015), not through a
-       * composer: three r169 tone-maps a material only when it draws to the
+       * composer: three r187 tone-maps a material only when it draws to the
        * canvas (WebGLPrograms.js), so here every material maps itself with
        * ACES at this rig's 0.88, a lamp adds its glow after the curve
        * (modelLighting.ts `keepGlowOutsideToneMapping`), and the 4× MSAA canvas

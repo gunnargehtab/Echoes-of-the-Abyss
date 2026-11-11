@@ -278,7 +278,9 @@ const BOUNCE_DEFINE = 'ARCH_BOUNCE';
  * from the south and `BOUNCE_BELOW_DEG` below level, on the model-space
  * normal, through the same Lambert the ambient takes (three's
  * `getAmbientLightIrradiance` and `BRDF_Lambert`), so at full incidence a
- * face takes that many more of what the ambient gives it. +Z is south in the model (Block 4b), and the
+ * face takes that many more of what the ambient gives it. It skips the
+ * specular-energy term r187's ambient also takes. Since r182,
+ * `diffuseContribution` is the albedo less its metal, what `diffuseColor` was. +Z is south in the model (Block 4b), and the
  * landmark stands at its anchor's yaw alone, so the model's south is the
  * court's. Taken off the normal before any displacement: the sway turns a
  * fitting by under a degree.
@@ -303,7 +305,7 @@ export function installCourtBounce(material: Material, uniforms: LandmarkUniform
         '#include <lights_fragment_end>',
         `#include <lights_fragment_end>
 #ifdef ${BOUNCE_DEFINE}
-reflectedLight.indirectDiffuse += getAmbientLightIrradiance( uBounce ) * BRDF_Lambert( material.diffuseColor ) * max( 0.0, dot( normalize( vBounceNormal ), ${from} ) );
+reflectedLight.indirectDiffuse += getAmbientLightIrradiance( uBounce ) * BRDF_Lambert( material.diffuseContribution ) * max( 0.0, dot( normalize( vBounceNormal ), ${from} ) );
 #endif`
       );
   });

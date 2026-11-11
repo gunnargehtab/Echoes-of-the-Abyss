@@ -87,10 +87,14 @@ if (plan.length === 0) {
 // depend on three, but scene.html imports it by URL through an importmap
 // (/deps/node_modules/three/) that the server below answers from this prefix,
 // so a render needs no workspace install. Keep THREE_VERSION on the version
-// package-lock.json resolves, so a render runs the r169 the client ships.
-const THREE_VERSION = '0.169.0';
+// packages/frontend resolves, so a render runs the r187 the client ships; the
+// root's r169 is the hull scripts' (kit.mjs).
+const THREE_VERSION = '0.187.0';
 const depsDir = join(tmpdir(), 'hull-intake-deps');
-if (!existsSync(join(depsDir, 'node_modules', 'three', 'package.json'))) {
+// The prefix outlives a pin change, so a cached copy of another version is
+// replaced rather than used (#1800).
+const threeAt = join(depsDir, 'node_modules', 'three', 'package.json');
+if (!existsSync(threeAt) || JSON.parse(readFileSync(threeAt, 'utf8')).version !== THREE_VERSION) {
   console.log(`installing three@${THREE_VERSION} into ${depsDir} (first run only)...`);
   mkdirSync(depsDir, { recursive: true });
   // npm is a .cmd batch file on Windows, which spawnSync cannot start alone.
