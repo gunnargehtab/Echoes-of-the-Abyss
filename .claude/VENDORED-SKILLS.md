@@ -45,8 +45,8 @@ are repo-authored, in the `material-design` skill.
 | `colyseus` | `colyseus/skill` | `9e3ce13` | MIT |
 
 Licence texts are in `.claude/vendor-licenses/`. `cloudai-x/threejs-skills`
-has shipped a `LICENSE` file since `0e18186`, so it replaced the README quote that
-stood in for one.
+ships a `LICENSE` file at `0e18186` (added in `9652c10`), so it replaced the README
+quote that stood in for one.
 
 **The three.js copies target r186, and the client runs r187 (#1804).** Upstream
 rewrote every skill for r186 on 19 October (#1450) and added a `LICENSE` and three
@@ -76,18 +76,19 @@ Why each one earns its context:
   repository happens, only through the primitives `tools/hull-models/kit.mjs`
   builds from.
 
-  The r186 rewrite fixed the drift the `b1c6230` copies had: the `uv2` aoMap
-  sample, the per-material `envMapIntensity`, the `GammaCorrectionShader` chain
-  end, `FilmPass`'s four arguments, a missing `Nodes.js` and an unexported
+  The commits up to `0e18186` fixed the drift the `b1c6230` copies had: the `uv2`
+  aoMap sample, the per-material `envMapIntensity`, the `GammaCorrectionShader`
+  chain end, `FilmPass`'s four arguments, a missing `Nodes.js` and an unexported
   `computeTangents`. Two samples still cut against this repository, and the
   `LOCAL` notes name them: the materials `ShaderMaterial` sample omits
   `<colorspace_fragment>`, and the loaders samples keep only `.texture` from
   `PMREMGenerator`. The hull scripts are the one place the r186 text runs ahead of
-  the code. `tools/hull-models` stays on the root's `three@0.169.0` pin (#1805),
-  which ships no core `Timer` and no `HDRLoader`, so geometry advice there is read
-  against r169. `tools/hull-renders` runs r187, like the client. Where the conn
-  view's tone mapping departs from these samples is in `packages/frontend/CLAUDE.md`
-  and the `material-design` skill.
+  the code. `tools/hull-models` stays on the root's `three@0.169.0` pin (#1805), so
+  geometry advice there is read against r169: the skill's `CapsuleGeometry` takes
+  `height` and `heightSegments`, which r176 brought, where r169's takes `length`.
+  `tools/hull-renders` runs r187, like the client. Where the conn view's tone
+  mapping departs from these samples is in `packages/frontend/CLAUDE.md` and the
+  `material-design` skill.
 - **accessibility** is WCAG 2.2 with two reference files, and `docs/ui-ux.md`
   §11 already calls accessibility "a correctness requirement, not a feature
   tier". The overlap is direct: §11 owes contrast, motion and flash limits, a
