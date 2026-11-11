@@ -73,7 +73,13 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
   days later.
 - **Acceptance is the owner's.** No loop, critic or reading accepts a look. A round ends
   with its frames in the pull request, and the look is done when the owner says so on the
-  issue. Unattended, a firing may build a look increment; it never accepts or promotes one.
+  issue. Unattended, a session may build a look increment; it never accepts or promotes one.
+- **A Fable session does it.** The owner set this routing on 11 November 2026. Look work,
+  like shape work, is authored under Fable, and the Routine is pinned to another model.
+  A look issue stays assigned to the owner until a Fable session takes it, and whoever
+  files the next look step assigns it the same way. A firing that finds its issue is look
+  work stops and releases it. The critic stays `opus`: a model other than the author's
+  grades the frames.
 
 The round, the critic, the cap and "Three things the loop must never do" are unchanged.
 What changes is what a round is graded against.
