@@ -447,7 +447,7 @@ Tactical layer · World layer
 
 Graphics quality
 
-- The renderer a player chooses: Low or High (graphics-standards.md gate 6). Low is the shipped renderer on its counted budgets. High is the lit world layer on a frame-time budget, and is not built.
+- The renderer a player chooses: Low or High (graphics-standards.md gate 6). Low is the shipped renderer on its counted budgets and the default. High is the lit world layer on a frame-time budget, a setting a player turns on, in development until the owner accepts a frame of it.
 - A *quality*, never a tier: Tier is the Echo Layer's word for how well a contact is resolved, and it keeps it.
 
 Target frame · Look work

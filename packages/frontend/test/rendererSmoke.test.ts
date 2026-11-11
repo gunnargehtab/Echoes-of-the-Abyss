@@ -134,6 +134,7 @@ import { HULL_LENGTH_M } from '../src/game/silhouettes.ts';
 import { buildTemplate, instantiate } from '../src/game/rosterModels.ts';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
+import { graphicsQualityStatus } from '../src/game/graphicsQuality.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FACTION_PALETTE, FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
@@ -144,6 +145,8 @@ import {
   MeshBasicMaterial,
   Points,
   ShaderMaterial,
+  type Material,
+  type Object3D,
   type Scene,
 } from 'three';
 
@@ -2237,6 +2240,182 @@ describe('renderer smoke test: the conn view', () => {
       blind.teardown();
     }
     assert.equal(lampHaloStatus(), 'off', 'a view that is gone has refused nothing');
+  });
+
+  it('draws High as a lit world pass under the tactical pass Low draws, and Low as it always did (#1801)', async () => {
+    // docs/art-direction.md, "Two layers, two laws": the world layer is lit
+    // at High, and the tactical layer is "unchanged at both graphics
+    // qualities". graphics-standards.md gate 6: "Low does not move". Counted
+    // here as passes, targets and what each pass draws; the pixels are the
+    // frames in docs/screenshots/issue-1801.
+    type Probes = {
+      __perspectiveProbe: () => Record<string, unknown>;
+      __perspectiveQuality?: (quality: 'low' | 'high') => string;
+      __perspectiveSplit: (on: boolean) => string;
+    };
+    const drawsOf = (gl: HeadlessWebGLRenderer) => gl.frameDraws.map((pass) => [...pass]);
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.ok(probes.__perspectiveQuality, 'outside a production build the switch is there');
+      probes.__perspectiveSplit(false);
+      world.frame(3);
+      const low = probes.__perspectiveProbe();
+      const quality = (p: Record<string, unknown>) => p.graphicsQuality as Record<string, unknown>;
+      assert.deepEqual(low.passes, ['canvas'], 'Low is the canvas pass');
+      assert.deepEqual(
+        quality(low),
+        { asked: 'low', drawn: 'low', targetBytes: 0, groundBytes: 0, frameGpuBudgetMs: 8 },
+        'Low holds nothing of High’s'
+      );
+      const lowDraws = drawsOf(world.gl)[0]!;
+      // What a draw is, to the GPU: the kind of object, and its material by
+      // type, program and the two flags that pick its curve and its fog. A
+      // quality change rebuilds the ground's dressing, so objects are compared
+      // by this and not by identity.
+      const kind = (object: Object3D): string => {
+        const material = (object as Mesh).material as Material & { fog?: boolean };
+        return [
+          object.type,
+          material.type,
+          material.customProgramCacheKey(),
+          material.toneMapped,
+          material.fog,
+          material.transparent,
+        ].join('|');
+      };
+      const count = (draws: Object3D[]) => {
+        const kinds = new Map<string, number>();
+        for (const object of draws) kinds.set(kind(object), (kinds.get(kind(object)) ?? 0) + 1);
+        return kinds;
+      };
+      const backdrop = lowDraws.find((o) => (o as Mesh).renderOrder === -1);
+      assert.ok(backdrop, 'Low draws the water backdrop');
+
+      assert.equal(probes.__perspectiveQuality!('high'), 'high');
+      assert.equal(graphicsQualityStatus(), 'high', 'and Settings is told');
+      world.frame(3);
+      const high = probes.__perspectiveProbe();
+      assert.deepEqual(high.passes, ['high-world', 'high-composite', 'high-tactical']);
+      // The world pass draws into a target, the other two to the canvas.
+      const [target, ...rest] = world.gl.frameTargets;
+      assert.ok(target !== null && target !== undefined, 'the world pass has a target');
+      assert.equal(target.samples, 4, 'multisampled as the canvas is (HIGH_GRAPHICS.SAMPLES)');
+      assert.ok(target.depthTexture, 'with the depth the composite lays on the canvas');
+      assert.deepEqual(rest, [null, null]);
+      assert.equal(quality(high).targetBytes, 1280 * 720 * 12 * 5);
+      assert.ok((quality(high).groundBytes as number) > 0, 'the lit ground holds its pixels');
+
+      const [worldPass, composite, tactical] = drawsOf(world.gl) as [
+        Object3D[],
+        Object3D[],
+        Object3D[],
+      ];
+      assert.equal(composite.length, 1, 'the composite is one full-screen draw');
+      // Two layers, one draw each: nothing is lit and then drawn again.
+      for (const object of worldPass) assert.ok(!tactical.includes(object), 'drawn once');
+      // The lit ground is the world's, and its survey ink the tactical layer's,
+      // on the one geometry.
+      const ground = worldPass.find((o) =>
+        ((o as Mesh).material as Material).customProgramCacheKey().includes(':lit-ground-1')
+      ) as Mesh | undefined;
+      assert.ok(ground, 'the world pass draws the lit ground');
+      const ink = tactical.find((o) =>
+        ((o as Mesh).material as Material).customProgramCacheKey().includes('-overlay')
+      ) as Mesh | undefined;
+      assert.ok(ink, 'the tactical pass draws the survey ink over it');
+      assert.equal(ink.geometry, ground.geometry);
+      assert.equal((ink.material as Material).transparent, true, 'blended over the lit ground');
+      assert.equal((ink.material as Material).depthWrite, false);
+      // The water is the composite's at High: the backdrop is not drawn.
+      assert.ok(!worldPass.includes(backdrop) && !tactical.includes(backdrop));
+      // "Unchanged at both graphics qualities", by construction: everything
+      // else the tactical pass draws is a draw Low makes, in a material of the
+      // kind Low makes it in. (Low's first frames also hold what expires on
+      // its own, a wake or a spray, so this is a containment, not a count.)
+      const lowKinds = count(lowDraws);
+      for (const [made, times] of count(tactical.filter((o) => o !== ink))) {
+        assert.ok(
+          (lowKinds.get(made) ?? 0) >= times,
+          `the tactical pass draws ${made} as Low does`
+        );
+      }
+      // The world pass is the world layer and nothing else: the lit ground,
+      // the stone over a passage, and the skirt the world ends at.
+      const roofs = worldPass.filter((o) => kind(o).includes(':lit-roof-1'));
+      assert.equal(roofs.length, 1, 'the canned ground has one roofed passage');
+      assert.ok(lowKinds.has(kind(roofs[0]!).replace(':lit-roof-1', '')), 'Low’s roof, lit');
+      const skirt = worldPass.filter((o) => o !== ground && !roofs.includes(o));
+      assert.equal(skirt.length, 1, 'and the skirt');
+      assert.ok(lowKinds.has(kind(skirt[0]!)), 'which Low draws in the same material');
+
+      // Low again is the frame it was: the same pass, the same draws.
+      assert.equal(probes.__perspectiveQuality!('low'), 'low');
+      world.frame(3);
+      const again = probes.__perspectiveProbe();
+      assert.deepEqual(again.passes, ['canvas']);
+      assert.equal(quality(again).targetBytes, 0, 'the target goes with High');
+      assert.equal(quality(again).groundBytes, 0, 'and the lit ground');
+      const againDraws = drawsOf(world.gl)[0]!;
+      for (const object of againDraws)
+        assert.equal(object.layers.mask, 1, 'back on Low’s one layer');
+      // Low does not move: every draw is one Low made before High was ever
+      // asked for, the unlit ground and the backdrop among them.
+      for (const [made, times] of count(againDraws)) {
+        assert.ok((lowKinds.get(made) ?? 0) >= times, `Low draws ${made} as it did`);
+      }
+      assert.ok(againDraws.includes(backdrop), 'the backdrop is Low’s water again');
+      const skin = (draws: Object3D[]) =>
+        draws.find((o) => (o as Mesh).geometry?.getAttribute('surveyFloor') !== undefined)!;
+      assert.equal(kind(skin(againDraws)), kind(skin(lowDraws)), 'the ground wears its skin again');
+      assert.equal(
+        againDraws.filter((o) => kind(o).includes('survey-ink')).length,
+        1,
+        'with its ink in it, not over it'
+      );
+
+      // A lost context takes the target and keeps the choice.
+      probes.__perspectiveQuality!('high');
+      world.gl.domElement.dispatchEvent({ type: 'webglcontextlost' });
+      assert.equal(quality(probes.__perspectiveProbe()).targetBytes, 0);
+      world.gl.domElement.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(
+        quality(probes.__perspectiveProbe()).drawn,
+        'high',
+        'High again once it can draw'
+      );
+    } finally {
+      world.teardown();
+    }
+    assert.equal(graphicsQualityStatus(), 'low', 'a view that is gone draws nothing');
+
+    // A display without the float colour target, or without the samples,
+    // stays on Low, keeps the choice and says why.
+    const blind = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      blind.gl.extensionNames.delete('EXT_color_buffer_float');
+      assert.equal(probes.__perspectiveQuality!('high'), 'unavailable: no EXT_color_buffer_float');
+      assert.equal(graphicsQualityStatus(), 'unavailable: no EXT_color_buffer_float');
+      probes.__perspectiveSplit(false);
+      blind.frame(2);
+      assert.deepEqual(probes.__perspectiveProbe().passes, ['canvas'], 'and draws Low');
+      probes.__perspectiveQuality!('low');
+      blind.gl.extensionNames.add('EXT_color_buffer_float');
+      blind.gl.context.maxSamples = 1;
+      assert.equal(probes.__perspectiveQuality!('high'), 'unavailable: fewer than 4 samples');
+    } finally {
+      blind.teardown();
+    }
+
+    // High does not reach Sorrowgate's own surface yet (#1683).
+    const sorrowgate = await boot({ look: 'sorrowgate' });
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.equal(probes.__perspectiveQuality!('high'), 'unavailable: Sorrowgate is not lit yet');
+    } finally {
+      sorrowgate.teardown();
+    }
   });
 
   it('draws the chromatic split on every frame, and checks again after a context restore (#1003)', async () => {

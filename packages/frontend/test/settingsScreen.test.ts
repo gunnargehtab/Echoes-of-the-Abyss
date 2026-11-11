@@ -19,6 +19,7 @@ import { SettingsScreen } from '../src/menu/SettingsScreen.tsx';
 import { loadSettings, UI_SCALE_MAX, UI_SCALE_MIN } from '../src/settings/store.ts';
 import { LAMP_HALOS_DEFAULT } from '../src/game/lampHalo.ts';
 import { publishLampHaloStatus } from '../src/game/lampHaloStatus.ts';
+import { publishGraphicsQualityStatus } from '../src/game/graphicsQuality.ts';
 import { PALETTE_LABEL, PALETTE_NAMES } from '../src/game/palette.ts';
 import { CONTACT_BOOST_MAX_DB } from '../src/audio/engine.ts';
 
@@ -166,6 +167,55 @@ describe('the settings screen: §11 commitments', () => {
       );
     } finally {
       await view.unmount();
+    }
+  });
+
+  it('offers High graphics as a choice in development, and says when the view draws Low', async () => {
+    // graphics-standards.md gate 6: "A Graphics quality control joins
+    // ui-ux.md's Settings with High's first increment", and until a High
+    // frame is accepted "the control names it as in development". A view High
+    // does not reach, or a display that fails its check, keeps the choice and
+    // draws Low; the view publishes which (graphicsQuality.ts), driven by
+    // hand here as the lamp halo's is below.
+    publishGraphicsQualityStatus('low');
+    const view = await settings();
+    try {
+      const row = view.root.findAll(
+        (node) =>
+          node.type === 'label' &&
+          node.findAll((n) => n.type === 'span' && n.children.join('').startsWith('High graphics'))
+            .length > 0
+      )[0];
+      assert.ok(row, '§14: a Graphics quality row');
+      const text = () => row.findAll((n) => n.type === 'span').map((n) => n.children.join(''));
+      assert.ok(
+        text().some((line) => line.includes('in development')),
+        'named as in development'
+      );
+      const toggle = row.findAll((n) => n.type === 'input' && n.props.type === 'checkbox')[0];
+      assert.equal(toggle.props.checked, false, 'Low by default');
+      await view.act(() => {
+        (toggle.props.onChange as (e: unknown) => void)({ target: { checked: true } });
+      });
+      assert.equal(loadSettings().graphicsQuality, 'high', 'the toggle reaches the store');
+      assert.ok(!text().some((line) => line.includes('Not drawn here')), 'nothing refused yet');
+      await view.act(() => {
+        publishGraphicsQualityStatus('unavailable: no EXT_color_buffer_float');
+      });
+      assert.ok(
+        text().some(
+          (line) => line.includes('Not drawn here') && line.includes('no EXT_color_buffer_float')
+        ),
+        'a refusal is named, with its reason'
+      );
+      assert.equal(loadSettings().graphicsQuality, 'high', 'and the choice is kept');
+      await view.act(() => {
+        (toggle.props.onChange as (e: unknown) => void)({ target: { checked: false } });
+      });
+      assert.equal(loadSettings().graphicsQuality, 'low');
+    } finally {
+      await view.unmount();
+      publishGraphicsQualityStatus('low');
     }
   });
 

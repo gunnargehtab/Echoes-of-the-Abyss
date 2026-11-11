@@ -13,6 +13,16 @@ import {
 import { DEPTH, MODEL_LIGHTING } from '@echoes/shared';
 import { waterColorAt } from './water.ts';
 
+/**
+ * Where the rig's two directional lights stand, aimed at the origin: the key
+ * and the rim of docs/art-direction.md's "Shared model lighting". The view
+ * builds its lights from these, and the High graphics quality's lit ground
+ * reads the same two, so the ground and the hulls over it are lit from one
+ * quarter (litGround.ts).
+ */
+export const MODEL_KEY_FROM: readonly [number, number, number] = [-1400, 2600, -900];
+export const MODEL_RIM_FROM: readonly [number, number, number] = [0, 900, -3000];
+
 /** Static public water, never a capture of the match or its hidden entities. */
 export function waterEnvironmentSource(): DataTexture {
   const width = MODEL_LIGHTING.ENVIRONMENT_WIDTH;

@@ -14,8 +14,10 @@ The art direction should communicate three things instantly:
 
 *Decided by the owner in session on 11 November 2026, for
 [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) and
-[#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694). Nothing in this
-section is built. The shipped renderer is the Low graphics quality
+[#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694). High is in
+development behind its setting, and no frame of it is accepted:
+[What is built at High](#what-is-built-at-high) lists what is drawn. The shipped renderer
+is the Low graphics quality
 ([graphics-standards.md](graphics-standards.md) gate 6), and every rule released below
 still binds it. Limits 5 and 7 were the author's, written to carry the decision out, and
 the owner confirmed both on the same day
@@ -112,6 +114,44 @@ This section sets no number. High's values are written here from the first frame
 owner accepts, not before it, and the `dev-loop` skill's "Look work" is the loop that
 builds toward that frame. The slice, its renderer work and its assets are tracked on
 [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637).
+
+### What is built at High
+
+*In development, a step at a time
+([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)). Nothing here
+is accepted. Every number is TUNABLE in `HIGH_GRAPHICS`
+(`packages/shared/src/constants.ts`) and is written into this section from the first frame
+the owner accepts.*
+
+High draws the one scene as two layers
+(`packages/frontend/src/game/highFrame.ts`):
+
+1. **The world pass** draws the world layer into a linear half-float target with the
+   canvas's four samples. Nothing in it is tone-mapped, so its light stays
+   scene-referred. A fragment there only loses light to the water.
+2. **The composite** is one full-screen draw to the canvas. It adds the water's own light
+   by how much of each pixel the water took, runs the tone curve, and lays the world's
+   depth so the next pass is hidden by the world as it is at Low.
+3. **The tactical pass** draws everything else on the canvas as Low draws it: the same
+   materials, the same per-material curve, the same fog. The survey ink is drawn here,
+   as a layer of its own over the lit ground. The lamp halo and the chromatic split
+   follow as they always have.
+
+Built so far:
+
+- **The ground and the stone are lit.** They stand under the rig the models stand under
+  ([Shared model lighting](#shared-model-lighting--abyss-render-stack): the ambient, the
+  key and the rim), so the ground and the hulls over it are lit from one quarter. The
+  water above the ground takes that light with depth, so depth still darkens. The albedo
+  is each biome's fill and the stone, lifted by one gain so their hues and their order
+  hold. The slope and the darkening at a cliff's rim, its lee and a stone's scour come
+  from the seabed bake. No new source and no new hue is drawn, so no token is added.
+- **The props** draw in the world pass under the same rig. Their additive clouds, the
+  steam, the haze and the sift, stay in the tactical pass.
+
+Not built yet: the water as a medium, which is still the Low ramp's colour, lifted; bloom,
+grading and ambient occlusion; shadow; world-owned sources lighting the ground; and the
+surfaces of hulls and structures, which draw whole in the tactical pass, lamps and all.
 
 ## World Aesthetic
 

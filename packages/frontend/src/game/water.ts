@@ -356,12 +356,32 @@ export function installWaterFog(): void {
     // at the same distance and fade to different darknesses, so "depth is
     // luminance" now governs the air between the camera and the ground as well
     // as the ground itself.
-    '  vec3 waterAtFragment = echoesWaterColor( echoesWaterDepthM( vWaterWorldY ) );',
-    '  waterAtFragment = linearToOutputTexel( vec4( waterAtFragment, 1.0 ) ).rgb;',
-    '  gl_FragColor.rgb = mix( gl_FragColor.rgb, waterAtFragment, fogFactor );',
+    //
+    // The High graphics quality's world pass asks for the other half
+    // (highFrame.ts): `fogColor`, which the ramp left unused, carries a
+    // negative red as its sign. There the fragment only loses light to the
+    // swim, and an opaque one writes what survives into alpha, so the pass
+    // that follows adds the water's own light by how much of each pixel the
+    // water took, per sample. A blended fragment leaves alpha to its blend.
+    '  if ( fogColor.r < 0.0 ) {',
+    '    gl_FragColor.rgb *= 1.0 - fogFactor;',
+    '    #ifdef OPAQUE',
+    '      gl_FragColor.a = 1.0 - fogFactor;',
+    '    #endif',
+    '  } else {',
+    '    vec3 waterAtFragment = echoesWaterColor( echoesWaterDepthM( vWaterWorldY ) );',
+    '    waterAtFragment = linearToOutputTexel( vec4( waterAtFragment, 1.0 ) ).rgb;',
+    '    gl_FragColor.rgb = mix( gl_FragColor.rgb, waterAtFragment, fogFactor );',
+    '  }',
     '#endif',
   ].join('\n');
 }
+
+/**
+ * The sign the High world pass sets on `scene.fog.color` while it draws
+ * (`installWaterFog`): any negative red. The pass restores the colour after.
+ */
+export const HIGH_WORLD_FOG_SIGN = -1;
 
 // --------------------------------------------------------- the backdrop
 

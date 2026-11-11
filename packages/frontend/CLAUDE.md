@@ -25,6 +25,16 @@ the halo's also clear with alpha 0. The split's copy is the encoded canvas, so i
 writes texels back without `<colorspace_fragment>`. The view counts the frame whole:
 `renderer.info.autoReset` is off and reset once a frame.
 
+That is the Low graphics quality, the default. High (`highFrame.ts`, behind the Graphics
+quality setting, in development since #1801) draws the same scene as two layers
+(`docs/art-direction.md`, "Two layers, two laws"): the world layer into a linear
+half-float target, one composite to the canvas that adds the water's light, runs the
+curve and lays the world's depth, then everything else on the canvas exactly as Low
+draws it. An object is the world pass's by its three layer (`WORLD_LAYER`); a material
+drawn there outputs scene-referred light, and the fog chunk's High half only attenuates
+(`water.ts`). The tactical layer is unchanged by construction: a mark, a lamp or the
+survey ink never moves into the world pass.
+
 ## Tests run under a Vite shim
 
 Two Vite idioms are build-time transforms, not runtime APIs: `import url from

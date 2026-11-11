@@ -134,6 +134,86 @@ describe('survey ink levels', () => {
   });
 
   /**
+   * The High graphics quality splits the ink from its ground
+   * (docs/art-direction.md, "Two layers, two laws"): the tactical layer's
+   * strokes are drawn over ground the lit world pass drew, and the lit ground
+   * carries none. The Low quality's patch is the one every build drew.
+   */
+  describe('the three modes (#1801)', () => {
+    const terrain: TerrainPayload = {
+      cols: 1,
+      rows: 1,
+      cellM: 250,
+      biomes: [Biome.OpenWater],
+      floor: [1000],
+      ceiling: [0],
+    };
+    const compile = (mode?: 'ground' | 'overlay' | 'carrier') => {
+      const material = new MeshBasicMaterial();
+      const cells = surveyCellTexture(terrain, surveyCellClasses(terrain));
+      if (mode === undefined) installSurveyInk(material, terrain, cells);
+      else installSurveyInk(material, terrain, cells, null, mode);
+      const shader = { ...ShaderLib.basic, uniforms: {} as Record<string, unknown> };
+      material.onBeforeCompile(shader as never, {} as never);
+      return { material, shader };
+    };
+    const MIX = 'surveyDecode( mix( surveyEncode( diffuseColor.rgb ), uSurveyInk, ink ) )';
+    const STROKE = 'float ink = max( max( minor';
+
+    it('mixes the strokes into its own ground by default, as Low always has', () => {
+      const byDefault = compile();
+      const ground = compile('ground');
+      assert.equal(byDefault.shader.fragmentShader, ground.shader.fragmentShader);
+      assert.equal(byDefault.material.customProgramCacheKey(), 'survey-ink');
+      assert.ok(ground.shader.fragmentShader.includes(MIX));
+      assert.ok(!ground.shader.fragmentShader.includes('discard'));
+      assert.ok(
+        ground.shader.fragmentShader.includes('#include <fog_fragment>'),
+        'fogged as ground'
+      );
+    });
+
+    it('draws the same strokes alone as an overlay, swimming out by coverage', () => {
+      const ground = compile('ground');
+      const overlay = compile('overlay');
+      assert.equal(overlay.material.customProgramCacheKey(), 'survey-ink-overlay');
+      // The stroke's coverage is the ground mode's, to the character.
+      const stroke = (source: string) =>
+        source.slice(
+          source.indexOf(STROKE),
+          source.indexOf(';', source.indexOf('ink = max( ink, thermocline *')) + 1
+        );
+      assert.ok(stroke(ground.shader.fragmentShader).includes('thermocline *'));
+      assert.equal(stroke(overlay.shader.fragmentShader), stroke(ground.shader.fragmentShader));
+      assert.ok(!overlay.shader.fragmentShader.includes(MIX), 'it has no ground to mix into');
+      assert.ok(overlay.shader.fragmentShader.includes('if ( ink <= 0.0 ) discard;'));
+      // The ink's own colour at the stroke's coverage: the canvas blends
+      // encoded, which is the ground mode's mix.
+      assert.ok(
+        overlay.shader.fragmentShader.includes(
+          'diffuseColor = vec4( surveyDecode( uSurveyInk ), ink );'
+        )
+      );
+      // Mixed toward the water's colour, a far stroke would paint Low's water
+      // over the lit world's: it fades by alpha instead.
+      assert.ok(!overlay.shader.fragmentShader.includes('#include <fog_fragment>'));
+      assert.ok(
+        overlay.shader.fragmentShader.includes(
+          'gl_FragColor.a *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );'
+        )
+      );
+    });
+
+    it('carries the varyings and the encode pair for a lit ground, and draws no stroke', () => {
+      const carrier = compile('carrier');
+      assert.equal(carrier.material.customProgramCacheKey(), 'survey-ink-carrier');
+      assert.ok(!carrier.shader.fragmentShader.includes(STROKE));
+      assert.ok(carrier.shader.fragmentShader.includes('vec3 surveyEncode( vec3 c )'));
+      assert.ok(carrier.shader.vertexShader.includes('vSurveyXZ = ( modelMatrix'));
+    });
+  });
+
+  /**
    * The free-water study's pass (docs/map-visuals.md §4, the study's clause):
    * coastlines on the zeros of the fields its heightfield carries, isobaths
    * of its rounded floor read from the bake's samples, and every other

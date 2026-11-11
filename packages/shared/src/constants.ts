@@ -100,6 +100,50 @@ export const FREE_WATER_OPENING = {
   DOLLY_M: 1200,
 } as const;
 
+/**
+ * The High graphics quality: the lit world layer (docs/art-direction.md, "Two
+ * layers, two laws"; docs/graphics-standards.md gate 6, "Two graphics
+ * qualities"). Presentation only; never read by the simulation.
+ *
+ * TUNABLE, every number, until the first High frame the owner accepts: the
+ * look is in development (#1801), and its numbers are written into `docs/`
+ * from that frame, not before it (the `dev-loop` skill, "Look work").
+ */
+export const HIGH_GRAPHICS = {
+  /**
+   * Gate 6's High budget, as its table tags it: GPU milliseconds over every
+   * pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU,
+   * read queued and unpaced. The probe reports it beside the reading.
+   */
+  FRAME_GPU_MS: 8,
+  /** MSAA samples of the world pass's target: the canvas's own four. */
+  SAMPLES: 4,
+  /** The exposure the world layer's light is tone-mapped at, before the curve. */
+  EXPOSURE: 1,
+  /**
+   * How the water above the ground takes the scene's light: the metres of
+   * depth over which it falls to 1/e. The ground stands under the rig the
+   * models already do (`MODEL_LIGHTING`), and depth still darkens it.
+   */
+  LIGHT_FALLOFF_M: 1100,
+  /**
+   * The lit ground. `ALBEDO_LUMINANCE` is the linear luminance the palest
+   * biome fill is lifted to as an albedo; every fill and the stone take the
+   * same gain, so their hues and their order hold. `ALBEDO_SATURATION` is how
+   * much of a fill's chroma the albedo keeps: a fill authored at 5 to 10%
+   * luminance reads as paint when it is lifted whole. `RELIEF_GAIN` steepens
+   * the baked slope the light reads, since the column is drawn at 0.22 and a
+   * true normal would shade nothing.
+   */
+  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 3 },
+  /**
+   * Round 1's water, until the medium is authored: the Low ramp's colour as
+   * in-scattered light, lifted by this so the tone curve's toe does not take
+   * it to black.
+   */
+  WATER_GAIN: 2.4,
+} as const;
+
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
 export const MODEL_LIGHTING = {
   AMBIENT: 0.75,

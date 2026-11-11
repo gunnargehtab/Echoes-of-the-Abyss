@@ -55,6 +55,13 @@ ENV VITE_SERVER_URL=$VITE_SERVER_URL
 ARG ECHOES_BUILD=
 ENV VITE_ECHOES_BUILD=$ECHOES_BUILD
 
+# `1` for the hosted playtest build (deploy/compose.playtest.yml), which hides
+# the Graphics quality control until a High frame is accepted
+# (docs/graphics-standards.md gate 6; game/graphicsQuality.ts). Baked, like
+# the two above. Unset, the control is offered.
+ARG ECHOES_HOSTED=
+ENV VITE_ECHOES_HOSTED=$ECHOES_HOSTED
+
 RUN npm run build:shared && npm -w packages/frontend run build
 
 # ---------------------------------------------------------------------------

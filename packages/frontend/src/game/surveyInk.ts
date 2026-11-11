@@ -420,17 +420,44 @@ const isobaths = (d: string) =>
     '    thermocline = surveyThermocline( thermoPx );',
   ].join('\n');
 
-/** The strongest stroke at a pixel, blended in encoded space, shared by both. */
-const INK = [
+/** The strongest stroke at a pixel, shared by both passes and every mode. */
+const INK_COVERAGE = [
   // The strongest stroke at this pixel wins rather than all four stacking:
   // a major isobath running along a coast is one line, not two.
   `  float ink = max( max( minor * ${glslFloat(SURVEY_ALPHA.minor)}, major * ${glslFloat(SURVEY_ALPHA.major)} ),`,
   `                   max( border * ${glslFloat(SURVEY_ALPHA.border)}, coast * ${glslFloat(SURVEY_ALPHA.coast)} ) );`,
   `  ink = max( ink, thermocline * ${glslFloat(SURVEY_ALPHA.thermocline)} );`,
+].join('\n');
+
+/** That stroke blended into the material's own ground, in encoded space. */
+const INK = [
+  INK_COVERAGE,
   '  if ( ink > 0.0 ) {',
   '    diffuseColor.rgb = surveyDecode( mix( surveyEncode( diffuseColor.rgb ), uSurveyInk, ink ) );',
   '  }',
 ].join('\n');
+
+/**
+ * The same stroke as a layer of its own (`SurveyInkMode`, `overlay`): the
+ * ink's colour at the stroke's coverage, for a blend over ground another pass
+ * drew. The canvas blends encoded, so that blend is `INK`'s mix.
+ */
+const INK_OVERLAY = [
+  INK_COVERAGE,
+  '  if ( ink <= 0.0 ) discard;',
+  '  diffuseColor = vec4( surveyDecode( uSurveyInk ), ink );',
+].join('\n');
+
+/**
+ * What the patch draws. `ground` is the Low graphics quality's and every
+ * build's before it: the strokes mixed into the material's own ground.
+ * The High quality splits the two (docs/art-direction.md, "Two layers, two
+ * laws"): `overlay` draws the strokes alone, over ground the lit world pass
+ * drew, fading into the water by coverage rather than by colour; `carrier`
+ * draws none, and gives a lit ground the varyings and the encode pair the
+ * silt detail reads (seabedDetail.ts).
+ */
+export type SurveyInkMode = 'ground' | 'overlay' | 'carrier';
 
 const FRAGMENT_MAIN = [
   '{',
@@ -530,7 +557,8 @@ export function installSurveyInk(
   material: Material,
   terrain: TerrainPayload,
   cells: DataTexture,
-  drawn: DrawnSurvey | null = null
+  drawn: DrawnSurvey | null = null,
+  mode: SurveyInkMode = 'ground'
 ): SurveyInkUniforms {
   const uniforms: SurveyInkUniforms = {
     uSurveyCells: { value: cells },
@@ -545,7 +573,9 @@ export function installSurveyInk(
   };
   const vertexPars = drawn ? `${VERTEX_PARS}\n${DRAWN_VERTEX_PARS}` : VERTEX_PARS;
   const vertexMain = drawn ? `${VERTEX_MAIN}\n${DRAWN_VERTEX_MAIN}` : VERTEX_MAIN;
-  const fragmentMain = drawn ? DRAWN_FRAGMENT_MAIN : FRAGMENT_MAIN;
+  const strokes = drawn ? DRAWN_FRAGMENT_MAIN : FRAGMENT_MAIN;
+  const fragmentMain =
+    mode === 'carrier' ? '' : mode === 'overlay' ? strokes.replace(INK, INK_OVERLAY) : strokes;
   const drawnUniforms =
     drawn === null
       ? {}
@@ -566,11 +596,24 @@ export function installSurveyInk(
         `#include <common>\n${fragmentPars()}${drawn ? `\n${DRAWN_FRAGMENT_PARS}` : ''}`
       )
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain}`);
+    // The strokes swim out by coverage: mixed toward the water's colour as
+    // the ground's fog does, a far stroke would paint that colour over the
+    // lit world's own water.
+    if (mode === 'overlay') {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <fog_fragment>',
+        [
+          '#ifdef USE_FOG',
+          '  gl_FragColor.a *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );',
+          '#endif',
+        ].join('\n')
+      );
+    }
   };
   // Keyed apart from every unpatched MeshBasicMaterial in the scene — three
   // keys compiled programs by material type — and the study's pass from the
   // cells', which reads attributes the cells' never declares.
-  const key = drawn ? 'survey-ink-drawn' : 'survey-ink';
+  const key = `${drawn ? 'survey-ink-drawn' : 'survey-ink'}${mode === 'ground' ? '' : `-${mode}`}`;
   material.customProgramCacheKey = () => key;
   material.needsUpdate = true;
   return uniforms;
