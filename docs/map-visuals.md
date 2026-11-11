@@ -168,6 +168,13 @@ outshines any line on the map by design: a vent field with no embers is not a ve
 is capped by its own five rules instead ([style-neon-noir.md](style-neon-noir.md) "World
 light"): points and seams only, the ember as the ceiling, static or on the 5 Hz grid.
 
+**The ladder is two layers.** Rungs 1 to 3 and world light are the world layer, and rungs 4
+to 7 the tactical layer ([art-direction.md](art-direction.md#two-layers-two-laws), decided on
+11 November 2026). At the High graphics quality rung 3's 5–10% band, rung 1's one blue and
+world light's first three rules are released, and the order of the rungs is not: each
+tactical floor still reads over the brightest lit ground under it. At Low, and on the chart
+at both qualities, the table stands as written.
+
 **A mark on the ground ends at the rim.** The rings, fills and lines rungs 5 and 6 lay on the
 seabed have no seabed past the rim: a mission drawn alone ends in the skirt, the deep water the
 world ends in. So a mark whose circle or course crosses the map's edge stops on the rim and

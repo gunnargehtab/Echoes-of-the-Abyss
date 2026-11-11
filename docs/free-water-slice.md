@@ -606,6 +606,13 @@ over the top of the world. §7 names no feel, by design, so this section is the 
 pass builds against. It changes no gameplay ground, cost, stat or disclosure, and tunes
 nothing for balance.
 
+**Overruled in part on 11 November 2026**, by the owner in session
+([art-direction.md](art-direction.md#two-layers-two-laws)). Decision 1 stands: no sunlight
+below the Lid, so no sunlit shafts and no caustics. At the High graphics quality decision
+3's refusals of hue in the water and of a new full-screen pass, the rest of "Water
+medium"'s prohibited list, and its retained 5–10% ground are released. This section stays
+the record of the study as built, which is the Low quality's.
+
 | Decision | Taken | Rejected | Child |
 | --- | --- | --- | --- |
 | 1. Light | Stay inside the canon: no sunlight below the Lid | Sunlit water in the manner of the owner's ocean reference, which would first amend [world.md](world.md) and art direction's "Shallow caustics" | Every child |

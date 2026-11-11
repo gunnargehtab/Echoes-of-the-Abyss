@@ -585,6 +585,12 @@ families, and nothing else on the ground ever emits:
 | `civic-lamp` | `#B8875A` | Coral Ruins with a floor at 350 m or shallower — the Upper Concourse; in the arch study, its landmark ([licence](#the-arch-studys-licence)) | A steady tallow point standing low over the terminus, about one cell in three and never more than twelve to a map |
 | `ore-trace` | `#7A5634` | Resource fields, any biome — the nodule bed | A dull glint in the crust of a few nodules on each bed: facets the size of a lump, never a lit drift. The same charge a crystal seam carries whole, in the trace of it the ore keeps ([economy.md](economy.md) §2's two modelled resources are one substance at two grades) |
 
+**These rules are the Low graphics quality's, and the chart's at both.** Since 11 November
+2026 the world layer may be lit at High
+([art-direction.md](art-direction.md#two-layers-two-laws)): rules 1 to 3 are released
+there, and rules 4 and 5 bind both qualities. A source High adds, such as the Lid's glow
+or an own hull's searchlight, takes its token in this section before it is drawn.
+
 Every family obeys the same five rules, and they are gates, not suggestions:
 
 1. **World light is points and seams, never area glow.** No lit ground, no
