@@ -22,6 +22,7 @@ import {
   WORLD_LIGHT,
 } from '../src/game/palette.ts';
 import {
+  agentFloorLift,
   furnitureFloorLift,
   instrumentFloorLift,
   strokeLift,
@@ -331,10 +332,12 @@ describe('the lit ground’s material (#1801)', () => {
   };
 
   /**
-   * The ladder's own comparisons for rungs 4 to 6 over one ground
+   * The ladder's own comparisons for rungs 4 to 7 over one ground
    * (test/ladder.test.ts): the first that fails, or null where its order
-   * holds. The ink reads, under rung 5's floor and under the unselected ring,
-   * and rung 6's floor clears rung 5's.
+   * holds. The ink reads, under rung 5's floor and under the unselected ring;
+   * rung 6's floor clears rung 5's; and rung 7's floor on the chart reads.
+   * Rung 7's floor clearing rung 6's is not asked: the ladder records where
+   * it does not, over every ground (docs/map-visuals.md §10).
    */
   const rungOrderBreak = (palette: Palette, ground: number): string | null => {
     const ink = Object.values(SURVEY_ALPHA).map((alpha) =>
@@ -345,6 +348,7 @@ describe('the lit ground’s material (#1801)', () => {
     if (Math.max(...ink) >= rung5) return 'the ink under rung 5';
     if (Math.max(...ink) >= unselectedRingLift(palette, ground)) return 'the ink under the ring';
     if (instrumentFloorLift(palette, ground) <= rung5) return 'rung 6 clears rung 5';
+    if (agentFloorLift(palette, ground) <= 0) return 'rung 7 reads';
     return null;
   };
 
@@ -370,9 +374,9 @@ describe('the lit ground’s material (#1801)', () => {
     // the brightest lit ground the look puts under it, in all four palettes."
     // The brightest ground is the ceiling's, in the Lid's hue or in a
     // source's: a pool is clamped with the glow it joins. Over each, the
-    // ladder's own comparisons for rungs 4 to 6 (test/ladder.test.ts) are run
+    // ladder's own comparisons for rungs 4 to 7 (test/ladder.test.ts) are run
     // again: the ink reads, under rung 5's floor and under the unselected
-    // ring, and rung 6's floor clears rung 5's.
+    // ring; rung 6's floor clears rung 5's; and rung 7's floor reads.
     const lights = { 'lid-glow': LID_GLOW, ...WORLD_LIGHT };
     for (const [light, hue] of Object.entries(lights)) {
       for (const ground of brightestUnder(hue)) {
@@ -401,9 +405,9 @@ describe('the lit ground’s material (#1801)', () => {
       return { percent: 100, broke: '' };
     };
     assert.deepEqual(holds('tritanopia'), { percent: 11.8, broke: 'rung 6 clears rung 5' });
-    assert.deepEqual(holds('deuteranopia'), { percent: 23.1, broke: 'the ink under rung 5' });
-    assert.deepEqual(holds('standard'), { percent: 27.8, broke: 'the ink under rung 5' });
-    assert.deepEqual(holds('protanopia'), { percent: 37.6, broke: 'rung 6 clears rung 5' });
+    assert.deepEqual(holds('deuteranopia'), { percent: 17.3, broke: 'rung 7 reads' });
+    assert.deepEqual(holds('protanopia'), { percent: 17.3, broke: 'rung 7 reads' });
+    assert.deepEqual(holds('standard'), { percent: 18.8, broke: 'rung 7 reads' });
   });
 
   it('lights the ground as bright as that leaves it: near the palest ground the ladder weighs', () => {

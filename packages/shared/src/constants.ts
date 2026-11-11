@@ -153,11 +153,16 @@ export const HIGH_GRAPHICS = {
    */
   WATER: { HUE_REACH: 0.8 },
   /**
-   * Ambient occlusion: how much of the Lid's glow the ground round a point
-   * hides from it. `RADIUS_M` is how far that ground is looked for, in the
-   * world's metres, and `STRENGTH` how much of the hidden share is taken.
+   * Ambient occlusion: how much of the world's own light, the Lid's glow and
+   * the pools on the ground with it, the ground round a point hides from it.
+   * `RADIUS_M` is how far that ground is looked for, in the world's metres.
+   * `FALLOFF` is where, in radii, ground stops counting: all of it inside the
+   * first, none past the second, so the far wall of a bowl does not darken
+   * its near rim. `GAIN` scales what the taps found hidden into the share
+   * that is dark, since eight taps on a spiral see about half of what stands
+   * over a crease, and `STRENGTH` is how much of that share is taken.
    */
-  AO: { RADIUS_M: 45, STRENGTH: 0.7 },
+  AO: { RADIUS_M: 45, FALLOFF: [0.6, 1.4], GAIN: 2, STRENGTH: 0.7 },
   /**
    * Bloom, on the world layer's light alone. Light under `THRESHOLD` less
    * `KNEE` spreads nothing, and the brightest ground the Lid's glow lights

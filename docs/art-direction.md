@@ -162,7 +162,8 @@ Built so far:
   on the ground and scatters in the water as a volume that stops at the ground. They are
   placed by the map alone and answer nothing a match does (limits 2 to 4).
 - **Ambient occlusion, bloom and a grade.** The ground round a point hides part of the
-  Lid's glow from it, which is the one shadow a light with no direction casts. Bloom
+  world's own light from it, the Lid's glow and the pools on the ground with it. For the
+  glow that is the one shadow a light with no direction casts. Bloom
   spreads only what stands over the brightest ground the glow lights, so a source blooms
   and the ground does not. The grade puts a little weight into the darks and a little
   chroma back.
@@ -178,24 +179,25 @@ pass, lamps and all.
 Limit 6 is held on the ground by a ceiling. The ground never takes more light, from the
 Lid and the world's sources together, than nine tenths of what level ground takes at the
 Lid. A pool therefore lifts ground only as far as depth has darkened it. A test runs the
-loudness ladder's own comparisons for rungs 4 to 6 over the brightest ground that leaves,
+loudness ladder's own comparisons for rungs 4 to 7 over the brightest ground that leaves,
 in the Lid's hue and in each family's, in all four palettes
 ([map-visuals.md](map-visuals.md) §5): the ink reads, under rung 5's floor and under the
-unselected ring, and rung 6's floor clears rung 5's.
+unselected ring; rung 6's floor clears rung 5's; and rung 7's floor on the chart reads.
 
-The ceiling is low because the ladder is tight. Its rung order holds over ground up to
-11.8% encoded luminance in tritanopia, 23.1% in deuteranopia, 27.8% in the standard
-palette and 37.6% in protanopia. Past the first, the unselected ring falls under rung 5's
-floor. So a pool that reads as light on the ground, as the target frame's do, cannot be
-drawn under the marks as they are.
+The ceiling is low because the ladder is tight. Those comparisons hold over ground up to
+11.8% encoded luminance in tritanopia, 17.3% in deuteranopia and protanopia, and 18.8% in
+the standard palette. Past the first, the unselected ring falls under rung 5's floor; past
+the others, rung 7's quietest outline no longer lifts the ground. So a pool that reads as
+light on the ground, as the target frame's do, cannot be drawn under the marks as they
+are.
 
 **Open, and the owner's: what limit 6 binds.** Three readings were written.
 
 - **The lit ground (taken until decided).** The ceiling above holds it. Light in the
   water over the ground, the scatter and the bloom, is judged by gate 7's glance on the
   frames. Over the garden it takes the survey frame to 24.6% at the 99th percentile
-  ([issue-1801](screenshots/issue-1801/README.md)), past the tritanopia and deuteranopia
-  figures, and the four palettes are read at promotion.
+  ([issue-1801](screenshots/issue-1801/README.md)), past all four figures, and no mark
+  stands over that glow in the frames. The four palettes are read at promotion.
 - **Everything the world layer draws under a mark.** The scatter and the bloom come down
   by about three, the garden's glow goes, and so would any pool or cone a later step adds.
 - **Marks carry their own ground at High**, a dark plate under a ring or a rim. That is a

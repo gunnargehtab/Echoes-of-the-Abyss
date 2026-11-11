@@ -95,20 +95,44 @@ makes, in a material of the kind Low makes it in.
 
 Limit 6 of [art-direction.md](../../art-direction.md#two-layers-two-laws) holds the lit
 ground under the tactical layer. A ceiling holds it there, and
-`packages/frontend/test/litGround.test.ts` runs the loudness ladder's rung comparisons
-over the brightest ground the ceiling leaves, in the Lid's hue and each family's, in all
-four palettes. The same file pins how pale a ground the ladder's order holds over: 11.8%
-in tritanopia, 23.1% in deuteranopia, 27.8% in the standard palette, 37.6% in protanopia.
+`packages/frontend/test/litGround.test.ts` runs the loudness ladder's comparisons for
+rungs 4 to 7 over the brightest ground the ceiling leaves, in the Lid's hue and each
+family's, in all four palettes. The same file pins how pale a ground those comparisons
+hold over: 11.8% in tritanopia, 17.3% in deuteranopia and protanopia, 18.8% in the
+standard palette.
 
 In these frames the 99th percentile of the world area's luma, out of 255, is 64 at Low
 and 60 at High at Home, 70 and 69 at Close, and 55 and 56 at Survey.
 
 Light in the water is not ground, and is not under that ceiling. Over the garden at
 Survey the 99th percentile of encoded luminance is 14.8% at Low and 24.6% at High, and
-the glow's cores reach 33.7% at the 99.9th. That is past the tritanopia and deuteranopia
-figures. Whether limit 6 binds it is put to the owner in
+the glow's cores reach 33.7% at the 99.9th. That is past all four figures. Whether limit
+6 binds it is put to the owner in
 [art-direction.md](../../art-direction.md#the-lit-ground-under-the-marks). The frames this
 pull request's second commit drew, 270b64727, show the ground's pools before the ceiling.
+
+## Gate 7, asked of the lit frames
+
+[graphics-standards.md](../../graphics-standards.md) gate 7 asks of any new visual whether
+a player who has read nothing can tell whose it is, how loud it is and whether it is
+theirs in under a second, and at the survey dolly whether the plateau, the trench and the
+rock can be named from the ink alone. Read off the High frames above, by the session that
+built them, on a software rasteriser:
+
+| Camera | Whose, how loud, theirs | The ink |
+| --- | --- | --- |
+| Home | Yes. The three hulls stand in their navy's green under their rings on the dark rim, each ring's arc short, which is quiet. The garden's glow is beyond them, and nothing of theirs stands over it | Not the survey's question at this dolly |
+| Close | Yes. Each hull fills its ring, its lamps and its ring's arc say quiet, and no world light is in the frame | Not the survey's question at this dolly |
+| Survey | Yes. The three hulls and their rings read on the west rim as at Low | Yes. The coast round the rim, the pocket, the garden and the rock wall, and the isobaths down each scarp, are drawn as at Low |
+
+One case these frames do not hold: an own hull over the garden. The flora's green sits
+near the Pelagia hulls' own, and the glow there is past the ladder's figures above.
+
+The ink was checked directly, since at this dolly it is faint at both qualities.
+[ink-survey.png](software/ink-survey.png) is the Survey frame at High less the same frame
+with the ink's draw hidden by a switch that was not committed, amplified twelve times: the
+coastlines and the scarps' isobaths, and nothing else. The ink moves 1.80% of the world
+area's pixels by more than 2 of 255 there, and 0.46% at Home.
 
 ## Related
 

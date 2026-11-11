@@ -9,10 +9,12 @@
  * its halo's and its collar's to say).
  *
  * - **Ambient occlusion** reads the world's depth at half the frame's size:
- *   how much of the water above a point the ground round it hides. The Lid's
- *   glow comes from the whole water above, so the crease under a scarp and
- *   the foot of a stand take less of it. This is the shadow a light with no
- *   direction casts, and the only one this step draws.
+ *   how much of the water above a point the ground round it hides. The
+ *   composite takes that share from the world's own light, the Lid's glow
+ *   and the pools on the ground with it, so the crease under a scarp and the
+ *   foot of a stand are darker. For the glow, which comes from the whole
+ *   water above, this is the shadow a light with no direction casts, and it
+ *   is the only shadow this step draws.
  * - **Bloom** takes what the composite's light holds over a soft threshold,
  *   at half size, and spreads it down four levels and back up. It is the
  *   glow of the world's own sources: a pool, a volume, a stand's lit tips.
@@ -91,9 +93,9 @@ const AO_FRAGMENT = [
   // How far the tap stands over the surface's own plane, and nothing from a
   // tap past the reach: the far wall of a bowl does not darken its near rim.
   '    float over = max( 0.0, dot( n, toTap ) / max( d, 1e-3 ) - 0.08 );',
-  '    hidden += over * ( 1.0 - smoothstep( 0.6 * reach, 1.4 * reach, d ) );',
+  `    hidden += over * ( 1.0 - smoothstep( ${glsl(HIGH_GRAPHICS.AO.FALLOFF[0])} * reach, ${glsl(HIGH_GRAPHICS.AO.FALLOFF[1])} * reach, d ) );`,
   '  }',
-  `  gl_FragColor = vec4( vec3( clamp( 1.0 - 2.0 * hidden / ${glsl(AO_TAPS)}, 0.0, 1.0 ) ), 1.0 );`,
+  `  gl_FragColor = vec4( vec3( clamp( 1.0 - ${glsl(HIGH_GRAPHICS.AO.GAIN)} * hidden / ${glsl(AO_TAPS)}, 0.0, 1.0 ) ), 1.0 );`,
   '}',
 ].join('\n');
 
