@@ -602,10 +602,10 @@ agent light and keeps its navy's glow.
 
 **The Lid's glow at High.** One world-owned source joins the five families at the High
 graphics quality: `lid-glow`, `#5A6B80`, the light the ground takes from the whole water
-above it. It is the cold ambient the shared model rig already carries
+above it. It is the colour of the cold ambient the shared model rig already carries
 ([art-direction.md](art-direction.md#shared-model-lighting--abyss-render-stack)), so the
-ground under the Lid and the hulls in it stand in one light. It has no direction and
-casts no shadow: there is no sun below the Lid. `LID_GLOW` in
+ground under the Lid and the hulls in it stand in one colour of light; its level is the
+ground's own. It has no direction and casts no shadow: there is no sun below the Lid. `LID_GLOW` in
 `packages/frontend/src/game/palette.ts` transcribes it.
 
 **The water's hue at High.** At the High graphics quality the water wears the hue of the

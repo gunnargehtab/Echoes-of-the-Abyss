@@ -138,9 +138,45 @@ export const HIGH_GRAPHICS = {
    * much of a fill's chroma the albedo keeps: a fill authored at 5 to 10%
    * luminance reads as paint when it is lifted whole. `RELIEF_GAIN` steepens
    * the baked slope the light reads: the column is drawn at 0.22, and light
-   * from straight above shades a true slope by a hundredth.
+   * from straight above shades a true slope by a hundredth. `LIGHT_CEILING` is
+   * the most light the ground takes from the Lid and the world's sources
+   * together, by luminance, as a share of what level ground takes at the Lid:
+   * a pool lifts ground only as far as depth has darkened it, so no ground is
+   * paler than the loudness ladder weighs, whatever stands on it (limit 6;
+   * test/litGround.test.ts).
    */
-  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8 },
+  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8, LIGHT_CEILING: 0.9 },
+  /**
+   * The water. `HUE_REACH` is how far along a sight line, in reaches, the
+   * water whose hue a pixel wears stands: most of the light the water adds
+   * comes from within one reach of where the line enters it.
+   */
+  WATER: { HUE_REACH: 0.8 },
+  /**
+   * Ambient occlusion: how much of the Lid's glow the ground round a point
+   * hides from it. `RADIUS_M` is how far that ground is looked for, in the
+   * world's metres, and `STRENGTH` how much of the hidden share is taken.
+   */
+  AO: { RADIUS_M: 45, STRENGTH: 0.7 },
+  /**
+   * Bloom, on the world layer's light alone. Light under `THRESHOLD` less
+   * `KNEE` spreads nothing, and the brightest ground the Lid's glow lights
+   * stands under that, so only a source blooms: a pool, a volume, a stand's
+   * lit tips. `INTENSITY` is how much of the spread light is added back.
+   */
+  BLOOM: { THRESHOLD: 0.15, KNEE: 0.05, INTENSITY: 0.6 },
+  /**
+   * The grade, before the curve: slope, offset and power a channel (ASC CDL),
+   * then saturation about the luminance. A little weight into the darks, red
+   * most, and a little chroma back: the curve's toe takes both from a frame
+   * this dark.
+   */
+  GRADE: {
+    SLOPE: [1, 1, 1],
+    OFFSET: [0, 0, 0],
+    POWER: [1.06, 1.03, 1],
+    SATURATION: 1.12,
+  },
   /**
    * The world's own sources (docs/style-neon-noir.md "World light"), a family
    * a row: `POWER` is the light level ground takes directly under one source,
@@ -150,6 +186,10 @@ export const HIGH_GRAPHICS = {
    * stand's tips and a chimney's column are tens of metres up. `MAX` caps the
    * sources a ground draws, brightest first, and `VOLUME` scales the light a
    * source scatters in the water against the light it puts on the ground.
+   * `VOLUME_FALLOFF` is how fast that light dies from the source out: at a
+   * fifth of the radius it has halved. `EMBER_SHARE` is how much of a source
+   * one vent ember is: a field stands scores of sparks, and five are one
+   * chimney's weight.
    */
   WORLD_LIGHT: {
     vent: { POWER: 8, RADIUS_M: 160, HEIGHT_M: 25 },
@@ -159,6 +199,8 @@ export const HIGH_GRAPHICS = {
     civic: { POWER: 6, RADIUS_M: 140, HEIGHT_M: 15 },
     MAX: 192,
     VOLUME: 0.2,
+    VOLUME_FALLOFF: 24,
+    EMBER_SHARE: 0.2,
   },
 } as const;
 

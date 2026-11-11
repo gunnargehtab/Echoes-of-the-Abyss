@@ -107,7 +107,7 @@ const FRAGMENT = [
   '    vec3 p = fromCentre + ray * ( t0 + ( float( i ) + 0.5 ) * dt );',
   '    float d2 = dot( p, p ) / ( vRadius * vRadius );',
   '    float window = max( 0.0, 1.0 - d2 );',
-  '    sum += window * window / ( 1.0 + 24.0 * d2 );',
+  `    sum += window * window / ( 1.0 + ${glsl(HIGH_GRAPHICS.WORLD_LIGHT.VOLUME_FALLOFF)} * d2 );`,
   '  }',
   // And the swim back to the eye, as the water takes any light (water.ts).
   '  float mid = 0.5 * ( t0 + t1 );',

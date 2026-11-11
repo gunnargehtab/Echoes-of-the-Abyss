@@ -440,6 +440,10 @@ export interface ProjectedPoint {
   worldY: number;
 }
 
+/** What the lit ground reads where no source of the world's pools on it. */
+const NO_POOLS = new DataTexture(new Uint8Array(4), 1, 1);
+NO_POOLS.needsUpdate = true;
+
 /**
  * Scratch for `projectPoint`. The overlay painter projects every vertex of
  * every ring through here each frame; a fresh Vector3 per call would make the
@@ -451,16 +455,6 @@ const PROJECT_TMP = new Vector3();
  * event, `groundQuad` and `applyCamera` per frame, and each used to allocate
  * a Raycaster, a Vector2 and a cloned Vector3 or four on the way.
  */
-/** What the lit ground reads where no source of the world's pools on it. */
-const NO_POOLS = new DataTexture(new Uint8Array(4), 1, 1);
-NO_POOLS.needsUpdate = true;
-
-/**
- * How much of a source one vent ember is: a field stands scores of sparks,
- * and a score of them is one chimney's light (worldLights.ts `worldLightsOf`).
- */
-const EMBER_LIGHT_SHARE = 0.2;
-
 const RAY_TMP = new Raycaster();
 // The High quality moves the ground onto the world pass's layer (highFrame.ts);
 // a pointer still lands on it.
@@ -3612,7 +3606,7 @@ export class PerspectiveView {
         family: 'vent' as const,
         xM: ember.xM,
         yM: ember.yM,
-        scale: EMBER_LIGHT_SHARE,
+        scale: HIGH_GRAPHICS.WORLD_LIGHT.EMBER_SHARE,
       })),
       ...civicLamps(terrain, this.groundSeed).map((lamp) => ({
         family: 'civic' as const,

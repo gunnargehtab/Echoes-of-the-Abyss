@@ -2309,27 +2309,42 @@ describe('renderer smoke test: the conn view', () => {
       assert.deepEqual(high.passes, [
         'high-world',
         'high-scatter',
+        'high-occlusion',
+        'high-bloom',
         'high-composite',
         'high-tactical',
       ]);
-      // The world pass and the scatter pass draw into targets, the other two
-      // to the canvas.
-      const [target, scatter, ...rest] = world.gl.frameTargets;
+      // The world, the scatter and the chain draw into targets: the
+      // occlusion, the bloom's prefilter, three levels down and three back
+      // up. The composite and the tactical pass draw to the canvas.
+      const [target, scatter, ...after] = world.gl.frameTargets;
+      const chain = after.slice(0, 8);
+      const rest = after.slice(8);
+      assert.deepEqual(
+        chain.map((t) => t?.width),
+        [640, 640, 320, 160, 80, 160, 320, 640],
+        'the chain is half the frame and smaller'
+      );
       assert.ok(target !== null && target !== undefined, 'the world pass has a target');
       assert.equal(target.samples, 4, 'multisampled as the canvas is (HIGH_GRAPHICS.SAMPLES)');
       assert.ok(target.depthTexture, 'with the depth the composite lays on the canvas');
       assert.ok(scatter !== null && scatter !== undefined, 'the scatter pass has its own');
       assert.deepEqual([scatter.width, scatter.height], [640, 360], 'at half the frame each way');
       assert.deepEqual(rest, [null, null]);
-      assert.equal(quality(high).targetBytes, 1280 * 720 * 12 * 5 + 640 * 360 * 8);
+      assert.equal(
+        quality(high).targetBytes,
+        1280 * 720 * 12 * 5 +
+          640 * 360 * 8 +
+          640 * 360 * 4 +
+          (640 * 360 + 320 * 180 + 160 * 90 + 80 * 45) * 8
+      );
       assert.ok((quality(high).groundBytes as number) > 0, 'the lit ground holds its pixels');
 
-      const [worldPass, volumes, composite, tactical] = drawsOf(world.gl) as [
-        Object3D[],
-        Object3D[],
-        Object3D[],
-        Object3D[],
-      ];
+      const draws = drawsOf(world.gl);
+      const [worldPass, volumes] = draws as [Object3D[], Object3D[]];
+      const [composite, tactical] = draws.slice(-2) as [Object3D[], Object3D[]];
+      assert.equal(draws.length, 12);
+      for (const pass of draws.slice(2, 10)) assert.equal(pass.length, 1, 'one full-screen draw');
       assert.equal(volumes.length, 1, 'every source is one instanced draw');
       assert.equal(composite.length, 1, 'the composite is one full-screen draw');
       // Two layers, one draw each: nothing is lit and then drawn again.

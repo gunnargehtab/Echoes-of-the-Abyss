@@ -607,8 +607,9 @@ export const VENT_EMBER = 0xe06a2b;
 /**
  * The Lid's glow, docs/style-neon-noir.md "World light" (SPEC by token): the
  * light the ground takes from above at the High graphics quality
- * (litGround.ts). It is the rig's own cold ambient, `MODEL_LIGHTING.AMBIENT_COLOR`,
- * so the ground under the Lid and the hulls in it stand in one light.
+ * (litGround.ts). It is the colour of the rig's cold ambient,
+ * `MODEL_LIGHTING.AMBIENT_COLOR`, so the ground under the Lid and the hulls in
+ * it stand in one colour of light; its level is the ground's own.
  */
 export const LID_GLOW = 0x5a6b80;
 

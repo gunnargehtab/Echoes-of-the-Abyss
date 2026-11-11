@@ -131,14 +131,18 @@ High draws the one scene as two layers
    scene-referred. A fragment there only loses light to the water.
 2. **The scatter pass** draws what the world's own sources scatter in the water, against
    the world's depth, at half the frame's size.
-3. **The composite** is one full-screen draw to the canvas. It adds the water's own light
-   by how much of each pixel the water took, and the sources' volumes, runs the tone
-   curve, and lays the world's depth so the next pass is hidden by the world as it is at
-   Low.
-4. **The tactical pass** draws everything else on the canvas as Low draws it: the same
+3. **The chain** runs at half the frame's size and smaller: ambient occlusion off the
+   world's depth, then the frame's light over a soft threshold, spread down four levels
+   and back as bloom.
+4. **The composite** is one full-screen draw to the canvas. It sums the world's light,
+   occluded, the water's own light by how much of each pixel the water took, the sources'
+   volumes and the bloom. It grades the sum, runs the tone curve, and lays the world's
+   depth so the next pass is hidden by the world as it is at Low.
+5. **The tactical pass** draws everything else on the canvas as Low draws it: the same
    materials, the same per-material curve, the same fog. The survey ink is drawn here,
    as a layer of its own over the lit ground. The lamp halo and the chromatic split
-   follow as they always have.
+   follow as they always have. The chain runs before this pass, so no mark, ring or lamp
+   is occluded, spread or graded.
 
 Built so far:
 
@@ -149,10 +153,6 @@ Built so far:
   depth still darkens. The albedo is each biome's fill and the stone, lifted by one gain
   so their hues and their order hold. The slope and the darkening at a cliff's rim, its
   lee and a stone's scour come from the seabed bake.
-- **The glow is held under the loudness ladder** (limit 6). The brightest ground it can
-  light, the palest fill level and unshadowed at the Lid, is no paler than the palest
-  ground the ladder weighs every rung over in all four palettes
-  ([map-visuals.md](map-visuals.md) §5), and a test holds it there.
 - **The water is a medium.** It keeps the depth ramp's brightness
   ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
   of the biome under the water its light comes from, in that biome's water token. A pixel
@@ -161,15 +161,46 @@ Built so far:
   prop that carries a licensed family stand as lights in their family's token. Each pools
   on the ground and scatters in the water as a volume that stops at the ground. They are
   placed by the map alone and answer nothing a match does (limits 2 to 4).
+- **Ambient occlusion, bloom and a grade.** The ground round a point hides part of the
+  Lid's glow from it, which is the one shadow a light with no direction casts. Bloom
+  spreads only what stands over the brightest ground the glow lights, so a source blooms
+  and the ground does not. The grade puts a little weight into the darks and a little
+  chroma back.
 - **The props** draw in the world pass under the shared rig. Their additive clouds, the
   steam, the haze and the sift, stay in the tactical pass.
 
-Not built yet: bloom, grading and ambient occlusion; shadow; and the surfaces of hulls and
-structures, which draw whole in the tactical pass, lamps and all.
+Not built yet: shadow cast by a light with a direction, which arrives with the own
+searchlights; and the surfaces of hulls and structures, which draw whole in the tactical
+pass, lamps and all.
 
-Owed before a frame is promoted: limit 6 under a source's pool. There the ground is
-brighter than any ground the ladder weighs, and no test or frame yet shows each rung's
-floor reading over it in the four palettes.
+#### The lit ground under the marks
+
+Limit 6 is held on the ground by a ceiling. The ground never takes more light, from the
+Lid and the world's sources together, than nine tenths of what level ground takes at the
+Lid. A pool therefore lifts ground only as far as depth has darkened it. A test runs the
+loudness ladder's own comparisons for rungs 4 to 6 over the brightest ground that leaves,
+in the Lid's hue and in each family's, in all four palettes
+([map-visuals.md](map-visuals.md) §5): the ink reads, under rung 5's floor and under the
+unselected ring, and rung 6's floor clears rung 5's.
+
+The ceiling is low because the ladder is tight. Its rung order holds over ground up to
+11.8% encoded luminance in tritanopia, 23.1% in deuteranopia, 27.8% in the standard
+palette and 37.6% in protanopia. Past the first, the unselected ring falls under rung 5's
+floor. So a pool that reads as light on the ground, as the target frame's do, cannot be
+drawn under the marks as they are.
+
+**Open, and the owner's: what limit 6 binds.** Three readings were written.
+
+- **The lit ground (taken until decided).** The ceiling above holds it. Light in the
+  water over the ground, the scatter and the bloom, is judged by gate 7's glance on the
+  frames. Over the garden it takes the survey frame to 24.6% at the 99th percentile
+  ([issue-1801](screenshots/issue-1801/README.md)), past the tritanopia and deuteranopia
+  figures, and the four palettes are read at promotion.
+- **Everything the world layer draws under a mark.** The scatter and the bloom come down
+  by about three, the garden's glow goes, and so would any pool or cone a later step adds.
+- **Marks carry their own ground at High**, a dark plate under a ring or a rim. That is a
+  change to the tactical layer, which this section holds unchanged, so it is a new
+  decision. It is the recommendation: the target frame's light needs it.
 
 ## World Aesthetic
 

@@ -14,11 +14,15 @@
  * 2. **The scatter pass**, where the ground stands a source of its own: the
  *    light those sources scatter in the water, summed against the world's
  *    depth into a half-resolution target (lightVolumes.ts).
- * 3. **The composite.** One full-screen draw to the canvas adds the water's
- *    own light by what each pixel lost (waterMedium.ts) and the sources'
- *    volumes, runs the chain's curve, and writes the world's depth, so the
- *    pass after it is hidden by the world as it is at Low.
- * 4. **The tactical pass.** Everything else in the scene, drawn to the canvas
+ * 3. **The occlusion pass and the bloom passes** (highChain.ts): how much of
+ *    the water above each point the ground round it hides, and the light
+ *    over a soft threshold spread down four levels and back.
+ * 4. **The composite.** One full-screen draw to the canvas sums the frame's
+ *    light: the world's, occluded; the water's own, by what each pixel lost
+ *    (waterMedium.ts); the sources' volumes; and the bloom. It grades the
+ *    sum, runs the curve, and writes the world's depth, so the pass after it
+ *    is hidden by the world as it is at Low.
+ * 5. **The tactical pass.** Everything else in the scene, drawn to the canvas
  *    exactly as the Low quality draws it: the same materials, the same
  *    per-material tone curve, the same fog. That is the law's "unchanged at
  *    both graphics qualities", kept by construction rather than by matching.
@@ -59,6 +63,7 @@ import {
   type WebGLRenderer,
 } from 'three';
 import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
+import { BLOOM_THRESHOLD_GLSL, LightChain } from './highChain.ts';
 import { LightVolumes } from './lightVolumes.ts';
 import { WATER_HUE } from './palette.ts';
 import { BACKDROP_SPAN_M, HIGH_WORLD_FOG_SIGN, WATER_RAMP_GLSL } from './water.ts';
@@ -87,10 +92,16 @@ const COMPOSITE_VERTEX = [
   '}',
 ].join('\n');
 
+const vec3 = (values: readonly number[]): string =>
+  `vec3( ${values.map((value) => glsl(value)).join(', ')} )`;
+
 const COMPOSITE_FRAGMENT = [
   'uniform sampler2D tWorld;',
   'uniform sampler2D tDepth;',
   'uniform sampler2D tScatter;',
+  'uniform sampler2D tOcclusion;',
+  'uniform sampler2D tBloom;',
+  'uniform vec2 uOcclusionTexel;',
   'uniform mat4 uInvViewProj;',
   'uniform vec3 uEye;',
   'uniform float uFocusDepthM;',
@@ -99,9 +110,12 @@ const COMPOSITE_FRAGMENT = [
   'varying vec4 vFarPoint;',
   WATER_RAMP_GLSL,
   WATER_MEDIUM_GLSL,
-  'void main() {',
+  BLOOM_THRESHOLD_GLSL,
+  // The frame's light at this pixel, scene-referred, before the bloom: what
+  // the prefilter cuts and what the composite grades.
+  'vec3 echoesHighLight( out float depth ) {',
   '  vec4 world = texture2D( tWorld, vUv );',
-  '  float depth = texture2D( tDepth, vUv ).r;',
+  '  depth = texture2D( tDepth, vUv ).r;',
   // The water a pixel looks into: where there is ground, the water the ground
   // stands in, and where there is none, the Low backdrop's reading of the ray
   // from the focus (water.ts `WaterBackdrop`). Its hue is the biome's under
@@ -115,18 +129,40 @@ const COMPOSITE_FRAGMENT = [
   '  bool solid = depth < 1.0;',
   '  float depthM = solid ? echoesWaterDepthM( ground.y ) : openDepthM;',
   '  float entry = uEye.y > 0.0 && ray.y < -1e-4 ? uEye.y / - ray.y : 0.0;',
-  '  float along = entry + 0.8 * uReachM;',
+  `  float along = entry + ${glsl(HIGH_GRAPHICS.WATER.HUE_REACH)} * uReachM;`,
   '  if ( solid ) along = min( along, distance( ground, uEye ) );',
   '  vec2 under = uEye.xz + ray.xz * along;',
   // The ramp's brightness in the biome's hue, by what the pixel's own light
   // lost to the swim; then what the world's own sources scatter in it.
   '  vec3 water = echoesWaterHue( under ) * echoesWaterLight( depthM );',
-  '  vec3 light = world.rgb + ( 1.0 - clamp( world.a, 0.0, 1.0 ) ) * water;',
-  '  light += texture2D( tScatter, vUv ).rgb;',
-  `  gl_FragColor = vec4( light * ${glsl(HIGH_GRAPHICS.EXPOSURE)}, 1.0 );`,
-  '  #include <tonemapping_fragment>',
-  '  #include <colorspace_fragment>',
-  '  gl_FragDepth = depth;',
+  // The world's own light, less what the ground round it hides of the water
+  // above: four reads of the half-size pass average its per-pixel turn.
+  '  float open = 0.25 * (',
+  '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( 0.5, 0.5 ) ).r +',
+  '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, 0.5 ) ).r +',
+  '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( 0.5, - 0.5 ) ).r +',
+  '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, - 0.5 ) ).r );',
+  `  vec3 light = world.rgb * mix( 1.0, open, ${glsl(HIGH_GRAPHICS.AO.STRENGTH)} );`,
+  '  light += ( 1.0 - clamp( world.a, 0.0, 1.0 ) ) * water;',
+  '  return light + texture2D( tScatter, vUv ).rgb;',
+  '}',
+  'void main() {',
+  '  float depth;',
+  '  vec3 light = echoesHighLight( depth );',
+  '  #ifdef BLOOM_PREFILTER',
+  '    gl_FragColor = vec4( echoesBloomCut( light ), 1.0 );',
+  '  #else',
+  `    light += texture2D( tBloom, vUv ).rgb * ${glsl(HIGH_GRAPHICS.BLOOM.INTENSITY)};`,
+  // The grade, before the curve: slope, offset and power a channel, then
+  // saturation about the luminance.
+  `    light = pow( max( light * ${vec3(HIGH_GRAPHICS.GRADE.SLOPE)} + ${vec3(HIGH_GRAPHICS.GRADE.OFFSET)}, 0.0 ), ${vec3(HIGH_GRAPHICS.GRADE.POWER)} );`,
+  `    light = mix( vec3( dot( light, vec3( 0.2126, 0.7152, 0.0722 ) ) ), light, ${glsl(HIGH_GRAPHICS.GRADE.SATURATION)} );`,
+  '    light = max( light, 0.0 );',
+  `    gl_FragColor = vec4( light * ${glsl(HIGH_GRAPHICS.EXPOSURE)}, 1.0 );`,
+  '    #include <tonemapping_fragment>',
+  '    #include <colorspace_fragment>',
+  '    gl_FragDepth = depth;',
+  '  #endif',
   '}',
 ].join('\n');
 
@@ -148,8 +184,10 @@ function texel(r: number, g: number, b: number): DataTexture {
 export class HighFrame {
   private current: HighFrameState = 'off';
   private target: WebGLRenderTarget | null = null;
-  /** No source, no scattered light; and open water's hue until a ground names its own. */
+  /** No source, no scattered light; nothing hidden; and open water's hue
+   * until a ground names its own. */
   private readonly dark = texel(0, 0, 0);
+  private readonly open = texel(255, 255, 255);
   private readonly openWater = (() => {
     const token = WATER_HUE[Biome.OpenWater];
     return texel((token >> 16) & 0xff, (token >> 8) & 0xff, token & 0xff);
@@ -158,6 +196,9 @@ export class HighFrame {
     tWorld: { value: null as WebGLRenderTarget['texture'] | null },
     tDepth: { value: null as DepthTexture | null },
     tScatter: { value: this.dark as Texture },
+    tOcclusion: { value: this.open as Texture },
+    tBloom: { value: this.dark as Texture },
+    uOcclusionTexel: { value: new Vector2(1, 1) },
     tWaterHue: { value: this.openWater as Texture },
     uWaterMapM: { value: new Vector2(1, 1) },
     uInvViewProj: { value: new Matrix4() },
@@ -176,6 +217,17 @@ export class HighFrame {
     depthFunc: AlwaysDepth,
     depthWrite: true,
   });
+  /** The same sum, cut by the bloom's threshold and drawn into its first level. */
+  private readonly prefilter = new ShaderMaterial({
+    uniforms: this.uniforms,
+    defines: { BLOOM_PREFILTER: '' },
+    vertexShader: COMPOSITE_VERTEX,
+    fragmentShader: COMPOSITE_FRAGMENT,
+    depthTest: false,
+    depthWrite: false,
+  });
+  /** Ambient occlusion and bloom (highChain.ts). */
+  private readonly chain = new LightChain();
   private readonly quad = new Mesh(new PlaneGeometry(2, 2), this.material);
   private readonly scene = new Scene();
   private readonly camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -202,7 +254,7 @@ export class HighFrame {
     if (this.target === null) return 0;
     const pixels = this.target.width * this.target.height;
     // Half-float RGBA and 24-bit depth, multisampled, and one resolve of each.
-    return pixels * (8 + 4) * (HIGH_GRAPHICS.SAMPLES + 1) + this.volumes.bytes;
+    return pixels * (8 + 4) * (HIGH_GRAPHICS.SAMPLES + 1) + this.volumes.bytes + this.chain.bytes;
   }
 
   /** Sources whose light the scatter pass draws. */
@@ -246,18 +298,24 @@ export class HighFrame {
     this.target?.dispose();
     this.target = null;
     this.volumes.release();
+    this.chain.release();
     this.uniforms.tWorld.value = null;
     this.uniforms.tDepth.value = null;
     this.uniforms.tScatter.value = this.dark;
+    this.uniforms.tOcclusion.value = this.open;
+    this.uniforms.tBloom.value = this.dark;
     this.current = reason === undefined ? 'off' : `unavailable: ${reason}`;
   }
 
   dispose(): void {
     this.disable();
     this.volumes.dispose();
+    this.chain.dispose();
     this.dark.dispose();
+    this.open.dispose();
     this.openWater.dispose();
     this.material.dispose();
+    this.prefilter.dispose();
     this.quad.geometry.dispose();
   }
 
@@ -361,27 +419,53 @@ export class HighFrame {
         this.uniforms.tScatter.value = this.dark;
       }
 
-      // 3. The composite, to the canvas, writing the world's depth.
-      this.marker?.('high-composite');
       this.uniforms.uInvViewProj.value
         .multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
         .invert();
       this.uniforms.uEye.value.copy(camera.position);
       this.uniforms.uFocusDepthM.value = view.focusDepthM;
       this.uniforms.uReachM.value = view.reachM;
+
+      // 3. The chain: what the ground hides of the water above it, then the
+      // frame's light over the bloom's threshold, spread.
+      this.marker?.('high-occlusion');
+      this.uniforms.tOcclusion.value = this.chain.occlude(
+        renderer,
+        camera,
+        target.depthTexture!,
+        target.width,
+        target.height
+      );
+      this.uniforms.uOcclusionTexel.value.set(2 / target.width, 2 / target.height);
+      this.marker?.('high-bloom');
+      this.uniforms.tBloom.value = this.dark;
+      this.quad.material = this.prefilter;
+      renderer.setRenderTarget(this.chain.bloomSource(target.width, target.height));
+      renderer.autoClear = true;
+      renderer.render(this.scene, this.camera);
+      this.uniforms.tBloom.value = this.chain.bloom(renderer);
+      this.quad.material = this.material;
+
+      // 4. The composite, to the canvas, writing the world's depth.
+      this.marker?.('high-composite');
       renderer.setRenderTarget(null);
       renderer.setClearColor(this.clear, clearAlpha);
       renderer.clear(true, true, true);
       renderer.autoClear = false;
       renderer.render(this.scene, this.camera);
 
-      // 4. The tactical layer, over it, as Low draws it.
+      // 5. The tactical layer, over it, as Low draws it.
       this.marker?.('high-tactical');
       camera.layers.mask = mask;
       renderer.render(scene, camera);
-      return scattered
-        ? ['high-world', 'high-scatter', 'high-composite', 'high-tactical']
-        : ['high-world', 'high-composite', 'high-tactical'];
+      return [
+        'high-world',
+        ...(scattered ? ['high-scatter'] : []),
+        'high-occlusion',
+        'high-bloom',
+        'high-composite',
+        'high-tactical',
+      ];
     } finally {
       scene.background = background;
       if (fog !== null) fog.color.copy(this.fogColor);

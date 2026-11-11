@@ -143,6 +143,8 @@
       "passes": [
         "high-world",
         "high-scatter",
+        "high-occlusion",
+        "high-bloom",
         "high-composite",
         "high-tactical",
         "depth-copy",
@@ -166,12 +168,12 @@
       },
       "distance": 1200,
       "waterReachM": 1805,
-      "calls": 46,
-      "triangles": 626594,
+      "calls": 54,
+      "triangles": 626610,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 128563200,
+        "targetBytes": 136145280,
         "groundBytes": 2796203,
         "worldLights": 71,
         "frameGpuBudgetMs": 8
@@ -189,6 +191,8 @@
       "passes": [
         "high-world",
         "high-scatter",
+        "high-occlusion",
+        "high-bloom",
         "high-composite",
         "high-tactical",
         "depth-copy",
@@ -212,12 +216,12 @@
       },
       "distance": 420,
       "waterReachM": 630,
-      "calls": 46,
-      "triangles": 626594,
+      "calls": 54,
+      "triangles": 626610,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 128563200,
+        "targetBytes": 136145280,
         "groundBytes": 2796203,
         "worldLights": 71,
         "frameGpuBudgetMs": 8
@@ -235,6 +239,8 @@
       "passes": [
         "high-world",
         "high-scatter",
+        "high-occlusion",
+        "high-bloom",
         "high-composite",
         "high-tactical",
         "depth-copy",
@@ -258,12 +264,12 @@
       },
       "distance": 10000,
       "waterReachM": 32000,
-      "calls": 47,
-      "triangles": 627880,
+      "calls": 55,
+      "triangles": 627896,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 128563200,
+        "targetBytes": 136145280,
         "groundBytes": 2796203,
         "worldLights": 71,
         "frameGpuBudgetMs": 8
