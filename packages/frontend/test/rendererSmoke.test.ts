@@ -99,6 +99,7 @@ import {
 import {
   collarRadius,
   EchoRenderer,
+  GLYPH_MIN_PX,
   SELECTION_GAP_M,
   YIELD,
   yieldToCells,
@@ -135,7 +136,7 @@ import { buildTemplate, instantiate } from '../src/game/rosterModels.ts';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { graphicsQualityStatus } from '../src/game/graphicsQuality.ts';
-import { PLATE_HOLD_GLSL } from '../src/game/markPlates.ts';
+import { PLATE_HOLD_GLSL, PLATE_STRIDE } from '../src/game/markPlates.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FACTION_PALETTE, FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
@@ -2410,6 +2411,39 @@ describe('renderer smoke test: the conn view', () => {
       assert.ok(plates.countOf('nodes') > 0, 'a band along every traced rim');
       assert.ok(plates.countOf('terrain') > 0, 'and along the map’s rim');
       assert.equal(quality(high).plates, plates.count, 'all of them drawn');
+      // A contact at a depth stands on a disc that reaches the top of its
+      // glyph, over its ring and its Tier-4 bar: all three are outlines the
+      // ladder weighs for rung 7 (ladder.ts `AGENT_OUTLINES`). The canned
+      // Tier-3 and Tier-4 contacts with a navy are both asked.
+      const packed = plates.pack();
+      const discAt = (x: number, y: number): number | null => {
+        for (let i = 0; i < packed.length; i += PLATE_STRIDE) {
+          const point =
+            packed[i] === packed[i + 4] &&
+            packed[i + 1] === packed[i + 5] &&
+            packed[i + 2] === packed[i + 6];
+          if (point && packed[i] === x && packed[i + 2] === y) return packed[i + 3]!;
+        }
+        return null;
+      };
+      const tiers = new Set<ResolutionTier>();
+      for (const contact of fleet.contacts) {
+        if (contact.depth === undefined || contact.faction === undefined) continue;
+        if (contact.tier < ResolutionTier.Classification) continue;
+        const at = world.conn.projectPoint(contact.x, contact.y, contact.depth);
+        if (!at.visible) continue;
+        const r = TIER_STYLE[contact.tier as ResolutionTier.Classification].radius;
+        const glyph = Math.max(r * 0.55, GLYPH_MIN_PX / at.pxPerM);
+        const radius = discAt(contact.x, contact.y);
+        assert.ok(radius !== null, `contact ${contact.id} carries a disc`);
+        assert.ok(
+          radius > (r * 2.4 + glyph * 2.3) * at.pxPerM,
+          `contact ${contact.id}'s disc reaches past the top of its glyph`
+        );
+        tiers.add(contact.tier);
+      }
+      assert.ok(tiers.has(ResolutionTier.Classification), 'a Tier-3 contact was in the frame');
+      assert.ok(tiers.has(ResolutionTier.Track), 'and a Tier-4 one');
       // The water is the composite's at High: the backdrop is not drawn.
       assert.ok(!worldPass.includes(backdrop) && !tactical.includes(backdrop));
       // "Unchanged at both graphics qualities", by construction: everything

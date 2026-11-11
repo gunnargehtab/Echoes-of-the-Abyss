@@ -597,7 +597,7 @@ const UNDER_FIRE_PULSE_MS = 2000;
  * a fight from: below this the Directorate's chevrons merge into the
  * Bathyarch's plate and the shape stops carrying what §11 asks it to carry.
  */
-const GLYPH_MIN_PX = 7;
+export const GLYPH_MIN_PX = 7;
 
 /**
  * Vertices per projected circle. Rings are facts about the water, so they lie
@@ -8096,8 +8096,10 @@ export class EchoRenderer {
       const arrival = markOpacity(now - entry.firstSeenMs, worldFade.start, worldFade.full);
       const alpha = style.alpha * freshness * arrival;
 
-      // How far a mark at a depth reaches from its anchor, in metres: its
-      // ring at 1.6 radii, or the hull or structure it has earned.
+      // How far a mark at a depth reaches from its anchor, in metres. To the
+      // sides and below, `figure`: its ring at 1.6 radii, or the hull or
+      // structure it has earned. Upward, `up`: the Tier-4 bar at 2.4 radii
+      // and, where the contact has a navy, the glyph over it (`drawGlyph`).
       const r = style.radius;
       let figure = r * 1.6;
       if (contact.kind !== undefined && contact.faction !== undefined) {
@@ -8106,10 +8108,17 @@ export class EchoRenderer {
       } else if (contact.structure !== undefined) {
         figure = Math.max(figure, structureStatsFor(contact.structure).radiusM);
       }
+      const glyph = Math.max(r * 0.55, GLYPH_MIN_PX * inverseScale);
+      const up =
+        contact.faction !== undefined
+          ? Math.max(figure, r * 2.4 + glyph * 2.3)
+          : Math.max(figure, r * 2.4);
 
       // The mark's plate, under High (markPlates.ts): one disc under a mark
-      // at a depth, as much of a plate as the mark has arrived and not yet
-      // faded, so the plate shows nothing before the mark does
+      // at a depth, out to the top of its glyph, since the glyph and the bar
+      // are outlines the ladder weighs with the ring (ladder.ts
+      // `AGENT_OUTLINES`). As much of a plate as the mark has arrived and not
+      // yet faded, so the plate shows nothing before the mark does
       // (docs/audio-direction.md §2). A column is a haze the ladder does not
       // weigh, and carries none.
       if (column === null) {
@@ -8117,7 +8126,7 @@ export class EchoRenderer {
           contact.x,
           anchorWorldY,
           contact.y,
-          figure * anchor.pxPerM + HIGH_GRAPHICS.PLATE.AGENT_PX * this.uiScale,
+          up * anchor.pxPerM + HIGH_GRAPHICS.PLATE.AGENT_PX * this.uiScale,
           Math.max(0, freshness) * arrival
         );
       }
@@ -8127,11 +8136,6 @@ export class EchoRenderer {
       // stepping aside earlier would show the contact before its sound.
       if (column === null && arrival >= 1) {
         if (modelled) this.arrivedTracks.add(id);
-        const glyph = Math.max(r * 0.55, GLYPH_MIN_PX * inverseScale);
-        const up =
-          contact.faction !== undefined
-            ? Math.max(figure, r * 2.4 + glyph * 2.3)
-            : Math.max(figure, r * 2.4);
         const k = anchor.pxPerM;
         this.contactFootprints.push(
           anchor.x - figure * k,
@@ -10667,7 +10671,8 @@ export class EchoRenderer {
     const foot = this.project(x, y, planeM);
     if (foot === null || !foot.visible) return;
     g.circle(foot.x, foot.y, FOOT_RING_PX).stroke({ width: 1, color, alpha });
-    this.platePoint(x, y, foot, FOOT_RING_PX);
+    // As much of a plate as there is of the ring: a contact's fades with it.
+    this.platePoint(x, y, foot, FOOT_RING_PX, alpha / FOOT_RING_ALPHA);
   }
 
   /**

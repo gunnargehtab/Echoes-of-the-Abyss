@@ -197,10 +197,11 @@ describe('a mark’s plate', () => {
 
   it('sizes a plate off the mark it stands under, in the UI’s pixels', () => {
     // TUNABLE until a High frame is accepted; what must hold is their order:
-    // a plate stands whole past the widest stroke's edge (three pixels wide,
-    // EchoRenderer `drawRings`), and ends in a soft edge, never a hard one.
+    // a plate stands whole past the widest stroke's edge (four pixels wide,
+    // an active hazard's rim: EchoRenderer `HAZARD_STYLE`), and ends in a
+    // soft edge, never a hard one.
     const { LINE_PX, INK_PX, AGENT_PX, FEATHER_PX } = HIGH_GRAPHICS.PLATE;
-    assert.ok(LINE_PX > 1.5, 'past half the widest stroke');
+    assert.ok(LINE_PX > 2, 'past half the widest stroke');
     assert.ok(INK_PX > 0 && INK_PX <= LINE_PX, 'the ink is thinner, and everywhere');
     assert.ok(AGENT_PX > 0);
     assert.ok(FEATHER_PX >= 1);

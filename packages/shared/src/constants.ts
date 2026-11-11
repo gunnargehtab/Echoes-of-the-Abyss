@@ -184,7 +184,8 @@ export const HIGH_GRAPHICS = {
    * The level it is held to is not here: it is derived from the ground the
    * ladder weighs (markPlates.ts `PLATE_LEVEL`). `LINE_PX` is how far the
    * plate stands whole either side of a traced line's centre: the widest
-   * stroke is three pixels, and a line reads against what stands beside it.
+   * stroke is four pixels, an active hazard's rim, and a line reads against
+   * what stands beside it.
    * `INK_PX` is the same for a stroke of survey ink, which is thinner and
    * everywhere. `AGENT_PX` is how far past an agent's outermost ring its disc
    * stands whole, and `FEATHER_PX` the soft edge every plate ends in.

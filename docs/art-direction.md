@@ -140,7 +140,7 @@ High draws the one scene as two layers
    and back as bloom.
 4. **The plate pass** draws where the marks stand into a mask of the frame's size: a
    band along every line traced on the ground and along every stroke of survey ink, and a
-   disc under every agent's mark.
+   disc under every agent's mark at a depth.
 5. **The composite** is one full-screen draw to the canvas. It sums the world's light,
    occluded, the water's own light by how much of each pixel the water took, the sources'
    volumes and the bloom. It grades the sum and runs the tone curve, holds the result
@@ -229,7 +229,7 @@ What carries one:
   ground's hatch, the tunnel routes and the map rim carry theirs too.
 - **Every mark billboarded at an agent** (rungs 6 and 7): one disc under an own hull's or
   structure's rings and collar, under an own shot's mark, and under a contact's mark once
-  it has a depth.
+  it has a depth, out to the top of its glyph and its bar.
 - **Every mark at a point**: an order's waypoint and its acknowledgement, a rally point,
   a move's preview and the study's foot rings, each on a disc, and the plumb line that
   drops from one to the ground.
@@ -245,6 +245,9 @@ What carries none, and why:
 - **A flash.** The lock brackets and a hit's burst fade to nothing by design and are
   weighed at their peak ([map-visuals.md](map-visuals.md) §5). They are drawn about a
   contact, whose mark carries the disc.
+- **An edge mark.** The study's chevron for a contact off the frame stands at the frame's
+  own edge, in screen space. It is not a mark on the map, and the ladder does not weigh
+  it.
 
 So limit 6 holds by construction rather than by a bright ground being forbidden. The
 ladder's comparisons are linear in the ground's luminance, and
