@@ -593,11 +593,11 @@ families, and nothing else on the ground ever emits:
 
 **These rules are the Low graphics quality's, and the chart's at both.** Since 11 November
 2026 the world layer may be lit at High
-([art-direction.md](art-direction.md#two-layers-two-laws)): rules 1 and 2 are released
+([art-direction.md](art-direction.md#two-layers-two-laws)): rules 1 to 3 are released
 there, save rule 1's sentence that keeps terrain light out of the lamp halo's source.
-Rule 3 still binds the strength of world-owned light, and rules 4 and 5 bind both
-qualities whole. A source High adds, such as the Lid's glow or an own hull's searchlight,
-takes its token in this section before it is drawn.
+Rules 4 and 5 bind both qualities. A source High adds, such as the Lid's glow or an own
+hull's searchlight, and each biome's water hue take their tokens in this section before
+they are drawn.
 
 Every family obeys the same five rules, and they are gates, not suggestions:
 

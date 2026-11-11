@@ -172,10 +172,10 @@ light"): points and seams only, the ember as the ceiling, static or on the 5 Hz 
 **The ladder is two layers.** Rungs 1 to 3 and world light are the world layer, and rungs 4
 to 7 the tactical layer, save the surfaces of rung 7's models, which are world layer
 ([art-direction.md](art-direction.md#two-layers-two-laws), decided on 11 November 2026). At
-the High graphics quality rung 3's 5–10% band and world light's first two rules are
-released. Rung 1's one blue is not, and neither is the order of the rungs: each tactical
-floor still reads over the brightest lit ground under it. At Low, and on the chart at both
-qualities, the table stands as written.
+the High graphics quality rung 3's 5–10% band, rung 1's one blue and world light's first
+three rules are released. The order of the rungs is not: each tactical floor still reads
+over the brightest lit ground under it. At Low, and on the chart at both qualities, the
+table stands as written.
 
 **A mark on the ground ends at the rim.** The rings, fills and lines rungs 5 and 6 lay on the
 seabed have no seabed past the rim: a mission drawn alone ends in the skirt, the deep water the
@@ -298,10 +298,11 @@ Two consequences worth naming:
 ## 6. Colour, light and depth — one grammar
 
 V3 is mostly already law. This section collects it, so that the next revision cites one place.
-At the High graphics quality one line below is narrowed
-([art-direction.md](art-direction.md#two-layers-two-laws)): light is loudness on the tactical
-layer only, and the ground may be lit by light that is not. The other lines stand at both
-qualities.
+At the High graphics quality three lines below are narrowed
+([art-direction.md](art-direction.md#two-layers-two-laws)). Light is loudness on the tactical
+layer only, and the ground may be lit by light that is not. The water over a biome may wear
+that biome's hue. World light may move off the 5 Hz grid. Depth, ink and the ground's ears
+stand at both qualities.
 
 - **Depth is luminance**, on the ground and in the water, and never hue. Depth darkens a
   fill toward 0.55 of itself at the foot of a map's range, and never below the Abyssal

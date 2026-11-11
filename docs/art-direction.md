@@ -17,9 +17,8 @@ The art direction should communicate three things instantly:
 [#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694). Nothing in this
 section is built. The shipped renderer is the Low graphics quality
 ([graphics-standards.md](graphics-standards.md) gate 6), and every rule released below
-still binds it. Four parts are the author's, written to carry the decision out, and await
-the owner's review on the pull request that adds this section: limits 5 and 7, the steady
-strength of world light, and the water keeping its one blue.*
+still binds it. Limits 5 and 7 are the author's, written to carry the decision out, and
+await the owner's review on the pull request that adds this section.*
 
 The owner turned the look down three times in two weeks. Three proposed designs "seem
 lifeless" (26 October, #1637). The free-water slice was "a map editor, not an ocean" on
@@ -48,15 +47,16 @@ The picture is two layers, and each now has its own law.
   flora and public life, vents, civic lamps, and the searchlights, work lights and
   floodlights of the player's own hulls and structures. Each may pool on the ground and
   scatter in the water as a visible volume, in its own token.
-- **Leave the water its one blue.** The ramp keeps its hue, because a hued water could be
-  read as a propagation factor ([Reading the Water](#reading-the-water)). Colour enters
-  the water as light scattered from a source, and depth still darkens it.
+- **Carry hue in the water**, and only the hue of the biome under it. Hue is biome and
+  biome is propagation factor ([map-visuals.md](map-visuals.md) §6), so water that wears
+  its biome's hue tells the player the same truth the ground does. Depth still darkens
+  it.
 - **Spend full-screen passes**: bloom, grading, ambient occlusion and whatever else gate
   6's High frame time holds.
-- **Move smoothly.** Geometry, sway, particulate, public life and the light an own hull
-  carries move at the frame's rate. The strength of world-owned light still holds steady
-  or steps on the 5 Hz grid: a light on the ground that pulses smoothly reads as an agent
-  ([style-neon-noir.md](style-neon-noir.md) "World light", rule 3).
+- **Move smoothly**, light included. The 5 Hz grid is the instruments' cadence, not the
+  world's. A smooth light on the ground was refused because it read as an agent
+  ([style-neon-noir.md](style-neon-noir.md) "World light", rule 3). At High an agent is
+  told by its faction hue, its mark and its collar, never by how its light moves.
 
 ### What binds both layers, at both qualities
 
@@ -66,9 +66,9 @@ The picture is two layers, and each now has its own law.
 2. **Nothing unresolved is drawn.** Light, shadow, wake and silt come from the world and
    from the player's own force. A contact casts none of them, and an enemy's lamp lights
    nothing: light from a contact would draw more than its tier resolves (gate 5).
-3. **Faction and interface hues are reserved.** World light keeps its own tokens, away
-   from the neons ([style-neon-noir.md](style-neon-noir.md) "World light", rule 5). A new
-   source takes a token there before it is drawn (gate 4).
+3. **Faction and interface hues are reserved.** World light and the water keep their own
+   tokens, away from the neons ([style-neon-noir.md](style-neon-noir.md) "World light",
+   rule 5). A new source or a water hue takes a token there before it is drawn (gate 4).
 4. **World-owned light is not an instrument.** It is placed by the map, identical for
    every client, and never answers activity, occupancy or proximity (the same section's
    rule 4).
@@ -89,10 +89,10 @@ The picture is two layers, and each now has its own law.
 | The conn canvas keeps at least 95% of its pixels under 10% encoded luma | [Lamp halo — SPEC](#lamp-halo--spec), "Darkness" | Released. The halo still costs no more than 1.5 points against its own off frame |
 | Light is loudness: the brighter something burns, the louder it is | [style-neon-noir.md](style-neon-noir.md) principle 3; [map-visuals.md](map-visuals.md) §6 | Narrowed to the tactical layer: an agent's lamps, halo and collar. World light is not loudness |
 | World light is points and seams, never area glow, with the vent ember as its ceiling | [style-neon-noir.md](style-neon-noir.md) "World light", rules 1 and 2 | Released, save rule 1's sentence that keeps terrain light out of the lamp halo's source. Limits 3 and 4 above still hold |
-| World light is static or on the 5 Hz grid | The same section, rule 3 | Kept for the strength of world-owned light. What carries it may move smoothly |
+| World light is static or on the 5 Hz grid | The same section, rule 3 | Released. Limits 3 and 4 above are what keep it from reading as an agent |
 | The canvas pass adds no bloom, shadows, camera effects or geometry, and the lamp halo is the one full-screen pass | [Shared model lighting](#shared-model-lighting--abyss-render-stack) below; gate 3 | Released. Gate 6's frame time is the bound |
-| The water is one blue, luminance only | [Reading the Water](#reading-the-water); [map-visuals.md](map-visuals.md) §5, rung 1 | Kept. Light scattered in it carries its source's token |
-| No light shafts, hue in the water, new full-screen pass or glow on terrain | [free-water-slice.md](free-water-slice.md) §9, "Water medium" | Released: shafts from the world's own lights, a full-screen pass and glow on terrain. Kept: the water's hue, no sun, no caustics, and no effect that rotates with the projection (gate 8) |
+| The water is one blue, luminance only | [Reading the Water](#reading-the-water); [map-visuals.md](map-visuals.md) §5, rung 1, and §6 | Hue released, as the hue of the biome under it. Depth still darkens |
+| No light shafts, hue in the water, new full-screen pass or glow on terrain | [free-water-slice.md](free-water-slice.md) §9, "Water medium" | Released: shafts from the world's own lights, hue in the water, a full-screen pass and glow on terrain. Kept: no sun, no caustics, and no effect that rotates with the projection (gate 8) |
 | "No new neon, sunlight, cinematic blur or full-detail enemy fleet" | [visual-reboot.md](visual-reboot.md) §1 | A lit world is licensed. New neon, sunlight, blur over play and the enemy fleet stay refused |
 | 150 draw calls and 400,000 triangles a frame | Gate 6 | Replaced by a frame time |
 
@@ -1270,9 +1270,11 @@ the far ground is as deep as the water drawn behind it. Far ground at another de
 darker or brighter than that water, and the edge left there is the depth, kept on purpose
 ([free-camera.md](free-camera.md) Phase 5).
 
-At the High graphics quality the ramp stands, hue and all. What High adds is light
-scattered in the water, in its source's own token
-([Two layers, two laws](#two-layers-two-laws)).
+At the High graphics quality the ramp's brightness stands and its one blue is released:
+the water may wear the hue of the biome under it, in a token of its own, and light may
+scatter in it ([Two layers, two laws](#two-layers-two-laws)). The reason given below for
+one blue is answered rather than dropped. A hue that is the biome's reads as that biome's
+propagation factor, which is true.
 
 It exists because freeing the camera exposed that it did not ([free-camera.md](free-camera.md)
 §9). A pinned 55° filled the frame with seabed; a camera at 12° spends most of the frame
