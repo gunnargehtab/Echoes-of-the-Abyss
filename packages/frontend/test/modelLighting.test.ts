@@ -41,6 +41,8 @@ describe('shared model lighting: art-direction and gates 3/6/8', () => {
     assert.equal(texture.colorSpace, LinearSRGBColorSpace);
     assert.equal(texture.mapping, EquirectangularReflectionMapping);
     const pixels = texture.image.data;
+    // r187's types let a DataTexture hold no data; this one is built with some.
+    assert.ok(pixels);
     const top = new Color(MODEL_LIGHTING.AMBIENT_COLOR);
     const low = waterColorAt(DEPTH.MAX_M);
     for (let y = 0; y < 64; y++) {

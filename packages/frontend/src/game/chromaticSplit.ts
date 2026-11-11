@@ -43,7 +43,7 @@ export const CHROMATIC_SPLIT = {
 } as const;
 
 /** Bytes a drawing-buffer pixel of the copy holds: RGBA8, the canvas's format
- * in the browser, since three r169 always asks the context for alpha. */
+ * in the browser, since three r187 always asks the context for alpha. */
 export const SPLIT_BYTES_PER_PX = 4;
 
 /**
@@ -205,7 +205,7 @@ export class ChromaticSplit {
   private allocate(renderer: WebGLRenderer, width: number, height: number): void {
     this.copy?.dispose();
     const gl = renderer.getContext() as WebGL2RenderingContext;
-    // A resolving blit wants the canvas's own format. three r169 asks every
+    // A resolving blit wants the canvas's own format. three r187 asks every
     // context for alpha (WebGLRenderer.js, `contextAttributes`), whatever its
     // `alpha` option says, so the browser's is RGBA8; a context handed in
     // without alpha would be RGB8.

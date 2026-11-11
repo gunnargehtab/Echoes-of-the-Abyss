@@ -74,7 +74,7 @@ export const TONED_SURFACE = 'toneMapping( max( gl_FragColor.rgb - totalEmissive
  * what reaches this is a flare past the rest, or lit surface added to emission,
  * on a lamp or on a glowing prop.
  * A no-op wherever three defines no TONE_MAPPING: a renderer without tone
- * mapping, or a draw into a render target, which r169 never tone-maps per
+ * mapping, or a draw into a render target, which r187 never tone-maps per
  * material (WebGLPrograms). So behind a RenderPass that feeds later passes the
  * glow is summed unmapped, and OutputPass tone-maps it, and every
  * `toneMapped: false` layer, with everything else.

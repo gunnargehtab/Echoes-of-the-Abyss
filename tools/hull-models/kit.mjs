@@ -63,6 +63,12 @@
  * `FileReader` is shimmed because three r169's GLTFExporter reads its own binary
  * chunk back through one, and Node has `Blob` but not `FileReader`.
  *
+ * The scripts run three r169, the root package.json's exact pin, while the
+ * client runs r187 (#1800). r187's `ExtrudeGeometry` merges near points, and
+ * under it check.mjs reads plates in committed hulls with their normals
+ * turned, up to 133° on broadside's `ram_plate`. Moving the scripts is a
+ * re-export of the models, judged as shape work, not part of an upgrade.
+ *
  * Nothing shims a canvas, so no image leaves GLTFExporter itself: it
  * encodes a texture through `OffscreenCanvas` or `document` (`getCanvas`),
  * Node has neither, and a material carrying an `aoMap` or any other map

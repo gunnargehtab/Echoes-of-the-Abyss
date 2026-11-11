@@ -6,7 +6,7 @@
  *
  * render.mjs bundles this with esbuild for the page and serves it as
  * /frame.js. three stays external, so the page's importmap hands this bundle
- * and the page one three, the r169 the client ships; two would fail every
+ * and the page one three, the r187 the client ships; two would fail every
  * `instanceof Mesh` the halo's gather asks. @echoes/shared resolves to its
  * build output, so `npm run build:shared` runs before a render, as before any
  * workspace script.
