@@ -14,6 +14,11 @@ upgrades its follow-ups start from, and rules out the Dream Loop study as the re
 
 ## Author the shared brief
 
+For look work the owner's target frame is locked before the brief, and the look's numbers
+are written after the frame is accepted ([dev-loop](../dev-loop/SKILL.md), "Look work").
+The brief then explains the frame: what transfers from it, what stays, and what
+`docs/art-direction.md`'s "Two layers, two laws" forbids.
+
 Before code, write the following into the applicable design document:
 
 - The player's emotion, the sound/depth argument, and the exact mission or screen.
@@ -52,12 +57,13 @@ The coordinator runs **one** [dev-loop](../dev-loop/SKILL.md), with its round ca
 and fresh independent critic. Specialists do not start nested loops or approve their own
 outputs. Any GLB change also goes through the separate hull-reviewer.
 
-Stop on the brief's written criteria, not on a beauty score. Report measured GPU work
-and the hardware that produced timings. The probe's conn and overlay milliseconds are CPU
-time and its frame time an interval. Its GPU milliseconds are a timer query over every pass
-of the conn view's frame, read on a GPU, unpaced and queued, and refused on a software
-rasteriser ([run-game](../run-game/SKILL.md) says how), so shading cost is a reading, not
-a guess.
+Stop on the brief's written criteria, not on a beauty score. For look work a round stops
+with its frames beside the target frame, and only the owner accepts the look. Report
+measured GPU work and the hardware that produced timings. The probe's conn and overlay
+milliseconds are CPU time and its frame time an interval. Its GPU milliseconds are a timer
+query over every pass of the conn view's frame, read on a GPU, unpaced and queued, and
+refused on a software rasteriser ([run-game](../run-game/SKILL.md) says how), so shading
+cost is a reading, not a guess.
 Render-stack work is accepted on desktop (gate 6).
 
 ## Related

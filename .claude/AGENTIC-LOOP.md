@@ -102,6 +102,13 @@ The two guardrails #709 does not have, and this repository needs, are in
 never settle a docs/code disagreement silently, never send the client
 anything it has not resolved.
 
+Look work has one more, set by the owner in session on 11 November 2026 after the
+free-water slice was refused twice with every evidence row passing (#1694): **the target
+is a frame the owner named, and only the owner accepts against it.** `dev-loop`'s "Look work" holds
+the rules, `loop-critic` grades the picture before the diff, and
+`docs/graphics-standards.md` gate 6 bounds the High graphics quality by frame time. No
+gate enforces any of it: a look is judged by looking.
+
 ### These files are gated too, and a number in them carries its source
 
 `npm run docs:claude` runs markdownlint and a relative-link check over the
