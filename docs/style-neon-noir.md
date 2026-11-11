@@ -595,9 +595,10 @@ families, and nothing else on the ground ever emits:
 2026 the world layer may be lit at High
 ([art-direction.md](art-direction.md#two-layers-two-laws)): rules 1 to 3 are released
 there, save rule 1's sentence that keeps terrain light out of the lamp halo's source.
-That section's "Move smoothly" answers rule 3's reason. Rules 4 and 5 bind both qualities. A source High adds, such as the Lid's glow or an own
-hull's searchlight, and each biome's water hue take their tokens in this section before
-they are drawn.
+That section's "Move smoothly" answers rule 3's reason. Rules 4 and 5 bind both
+qualities. A world-owned source High adds, such as the Lid's glow, and each biome's water
+hue take their tokens in this section before they are drawn. An own hull's searchlight is
+agent light and keeps its navy's glow.
 
 Every family obeys the same five rules, and they are gates, not suggestions:
 
@@ -680,7 +681,9 @@ the ladder in [map-visuals.md](map-visuals.md) §5. So public life's glow belong
 to neither an agent nor an instrument, and rung 5 bounds it instead: soft,
 additive dots, each at a furniture gain `ladder.ts` holds. An animal is an agent
 only as a contact, on rung 7 (§8 there). Either way its colour comes from the
-palette tables above.
+palette tables above. Rung 5 bounds public life's stipple at both graphics qualities. At
+High its modelled bodies and their light are world layer
+([art-direction.md](art-direction.md#two-layers-two-laws)).
 
 The planned [free-water slice](free-water-slice.md) §5 applies this same public-life
 point channel to its decorative deep fish, not to a gameplay animal: non-emissive

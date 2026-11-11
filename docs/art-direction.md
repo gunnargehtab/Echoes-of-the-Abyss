@@ -44,9 +44,11 @@ The picture is two layers, and each now has its own law.
   scene's lights and shadow one another. The ground stops being a baked chart under lit
   models.
 - **Carry light sources of its own.** The Lid's scattered glow from above, bioluminescent
-  flora and the bodies of public life, vents, civic lamps, and the searchlights, work
-  lights and floodlights of the player's own hulls and structures. Each may pool on the
-  ground and scatter in the water as a visible volume, in its own token.
+  flora and the bodies of public life, vents and civic lamps are world-owned, each in its
+  own token (limits 3 and 4 below). The searchlights, work lights and floodlights of the
+  player's own hulls and structures are agent light: they keep their navy's glow and
+  answer gate 3 (limit 5). Either kind may pool on the ground and scatter in the water as
+  a visible volume.
 - **Carry hue in the water**, and only the hue of the biome under it. Hue is biome and
   biome is propagation factor ([map-visuals.md](map-visuals.md) §6), so water that wears
   its biome's hue tells the player the same truth the ground does. Depth still darkens
@@ -58,7 +60,7 @@ The picture is two layers, and each now has its own law.
   ([style-neon-noir.md](style-neon-noir.md) "World light", rule 3). At High an agent is
   told by its mark: an own hull by its faction hue and collar as well, and a creature
   contact by the form [map-visuals.md](map-visuals.md) §8 holds against public life. No
-  world light takes an agent's token or answers activity, and no contact casts light
+  world-owned light takes an agent's token or answers activity, and no contact casts light
   (limits 2 to 4 below), so light moving on the ground is never an enemy's.
 
 ### What binds both layers, at both qualities
@@ -95,7 +97,7 @@ The picture is two layers, and each now has its own law.
 | World light is static or on the 5 Hz grid | The same section, rule 3 | Released. Limits 2 to 4 above are what keep it from reading as an enemy |
 | The canvas pass adds no bloom, shadows, camera effects or geometry, and the lamp halo is the one full-screen pass | [Shared model lighting](#shared-model-lighting--abyss-render-stack) below; gate 3 | Released. Gate 6's frame time is the bound |
 | The water is one blue, luminance only | [Reading the Water](#reading-the-water); [map-visuals.md](map-visuals.md) §5, rung 1, and §6 | Hue released, as the hue of the biome under it. Depth still darkens |
-| No light shafts, hue in the water, new full-screen pass or glow on terrain | [free-water-slice.md](free-water-slice.md) §9, "Water medium" | Released: shafts from the world's own lights, the hue of the biome under it in the water, a full-screen pass and glow on terrain. Kept: no sun, no caustics, and no effect that rotates with the projection (gate 8) |
+| No light shafts, hue in the water, new full-screen pass or glow on terrain | [free-water-slice.md](free-water-slice.md) §9, "Water medium" | Released: shafts from the world's own lights, the water wearing its biome's hue, a full-screen pass and glow on terrain. Kept: no sun, no caustics, and no effect that rotates with the projection (gate 8) |
 | "No new neon, sunlight, cinematic blur or full-detail enemy fleet" | [visual-reboot.md](visual-reboot.md) §1 | A lit world is licensed. New neon, sunlight, blur over play and the enemy fleet stay refused |
 | 150 draw calls and 400,000 triangles a frame | Gate 6 | Replaced by a frame time |
 
