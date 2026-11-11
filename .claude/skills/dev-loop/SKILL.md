@@ -61,9 +61,10 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
 - **Look at your own frames.** A session that cannot open an image does no look work. It
   says so and stops. On #1637 one captured a baseline it could not view.
 - **Evidence is three frames and a clip.** Home, close and survey beside the target at
-  the same cameras, with the HUD present, and one clip of the camera moving. Take them on
-  a GPU where one is at hand, and say so where the frame is a software rasteriser's.
-  Colour-vision palettes, reduced motion and the GPU station table run once, at promotion.
+  the same cameras, with the HUD present, and one clip of the camera moving. Frames
+  handed for acceptance are taken on a real GPU. A software rasteriser's frames may guide
+  a round; they are labelled so and never offered for acceptance. Colour-vision palettes,
+  reduced motion and the GPU station table run once, at promotion.
 - **Low does not move.** Each increment shows the Low quality's frame unchanged at the
   same cameras, as its non-target control.
 - **A refusal names one cause.** When the owner refuses a frame, write the one cause that

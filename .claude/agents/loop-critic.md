@@ -59,11 +59,12 @@ reasonable". Quote the doc line and the code line side by side when they disagre
 Something sensible the doc did not ask for is a finding.
 
 **For look work the target is a frame** (`dev-loop`, "Look work"). Open the target frame
-and the round's frames before reading the diff, and make your first finding the largest
-visible difference between them, in plain words a person looking at both would use. A
+and the round's frames before reading the diff, and name the largest visible difference
+between them first, under TARGET, in plain words a person looking at both would use. It
+is a finding only when it contradicts what the round claimed to change, and then it is
+blocking: no frame matches its target, and the distance left is the owner's to judge. A
 round with no target frame, or frames you cannot open, is `evidence-missing`. Check Low's
-frame is unchanged. You never accept a look: **pass** says the round did what it claimed,
-and the owner still judges the frame.
+frame is unchanged. You never accept a look: **pass** says the round did what it claimed.
 
 **3. What did it fail to do?** The clause with no code, the second call site, a
 `CLIENT_MSG` entry with no `CLIENT_SHAPE`, a constant moved without its doc, a

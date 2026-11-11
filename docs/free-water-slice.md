@@ -608,10 +608,11 @@ nothing for balance.
 
 **Overruled in part on 11 November 2026**, by the owner in session
 ([art-direction.md](art-direction.md#two-layers-two-laws)). Decision 1 stands: no sunlight
-below the Lid, so no sunlit shafts and no caustics. At the High graphics quality decision
-3's refusals of hue in the water and of a new full-screen pass, the rest of "Water
-medium"'s prohibited list, and its retained 5–10% ground are released. This section stays
-the record of the study as built, which is the Low quality's.
+below the Lid, so no sunlit shafts and no caustics. At the High graphics quality four
+things are released: light shafts from the world's own lights, a new full-screen pass,
+glow on terrain, and the retained 5–10% ground. Hue in the water and effects that rotate
+with the projection stay refused. This section stays the record of the study as built,
+which is the Low quality's.
 
 | Decision | Taken | Rejected | Child |
 | --- | --- | --- | --- |

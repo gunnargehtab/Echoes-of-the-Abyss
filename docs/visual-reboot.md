@@ -27,8 +27,8 @@ escorts and freight under a silence order. Close views describe construction and
 home and survey views describe the fleet, the route and the depth. No new neon,
 sunlight, cinematic blur or full-detail enemy fleet is licensed by this decision.
 Since 11 November 2026 a lit world is licensed at the High graphics quality
-([art-direction.md](art-direction.md#two-layers-two-laws)); sunlight, blur over play and
-the enemy fleet stay refused, and this slice at Low is unchanged.
+([art-direction.md](art-direction.md#two-layers-two-laws)); new neon, sunlight, blur over
+play and the enemy fleet stay refused, and this slice at Low is unchanged.
 
 ## 2. Game-design contract
 

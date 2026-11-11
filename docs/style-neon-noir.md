@@ -25,6 +25,12 @@ a ping — is how you are found. So the style rule is the game rule:
    damage, rain-on-glass reflection on every panel. The HUD is a pressure hull
    with instruments, not a website.
 
+Since 11 November 2026 principles 1 and 3 are scoped by layer
+([art-direction.md](art-direction.md#two-layers-two-laws)). Principle 1's 85–90 % and 95 %
+are the Low graphics quality's, and the chart's at both. Principle 3 is the tactical
+layer's at both: loudness is read from an agent's lamps, halo and collar, in its
+faction's hue. At High the world's own light is not loudness and wears no faction hue.
+
 The reference plates: the four Pressure Cartography survey plates
 (I–IV) establish the dark-paper / neon-linework language, and the two
 presentation plates (V–VI) establish the saturated neon register for key art
@@ -587,9 +593,11 @@ families, and nothing else on the ground ever emits:
 
 **These rules are the Low graphics quality's, and the chart's at both.** Since 11 November
 2026 the world layer may be lit at High
-([art-direction.md](art-direction.md#two-layers-two-laws)): rules 1 to 3 are released
-there, and rules 4 and 5 bind both qualities. A source High adds, such as the Lid's glow
-or an own hull's searchlight, takes its token in this section before it is drawn.
+([art-direction.md](art-direction.md#two-layers-two-laws)): rules 1 and 2 are released
+there, save rule 1's sentence that keeps terrain light out of the lamp halo's source.
+Rule 3 still binds the strength of world-owned light, and rules 4 and 5 bind both
+qualities whole. A source High adds, such as the Lid's glow or an own hull's searchlight,
+takes its token in this section before it is drawn.
 
 Every family obeys the same five rules, and they are gates, not suggestions:
 

@@ -399,7 +399,11 @@ browser's compositor and a weaker card.
 - **High is a player's choice.** A Graphics quality control joins
   [ui-ux.md](ui-ux.md)'s Settings with High's first increment, since that list holds only
   what is wired. The default stays Low until the owner accepts a High frame and says the
-  default moves.
+  default moves. A player can therefore choose High before it is accepted, and until then
+  the control names it as in development.
+- **Low keeps its counts.** A frame-time ceiling at today's cost was the other reading of
+  the decision. Counts are what Low's tests already hold, and the next line holds its
+  cost.
 - **Low does not move.** A High change shows Low's frames and readings unchanged at the
   same cameras, as its non-target control.
 - **High is production code behind the setting**, not behind a development URL flag. The
