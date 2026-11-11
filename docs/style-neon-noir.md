@@ -595,7 +595,7 @@ families, and nothing else on the ground ever emits:
 2026 the world layer may be lit at High
 ([art-direction.md](art-direction.md#two-layers-two-laws)): rules 1 to 3 are released
 there, save rule 1's sentence that keeps terrain light out of the lamp halo's source.
-Rules 4 and 5 bind both qualities. A source High adds, such as the Lid's glow or an own
+That section's "Move smoothly" answers rule 3's reason. Rules 4 and 5 bind both qualities. A source High adds, such as the Lid's glow or an own
 hull's searchlight, and each biome's water hue take their tokens in this section before
 they are drawn.
 

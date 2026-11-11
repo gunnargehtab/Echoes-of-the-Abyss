@@ -30,7 +30,8 @@ Long writing costs the reader: the six pull requests merged before this rule ave
 1,598-word bodies. Every issue, pull request, review, comment and commit message follows
 it, since a merge commit carries its body into `main` for good.
 
-- **Short sentences**, one idea each, leading with the answer: what changed, or what is wrong.
+- **Short sentences**, one idea each, leading with the answer: what changed, or what is
+  wrong.
 - **Facts, not narrative.** Numbers, paths, the failing test's name.
 - **Link instead of quoting.** Name the doc, the test or the issue and move on.
 - **Budgets.** 300 words for a pull request body, 200 for an issue, 100 for a comment.
@@ -85,8 +86,9 @@ tools/             Every harness and gate; tools/CLAUDE.md gives each its line.
 docs/              The design bible, and the source of every SPEC number.
 ```
 
-`tools/`, `packages/backend/`, `packages/frontend/` and `docs/` each have a `CLAUDE.md` for what
-binds that directory only, loaded for a session working under it. What stays here binds two or more.
+`tools/`, `packages/backend/`, `packages/frontend/` and `docs/` each have a `CLAUDE.md` for
+what binds that directory only, loaded for a session working under it. What stays here
+binds two or more.
 
 ### Server-authoritative is a hard rule, not a preference
 
@@ -147,11 +149,8 @@ several encode hard-won gotchas: match that register; don't strip them when refa
 Every mechanic is an argument about **sound** or **depth**: how loud it makes you, and what
 going deep commits you to. One anchored to neither is arbitrary — reconsider it before
 implementing it, and aim at dread rather than confusion. `docs/systems-echo.md` and
-`docs/systems-depth.md` are those two systems; `.github/copilot-instructions.md` is the design-side
-companion (SIG scale, biome PF, depth bands, doctrines). The picture is two layers
-(`docs/art-direction.md`, "Two layers, two laws"): the tactical layer keeps every law, and the world
-layer may be lit at the High graphics quality (`docs/graphics-standards.md` gate 6). **Look work**
-targets a frame the owner named, and only the owner accepts it (`dev-loop`).
+`docs/systems-depth.md` are those two systems; `.github/copilot-instructions.md` is the
+design-side companion (SIG scale, biome PF, depth bands, doctrines).
 
 ## CI
 
@@ -164,13 +163,15 @@ to pass. All three doc gates block, so a dead link in `docs/` fails the build.
 ## Contributing
 
 `CONTRIBUTING.md` is the contract: branches, commits, labels, pull requests, and the gates
-to run first. Anything visual also clears `docs/graphics-standards.md`. The template is
-`.github/PULL_REQUEST_TEMPLATE.md` — upper case is the only spelling here, so a probe for
-`.github/pull_request_template.md` finds nothing and proves nothing.
+to run first. Anything visual also clears `docs/graphics-standards.md` and
+`docs/art-direction.md`'s "Two layers, two laws", and a look runs as `dev-loop`'s "Look
+work". The template is `.github/PULL_REQUEST_TEMPLATE.md` — upper case is the only spelling
+here, so a probe for `.github/pull_request_template.md` finds nothing and proves nothing.
 
-- **Push in instalments.** A session can hit a context or session limit and lose its container.
-  Commit and push at every self-contained step; open the pull request once an increment stands on
-  its own and passes the gates, not when the issue is done, and say in it what is left.
+- **Push in instalments.** A session can hit a context or session limit and lose its
+  container. Commit and push at every self-contained step; open the pull request once an
+  increment stands on its own and passes the gates, not when the issue is done, and say
+  in it what is left.
 - **Claim the issue before you touch a file.** Assign it to the repository owner (`get_me`
   gives the login) **before** the first edit, in every session: the assignee is the only
   claim that exists before a branch does (`.claude/skills/work-issue/SKILL.md` §3; §5 keeps

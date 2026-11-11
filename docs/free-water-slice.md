@@ -609,8 +609,8 @@ nothing for balance.
 **Overruled in part on 11 November 2026**, by the owner in session
 ([art-direction.md](art-direction.md#two-layers-two-laws)). Decision 1 stands: no sunlight
 below the Lid, so no sunlit shafts and no caustics. At the High graphics quality five
-things are released: light shafts from the world's own lights, hue in the water, a new
-full-screen pass, glow on terrain, and the retained 5–10% ground. Effects that rotate with
+things are released: light shafts from the world's own lights, the hue of the biome under
+it in the water, a new full-screen pass, glow on terrain, and the retained 5–10% ground. Effects that rotate with
 the projection stay refused. This section stays the record of the study as built, which is
 the Low quality's.
 

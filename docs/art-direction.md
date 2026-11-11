@@ -35,8 +35,8 @@ The picture is two layers, and each now has its own law.
 
 | Layer | What is on it | Its law |
 | --- | --- | --- |
-| **Tactical layer** | Rungs 4 to 7 of the ladder ([map-visuals.md](map-visuals.md) §5): survey ink, map furniture, instruments and agents. That is every mark, ring and glyph, contacts at every tier, own lamps with their halo and collar, the scope and the Pixi HUD | Unchanged at both graphics qualities. Glow is loudness, hue is the faction's, fidelity is asymmetric and the glance test holds ([graphics-standards.md](graphics-standards.md) gates 3, 4, 5 and 7) |
-| **World layer** | Rungs 1 to 3 and world light: the water, stone and ground, flora and public life, and the surfaces of hulls, structures, props and landmarks | At Low, every rule as written. At High, lit, inside the limits below |
+| **Tactical layer** | Rungs 4 to 7 of the ladder ([map-visuals.md](map-visuals.md) §5): survey ink, map furniture, instruments and agents. That is every mark, ring and glyph, public life's field marks and stipple, contacts at every tier, own lamps with their halo and collar, the scope and the Pixi HUD | Unchanged at both graphics qualities. Glow is loudness, hue is the faction's, fidelity is asymmetric and the glance test holds ([graphics-standards.md](graphics-standards.md) gates 3, 4, 5 and 7) |
+| **World layer** | Rungs 1 to 3 and world light: the water, stone and ground, flora, the modelled bodies of public life with their light, and the surfaces of hulls, structures, props and landmarks | At Low, every rule as written. At High, lit, inside the limits below |
 
 ### What the world layer may do at High
 
@@ -44,9 +44,9 @@ The picture is two layers, and each now has its own law.
   scene's lights and shadow one another. The ground stops being a baked chart under lit
   models.
 - **Carry light sources of its own.** The Lid's scattered glow from above, bioluminescent
-  flora and public life, vents, civic lamps, and the searchlights, work lights and
-  floodlights of the player's own hulls and structures. Each may pool on the ground and
-  scatter in the water as a visible volume, in its own token.
+  flora and the bodies of public life, vents, civic lamps, and the searchlights, work
+  lights and floodlights of the player's own hulls and structures. Each may pool on the
+  ground and scatter in the water as a visible volume, in its own token.
 - **Carry hue in the water**, and only the hue of the biome under it. Hue is biome and
   biome is propagation factor ([map-visuals.md](map-visuals.md) §6), so water that wears
   its biome's hue tells the player the same truth the ground does. Depth still darkens
@@ -56,7 +56,10 @@ The picture is two layers, and each now has its own law.
 - **Move smoothly**, light included. The 5 Hz grid is the instruments' cadence, not the
   world's. A smooth light on the ground was refused because it read as an agent
   ([style-neon-noir.md](style-neon-noir.md) "World light", rule 3). At High an agent is
-  told by its faction hue, its mark and its collar, never by how its light moves.
+  told by its mark: an own hull by its faction hue and collar as well, and a creature
+  contact by the form [map-visuals.md](map-visuals.md) §8 holds against public life. No
+  world light takes an agent's token or answers activity, and no contact casts light
+  (limits 2 to 4 below), so light moving on the ground is never an enemy's.
 
 ### What binds both layers, at both qualities
 
@@ -89,10 +92,10 @@ The picture is two layers, and each now has its own law.
 | The conn canvas keeps at least 95% of its pixels under 10% encoded luma | [Lamp halo — SPEC](#lamp-halo--spec), "Darkness" | Released. The halo still costs no more than 1.5 points against its own off frame |
 | Light is loudness: the brighter something burns, the louder it is | [style-neon-noir.md](style-neon-noir.md) principle 3; [map-visuals.md](map-visuals.md) §6 | Narrowed to the tactical layer: an agent's lamps, halo and collar. World light is not loudness |
 | World light is points and seams, never area glow, with the vent ember as its ceiling | [style-neon-noir.md](style-neon-noir.md) "World light", rules 1 and 2 | Released, save rule 1's sentence that keeps terrain light out of the lamp halo's source. Limits 3 and 4 above still hold |
-| World light is static or on the 5 Hz grid | The same section, rule 3 | Released. Limits 3 and 4 above are what keep it from reading as an agent |
+| World light is static or on the 5 Hz grid | The same section, rule 3 | Released. Limits 2 to 4 above are what keep it from reading as an enemy |
 | The canvas pass adds no bloom, shadows, camera effects or geometry, and the lamp halo is the one full-screen pass | [Shared model lighting](#shared-model-lighting--abyss-render-stack) below; gate 3 | Released. Gate 6's frame time is the bound |
 | The water is one blue, luminance only | [Reading the Water](#reading-the-water); [map-visuals.md](map-visuals.md) §5, rung 1, and §6 | Hue released, as the hue of the biome under it. Depth still darkens |
-| No light shafts, hue in the water, new full-screen pass or glow on terrain | [free-water-slice.md](free-water-slice.md) §9, "Water medium" | Released: shafts from the world's own lights, hue in the water, a full-screen pass and glow on terrain. Kept: no sun, no caustics, and no effect that rotates with the projection (gate 8) |
+| No light shafts, hue in the water, new full-screen pass or glow on terrain | [free-water-slice.md](free-water-slice.md) §9, "Water medium" | Released: shafts from the world's own lights, the hue of the biome under it in the water, a full-screen pass and glow on terrain. Kept: no sun, no caustics, and no effect that rotates with the projection (gate 8) |
 | "No new neon, sunlight, cinematic blur or full-detail enemy fleet" | [visual-reboot.md](visual-reboot.md) §1 | A lit world is licensed. New neon, sunlight, blur over play and the enemy fleet stay refused |
 | 150 draw calls and 400,000 triangles a frame | Gate 6 | Replaced by a frame time |
 
@@ -1123,7 +1126,8 @@ Three further layers of the same texture-not-information rule:
   built — deterministic per
   map, render-only, and carrying no state, never brightening with activity,
   occupancy, or anything else a player could read as a signal. The seafloor
-  otherwise stays unlit at the Low graphics quality; at High it is lit
+  otherwise stays unlit at the Low graphics quality; at High it is lit, and its light may
+  leave the 5 Hz grid the steam below steps on
   ([Two layers, two laws](#two-layers-two-laws)). Each vent chimney breathes steam in the ember's hue (#1514): soft
   puffs leave its mouth, climb straight up and thin out, each puff dimmer than an ember at its peak.
   The climb steps on the same 5 Hz grid, and reduced motion holds each column still.
@@ -1274,7 +1278,7 @@ At the High graphics quality the ramp's brightness stands and its one blue is re
 the water may wear the hue of the biome under it, in a token of its own, and light may
 scatter in it ([Two layers, two laws](#two-layers-two-laws)). The reason given below for
 one blue is answered rather than dropped. A hue that is the biome's reads as that biome's
-propagation factor, which is true.
+base propagation factor, which is true, as the ground's hue does.
 
 It exists because freeing the camera exposed that it did not ([free-camera.md](free-camera.md)
 §9). A pinned 55° filled the frame with seabed; a camera at 12° spends most of the frame
