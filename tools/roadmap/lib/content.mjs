@@ -588,6 +588,7 @@ export const items = {
   1727: 'A problem fixed twice gets fixed for every case at once',
   1728: 'A wrong date corrected in the project’s notes on how it runs',
   1756: 'The owner confirming the extra review rounds allowed for the free-water study',
+  1804: 'The project’s borrowed 3D-engine guidance brought up to date with the engine version the game now runs',
   1599: 'A score that plays through the match and swells when your fleet is loud',
   1657: 'The score’s held-breath note going silent on a phone’s speaker setting',
   1651: 'Store art drawn from the game’s own logo',
