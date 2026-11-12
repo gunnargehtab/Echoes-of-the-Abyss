@@ -1,6 +1,7 @@
 {
   "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
   "software": true,
+  "quality": "high",
   "viewport": {
     "width": 1920,
     "height": 1080
@@ -9,8 +10,8 @@
     {
       "name": "home",
       "pose": "the opening pose",
-      "drawCalls": 44,
-      "triangles": 593684,
+      "drawCalls": 56,
+      "triangles": 660446,
       "lampAreaPx": [
         12
       ],
@@ -27,6 +28,33 @@
       ]
     },
     {
+      "name": "close",
+      "pose": {
+        "xM": 542,
+        "zM": 1958,
+        "distance": 420,
+        "yawDeg": -60,
+        "pitchDeg": 2,
+        "focusDepthM": 300
+      },
+      "drawCalls": 56,
+      "triangles": 660446,
+      "lampAreaPx": [
+        51.2
+      ],
+      "lampSitesPx": [
+        [
+          2.88,
+          2.36,
+          2.43,
+          2.52,
+          2.4,
+          2.49,
+          2.49
+        ]
+      ]
+    },
+    {
       "name": "station",
       "pose": {
         "distance": 1800,
@@ -34,8 +62,8 @@
         "pitchDeg": 55,
         "focusDepthM": null
       },
-      "drawCalls": 43,
-      "triangles": 593674,
+      "drawCalls": 55,
+      "triangles": 660430,
       "lampAreaPx": [
         2.7
       ],
@@ -59,8 +87,8 @@
         "pitchDeg": 16,
         "focusDepthM": 300
       },
-      "drawCalls": 39,
-      "triangles": 589674,
+      "drawCalls": 51,
+      "triangles": 656432,
       "lampAreaPx": [
         123.7
       ],
@@ -84,8 +112,8 @@
         "pitchDeg": 22,
         "focusDepthM": 300
       },
-      "drawCalls": 36,
-      "triangles": 588378,
+      "drawCalls": 48,
+      "triangles": 655140,
       "lampAreaPx": [
         135.6
       ],

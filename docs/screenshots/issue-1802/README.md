@@ -13,6 +13,15 @@ Close camera will look. The script is `tools/hull-models/blender/corvette_pelagi
 `tools/hull-models/blender/kit.py`, and its output is
 `docs/concept-art/spikes/corvette-pelagia-blender.glb`.
 
+## The decision
+
+The owner decided in session on 12 November 2026: **the roster is not rebuilt in
+Blender.** The reasons are the costs under "What it costs" and the control below, which
+shows that most of what this hull gained is its surface and not its modelling. The
+follow-up is filed as #1811: a navy's surface drawn once and worn by the kit hulls,
+judged beside this hull on the named GPU once own hulls are lit at High. Blender stays a
+candidate for a short list of hero hulls only, if it still clearly wins there.
+
 ## What was built
 
 The script reads the approved `docs/concept-art/models/corvette-pelagia.glb` as its
@@ -84,6 +93,33 @@ node tools/hull-renders/inspect.mjs corvette-pelagia \
 
 ![The bow lamp, the tail lamp and a launcher's seeds](lit-lamps.png)
 
+## The surface without the modelling
+
+The spike changed two things at once: what a part is made of, and what its skin carries.
+`tools/hull-models/blender/corvette_pelagia_surface.py` changes only the second. It
+leaves the approved Corvette's geometry as it is and bakes the same two maps onto it, from
+the same height fields (`tools/hull-models/blender/pelagia.py`), into
+`docs/concept-art/spikes/corvette-pelagia-surface.glb`.
+
+| | Current | Surface only | Blender |
+| --- | --- | --- | --- |
+| Triangles | 2,652 | 2,652 | 44,884 |
+| File | 100,964 bytes | 2,025,116 bytes | 3,049,168 bytes |
+| Texture memory | none | about 6.7 MiB | about 6.7 MiB |
+
+![Current, surface only and Blender on the lit table](lit-three.png)
+
+On the table the surface alone carries most of the gain: the veins, the rays on the fins
+and the grain on the rings are all there at 2,652 triangles. What the modelling still
+adds is round seeds and lamps where the kit has facets, a smooth outline where the kit
+hull has a kink amidships, rings that lie on the skin, and fins with a rim. At the conn
+view's 55° those differences are small.
+
+A map a hull is not the cheap route itself. A navy's surface would be drawn once and
+tiled, as its trim sheet is
+([art-direction.md](../../art-direction.md#uv-layout-and-trim-sheets--spec)), and cost no
+bytes a hull. This control only shows what such a surface would look like on a kit hull.
+
 ## In the game
 
 **A software rasteriser drew these frames** (SwiftShader, the container's only one). They
@@ -107,12 +143,13 @@ enlarged twice:
 
 ![Gate 6's close station](conn-station.png)
 
-The High slice's own Close camera is not fixed yet
-([issue-1799](../issue-1799/README.md#cameras)), so the two near frames stand in for it.
+The table below is at Low. #1801 has since fixed the High slice's Close camera
+([issue-1799](../issue-1799/README.md#cameras)), and "At High" takes it.
 
 | Camera | Draw calls | Triangles, current | Triangles, spike | Lamps, current | Lamps, spike |
 | --- | --- | --- | --- | --- | --- |
 | Home | 44 | 593,684 | 635,916 | 12.0 px² | 12.4 px² |
+| The High slice's Close | 44 | 593,684 | 635,916 | 51.2 px² | 50.0 px² |
 | Gate 6's close station | 43 | 593,674 | 635,906 | 2.7 px² | 2.6 px² |
 | Near, port | 39 | 589,674 | 631,906 | 123.7 px² | 127.0 px² |
 | Near, bow | 36 | 588,378 | 630,610 | 135.6 px² | 141.5 px² |
@@ -122,8 +159,35 @@ the same five. One Corvette adds 42,232 triangles to a frame. The lamp columns a
 client's own reading of the area the Corvette's seven lamps project at each camera
 (`packages/frontend/src/game/lampScreen.ts`). Its other reading, a lamp site's radius, is
 6 to 8% smaller on the spike, 1.40 px against 1.51 for the bow lamp at Home: a barrel
-holds a spindle's area and is about a tenth shorter. `readings-current.json` and
-`readings-spike.json` hold all of it.
+holds a spindle's area and is about a tenth shorter. The six `readings-*.json` files hold
+all of it, one a hull at Low and at High. The surface-only hull reads as the current one
+does in every column, since its geometry is the current one's.
+
+### At High
+
+The first step of #1801 landed while this spike was open, so the three hulls are also
+taken at the High graphics quality, by `QUALITY=high` on the same module. High draws 56 calls and
+660,446 triangles at Home with the current or the surface-only hull, and 702,678 with the
+Blender one.
+
+The High slice's Close camera, the Corvette on the right of the frame and bow on, enlarged
+twice. [The whole frame](high-close-current-full.png) has the three hulls across it.
+
+![The Corvette at the High slice's Close camera, three ways](high-close-three.png)
+
+The nearest camera, off the port quarter:
+
+![The Corvette at the nearest camera at High, three ways](high-near-port-three.png)
+
+At the Close camera the Corvette is about 70 pixels across and the three cannot be told
+apart. At the nearest camera the Blender hull shows its veins and its fins' rays faintly,
+and the surface-only hull less. High's first step lights the ground and the water, and a
+hull's surface is not in it yet: hulls still draw whole in the tactical pass, as at Low
+([art-direction.md](../../art-direction.md#what-is-built-at-high), "Not built yet"). So
+neither treatment has light to show in. That is the finding: a hull's surface is worth
+building, by either route, only once High lights it.
+
+The same three at Low, for the control High owes: [low](low-near-port-three.png).
 
 ## Through intake
 
@@ -208,9 +272,9 @@ measure. With the shape decisions listed under "What was built", they are the ow
 
 - **That `npm run check:models` can hold it.** Repeated builds on one machine gave one
   SHA-256. Another machine was not tried, and CI installs no `bpy`.
-- **That it reads at High.** High's lighting is not built (#1801). Under Low's rig at the
-  nearest camera the gain is visible and small. The lit table is the fairer reading of
-  what the surface holds.
+- **That it reads at High.** High's first step does not light a hull's surface (#1801), so
+  the frames under "At High" show a hull as Low draws it. At the nearest camera the gain
+  is visible and small. The lit table is the fairer reading of what the surface holds.
 - **A second navy.** The Commune is the navy primitives serve worst. A plated hull would
   lean on bevels, which this hull uses on three lips and nowhere else.
 - **A frame on the named GPU.** Every frame here is a software rasteriser's.
