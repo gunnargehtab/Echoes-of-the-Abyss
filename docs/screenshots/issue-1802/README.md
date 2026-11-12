@@ -175,10 +175,10 @@ What the two rounds found in the build itself is fixed:
 
 Three of its findings stand, because they are what the spike was run to measure:
 
-- **Gate 6, triangles.** 44,340 a hull against Low's 400,000 a frame. Ten such hulls pass
-  it, and the berth ceiling is forty.
-- **Gate 6, texture memory.** About 6.7 MiB on the GPU, against the 1.33 MiB that
-  [art-direction.md](../../art-direction.md#bevels-and-baked-occlusion--spec) holds a model to.
+- **Gate 6, triangles.** 44,340 a hull against Low's 400,000 a frame. Nine such hulls fit
+  under it and ten exceed it; the berth ceiling is forty.
+- **Gate 6, texture memory.** About 6.7 MiB on the GPU, against the 1.33 MiB a model that
+  gate 6 of [graphics-standards.md](../../graphics-standards.md) allows.
 - **The pipeline of record.** An approved model is `THREE.GLTFExporter` output with no
   texture but an occlusion map. This file is neither, and `npm run check:models` would
   fail it over the kit script's.

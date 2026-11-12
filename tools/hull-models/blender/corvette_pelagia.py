@@ -26,8 +26,8 @@ refuse with the spike.
 - The six membranes: the blockout's own outline, as a lens that swells
   0.19 m a side at the root and thins to the tip, where the blockout had a
   0.42 m slab.
-- `tail_peduncle`: the blockout's frustum, subdivided, its flat end caps
-  rounded.
+- `tail_peduncle`: the blockout's frustum, subdivided: its end caps kept
+  flat and their rims rounded.
 - The eleven seeds and the seven lamps: the facet rule cut each sphere to a
   spindle (#919), nearer a barrel than a ball. Each is rebuilt smooth as a
   barrel showing what the blockout showed along its pole, square to it and
