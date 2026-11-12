@@ -56,7 +56,7 @@ describe('an outline’s reach', () => {
     );
   });
 
-  it('keeps every hull’s outline inside the box its track’s plate is sized by, at any heading', () => {
+  it('keeps every hull’s outline within the half-diagonal of its sprite’s box, at any heading', () => {
     // A tracked hull's plate takes the half-diagonal of its sprite's box
     // (EchoRenderer, `figure`), which the outline is drawn inside.
     for (const kind of kinds<UnitKind>(UnitKind)) {
