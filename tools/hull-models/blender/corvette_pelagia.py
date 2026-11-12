@@ -30,22 +30,27 @@ refuse with the spike.
   rounded.
 - The eleven seeds and the seven lamps: the facet rule cut each sphere to a
   spindle (#919), nearer a barrel than a ball. Each is rebuilt smooth as a
-  superellipsoid showing what the blockout showed along its pole, square to
-  it and between (`round_part`). For a lamp the area from above is then
-  read with everything near it in place, so gate 3 reads the light it read
-  and the conn view draws the lamp the size it drew. Same sites, same
-  material, same emission: a lamp the rebuilt skin no longer reached would
-  be seated again by kit.mjs `seat`'s rule and reported, and none is.
-- Added, and in no block: a collar along the line where each seed leaves
-  its sheath and a calyx where each lamp leaves the skin, 17 small rings of
-  ridge. `launcher_starboard_seed_4` has none, since a growth ring crosses
-  it. The blockout's two unnamed point lights are not carried: the conn
-  view keeps a model's meshes alone when it merges one (rosterModels.ts
-  `mergeByMaterial`), and no map sees them.
+  barrel showing what the blockout showed along its pole, square to it and
+  between (`round_part`). For a lamp the area from above is then read with
+  everything near it in place, so gate 3 reads the light it read and the
+  conn view draws the lamp the size it drew. Same material, same emission.
+- Each lamp is moved along its seat's normal until it stands off the
+  smoothed skin what it stood off the blockout's: a light placement moved.
+  `bow_light` moves 0.20 m, since the table's nose under it was a
+  two-vertex wedge and the smooth nose is not; the other six move 5 cm or
+  less.
+- Added, and in no block: a collar along the line where a seed leaves its
+  sheath and a calyx where a lamp leaves the skin, 15 small rings of
+  ridge, nine and six. A ring is not built where a growth ring would cross
+  it (`launcher_starboard_seed_4`) or where less than 15% of it would show
+  (`launcher_port_aft_seed_3`, which the hull covers, and
+  `hullline_starboard_2`). The blockout's two unnamed point lights are not
+  carried: the conn view keeps a model's meshes alone when it merges one
+  (rosterModels.ts `mergeByMaterial`), and no map sees them.
 
-Baked: a 1,024² normal map from each material's height field below (a net
-of veins over growth lines on the chitin, a grain on the ridge, rays on
-the membranes) and a 512² occlusion map of the parts on one another, both
+Baked: a 1,024² normal map from each material's height field below (veins
+as a leaf carries them over growth lines on the chitin, a grain on the
+ridge, rays on the membranes) and a 512² occlusion map of the parts on one another, both
 on the second UV set. The last lines the script prints are what moved
 against the blockout, part by part.
 """
@@ -185,6 +190,29 @@ bands = [growth_ring(f"growth_ring_{n}") for n in (1, 2, 3)]
 mapped.extend(bands)
 
 
+def world(obj):
+    return [obj.matrix_world @ v.co for v in obj.data.vertices]
+
+
+def under(tree, p):
+    """Whether a point is inside a closed part, by its nearest face."""
+    foot, n, _, _ = tree.find_nearest(p)
+    return (p - foot).dot(n) < 0
+
+
+def showing(ring, *parts):
+    """The share of a ring's vertices outside every part named: what of it
+    a camera could see. A ring wholly under the hull meets no surface, so
+    `kit.meets` passes it; the second review found one built 1.56 m under."""
+    trees = [kit.world_bvh(part) for part in parts]
+    points = world(ring)
+    return sum(1 for p in points if not any(under(t, p) for t in trees)) / len(points)
+
+
+# A ring is built to be seen. One that shows less than this is not built.
+SHOWS = 0.15
+
+
 # --- collars -----------------------------------------------------------------
 def collar(name, bud, seat, minor, parent=None, around=16, tube=6):
     """A ring of ridge along the line where a round part leaves the surface
@@ -196,16 +224,15 @@ def collar(name, bud, seat, minor, parent=None, around=16, tube=6):
     centre = sum((bud.matrix_world @ v.co for v in bud.data.vertices), Vector()) / len(
         bud.data.vertices
     )
-    own, under = kit.world_bvh(bud), kit.world_bvh(seat)
+    own, below = kit.world_bvh(bud), kit.world_bvh(seat)
 
     def leaves(direction):
         return own.ray_cast(centre, direction)[0]
 
     def inside(p):
-        foot, n, _, _ = under.find_nearest(p)
-        return (p - foot).dot(n) < 0
+        return under(below, p)
 
-    foot, n, _, _ = under.find_nearest(centre)
+    foot, n, _, _ = below.find_nearest(centre)
     out = n if inside(centre) else (centre - foot).normalized()
     assert not inside(leaves(out)) and inside(leaves(-out)), f"{name}: no line to follow"
     e1 = out.orthogonal().normalized()
@@ -221,7 +248,7 @@ def collar(name, bud, seat, minor, parent=None, around=16, tube=6):
             else:
                 lo = mid
         p = leaves(out * math.cos(lo) + side * math.sin(lo))
-        n = under.find_nearest(p)[1]
+        n = below.find_nearest(p)[1]
         away = p - centre
         away = (away - n * away.dot(n)).normalized()
         rings.append(
@@ -357,13 +384,21 @@ for launcher, seeds in (
         mapped.append(seed)
         ring = collar(f"{launcher}_collar_{n}", seed, sheath, minor=0.14, parent=node)
         assert kit.meets(ring, seed), f"{ring.name} stands off its seed"
-        # A growth ring already crosses two of the launchers, as it does in
-        # the blockout. Where the band runs over a seed, the seed gets no
-        # collar: the ring would only be one more thing the band cuts.
+        # A growth ring already crosses the launchers at five pairs, as it
+        # does in the blockout. Where the band runs over a seed, the seed gets
+        # no collar: the ring would only be one more thing the band cuts. And
+        # a launcher is rolled into the flank, so the hull takes part of some
+        # collars as it takes part of their seeds; one it takes whole, or
+        # nearly, is not built either.
+        shows = showing(ring, hull, sheath, seed)
         if any(kit.meets(ring, band) for band in bands):
             print(f"  {ring.name}: not built, a growth ring crosses its seed")
             bpy.data.objects.remove(ring, do_unlink=True)
+        elif shows < SHOWS:
+            print(f"  {ring.name}: not built, {shows:.0%} of it would show")
+            bpy.data.objects.remove(ring, do_unlink=True)
         else:
+            print(f"  {ring.name}: {shows:.0%} shows, {showing(ring, hull):.0%} clear of the hull")
             mapped.append(ring)
 
 
@@ -523,19 +558,31 @@ for name in LAMPS:
     bud, k = round_part(name, light, levels=0)
     lamps.append(bud)
     seat = bpy.data.objects["tail_peduncle" if name == "tail_light" else "hull"]
-    # A lamp rests on something (#894). A lamp the rebuilt skin no longer
-    # reaches is seated again by kit.mjs `seat`'s rule: on the nearest skin
-    # to its own station, sunk half its radius. That is a light placement
-    # moved, and the script says so when it does it.
-    if not kit.meets(bud, seat):
-        at = part.frame @ part.centre
-        foot, n, _, _ = kit.world_bvh(seat).find_nearest(at)
-        shift = foot + n * (0.5 * k * sum(part.half) / 3) - at
-        bud.matrix_world = Matrix.Translation(shift) @ bud.matrix_world
-        print(f"  {name}: seated again, moved {shift.length:.2f} m to stay on the skin")
+    # A lamp rests on something (#894), and how deep is part of where it is.
+    # The skin under a lamp moves when it is smoothed, most at the nose and
+    # at the peduncle's rounded end, so each lamp is moved along its seat's
+    # normal until its centre stands off the skin what it stood off the
+    # blockout's. That is a light placement moved, and the script says by
+    # how much.
+    was, now = ref[seat.name].bvh(), kit.world_bvh(seat)
+    at = part.frame @ part.centre
+    foot, n, _, _ = was.find_nearest(at)
+    stood = (at - foot).dot(n)
+    moved = Vector((0, 0, 0))
+    for _ in range(3):
+        foot, n, _, _ = now.find_nearest(at + moved)
+        moved += n * (stood - (at + moved - foot).dot(n))
+    bud.matrix_world = Matrix.Translation(moved) @ bud.matrix_world
+    print(f"  {name}: stands {stood:.2f} m off its seat, moved {moved.length:.2f} m to keep that")
     # A lip 7 cm high along the line the bud leaves the skin by: low, so it
     # hides none of the lamp it rings from any side.
-    mapped.append(collar(f"{name}_calyx", bud, seat, minor=0.07))
+    calyx = collar(f"{name}_calyx", bud, seat, minor=0.07)
+    shows = showing(calyx, seat, bud)
+    if shows < SHOWS:
+        print(f"  {calyx.name}: not built, {shows:.0%} of it would show")
+        bpy.data.objects.remove(calyx, do_unlink=True)
+    else:
+        mapped.append(calyx)
 
 
 # The light a lamp owes gate 3 is the plan area it showed, with everything
@@ -545,10 +592,6 @@ for name in LAMPS:
 # step widens the bud and leaves its height, then sets the height again from
 # the side, so a lamp half under the skin is not made taller to show more.
 UP = Vector((0, 0, 1))
-
-
-def world(obj):
-    return [obj.matrix_world @ v.co for v in obj.data.vertices]
 
 
 def stretch(bud, across, upward):
@@ -587,28 +630,32 @@ for bud in lamps:
 h = kit.Height(chitin)
 p = h.position()
 # The block's two nouns for this skin: "growth rings and living ... veins".
-# A net of raised veins, a coarse one about 6 m by 3.5 and a fine one
-# inside it, as a leaf carries them, over growth lines square to the keel.
-# Relief only: a vein that glowed would be a lamp, and gate 3 counts lamps.
-warp = h.node("ShaderNodeVectorMath", operation="ADD")
-h.links.new(p, warp.inputs[0])
-wander = h.node("ShaderNodeTexNoise")
-h.links.new(p, wander.inputs["Vector"])
-wander.inputs["Scale"].default_value = 0.18
-h.links.new(wander.outputs["Color"], warp.inputs[1])
-q = warp.outputs[0]
-coarse = h.cells(h.scaled(q, (1 / 6.0, 1 / 3.5, 1 / 3.5)), 1.0, "DISTANCE_TO_EDGE")
-fine = h.cells(h.scaled(q, (1 / 2.2, 1 / 1.4, 1 / 1.4)), 1.0, "DISTANCE_TO_EDGE")
-vein = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(coarse, 0.0, 0.055)), 0.085)
-veinlet = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(fine, 0.0, 0.06)), 0.03)
+# Veins as a leaf carries them: a midrib down the back and a lesser one down
+# the keel, laterals leaving the midrib every 5.5 m and trailing aft as they
+# run down the flank, and a fine net between them, over growth lines square
+# to the keel. The second review read a net alone as scales. Relief only: a
+# vein that glowed would be a lamp, and gate 3 counts lamps.
+along, across, above = h.axis(p, 0), h.axis(p, 1), h.math("ADD", h.axis(p, 2), 0.5)
+turn = h.math("ABSOLUTE", h.math("ARCTAN2", across, above))  # 0 on the back, π on the keel
+wander = h.math("MULTIPLY", h.noise(p, 0.12), 3.0)
+station = h.math("DIVIDE", h.total(along, h.math("MULTIPLY", turn, 5.4), wander), 5.5)
+lateral = h.math(
+    "MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(h.math("PINGPONG", station, 0.5), 0.0, 0.05)), 0.08
+)
+midrib = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(turn, 0.0, 0.08)), 0.10)
+keel = h.math(
+    "MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(h.math("SUBTRACT", math.pi, turn), 0.0, 0.08)), 0.06
+)
+net = h.cells(h.scaled(p, (1 / 2.2, 1 / 1.4, 1 / 1.4)), 1.0, "DISTANCE_TO_EDGE")
+veinlet = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(net, 0.0, 0.06)), 0.025)
 drift = h.math("MULTIPLY", h.noise(p, 0.3), 7.0)
 growth = h.math(
     "MULTIPLY",
-    h.math("SINE", h.math("ADD", h.math("MULTIPLY", h.axis(p, 0), TAU / 0.9), drift)),
+    h.math("SINE", h.math("ADD", h.math("MULTIPLY", along, TAU / 0.9), drift)),
     0.014,
 )
 pits = h.math("MULTIPLY", h.noise(p, 3.0, 3.0), 0.015)
-h.bump(h.total(vein, veinlet, growth, pits))
+h.bump(h.total(lateral, midrib, keel, veinlet, growth, pits))
 
 h = kit.Height(ridge)
 p = h.position()
