@@ -913,6 +913,7 @@ and no row below is open.
 | A repeat fix to one property targeting the whole property | [#1727](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1727) |
 | The loop map's misdated severity change | [#1728](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1728) |
 | Confirming the five-round cap exception for the free-water slice | [#1756](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1756) |
+| Re-syncing the vendored three.js skills to the r187 client | [#1804](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1804) |
 
 **Store art**
 

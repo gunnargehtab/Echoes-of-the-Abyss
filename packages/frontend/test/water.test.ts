@@ -18,6 +18,7 @@ import { DEPTH, LID, THERMOCLINE } from '@echoes/shared';
 import { ShaderMaterial, Vector3 } from 'three';
 import {
   fogDensityFor,
+  HIGH_WORLD_FOG_SIGN,
   installWaterFog,
   MarineSnow,
   SNOW_FAR,
@@ -214,6 +215,33 @@ describe('the fog patch', () => {
       false,
       'the world height is taken from the view-space position, not the pre-instance one'
     );
+  });
+
+  it("gives the High world pass the fog's other half, behind a sign Low never sets", async () => {
+    // highFrame.ts: in the world pass a fragment only loses light to the
+    // water, and an opaque one writes what survived into alpha, so the
+    // composite adds the water's light by what each pixel lost, per sample.
+    // The sign is a negative red on `fogColor`, which the ramp left unused
+    // and the view holds at the deepest water: Low takes the mix it always
+    // took.
+    const { ShaderChunk } = await import('three');
+    installWaterFog();
+    const fog = ShaderChunk.fog_fragment;
+    const sign = fog.indexOf('if ( fogColor.r < 0.0 ) {');
+    const otherwise = fog.indexOf('} else {');
+    assert.ok(sign >= 0 && otherwise > sign);
+    const high = fog.slice(sign, otherwise);
+    assert.ok(high.includes('gl_FragColor.rgb *= 1.0 - fogFactor;'));
+    assert.ok(high.includes('#ifdef OPAQUE'), 'a blended fragment leaves alpha to its blend');
+    assert.ok(high.includes('gl_FragColor.a = 1.0 - fogFactor;'));
+    assert.ok(!high.includes('echoesWaterColor'), 'it adds none of the water’s colour');
+    const low = fog.slice(otherwise);
+    assert.ok(
+      low.includes('gl_FragColor.rgb = mix( gl_FragColor.rgb, waterAtFragment, fogFactor );')
+    );
+    assert.ok(HIGH_WORLD_FOG_SIGN < 0);
+    const deepest = waterColorAt(DEPTH.MAX_M);
+    assert.ok(deepest.r >= 0, 'the colour Low holds there is no sign');
   });
 
   it('mixes toward the water in the space the fragment is already in', async () => {

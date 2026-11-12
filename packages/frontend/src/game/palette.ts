@@ -605,6 +605,50 @@ export const RELIEF_REFERENCE_M = 550;
 export const VENT_EMBER = 0xe06a2b;
 
 /**
+ * The Lid's glow, docs/style-neon-noir.md "World light" (SPEC by token): the
+ * light the ground takes from above at the High graphics quality
+ * (litGround.ts). It is the colour of the rig's cold ambient,
+ * `MODEL_LIGHTING.AMBIENT_COLOR`, so the ground under the Lid and the hulls in
+ * it stand in one colour of light; its level is the ground's own.
+ */
+export const LID_GLOW = 0x5a6b80;
+
+/**
+ * The five world-light families' tokens, docs/style-neon-noir.md "World light"
+ * (SPEC): the colour each family's light is at the High graphics quality,
+ * where it pools on the ground and scatters in the water (worldLights.ts). At
+ * Low the props carry three of them in their own emissive, and the other two
+ * are `VENT_EMBER` and `CIVIC_LAMP` below.
+ */
+export type WorldLightFamily = 'vent' | 'flora' | 'crystal' | 'ore' | 'civic';
+export const WORLD_LIGHT: Record<WorldLightFamily, number> = {
+  vent: 0xe06a2b,
+  flora: 0x2e8c74,
+  crystal: 0x5b4a8c,
+  ore: 0x7a5634,
+  civic: 0xb8875a,
+};
+
+/**
+ * The water's hue over each biome at the High graphics quality,
+ * docs/style-neon-noir.md "World light", the water hues (SPEC by token,
+ * TUNABLE until a High frame is accepted): the biome fill's own hue at one
+ * luminance, its chroma eased, so water tells what the ground under it does
+ * (docs/art-direction.md "Reading the Water"). The brightness is not these:
+ * it is the ramp's (water.ts), and only their chromaticity is drawn
+ * (waterMedium.ts). Identical across the four accessibility palettes, as the
+ * fills are.
+ */
+export const WATER_HUE: Record<Biome, number> = {
+  [Biome.OpenWater]: 0x2b4157,
+  [Biome.ThermalVein]: 0x5d3529,
+  [Biome.KelpForest]: 0x28453c,
+  [Biome.AbyssalTrench]: 0x37404c,
+  [Biome.ResonanceField]: 0x443961,
+  [Biome.CoralRuins]: 0x334148,
+};
+
+/**
  * Civic lamp, docs/style-neon-noir.md "World light" (SPEC): the fourth family,
  * on the Upper Concourse only (#1533). Tallow rather than amber — yellower than
  * the ember, greyer than every faction's warm glow — so a terminus lamp reads as

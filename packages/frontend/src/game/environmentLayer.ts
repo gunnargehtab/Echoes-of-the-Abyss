@@ -54,6 +54,7 @@ import {
   freeWaterPlacements,
   type DecorationPose,
 } from './freeWaterDecoration.ts';
+import type { WorldLightSite } from './worldLights.ts';
 import { StippleCloud, type StippleFrame } from './faunaStipple.ts';
 import { FURNITURE_DOT_GAIN } from './ladder.ts';
 import {
@@ -242,6 +243,28 @@ export class EnvironmentLayer {
   private shade: ((xM: number, yM: number, out: Color) => void) | null = null;
   /** What each instanced mesh in this build stands on, for a reshade. */
   private shaded: Array<{ mesh: InstancedMesh; list: PropPlacement[] }> = [];
+
+  /**
+   * Where the props this layer stands carry a licensed world light, by family
+   * (docs/style-neon-noir.md "World light"; environment.ts `worldLight`): the
+   * High graphics quality's sources (worldLights.ts). Read off the same pure
+   * placements `rebuild` stands, so it does not wait on a model decoding. A
+   * swimming fixture is life, not ground, and a disabled one stands nothing.
+   */
+  worldLightSites(terrain: TerrainPayload): WorldLightSite[] {
+    const placements =
+      this.look === 'free-water'
+        ? freeWaterPlacements(terrain, true)
+        : placeAll(terrain, ENVIRONMENT_PROPS, this.look, this.fields, this.landmarks).placements;
+    const sites: WorldLightSite[] = [];
+    for (const placement of placements) {
+      if (placement.disabled === true || placement.motion !== undefined) continue;
+      const family = propSpec(placement.slug)?.worldLight ?? 'none';
+      if (family === 'none') continue;
+      sites.push({ family, xM: placement.xM, yM: placement.yM, scale: placement.scale });
+    }
+    return sites;
+  }
 
   /**
    * Rebuild the layer for a terrain. `groundY` is the view's own seabed

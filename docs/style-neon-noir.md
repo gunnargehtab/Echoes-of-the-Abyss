@@ -600,6 +600,31 @@ qualities. A world-owned source High adds, such as the Lid's glow, and each biom
 hue take their tokens in this section before they are drawn. An own hull's searchlight is
 agent light and keeps its navy's glow.
 
+**The Lid's glow at High.** One world-owned source joins the five families at the High
+graphics quality: `lid-glow`, `#5A6B80`, the light the ground takes from the whole water
+above it. It is the colour of the cold ambient the shared model rig already carries
+([art-direction.md](art-direction.md#shared-model-lighting--abyss-render-stack)), so the
+ground under the Lid and the hulls in it stand in one colour of light; its level is the
+ground's own. It has no direction and casts no shadow: there is no sun below the Lid. `LID_GLOW` in
+`packages/frontend/src/game/palette.ts` transcribes it.
+
+**The water's hue at High.** At the High graphics quality the water wears the hue of the
+biome under it ([art-direction.md](art-direction.md#reading-the-water)). Six tokens, one a
+biome: the biome fill's own hue at one luminance, linear 0.05, with a fifth of its chroma
+eased out. Only a token's chromaticity is drawn, since the water's brightness is the depth
+ramp's. Rule 5 holds them as it holds the families: each is its fill's hue, which no
+faction and no interface token wears. They are TUNABLE until a High frame is accepted, and
+`WATER_HUE` in `packages/frontend/src/game/palette.ts` transcribes them.
+
+| Token | Hex | Biome |
+| --- | --- | --- |
+| `water-open` | `#2B4157` | Open Water |
+| `water-thermal` | `#5D3529` | Thermal Veins |
+| `water-kelp` | `#28453C` | Kelp Forest |
+| `water-trench` | `#37404C` | Abyssal Trench |
+| `water-resonance` | `#443961` | Resonance Fields |
+| `water-coral` | `#334148` | Coral Ruins |
+
 Every family obeys the same five rules, and they are gates, not suggestions:
 
 1. **World light is points and seams, never area glow.** No lit ground, no

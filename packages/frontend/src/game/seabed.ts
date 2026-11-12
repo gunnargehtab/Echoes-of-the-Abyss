@@ -32,7 +32,7 @@
  *   same rebuild cadence `drawTerrain` already had.
  */
 
-import { Biome, SEABED_DETAIL, TERRAIN_LIFT, WORLD } from '@echoes/shared';
+import { Biome, HIGH_GRAPHICS, SEABED_DETAIL, TERRAIN_LIFT, WORLD } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import type { StoneSeat } from './environment.ts';
 import { BIOME_COLOR, depthShade, reliefTextureGain, ROCK_FACE, scaleRgb } from './palette.ts';
@@ -68,6 +68,29 @@ export interface BakeOptions {
    * floor costs no second pass.
    */
   eroded?: { rockTopM: number; floors?: Float32Array };
+  /**
+   * The High graphics quality's lit ground (litGround.ts): what a light needs
+   * of each pixel, written beside the skin the bake shades, the whole map's
+   * pixels, row-major and RGBA, as `eroded.floors` is taken. Undefined at
+   * Low, which bakes its light in and reads neither.
+   *
+   * `albedo` is the fill and its mottle, sRGB, with no depth and no relief
+   * shaded in: every fill and the stone lifted by one gain, so their order
+   * holds (`LIT_ALBEDO_GAIN`). `relief` is data: the drawn surface's normal
+   * in R (east) and B (south), 0.5 level, and in G the darkening the bake
+   * gives a cliff's rim, its lee and a stone's scour, which no light here
+   * casts. `heightPerDepthM` is the drawn column's scale, world metres of
+   * height per metre of depth (perspectiveTerrain.ts, which imports this
+   * module): the normal is the drawn ground's, not the authored one's.
+   */
+  lit?: LitBake;
+}
+
+/** Where a bake writes the lit ground's pixels (`BakeOptions.lit`). */
+export interface LitBake {
+  albedo: Uint8Array;
+  relief: Uint8Array;
+  heightPerDepthM: number;
 }
 
 /**
@@ -922,6 +945,65 @@ export function stoneScourGain(
   return 1 - (1 - SEABED_DETAIL.STONE_SCOUR_GAIN) * hollow * keep;
 }
 
+const srgbDecode = (byte: number): number => {
+  const c = byte / 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+};
+const srgbEncode = (linear: number): number => {
+  const c = Math.min(1, Math.max(0, linear));
+  return Math.round(255 * (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055));
+};
+const linearLuminance = (color: number): number =>
+  0.2126 * srgbDecode((color >> 16) & 0xff) +
+  0.7152 * srgbDecode((color >> 8) & 0xff) +
+  0.0722 * srgbDecode(color & 0xff);
+
+/**
+ * The one gain that lifts a Low fill to a lit ground's albedo: what takes the
+ * palest biome fill to `HIGH_GRAPHICS.GROUND.ALBEDO_LUMINANCE`, linear. Every
+ * fill and the stone take the same gain, so a trench stays the darkest ground
+ * and stone stays under the palest fill, as the Low ramp holds them
+ * (palette.ts `ROCK_FACE`); only the light is new.
+ */
+export const LIT_ALBEDO_GAIN =
+  HIGH_GRAPHICS.GROUND.ALBEDO_LUMINANCE /
+  Math.max(...Object.values(BIOME_COLOR).map(linearLuminance));
+
+/** One lit pixel: the fill as an albedo, and the slope and occlusion beside it. */
+function writeLit(
+  lit: LitBake,
+  at: number,
+  fill: number,
+  mottle: number,
+  /** The drawn depth's change over two bake pixels, east and south, metres. */
+  dropX: number,
+  dropY: number,
+  mPerPx: number,
+  occlusion: number
+): void {
+  const gain = LIT_ALBEDO_GAIN * mottle;
+  const r = srgbDecode((fill >> 16) & 0xff) * gain;
+  const g = srgbDecode((fill >> 8) & 0xff) * gain;
+  const b = srgbDecode(fill & 0xff) * gain;
+  // Toward its own grey, so the luminance and the hue hold and the chroma eases.
+  const grey = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const keep = HIGH_GRAPHICS.GROUND.ALBEDO_SATURATION;
+  lit.albedo[at] = srgbEncode(grey + (r - grey) * keep);
+  lit.albedo[at + 1] = srgbEncode(grey + (g - grey) * keep);
+  lit.albedo[at + 2] = srgbEncode(grey + (b - grey) * keep);
+  lit.albedo[at + 3] = 255;
+  // World height is minus the depth at the drawn scale, so ground that
+  // deepens eastward faces east. Steepened, since the column is drawn flat.
+  const slope = (HIGH_GRAPHICS.GROUND.RELIEF_GAIN * lit.heightPerDepthM) / (2 * mPerPx);
+  const nx = dropX * slope;
+  const nz = dropY * slope;
+  const length = Math.hypot(nx, 1, nz);
+  lit.relief[at] = Math.round(127.5 + (127.5 * nx) / length);
+  lit.relief[at + 1] = Math.round(255 * Math.min(1, Math.max(0, occlusion)));
+  lit.relief[at + 2] = Math.round(127.5 + (127.5 * nz) / length);
+  lit.relief[at + 3] = 255;
+}
+
 /** A rectangle of cells, inclusive at both ends. */
 export interface CellRect {
   col0: number;
@@ -1174,22 +1256,40 @@ export function shadeSeabed(
           const hD = rockDetailM(xM, yM + mPerPx, seed);
           shade = reliefTextureGain(0, 0, (hR - hL) * dropScale, (hD - hU) * dropScale);
         }
-        const texture = Math.min(
-          1 + TERRAIN_LIFT.BAKE,
-          shade * mottleFactor(xM, yM, seed, ROCK_RELIEF.mottle)
-        );
-        color = scaleRgb(
-          ROCK_FACE,
-          texture *
-            // The rim: darkened toward ROCK_SHADOW where the mesa meets open
-            // water, so a flat top reads as raised ground with an edge.
-            (eroded !== undefined
-              ? Math.min(
-                  faceGainOf(share[(py - ey0) * ew + (px - ex0)]!),
-                  edgeGain(roofedDistM(xM, yM, row, col), ROCK_EDGE_M, ROCK_EDGE_GAIN)
-                )
-              : edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN))
-        );
+        const stoneMottle = mottleFactor(xM, yM, seed, ROCK_RELIEF.mottle);
+        const texture = Math.min(1 + TERRAIN_LIFT.BAKE, shade * stoneMottle);
+        // The rim: darkened toward ROCK_SHADOW where the mesa meets open
+        // water, so a flat top reads as raised ground with an edge.
+        const rim =
+          eroded !== undefined
+            ? Math.min(
+                faceGainOf(share[(py - ey0) * ew + (px - ex0)]!),
+                edgeGain(roofedDistM(xM, yM, row, col), ROCK_EDGE_M, ROCK_EDGE_GAIN)
+              )
+            : edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN);
+        color = scaleRgb(ROCK_FACE, texture * rim);
+        if (options.lit !== undefined) {
+          let dropX: number;
+          let dropY: number;
+          if (eroded !== undefined) {
+            const i = (py - ey0) * ew + (px - ex0);
+            dropX = height[i + (px < w - 1 ? 1 : 0)]! - height[i - (px > 0 ? 1 : 0)]!;
+            dropY = height[i + (py < h - 1 ? ew : 0)]! - height[i - (py > 0 ? ew : 0)]!;
+          } else {
+            dropX = rockDetailM(xM + mPerPx, yM, seed) - rockDetailM(xM - mPerPx, yM, seed);
+            dropY = rockDetailM(xM, yM + mPerPx, seed) - rockDetailM(xM, yM - mPerPx, seed);
+          }
+          writeLit(
+            options.lit,
+            (py * w + px) * 4,
+            ROCK_FACE,
+            stoneMottle,
+            dropX,
+            dropY,
+            mPerPx,
+            rim
+          );
+        }
       } else {
         const i = (py - ey0) * ew + (px - ex0);
         const hL = height[i - (px > 0 ? 1 : 0)]!;
@@ -1224,6 +1324,7 @@ export function shadeSeabed(
         // The shape the light finds, then what the surface is made of: both
         // texture, centred on the step, and capped together. Each gain scales
         // all three channels alike, so hue stays the biome's.
+        const floorMottle = detail ? mottleFactor(xM, yM, seed, mottle) : 1;
         const texture = Math.min(
           1 + TERRAIN_LIFT.BAKE,
           reliefTextureGain(
@@ -1231,22 +1332,27 @@ export function shadeSeabed(
             (gD - gU) * dropScale,
             (hR - hL) * dropScale,
             (hD - hU) * dropScale
-          ) * (detail ? mottleFactor(xM, yM, seed, mottle) : 1)
+          ) * floorMottle
         );
-        color = scaleRgb(
-          depthShade(base, height[i]!, shallowest, deepest),
-          texture *
-            // The wall's lee: open floor darkens where it meets a mesa, so
-            // the rock reads as standing on the seabed, not pasted over it.
-            (eroded !== undefined
-              ? faceGainOf(share[i]!)
-              : edgeGain(
-                  oppositeDistM(xM, yM, row, col, true),
-                  CLIFF_SHADOW_M,
-                  CLIFF_SHADOW_GAIN
-                )) *
-            scour
-        );
+        // The wall's lee: open floor darkens where it meets a mesa, so the
+        // rock reads as standing on the seabed, not pasted over it.
+        const lee =
+          eroded !== undefined
+            ? faceGainOf(share[i]!)
+            : edgeGain(oppositeDistM(xM, yM, row, col, true), CLIFF_SHADOW_M, CLIFF_SHADOW_GAIN);
+        color = scaleRgb(depthShade(base, height[i]!, shallowest, deepest), texture * lee * scour);
+        if (options.lit !== undefined) {
+          writeLit(
+            options.lit,
+            (py * w + px) * 4,
+            base,
+            floorMottle,
+            hR - hL,
+            hD - hU,
+            mPerPx,
+            lee * scour
+          );
+        }
       }
 
       data[j] = (color >> 16) & 0xff;

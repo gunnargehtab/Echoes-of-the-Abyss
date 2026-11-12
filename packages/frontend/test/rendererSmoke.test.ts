@@ -96,6 +96,7 @@ import {
   COLS,
   ROWS,
 } from './support/cannedMatch.ts';
+import { farthestInk } from './support/inkReach.ts';
 import {
   collarRadius,
   EchoRenderer,
@@ -134,16 +135,21 @@ import { HULL_LENGTH_M } from '../src/game/silhouettes.ts';
 import { buildTemplate, instantiate } from '../src/game/rosterModels.ts';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
+import { graphicsQualityStatus } from '../src/game/graphicsQuality.ts';
+import { PLATE_HOLD_GLSL, PLATE_STRIDE } from '../src/game/markPlates.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FACTION_PALETTE, FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
 import {
   BufferAttribute,
   FogExp2,
+  MaxEquation,
   Mesh,
   MeshBasicMaterial,
   Points,
   ShaderMaterial,
+  type Material,
+  type Object3D,
   type Scene,
 } from 'three';
 
@@ -2237,6 +2243,420 @@ describe('renderer smoke test: the conn view', () => {
       blind.teardown();
     }
     assert.equal(lampHaloStatus(), 'off', 'a view that is gone has refused nothing');
+  });
+
+  it('draws High as a lit world pass under the tactical pass Low draws, and Low as it always did (#1801)', async () => {
+    // docs/art-direction.md, "Two layers, two laws": the world layer is lit
+    // at High, and the tactical layer is "unchanged at both graphics
+    // qualities". graphics-standards.md gate 6: "Low does not move". Counted
+    // here as passes, targets and what each pass draws; the pixels are the
+    // frames in docs/screenshots/issue-1801.
+    type Probes = {
+      __perspectiveProbe: () => Record<string, unknown>;
+      __perspectiveQuality?: (quality: 'low' | 'high') => string;
+      __perspectiveSplit: (on: boolean) => string;
+    };
+    const drawsOf = (gl: HeadlessWebGLRenderer) => gl.frameDraws.map((pass) => [...pass]);
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.ok(probes.__perspectiveQuality, 'outside a production build the switch is there');
+      probes.__perspectiveSplit(false);
+      world.frame(3);
+      const low = probes.__perspectiveProbe();
+      const quality = (p: Record<string, unknown>) => p.graphicsQuality as Record<string, unknown>;
+      assert.deepEqual(low.passes, ['canvas'], 'Low is the canvas pass');
+      assert.deepEqual(
+        quality(low),
+        {
+          asked: 'low',
+          drawn: 'low',
+          targetBytes: 0,
+          groundBytes: 0,
+          worldLights: 0,
+          plates: 0,
+          frameGpuBudgetMs: 8,
+        },
+        'Low holds nothing of High’s'
+      );
+      assert.equal(world.conn.markPlates(), null, 'and the chart hands it no plate');
+      const lowDraws = drawsOf(world.gl)[0]!;
+      // What a draw is, to the GPU: the kind of object, and its material by
+      // type, program and the two flags that pick its curve and its fog. A
+      // quality change rebuilds the ground's dressing, so objects are compared
+      // by this and not by identity.
+      const kind = (object: Object3D): string => {
+        const material = (object as Mesh).material as Material & { fog?: boolean };
+        return [
+          object.type,
+          material.type,
+          material.customProgramCacheKey(),
+          material.toneMapped,
+          material.fog,
+          material.transparent,
+        ].join('|');
+      };
+      const count = (draws: Object3D[]) => {
+        const kinds = new Map<string, number>();
+        for (const object of draws) kinds.set(kind(object), (kinds.get(kind(object)) ?? 0) + 1);
+        return kinds;
+      };
+      const backdrop = lowDraws.find((o) => (o as Mesh).renderOrder === -1);
+      assert.ok(backdrop, 'Low draws the water backdrop');
+
+      assert.equal(probes.__perspectiveQuality!('high'), 'high');
+      assert.equal(graphicsQualityStatus(), 'high', 'and Settings is told');
+      world.frame(3);
+      const high = probes.__perspectiveProbe();
+      // The canned ground stands vent embers, which are sources of the
+      // world's own at High, so their light scatters in a pass of its own.
+      assert.ok((quality(high).worldLights as number) > 0, 'the ground’s own sources are lit');
+      assert.deepEqual(high.passes, [
+        'high-world',
+        'high-scatter',
+        'high-occlusion',
+        'high-bloom',
+        'high-plates',
+        'high-composite',
+        'high-tactical',
+      ]);
+      // The world, the scatter, the chain and the plates draw into targets:
+      // the occlusion, the bloom's prefilter, three levels down and three
+      // back up, then the plates' mask. The composite and the tactical pass
+      // draw to the canvas.
+      const [target, scatter, ...after] = world.gl.frameTargets;
+      const chain = after.slice(0, 8);
+      const mask = after[8];
+      const rest = after.slice(9);
+      assert.ok(mask !== null && mask !== undefined, 'the plate pass has its mask');
+      assert.deepEqual([mask.width, mask.height], [1280, 720], 'at the frame’s own size');
+      assert.deepEqual(
+        chain.map((t) => t?.width),
+        [640, 640, 320, 160, 80, 160, 320, 640],
+        'the chain is half the frame and smaller'
+      );
+      assert.ok(target !== null && target !== undefined, 'the world pass has a target');
+      assert.equal(target.samples, 4, 'multisampled as the canvas is (HIGH_GRAPHICS.SAMPLES)');
+      assert.ok(target.depthTexture, 'with the depth the composite lays on the canvas');
+      assert.ok(scatter !== null && scatter !== undefined, 'the scatter pass has its own');
+      assert.deepEqual([scatter.width, scatter.height], [640, 360], 'at half the frame each way');
+      assert.deepEqual(rest, [null, null]);
+      assert.equal(
+        quality(high).targetBytes,
+        1280 * 720 * 12 * 5 +
+          640 * 360 * 8 +
+          640 * 360 * 4 +
+          (640 * 360 + 320 * 180 + 160 * 90 + 80 * 45) * 8 +
+          1280 * 720 * 4
+      );
+      assert.ok((quality(high).groundBytes as number) > 0, 'the lit ground holds its pixels');
+
+      const draws = drawsOf(world.gl);
+      const [worldPass, volumes] = draws as [Object3D[], Object3D[]];
+      const [plated, composite, tactical] = draws.slice(-3) as [Object3D[], Object3D[], Object3D[]];
+      assert.equal(draws.length, 13);
+      for (const pass of draws.slice(2, 10)) assert.equal(pass.length, 1, 'one full-screen draw');
+      assert.equal(volumes.length, 1, 'every source is one instanced draw');
+      assert.equal(composite.length, 1, 'the composite is one full-screen draw');
+      // Two layers, one draw each: nothing is lit and then drawn again.
+      for (const object of worldPass) assert.ok(!tactical.includes(object), 'drawn once');
+      // The lit ground is the world's, and its survey ink the tactical layer's,
+      // on the one geometry.
+      const ground = worldPass.find((o) =>
+        ((o as Mesh).material as Material).customProgramCacheKey().includes(':lit-ground-')
+      ) as Mesh | undefined;
+      assert.ok(ground, 'the world pass draws the lit ground');
+      const ink = tactical.find((o) =>
+        ((o as Mesh).material as Material).customProgramCacheKey().includes('-overlay')
+      ) as Mesh | undefined;
+      assert.ok(ink, 'the tactical pass draws the survey ink over it');
+      assert.equal(ink.geometry, ground.geometry);
+      assert.equal((ink.material as Material).transparent, true, 'blended over the lit ground');
+      assert.equal((ink.material as Material).depthWrite, false);
+
+      // A mark carries a plate (art-direction.md, "The plate under a mark").
+      // The plate pass draws two things into its mask, the greater kept where
+      // they cross: the ink's plate, on the ground's own geometry, and every
+      // band and disc the marks handed over, as one instanced draw. Neither
+      // is drawn by the world pass or the tactical pass.
+      assert.equal(plated.length, 2, 'the ink’s plate and the marks’');
+      const inkPlate = plated.find((o) =>
+        ((o as Mesh).material as Material).customProgramCacheKey().includes('-plate')
+      ) as Mesh | undefined;
+      assert.ok(inkPlate, 'the plate pass draws the ink’s plate');
+      assert.equal(inkPlate.geometry, ground.geometry);
+      for (const object of plated) {
+        const material = (object as Mesh).material as Material;
+        assert.equal(material.blendEquation, MaxEquation, 'the greater of two plates stands');
+        assert.equal(material.depthWrite, false);
+        assert.ok(!worldPass.includes(object) && !tactical.includes(object), 'drawn in its pass');
+      }
+      // The composite holds the world under the mask after its curve, and
+      // before it lays the depth the tactical pass is hidden by.
+      const sum = ((composite[0] as Mesh).material as ShaderMaterial).fragmentShader;
+      assert.ok(sum.includes(PLATE_HOLD_GLSL));
+      assert.ok(sum.indexOf('#include <colorspace_fragment>') < sum.indexOf(PLATE_HOLD_GLSL));
+      assert.ok(sum.indexOf(PLATE_HOLD_GLSL) < sum.indexOf('gl_FragDepth = depth;'));
+      // What stands in the mask: the chart's marks, a group to each layer it
+      // caches, and the lines this view draws. Every own hull and structure
+      // carries a disc; a resource field's rim is traced, and its plate is
+      // taken from the tracer; the map's rim is this view's own line.
+      const plates = world.conn.markPlates();
+      assert.ok(plates, 'at High the chart has somewhere to hand its plates');
+      const fleet = cannedSnapshot();
+      assert.ok(
+        plates.countOf('force') >= fleet.units.length + fleet.structures.length,
+        'a disc under every own hull and structure'
+      );
+      assert.ok(plates.countOf('nodes') > 0, 'a band along every traced rim');
+      assert.ok(plates.countOf('terrain') > 0, 'and along the map’s rim');
+      assert.equal(quality(high).plates, plates.count, 'all of them drawn');
+      // The water is the composite's at High: the backdrop is not drawn.
+      assert.ok(!worldPass.includes(backdrop) && !tactical.includes(backdrop));
+      // "Unchanged at both graphics qualities", by construction: everything
+      // else the tactical pass draws is a draw Low makes, in a material of the
+      // kind Low makes it in. (Low's first frames also hold what expires on
+      // its own, a wake or a spray, so this is a containment, not a count.)
+      const lowKinds = count(lowDraws);
+      for (const [made, times] of count(tactical.filter((o) => o !== ink))) {
+        assert.ok(
+          (lowKinds.get(made) ?? 0) >= times,
+          `the tactical pass draws ${made} as Low does`
+        );
+      }
+      // The world pass is the world layer and nothing else: the lit ground,
+      // the stone over a passage, and the skirt the world ends at.
+      const roofs = worldPass.filter((o) => kind(o).includes(':lit-roof-1'));
+      assert.equal(roofs.length, 1, 'the canned ground has one roofed passage');
+      assert.ok(lowKinds.has(kind(roofs[0]!).replace(':lit-roof-1', '')), 'Low’s roof, lit');
+      const skirt = worldPass.filter((o) => o !== ground && !roofs.includes(o));
+      assert.equal(skirt.length, 1, 'and the skirt');
+      assert.ok(lowKinds.has(kind(skirt[0]!)), 'which Low draws in the same material');
+
+      // Low again is the frame it was: the same pass, the same draws.
+      assert.equal(probes.__perspectiveQuality!('low'), 'low');
+      world.frame(3);
+      const again = probes.__perspectiveProbe();
+      assert.deepEqual(again.passes, ['canvas']);
+      assert.equal(quality(again).targetBytes, 0, 'the target goes with High');
+      assert.equal(quality(again).groundBytes, 0, 'and the lit ground');
+      assert.equal(world.conn.markPlates(), null, 'and no mark carries a plate');
+      assert.equal(plates.count, 0);
+      assert.equal(quality(again).plates, 0);
+      const againDraws = drawsOf(world.gl)[0]!;
+      for (const object of againDraws)
+        assert.equal(object.layers.mask, 1, 'back on Low’s one layer');
+      // Low does not move: every draw is one Low made before High was ever
+      // asked for, the unlit ground and the backdrop among them.
+      for (const [made, times] of count(againDraws)) {
+        assert.ok((lowKinds.get(made) ?? 0) >= times, `Low draws ${made} as it did`);
+      }
+      assert.ok(againDraws.includes(backdrop), 'the backdrop is Low’s water again');
+      const skin = (draws: Object3D[]) =>
+        draws.find((o) => (o as Mesh).geometry?.getAttribute('surveyFloor') !== undefined)!;
+      assert.equal(kind(skin(againDraws)), kind(skin(lowDraws)), 'the ground wears its skin again');
+      assert.equal(
+        againDraws.filter((o) => kind(o).includes('survey-ink')).length,
+        1,
+        'with its ink in it, not over it'
+      );
+
+      // A lost context takes the target and keeps the choice.
+      probes.__perspectiveQuality!('high');
+      world.gl.domElement.dispatchEvent({ type: 'webglcontextlost' });
+      assert.equal(quality(probes.__perspectiveProbe()).targetBytes, 0);
+      world.gl.domElement.dispatchEvent({ type: 'webglcontextrestored' });
+      assert.equal(
+        quality(probes.__perspectiveProbe()).drawn,
+        'high',
+        'High again once it can draw'
+      );
+    } finally {
+      world.teardown();
+    }
+    assert.equal(graphicsQualityStatus(), 'low', 'a view that is gone draws nothing');
+
+    // A display without the float colour target, or without the samples,
+    // stays on Low, keeps the choice and says why.
+    const blind = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      blind.gl.extensionNames.delete('EXT_color_buffer_float');
+      assert.equal(probes.__perspectiveQuality!('high'), 'unavailable: no EXT_color_buffer_float');
+      assert.equal(graphicsQualityStatus(), 'unavailable: no EXT_color_buffer_float');
+      probes.__perspectiveSplit(false);
+      blind.frame(2);
+      assert.deepEqual(probes.__perspectiveProbe().passes, ['canvas'], 'and draws Low');
+      probes.__perspectiveQuality!('low');
+      blind.gl.extensionNames.add('EXT_color_buffer_float');
+      blind.gl.context.maxSamples = 1;
+      assert.equal(probes.__perspectiveQuality!('high'), 'unavailable: fewer than 4 samples');
+    } finally {
+      blind.teardown();
+    }
+
+    // High does not reach Sorrowgate's own surface yet (#1683).
+    const sorrowgate = await boot({ look: 'sorrowgate' });
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.equal(probes.__perspectiveQuality!('high'), 'unavailable: Sorrowgate is not lit yet');
+    } finally {
+      sorrowgate.teardown();
+    }
+  });
+
+  it('holds every agent’s ink on its disc at High, far and close (#1801)', async () => {
+    // art-direction.md, "The plate under a mark": "one disc under an own
+    // hull's or structure's rings and collar, under an own shot's mark, and
+    // under a contact's mark once it has a depth, out to the top of its glyph
+    // and its bar". Not one case of it, the property: each symbol the chart
+    // drew is measured off its own shapes, a flash aside, and set against the
+    // disc under it. Asked far, at the canned frame, and close, where a
+    // plate's few pixels of margin are small beside a mark.
+    type Probes = {
+      __perspectiveQuality: (quality: 'low' | 'high') => string;
+      __perspectiveCamera: (
+        x: number,
+        z: number,
+        distance: number,
+        pose: { yawDeg: number; pitchDeg: number; focusDepthM: number | null }
+      ) => unknown;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.equal(probes.__perspectiveQuality('high'), 'high');
+      // The server sends hp for every track (echoLayer.ts), so the canned
+      // torpedo track is given one: a bar with no navy's glyph over it. And a
+      // tracked hall is added, the kind whose outline stands farthest past
+      // its footing: a Baffle Barge's corners are 1.3 radii out.
+      const tracked = cannedSnapshot(cannedSnapshot().tick + 1);
+      tracked.contacts = [
+        ...tracked.contacts.map((c) => (c.id === 107 ? { ...c, hp: 40, maxHp: 80 } : c)),
+        {
+          id: 108,
+          tier: ResolutionTier.Track,
+          x: 3300,
+          y: 1400,
+          depth: 1300,
+          structure: StructureKind.BaffleBarge,
+          faction: Faction.Hadron,
+          hp: 300,
+          maxHp: 400,
+          tick: tracked.tick,
+        },
+      ];
+      world.chart.applySnapshot(tracked);
+      world.conn.applySnapshot(tracked);
+      const chart = world.chart as unknown as Record<
+        'unitSymbols' | 'structureSymbols' | 'contactSymbols' | 'ordnanceSymbols',
+        { held: Map<number, Graphics> }
+      > & { lockFlash: Map<number, number>; tracked: Map<number, { firstSeenMs: number }> };
+      // A mark fades in, and its plate with it (the Precedence Law): the hall
+      // is new this snapshot, so it is asked once it has arrived.
+      chart.tracked.get(108)!.firstSeenMs = performance.now() - 60_000;
+      const asked: Array<
+        [
+          'unitSymbols' | 'structureSymbols' | 'contactSymbols' | 'ordnanceSymbols',
+          string,
+          number[],
+        ]
+      > = [
+        ['unitSymbols', 'hull', tracked.units.map((u) => u.id)],
+        ['structureSymbols', 'structure', tracked.structures.map((s) => s.id)],
+        ['ordnanceSymbols', 'shot', tracked.ordnance.map((o) => o.id)],
+        [
+          'contactSymbols',
+          'contact',
+          // A contact with no depth is its column, a haze, and carries none.
+          tracked.contacts.filter((c) => c.depth !== undefined).map((c) => c.id),
+        ],
+      ];
+      /** Every symbol in the frame against the disc under it; the names of those asked. */
+      const holds = (): Set<string> => {
+        // The lock brackets are a flash, and carry no plate (art-direction.md).
+        chart.lockFlash.clear();
+        world.frame(2);
+        const plates = world.conn.markPlates();
+        assert.ok(plates);
+        const packed = plates.pack();
+        const discs: Array<{ x: number; y: number; radius: number }> = [];
+        for (let i = 0; i < packed.length; i += PLATE_STRIDE) {
+          const point =
+            packed[i] === packed[i + 4] &&
+            packed[i + 1] === packed[i + 5] &&
+            packed[i + 2] === packed[i + 6];
+          if (!point) continue;
+          const at = world.conn.projectHeight(packed[i]!, packed[i + 1]!, packed[i + 2]!, {
+            x: 0,
+            y: 0,
+            pxPerM: 1,
+            visible: false,
+            worldY: 0,
+          });
+          discs.push({ x: at.x, y: at.y, radius: packed[i + 3]! });
+        }
+        const seen = new Set<string>();
+        for (const [pool, kind, ids] of asked) {
+          for (const id of ids) {
+            const symbol = chart[pool].held.get(id);
+            if (symbol === undefined || !symbol.visible) continue;
+            const ink = farthestInk(symbol) * symbol.scale.x;
+            const under = discs
+              .filter((d) => Math.hypot(d.x - symbol.position.x, d.y - symbol.position.y) < 1)
+              .reduce((most, d) => Math.max(most, d.radius), 0);
+            assert.ok(under > 0, `${kind} ${id} carries a disc`);
+            assert.ok(
+              under >= ink,
+              `${kind} ${id}'s disc holds its ink: ${under.toFixed(1)} px against ${ink.toFixed(1)}`
+            );
+            // A noisemaker's ring breathes; its disc is sized for its widest,
+            // 1.2 of the six metres the shot's marks are drawn at.
+            if (kind === 'shot') {
+              assert.ok(under >= 1.2 * 6 * world.conn.hullDrawScale() * symbol.scale.x);
+            }
+            seen.add(`${kind} ${id}`);
+          }
+        }
+        return seen;
+      };
+
+      // Far: the canned frame holds one of each.
+      const hull = tracked.units[0]!;
+      const yard = tracked.structures[0]!;
+      const far = holds();
+      const cases: Array<[string, { x: number; y: number; depth?: number }]> = [
+        // A hull with its bar up, a structure with its bars, and both shots:
+        // a torpedo's dial and a noisemaker's breathing ring.
+        [`hull ${hull.id}`, hull],
+        [`structure ${yard.id}`, yard],
+        ...tracked.ordnance.map((shot): [string, { x: number; y: number; depth?: number }] => [
+          `shot ${shot.id}`,
+          shot,
+        ]),
+        // A Tier-3 contact under a navy's glyph, a Tier-4 one with a blade's
+        // point over its bar, a Tier-3 structure, a creature in dots, a track
+        // with a bar and no navy, and a tracked hall in its outline.
+        ...[103, 104, 105, 106, 107, 108].map(
+          (id): [string, { x: number; y: number; depth?: number }] => [
+            `contact ${id}`,
+            tracked.contacts.find((c) => c.id === id)!,
+          ]
+        ),
+      ];
+      for (const [name] of cases) assert.ok(far.has(name), `${name} was in the far frame`);
+      // Close: each in turn, at a dolly where it is some five pixels a metre.
+      for (const [name, at] of cases) {
+        probes.__perspectiveCamera(at.x, at.y, 200, {
+          yawDeg: 0,
+          pitchDeg: 55,
+          focusDepthM: at.depth ?? null,
+        });
+        assert.ok(holds().has(name), `${name} was in its close frame`);
+      }
+    } finally {
+      world.teardown();
+    }
   });
 
   it('draws the chromatic split on every frame, and checks again after a context restore (#1003)', async () => {

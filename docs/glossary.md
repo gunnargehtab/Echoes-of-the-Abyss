@@ -445,9 +445,14 @@ Tactical layer · World layer
 - The two halves of the picture since 11 November 2026 (art-direction.md, "Two layers, two laws"). The tactical layer is everything a player reads to command: survey ink, map furniture, public life's field marks and stipple, instruments, agents' marks and lamps, contacts, the scope and the HUD. The world layer is the place it is read in: water, stone, ground, flora, the modelled bodies of public life and the surfaces of every model.
 - Not the Echo Layer, which is the detection system and computes what the tactical layer shows. Not the three-layer ocean either, which is the water column's three bands (three-layer-ocean.md).
 
+Mark plate
+
+- The ground a mark carries at the High graphics quality: under it the world layer is drawn no brighter than the palest ground the loudness ladder weighs, so the mark reads over a lit world as it does at Low (art-direction.md, "The plate under a mark"). A ceiling on the world's light under a mark, never a paint, and never over a model, a lamp or another mark.
+- Not Plate, one of the five fleet-wide upgrades (systems-progression.md §2).
+
 Graphics quality
 
-- The renderer a player chooses: Low or High (graphics-standards.md gate 6). Low is the shipped renderer on its counted budgets. High is the lit world layer on a frame-time budget, and is not built.
+- The renderer a player chooses: Low or High (graphics-standards.md gate 6). Low is the shipped renderer on its counted budgets and the default. High is the lit world layer on a frame-time budget, a setting a player turns on, in development until the owner accepts a frame of it.
 - A *quality*, never a tier: Tier is the Echo Layer's word for how well a contact is resolved, and it keeps it.
 
 Target frame · Look work

@@ -60,6 +60,16 @@ export function rankChevronReachPx(rank: number | undefined): number {
   return RANK_CHEVRON_PX.gap + RANK_CHEVRON_PX.width;
 }
 
+/**
+ * How far above the bar's centre line the chevrons reach, in screen pixels,
+ * stroke and all: half the stack, which three straddle the line with.
+ */
+export function rankChevronRisePx(rank: number | undefined): number {
+  if (rank === undefined || !Number.isInteger(rank) || rank < 1 || rank > 3) return 0;
+  const { rise, pitch, stroke } = RANK_CHEVRON_PX;
+  return ((rank - 1) * pitch + rise) / 2 + stroke / 2;
+}
+
 /** Stroke the chevrons into `g`, in the ink and alpha of the bar they caption. */
 export function drawRankChevrons(
   g: Graphics,

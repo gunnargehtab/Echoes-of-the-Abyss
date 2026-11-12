@@ -1,0 +1,294 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "unpaced": false,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "readings": [
+    {
+      "name": "home",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 61,
+        "zM": 2671,
+        "depthM": -1112
+      },
+      "distance": 1200,
+      "waterReachM": 1805,
+      "calls": 44,
+      "triangles": 593684,
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "plates": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6,
+      "sway": "held"
+    },
+    {
+      "name": "close",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "pitchDeg": 2,
+      "yawDeg": 300,
+      "focus": {
+        "xM": 542,
+        "zM": 1958,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 178,
+        "zM": 2168,
+        "depthM": 233
+      },
+      "distance": 420,
+      "waterReachM": 630,
+      "calls": 44,
+      "triangles": 593684,
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "plates": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6,
+      "sway": "held"
+    },
+    {
+      "name": "survey",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2000,
+        "zM": 2349,
+        "depthM": -43039
+      },
+      "distance": 10000,
+      "waterReachM": 32000,
+      "calls": 45,
+      "triangles": 594970,
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "plates": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6,
+      "sway": "held"
+    },
+    {
+      "name": "home",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-plates",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "pitchDeg": 15,
+      "yawDeg": 326,
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 61,
+        "zM": 2671,
+        "depthM": -1112
+      },
+      "distance": 1200,
+      "waterReachM": 1805,
+      "calls": 56,
+      "triangles": 660446,
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 144439680,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "plates": 534,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6,
+      "sway": "held"
+    },
+    {
+      "name": "close",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-plates",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "pitchDeg": 2,
+      "yawDeg": 300,
+      "focus": {
+        "xM": 542,
+        "zM": 1958,
+        "depthM": 300
+      },
+      "eye": {
+        "xM": 178,
+        "zM": 2168,
+        "depthM": 233
+      },
+      "distance": 420,
+      "waterReachM": 630,
+      "calls": 56,
+      "triangles": 660446,
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 144439680,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "plates": 534,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6,
+      "sway": "held"
+    },
+    {
+      "name": "survey",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-plates",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "pitchDeg": 88,
+      "yawDeg": 0,
+      "focus": {
+        "xM": 2000,
+        "zM": 2000,
+        "depthM": null
+      },
+      "eye": {
+        "xM": 2000,
+        "zM": 2349,
+        "depthM": -43039
+      },
+      "distance": 10000,
+      "waterReachM": 32000,
+      "calls": 57,
+      "triangles": 661726,
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 144439680,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "plates": 531,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6,
+      "sway": "held"
+    }
+  ]
+}

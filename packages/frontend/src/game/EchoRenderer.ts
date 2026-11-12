@@ -59,6 +59,7 @@ import {
   firingSigFor,
   FOLLOW_FLOOR,
   FLIGHT_CAMERA,
+  HIGH_GRAPHICS,
   faunaStatsFor,
   HarvestIdleReason,
   HarvestThrottle,
@@ -153,7 +154,7 @@ import {
 } from './ladder.ts';
 import { fieldRadiusM } from './environment.ts';
 import { roofedPassages } from './passages.ts';
-import { drawRankChevrons, rankChevronReachPx } from './rankChevrons.ts';
+import { drawRankChevrons, rankChevronReachPx, rankChevronRisePx } from './rankChevrons.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -235,6 +236,7 @@ import {
   drawStructureSilhouette,
   drawUnitSilhouette,
   HULL_LENGTH_M,
+  structureOutlineReachM,
 } from './silhouettes.ts';
 import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
 import {
@@ -259,6 +261,7 @@ import {
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
 import { FOCUS_DRAG_M_PER_PX, FOCUS_STEP_M, HOME_DOLLY_M } from './PerspectiveView.ts';
 import type { PerspectiveView, ProjectedPoint, Track } from './PerspectiveView.ts';
+import type { MarkPlates } from './markPlates.ts';
 import {
   COLUMN_RIBBONS,
   columnDepthsM,
@@ -1892,6 +1895,13 @@ export class EchoRenderer {
    * open, whether the last point projected (so the next segment is tested
    * from it), and where that point was, in world metres and on screen.
    */
+  /**
+   * Where this frame's marks hand over their plates, or null while the conn
+   * view draws none: the Low quality (markPlates.ts; docs/art-direction.md,
+   * "The plate under a mark"). Read once a frame in `draw`, which also opens
+   * a group for each layer it redraws, so a cached layer keeps its plates.
+   */
+  private plates: MarkPlates | null = null;
   private readonly pen = {
     open: false,
     held: false,
@@ -2992,6 +3002,12 @@ export class EchoRenderer {
     const sx = p.x;
     const sy = p.y;
     const wy = p.worldY;
+    // The line's plate, under High (markPlates.ts): the whole world segment,
+    // a model across it or not. The plate is drawn under the tactical pass,
+    // so a model that hides the line hides its plate.
+    if (pen.held) {
+      this.plates?.line(pen.x, pen.wy, pen.y, x, wy, y, HIGH_GRAPHICS.PLATE.LINE_PX * this.uiScale);
+    }
     if (pen.held && conn.inkCrosses(pen.sx, pen.sy, sx, sy)) {
       const x0 = pen.x;
       const y0 = pen.y;
@@ -3020,6 +3036,27 @@ export class EchoRenderer {
     pen.wy = wy;
     pen.sx = sx;
     pen.sy = sy;
+  }
+
+  /**
+   * A point mark's plate, under High: one disc under a mark drawn about a
+   * projected point, whole to `reachPx` from it and the agent margin past
+   * that (markPlates.ts). `strength` follows a mark that fades.
+   */
+  private platePoint(
+    xM: number,
+    yM: number,
+    at: ProjectedPoint,
+    reachPx: number,
+    strength = 1
+  ): void {
+    this.plates?.disc(
+      xM,
+      at.worldY,
+      yM,
+      reachPx + HIGH_GRAPHICS.PLATE.AGENT_PX * this.uiScale,
+      strength
+    );
   }
 
   /** One projected point onto the open run, or a break where a model hides it. */
@@ -6863,9 +6900,21 @@ export class EchoRenderer {
     // The models ground ink passes behind, where they stand this frame. A
     // layer cached on the view alone redraws when one of them moves too.
     this.inkRevision = this.conn?.beginInk() ?? 0;
-    const base = `${this.snapshotSeq}|${this.selectionSeq}|${view}|${this.worldRev}`;
-    if (this.stale('ground', base)) this.drawBlockedGround();
-    if (this.stale('nodes', `${view}|${this.worldRev}|${this.inkRevision}`)) this.drawNodes();
+    // A mark carries a plate under High, and a layer is cached: each layer
+    // that redraws opens its own group of plates, and the quality is in every
+    // layer's stamp so the turn to High redraws them all once.
+    const plates = this.conn?.markPlates() ?? null;
+    this.plates = plates;
+    const plated = plates === null ? 0 : 1;
+    const base = `${this.snapshotSeq}|${this.selectionSeq}|${view}|${this.worldRev}|${plated}`;
+    if (this.stale('ground', base)) {
+      plates?.begin('ground');
+      this.drawBlockedGround();
+    }
+    if (this.stale('nodes', `${view}|${this.worldRev}|${this.inkRevision}|${plated}`)) {
+      plates?.begin('nodes');
+      this.drawNodes();
+    }
     // The force layers share the ring Graphics (rings, routes, a rally) and
     // the symbol pools, so they repaint together. Anything on them that
     // moves between snapshots — a gliding hull, a contracting order marker,
@@ -6880,15 +6929,22 @@ export class EchoRenderer {
       this.brokeSilence.size > 0;
     const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}|${this.inkRevision}|${this.missionMarksKey}|${this.panelKey}`;
     const forceStale = this.stale('force', force);
-    if (forceStale) this.drawRings();
+    if (forceStale) {
+      plates?.begin('force');
+      this.drawRings();
+    }
+    plates?.begin('contacts');
     this.drawContacts();
     this.drawEdgeMarks();
     if (forceStale) {
+      plates?.resume('force');
       this.drawStructures();
       this.drawUnits();
       this.drawOrderPlans();
       this.drawMissionMarks();
     }
+    // The map ends here, and so do the plates: a panel is no mark.
+    plates?.close();
     // The map ends here. Every pass below paints screen space — panels, the
     // edge flash, the drag box — and sits outside the loudness ladder, which
     // ranks marks on the map (docs/map-visuals.md §5).
@@ -6977,6 +7033,17 @@ export class EchoRenderer {
         g.moveTo(p01.x, p01.y)
           .lineTo(p10.x, p10.y)
           .stroke({ width: 1, color: UI.accent, alpha: INSTRUMENT_OUTLINE_ALPHA.blockedHatch });
+        // The hatch is what the ladder weighs of this mark, so it is what
+        // carries the plate (markPlates.ts).
+        this.plates?.line(
+          x,
+          p01.worldY,
+          y + terrain.cellM,
+          x + terrain.cellM,
+          p10.worldY,
+          y,
+          HIGH_GRAPHICS.PLATE.LINE_PX * this.uiScale
+        );
       }
     }
   }
@@ -7079,6 +7146,21 @@ export class EchoRenderer {
       const footing = radius * p.pxPerM;
       const ox = c === null ? p.x : c.x;
       const oy = c === null ? p.y : c.y;
+      // The structure's plate, under High (markPlates.ts): one disc about
+      // the footing that holds every steady mark: the collar, which stands
+      // about the model as drawn; the bars' slots at the footing, to their
+      // corners, the build bar's top 14 pixels over it; and a site's
+      // scaffold, to its outline's corners.
+      this.platePoint(
+        structure.x,
+        structure.y,
+        p,
+        Math.max(
+          Math.hypot(ox - p.x, oy - p.y) + collar,
+          Math.hypot(footing, footing + 14),
+          structureOutlineReachM(structure.kind, radius) * p.pxPerM
+        )
+      );
       this.figureFootprints.push(
         Math.min(ox - collar, p.x - footing),
         Math.min(oy - collar, p.y - footing - 14),
@@ -7104,6 +7186,7 @@ export class EchoRenderer {
           const rp = this.project(structure.rally.x, structure.rally.y, null);
           if (rp !== null && rp.visible) {
             const arm = 6 * this.uiScale;
+            this.platePoint(structure.rally.x, structure.rally.y, rp, arm);
             rg.moveTo(rp.x, rp.y - arm)
               .lineTo(rp.x + arm, rp.y)
               .lineTo(rp.x, rp.y + arm)
@@ -7980,6 +8063,8 @@ export class EchoRenderer {
       // and is drawn as the column (contactColumn.ts), so the anchor is a
       // consequence of the span rather than a claim about a depth.
       let anchor: { x: number; y: number; pxPerM: number };
+      /** The world height a mark at a depth billboards at, for its plate. */
+      let anchorWorldY = 0;
       let column: ColumnLayout | null = null;
       if (contact.depth === undefined) {
         if (this.conn === null) break;
@@ -8000,6 +8085,7 @@ export class EchoRenderer {
           continue;
         }
         anchor = p;
+        anchorWorldY = p.worldY;
       }
       const sg = this.contactSymbols.acquire(id);
       sg.position.set(anchor.x, anchor.y);
@@ -8018,24 +8104,89 @@ export class EchoRenderer {
       const arrival = markOpacity(now - entry.firstSeenMs, worldFade.start, worldFade.full);
       const alpha = style.alpha * freshness * arrival;
 
+      // How far a mark at a depth reaches from its anchor, in metres. To the
+      // sides and below, `figure`: its ring at 1.6 radii, or the hull or
+      // structure it has earned. Upward, `up`: the Tier-4 bar at 2.4 radii
+      // and, where the contact has a navy, the glyph over it (`drawGlyph`).
+      const r = style.radius;
+      let figure = r * 1.6;
+      if (contact.kind !== undefined && contact.faction !== undefined) {
+        const size = hullSpriteSizeM(contact.kind, contact.faction);
+        figure = Math.max(figure, Math.hypot(size.widthM, size.heightM) / 2);
+      } else if (contact.structure !== undefined) {
+        figure = Math.max(figure, structureStatsFor(contact.structure).radiusM);
+      }
+      const glyph = Math.max(r * 0.55, GLYPH_MIN_PX * inverseScale);
+      const up =
+        contact.faction !== undefined
+          ? Math.max(figure, r * 2.4 + glyph * 2.3)
+          : Math.max(figure, r * 2.4);
+
+      // The mark's plate, under High (markPlates.ts): one disc under a mark
+      // at a depth that holds every steady outline the ladder weighs for it
+      // (ladder.ts `AGENT_OUTLINES`), each to its farthest corner: the
+      // figure; a tracked structure's outline, which stands past its footing
+      // for the halls and the Spore Veil (silhouettes.ts
+      // `structureOutlineReachM`); the glyph, a size to either side and a
+      // blade's point 1.1 sizes over its centre (`drawFactionGlyph`); the
+      // Tier-4 bar, three radii wide at 2.4; and a classified creature's dots.
+      // A track's baked sprite needs no term: it is drawn only for a track
+      // the conn view does not model (`modelled`, above), and the plates are
+      // the conn view's, which models every live track that has a sprite. The
+      // lock brackets and a hit's burst are flashes, and carry none. As much
+      // of a plate as the mark has arrived and not yet faded, so the plate
+      // shows nothing before the mark does (docs/audio-direction.md §2). A
+      // column is a haze the ladder does not weigh, and carries none.
+      if (column === null && this.plates !== null) {
+        let reach = figure;
+        if (contact.faction !== undefined) {
+          reach = Math.max(reach, Math.hypot(glyph, r * 2.4 + glyph * 2.4));
+        }
+        if (
+          contact.tier === ResolutionTier.Track &&
+          contact.hp !== undefined &&
+          contact.maxHp !== undefined &&
+          contact.maxHp > 0
+        ) {
+          // The bar's ends, and a veteran's chevrons off its right end: their
+          // line is a pixel and a half under the bar's top.
+          reach = Math.max(
+            reach,
+            Math.hypot(
+              r * 1.5 + rankChevronReachPx(contact.rank) * inverseScale,
+              r * 2.4 + Math.max(0, rankChevronRisePx(contact.rank) - 1.5) * inverseScale
+            )
+          );
+        }
+        if (contact.tier === ResolutionTier.Track && contact.structure !== undefined) {
+          reach = Math.max(
+            reach,
+            structureOutlineReachM(contact.structure, structureStatsFor(contact.structure).radiusM)
+          );
+        }
+        if (contact.fauna !== undefined) {
+          const dots = agentStippleContext(contact.fauna, contact.tier, anchor.pxPerM)?.bounds;
+          if (dots !== undefined) {
+            reach = Math.max(
+              reach,
+              Math.hypot(Math.max(-dots.minX, dots.maxX), Math.max(-dots.minY, dots.maxY))
+            );
+          }
+        }
+        this.plates.disc(
+          contact.x,
+          anchorWorldY,
+          contact.y,
+          reach * anchor.pxPerM + HIGH_GRAPHICS.PLATE.AGENT_PX * this.uiScale,
+          Math.max(0, freshness) * arrival
+        );
+      }
+
       // What a mission marker's name keeps off (§10.5, #1662): a mark drawn at
       // a depth, from its glyph or bar down, once it has fully arrived. A name
       // stepping aside earlier would show the contact before its sound.
       if (column === null && arrival >= 1) {
         if (modelled) this.arrivedTracks.add(id);
-        const r = style.radius;
-        let figure = r * 1.6;
-        if (contact.kind !== undefined && contact.faction !== undefined) {
-          const size = hullSpriteSizeM(contact.kind, contact.faction);
-          figure = Math.max(figure, Math.hypot(size.widthM, size.heightM) / 2);
-        } else if (contact.structure !== undefined) {
-          figure = Math.max(figure, structureStatsFor(contact.structure).radiusM);
-        }
-        const glyph = Math.max(r * 0.55, GLYPH_MIN_PX * inverseScale);
-        const up =
-          contact.faction !== undefined
-            ? Math.max(figure, r * 2.4 + glyph * 2.3)
-            : Math.max(figure, r * 2.4);
         const k = anchor.pxPerM;
         this.contactFootprints.push(
           anchor.x - figure * k,
@@ -8344,6 +8495,15 @@ export class EchoRenderer {
       const collar =
         collarRadius(radius, SELECTION_GAP_M.HULL) * p.pxPerM + LOUDNESS_COLLAR.HALO_OUTER_PX / 2;
       const reach = Math.max(collar, radius * 1.2 * p.pxPerM);
+      // The hull's plate, under High (markPlates.ts): one disc that holds
+      // every steady mark about it. The collar, halo and all, is its widest
+      // ring; the bar's slot stands over it, 1.2 radii to either side, with a
+      // veteran's chevrons off its right end and over its line. Sized for the
+      // slot whether or not the bar is up, so the disc does not jump at the
+      // first hit. The break-silence ring is a flash, and carries none.
+      const slotEnd = radius * 1.2 * p.pxPerM + rankChevronReachPx(unit.rank);
+      const slotTop = radius * p.pxPerM + Math.max(12, 10.5 + rankChevronRisePx(unit.rank));
+      this.platePoint(d.x, d.y, p, Math.max(reach, Math.hypot(slotEnd, slotTop)));
       // A veteran's chevrons sit off the bar's right end, so its slot is wider.
       const reachRight = Math.max(reach, radius * 1.2 * p.pxPerM + rankChevronReachPx(unit.rank));
       this.figureFootprints.push(
@@ -8462,6 +8622,9 @@ export class EchoRenderer {
       const inverseScale = 1 / p.pxPerM;
       const r = 6 * this.hullDrawScale();
       const width = 1.5 * inverseScale;
+      // The shot's plate, under High: one disc under its mark, out to the
+      // widest a noisemaker's ring breathes (markPlates.ts).
+      this.platePoint(d.x, d.y, p, r * 1.2 * p.pxPerM);
       switch (shot.kind) {
         case OrdnanceKind.Torpedo: {
           // The run left, as an arc closing from the bow's twelve o'clock.
@@ -9475,10 +9638,13 @@ export class EchoRenderer {
     if (at === null || !at.visible) return false;
     const ax = at.x;
     const ay = at.y;
+    const aWorldY = at.worldY;
     const foot = this.project(x, y, null);
     if (foot === null || !foot.visible) return false;
     if (Math.hypot(foot.x - ax, foot.y - ay) < 2) return false;
     g.moveTo(ax, ay).lineTo(foot.x, foot.y);
+    // The plumb line's plate, under High (markPlates.ts).
+    this.plates?.line(x, aWorldY, y, x, foot.worldY, y, HIGH_GRAPHICS.PLATE.LINE_PX * this.uiScale);
     return true;
   }
 
@@ -9888,6 +10054,7 @@ export class EchoRenderer {
         if (p !== null && p.visible) {
           const marker = order.kind === 'move' ? 7 : 11;
           const hostile = order.kind === 'attack' || order.kind === 'attackMove';
+          this.platePoint(order.x, order.y, p, marker);
           g.circle(p.x, p.y, marker).stroke({
             width: 1.5,
             color: hostile ? UI.threat : UI.accent,
@@ -9919,6 +10086,7 @@ export class EchoRenderer {
       const p = this.project(marker.x, marker.y, marker.depth ?? null);
       if (p === null || !p.visible) continue;
       const radius = this.reducedMotion ? 9 : 16 - 11 * t;
+      this.platePoint(marker.x, marker.y, p, radius * this.uiScale, 1 - t);
       g.circle(p.x, p.y, radius * this.uiScale).stroke({
         width: 1.5 * this.uiScale,
         color,
@@ -9938,7 +10106,10 @@ export class EchoRenderer {
       const color = reading.reason === null ? UI.accent : UI.threat;
       if (this.plumbTo(g, x, y, preview.depthM)) g.stroke({ width: 1.5, color, alpha: 0.9 });
       const p = this.project(x, y, preview.depthM);
-      if (p?.visible) g.circle(p.x, p.y, 9 * this.uiScale).stroke({ width: 2, color });
+      if (p?.visible) {
+        this.platePoint(x, y, p, 9 * this.uiScale);
+        g.circle(p.x, p.y, 9 * this.uiScale).stroke({ width: 2, color });
+      }
     }
   }
 
@@ -10558,6 +10729,8 @@ export class EchoRenderer {
     const foot = this.project(x, y, planeM);
     if (foot === null || !foot.visible) return;
     g.circle(foot.x, foot.y, FOOT_RING_PX).stroke({ width: 1, color, alpha });
+    // As much of a plate as there is of the ring: a contact's fades with it.
+    this.platePoint(x, y, foot, FOOT_RING_PX, alpha / FOOT_RING_ALPHA);
   }
 
   /**

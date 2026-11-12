@@ -20,6 +20,11 @@ import {
 } from '../input/bindings.ts';
 import { PALETTES, type PaletteName } from '../game/palette.ts';
 import { LAMP_HALOS_DEFAULT } from '../game/lampHalo.ts';
+import {
+  GRAPHICS_QUALITY_DEFAULT,
+  graphicsQualityOf,
+  type GraphicsQuality,
+} from '../game/graphicsQuality.ts';
 import type { TrimBus } from '../audio/engine.ts';
 import { FLIGHT_CAMERA } from '@echoes/shared';
 import { prefersSpeakerProfile } from '../audio/speakerProfile.ts';
@@ -171,6 +176,17 @@ export interface Settings {
    * reach a player who had saved any other setting while it was off.
    */
   lampHalosChosen: boolean;
+  /**
+   * The Graphics quality (docs/graphics-standards.md gate 6, docs/ui-ux.md
+   * §14, #1801): Low, the shipped renderer, or High, the lit world layer.
+   *
+   * Low by default, and a choice rather than a default that moves: High is in
+   * development until the owner accepts a frame of it, so a stored `high` is
+   * always something the player picked. The tactical layer is the same at
+   * both, so neither costs a player any information; a display that fails
+   * High's check keeps the choice and draws Low, and the row says so.
+   */
+  graphicsQuality: GraphicsQuality;
 }
 
 /**
@@ -211,6 +227,7 @@ export const DEFAULT_SETTINGS: Settings = {
   interfaceCues: false,
   lampHalos: LAMP_HALOS_DEFAULT,
   lampHalosChosen: false,
+  graphicsQuality: GRAPHICS_QUALITY_DEFAULT,
 };
 
 const STORAGE_KEY = 'echoes.settings';
@@ -308,6 +325,8 @@ function sanitise(raw: unknown): Settings {
       record.lampHalosChosen === true && typeof record.lampHalos === 'boolean'
         ? record.lampHalos
         : LAMP_HALOS_DEFAULT,
+    // A record older than the control loads Low, where every build before it drew.
+    graphicsQuality: graphicsQualityOf(record.graphicsQuality),
   };
 }
 
