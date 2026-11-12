@@ -16,6 +16,14 @@ interface ImportMetaEnv {
    * (net/reports.ts `clientBuild`), for `VITE_SERVER_URL`'s reason.
    */
   readonly VITE_ECHOES_BUILD?: string;
+  /**
+   * `1` in the hosted playtest build, from the image's `ECHOES_HOSTED` build
+   * argument (deploy/compose.playtest.yml): that build hides the Graphics
+   * quality control until a High frame is accepted
+   * (game/graphicsQuality.ts, docs/graphics-standards.md gate 6). Unset and
+   * empty both read as not hosted, for `VITE_SERVER_URL`'s reason.
+   */
+  readonly VITE_ECHOES_HOSTED?: string;
 }
 
 interface ImportMeta {

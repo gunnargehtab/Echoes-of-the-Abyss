@@ -188,6 +188,23 @@ describe('the settings store', () => {
     assert.equal(loadSettings().lampHalos, LAMP_HALOS_DEFAULT);
   });
 
+  it('loads the Graphics quality at Low, and keeps a choice of High', () => {
+    // graphics-standards.md gate 6: "High is a player's choice", and "The
+    // default stays Low until the owner accepts a High frame". A record older
+    // than the control loads Low, where every build before it drew.
+    assert.equal(DEFAULT_SETTINGS.graphicsQuality, 'low');
+    assert.equal(loadSettings().graphicsQuality, 'low');
+    backing.set('echoes.settings', JSON.stringify({ version: 1, masterVolume: 0.5 }));
+    assert.equal(loadSettings().graphicsQuality, 'low');
+    saveSettings({ graphicsQuality: 'high' });
+    assert.equal(loadSettings().graphicsQuality, 'high');
+    saveSettings({ masterVolume: 0.3 });
+    assert.equal(loadSettings().graphicsQuality, 'high', 'a choice outlives other saves');
+    // A stored value this build does not know is Low, never a third quality.
+    backing.set('echoes.settings', JSON.stringify({ version: 1, graphicsQuality: 'ultra' }));
+    assert.equal(loadSettings().graphicsQuality, 'low');
+  });
+
   it('fills an action a one-handed record never heard of from that layout (#1343)', () => {
     // A record from before Engine Off: the one-handed table whole, less that
     // action. Filled from the standard table, Engine Off took the `Q` this

@@ -36,6 +36,7 @@ import {
   WebGLRenderTarget,
   type Camera,
   type Material,
+  type Object3D,
   type Scene,
   type WebGLRenderer,
 } from 'three';
@@ -838,6 +839,10 @@ export class HeadlessGL {
   readonly INVALID_OPERATION = 0x502;
   readonly RGBA = 0x1908;
   readonly FLOAT = 0x1406;
+  readonly MAX_SAMPLES = 0x8d57;
+  /** The most samples a target may take; a test sets 1 to model a context
+   * that cannot give the High graphics quality its four (highFrame.ts). */
+  maxSamples = 4;
   /** The canvas's stencil bits; a test sets 0 to model a context without one. */
   stencilBits = 8;
   /** What checkFramebufferStatus answers. */
@@ -931,6 +936,7 @@ export class HeadlessGL {
 
   getParameter(name: number): unknown {
     if (name === this.STENCIL_BITS) return this.stencilBits;
+    if (name === this.MAX_SAMPLES) return this.maxSamples;
     if (name === this.RENDERER || name === HeadlessGL.UNMASKED_RENDERER_WEBGL) {
       return this.rendererName;
     }
@@ -1098,6 +1104,8 @@ export class HeadlessWebGLRenderer {
   private clearAlpha = 1;
   /** The render target of every pass this frame, in order (null is the canvas). */
   readonly frameTargets: (WebGLRenderTarget | null)[] = [];
+  /** What each of those passes drew, pass by pass, in the same order. */
+  readonly frameDraws: Object3D[][] = [];
   private firstPass = true;
 
   initRenderTarget(): void {}
@@ -1161,6 +1169,7 @@ export class HeadlessWebGLRenderer {
       this.lastScene = scene;
       this.lastCamera = camera;
       this.frameTargets.length = 0;
+      this.frameDraws.length = 0;
     }
     this.firstPass = false;
     this.frameTargets.push(this.renderTarget);
@@ -1168,7 +1177,12 @@ export class HeadlessWebGLRenderer {
     if (this.context.timing) this.timedPasses++;
     let calls = 0;
     let triangles = 0;
+    const drawn: Object3D[] = [];
     scene.traverseVisible((object) => {
+      // As three's `projectObject`: an object is drawn by the camera whose
+      // layers it shares, which is how the High graphics quality splits one
+      // scene into its world pass and its tactical pass (highFrame.ts).
+      if (!object.layers.test(camera.layers)) return;
       const geometry = (
         object as {
           geometry?: {
@@ -1186,6 +1200,7 @@ export class HeadlessWebGLRenderer {
         ? (geometry.instanceCount ?? 0)
         : ((object as { count?: number }).count ?? 1);
       if (instances === 0) return;
+      drawn.push(object);
       calls++;
       // Clamped to the draw range, as `renderBufferDirect` clamps it: a mesh
       // that keeps one buffer and draws a prefix of it (the overview's cut)
@@ -1200,6 +1215,7 @@ export class HeadlessWebGLRenderer {
       if (flags.isPoints === true || flags.isLine === true) return;
       triangles += (corners / 3) * instances;
     });
+    this.frameDraws.push(drawn);
     if (world) {
       this.ledger.frames++;
       this.ledger.calls = calls;

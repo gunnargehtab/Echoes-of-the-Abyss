@@ -23,6 +23,12 @@ import {
   subscribeLampHaloStatus,
 } from '../game/lampHaloStatus.ts';
 import {
+  GRAPHICS_QUALITY_OFFERED,
+  graphicsQualityStatus,
+  graphicsQualityUnavailableReason,
+  subscribeGraphicsQualityStatus,
+} from '../game/graphicsQuality.ts';
+import {
   loadSettings,
   saveSettings,
   UI_SCALE_MAX,
@@ -76,6 +82,14 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
   // the choice, and this screen is where the SPEC has it say so.
   const haloState = useSyncExternalStore(subscribeLampHaloStatus, lampHaloStatus, lampHaloStatus);
   const haloUnavailable = lampHaloUnavailableReason(haloState);
+  // And for the Graphics quality: a view High does not reach, or a display
+  // that fails its check, draws Low and keeps the choice.
+  const qualityState = useSyncExternalStore(
+    subscribeGraphicsQualityStatus,
+    graphicsQualityStatus,
+    graphicsQualityStatus
+  );
+  const highUnavailable = graphicsQualityUnavailableReason(qualityState);
   // The same for the UI scale: a window too short for the setting draws less
   // of it and keeps the setting (docs/ui-ux.md §11), and a value that read
   // 200% over a HUD drawn at 132% would hide the difference rather than say it.
@@ -322,6 +336,26 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
                   'how loud you are. Off, the lamp and the collar still say it all.'}
             </span>
           </label>
+
+          {GRAPHICS_QUALITY_OFFERED && (
+            <label className="menu-toggle-row">
+              <input
+                type="checkbox"
+                checked={settings.graphicsQuality === 'high'}
+                onChange={(event) =>
+                  patch({ graphicsQuality: event.target.checked ? 'high' : 'low' })
+                }
+              />
+              <span className="menu-toggle-label">High graphics (in development)</span>
+              <span className="menu-toggle-note">
+                {highUnavailable !== null && settings.graphicsQuality === 'high'
+                  ? `Not drawn here: ${highUnavailable}. Your choice is kept.`
+                  : 'A lit ocean: the ground and the water take light, at a higher cost to the ' +
+                    'graphics card. Every mark, ring and lamp you command by is drawn the same ' +
+                    'either way.'}
+              </span>
+            </label>
+          )}
 
           <label className="menu-toggle-row">
             <input

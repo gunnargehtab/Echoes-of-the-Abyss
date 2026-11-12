@@ -100,6 +100,125 @@ export const FREE_WATER_OPENING = {
   DOLLY_M: 1200,
 } as const;
 
+/**
+ * The High graphics quality: the lit world layer (docs/art-direction.md, "Two
+ * layers, two laws"; docs/graphics-standards.md gate 6, "Two graphics
+ * qualities"). Presentation only; never read by the simulation.
+ *
+ * TUNABLE, every number, until the first High frame the owner accepts: the
+ * look is in development (#1801), and its numbers are written into `docs/`
+ * from that frame, not before it (the `dev-loop` skill, "Look work").
+ */
+export const HIGH_GRAPHICS = {
+  /**
+   * Gate 6's High budget, as its table tags it: GPU milliseconds over every
+   * pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU,
+   * read queued and unpaced. The probe reports it beside the reading.
+   */
+  FRAME_GPU_MS: 8,
+  /** MSAA samples of the world pass's target: the canvas's own four. */
+  SAMPLES: 4,
+  /** The exposure the world layer's light is tone-mapped at, before the curve. */
+  EXPOSURE: 1,
+  /**
+   * The Lid's glow (`lid-glow`, docs/style-neon-noir.md "World light"): the
+   * light the ground takes from the whole water above it, with no direction
+   * and no shadow (docs/art-direction.md, limit 1). `IRRADIANCE` is what level
+   * ground takes at the Lid, in the renderer's linear units; it is held where
+   * the palest ground it lights is no paler than the palest ground the
+   * loudness ladder weighs, so a mark's plate changes nothing the Lid alone
+   * lights (test/litGround.test.ts). `FALLOFF_M` is
+   * the depth over which the water above takes it to 1/e, so depth still
+   * darkens. `HORIZON` is what a vertical face keeps of it.
+   */
+  LID: { IRRADIANCE: 3, FALLOFF_M: 3000, HORIZON: 0.3 },
+  /**
+   * The lit ground. `ALBEDO_LUMINANCE` is the linear luminance the palest
+   * biome fill is lifted to as an albedo; every fill and the stone take the
+   * same gain, so their hues and their order hold. `ALBEDO_SATURATION` is how
+   * much of a fill's chroma the albedo keeps: a fill authored at 5 to 10%
+   * luminance reads as paint when it is lifted whole. `RELIEF_GAIN` steepens
+   * the baked slope the light reads: the column is drawn at 0.22, and light
+   * from straight above shades a true slope by a hundredth.
+   */
+  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8 },
+  /**
+   * The water. `HUE_REACH` is how far along a sight line, in reaches, the
+   * water whose hue a pixel wears stands: most of the light the water adds
+   * comes from within one reach of where the line enters it.
+   */
+  WATER: { HUE_REACH: 0.8 },
+  /**
+   * Ambient occlusion: how much of the world's own light, the Lid's glow and
+   * the pools on the ground with it, the ground round a point hides from it.
+   * `RADIUS_M` is how far that ground is looked for, in the world's metres.
+   * `FALLOFF` is where, in radii, ground stops counting: all of it inside the
+   * first, none past the second, so the far wall of a bowl does not darken
+   * its near rim. `GAIN` scales what the taps found hidden into the share
+   * that is dark, since eight taps on a spiral see about half of what stands
+   * over a crease, and `STRENGTH` is how much of that share is taken.
+   */
+  AO: { RADIUS_M: 45, FALLOFF: [0.6, 1.4], GAIN: 2, STRENGTH: 0.7 },
+  /**
+   * Bloom, on the world layer's light alone. Light under `THRESHOLD` less
+   * `KNEE` spreads nothing, and the brightest ground the Lid's glow lights
+   * stands under that, so only a source blooms: a pool, a volume, a stand's
+   * lit tips. `INTENSITY` is how much of the spread light is added back.
+   */
+  BLOOM: { THRESHOLD: 0.15, KNEE: 0.05, INTENSITY: 0.6 },
+  /**
+   * The grade, before the curve: slope, offset and power a channel (ASC CDL),
+   * then saturation about the luminance. A little weight into the darks, red
+   * most, and a little chroma back: the curve's toe takes both from a frame
+   * this dark.
+   */
+  GRADE: {
+    SLOPE: [1, 1, 1],
+    OFFSET: [0, 0, 0],
+    POWER: [1.06, 1.03, 1],
+    SATURATION: 1.12,
+  },
+  /**
+   * A mark's plate (docs/art-direction.md, "The plate under a mark"): where
+   * the world layer is held under a mark, in CSS pixels at the UI's scale.
+   * The level it is held to is not here: it is derived from the ground the
+   * ladder weighs (markPlates.ts `PLATE_LEVEL`). `LINE_PX` is how far the
+   * plate stands whole either side of a traced line's centre: the widest
+   * stroke is four pixels, an active hazard's rim, and a line reads against
+   * what stands beside it.
+   * `INK_PX` is the same for a stroke of survey ink, which is thinner and
+   * everywhere. `AGENT_PX` is how far past an agent's farthest steady mark
+   * its disc stands whole, and `FEATHER_PX` the soft edge every plate ends
+   * in.
+   */
+  PLATE: { LINE_PX: 4, INK_PX: 2, AGENT_PX: 4, FEATHER_PX: 3 },
+  /**
+   * The world's own sources (docs/style-neon-noir.md "World light"), a family
+   * a row: `POWER` is the light level ground takes directly under one source,
+   * in the renderer's linear units, as the rig's key gives 1.8 face on;
+   * `RADIUS_M` how far its pool and its volume reach; `HEIGHT_M` how high over
+   * the ground its light stands, which is also how wide its pool is: a kelp
+   * stand's tips and a chimney's column are tens of metres up. `MAX` caps the
+   * sources a ground draws, brightest first, and `VOLUME` scales the light a
+   * source scatters in the water against the light it puts on the ground.
+   * `VOLUME_FALLOFF` is how fast that light dies from the source out: at a
+   * fifth of the radius it has halved. `EMBER_SHARE` is how much of a source
+   * one vent ember is: a field stands scores of sparks, and five are one
+   * chimney's weight.
+   */
+  WORLD_LIGHT: {
+    vent: { POWER: 8, RADIUS_M: 160, HEIGHT_M: 25 },
+    flora: { POWER: 4, RADIUS_M: 120, HEIGHT_M: 35 },
+    crystal: { POWER: 4, RADIUS_M: 110, HEIGHT_M: 20 },
+    ore: { POWER: 1.5, RADIUS_M: 70, HEIGHT_M: 12 },
+    civic: { POWER: 6, RADIUS_M: 140, HEIGHT_M: 15 },
+    MAX: 192,
+    VOLUME: 0.2,
+    VOLUME_FALLOFF: 24,
+    EMBER_SHARE: 0.2,
+  },
+} as const;
+
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
 export const MODEL_LIGHTING = {
   AMBIENT: 0.75,

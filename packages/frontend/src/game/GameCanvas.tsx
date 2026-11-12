@@ -33,6 +33,7 @@ import type { FlightReading } from './flightCamera.ts';
 import { FREE_WATER_CONTROLS, FREE_WATER_SLICE } from './freeWaterControls.ts';
 import { consoleBlocks } from './consoleLayout.ts';
 import { lookForMission } from './tutorialLook.ts';
+import { askedGraphicsQuality } from './graphicsQuality.ts';
 import { worldView } from './worldView.ts';
 import { paletteFor, type PaletteName } from './palette.ts';
 import { ContactLog } from './ContactLog.tsx';
@@ -848,6 +849,9 @@ export function GameCanvas({
         // The lamp halo's toggle (art-direction.md "Lamp halo — SPEC"): the
         // view runs its capability check on the way on and may refuse.
         perspective.setLampHalos(settings.lampHalos);
+        // The Graphics quality (graphics-standards.md gate 6): a build that
+        // hides the control draws Low whatever a stored record says.
+        perspective.setGraphicsQuality(askedGraphicsQuality(settings.graphicsQuality));
         activeRenderer.setEdgeScroll(settings.edgeScroll);
         applyScale(settings.uiScale);
       };

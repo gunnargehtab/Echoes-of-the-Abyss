@@ -378,7 +378,10 @@ edge is what keeps a track readable when it does.
 #### Two graphics qualities
 
 *Decided by the owner in session on 11 November 2026
-([art-direction.md](art-direction.md#two-layers-two-laws)). High is not built.*
+([art-direction.md](art-direction.md#two-layers-two-laws)). High is in development behind
+its setting, a step at a time
+([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)), and no frame
+of it is accepted.*
 
 This gate bounded one renderer by what it draws. It now bounds two, the second by what a
 frame costs.
@@ -386,7 +389,7 @@ frame costs.
 | Quality | What it is | Budget | Status |
 | --- | --- | --- | --- |
 | **Low** | The shipped renderer, as this gate and [art-direction.md](art-direction.md) specify it | "Low: the counted budgets" below, unchanged: at most 150 draw calls and 400,000 triangles a frame, pixel ratio capped at 1.5, and every reservation | Shipped, and the default |
-| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped | Not built. The 8 ms is TUNABLE until the first frame the owner accepts |
+| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped | In development ([art-direction.md](art-direction.md#what-is-built-at-high)). The 8 ms is TUNABLE until the first frame the owner accepts, and is not yet read on the named GPU |
 
 A count is a proxy for what a frame costs, and the cost itself is read now. On the named
 GPU the free-water study's frame takes at most 2.07 ms of GPU time at its four stations,
@@ -402,6 +405,13 @@ browser's compositor and a weaker card.
   default moves. A player can therefore choose High before it is accepted, and until then
   the control names it as in development. The hosted playtest build hides the control
   until then.
+- **High reaches a match drawn alone, on the standard surface.** That is every skirmish
+  and solo map, and the free-water crater the slice is judged in. A mission placed in the
+  continuous world and Sorrowgate's own surface draw Low, and Settings says so, until a
+  frame is accepted and they fold in
+  ([#1683](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1683)). The other
+  reading, the crater alone, would have left High behind a development URL flag, which
+  the line below refuses.
 - **Low keeps its counts.** A frame-time ceiling at today's cost was the other reading of
   the decision. Counts are what Low's tests already hold, and the next line holds its
   cost.
@@ -411,7 +421,8 @@ browser's compositor and a weaker card.
   arch study and the free-water study each stayed behind one, and neither has reached a
   player.
 - **The ceiling is a constant** in `packages/shared/src/constants.ts` from the first code
-  that reads it, tagged as this table tags it.
+  that reads it, tagged as this table tags it: `HIGH_GRAPHICS.FRAME_GPU_MS`, which the
+  probe reports beside each reading.
 
 #### Low: the counted budgets
 

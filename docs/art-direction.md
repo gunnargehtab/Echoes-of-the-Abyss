@@ -14,12 +14,16 @@ The art direction should communicate three things instantly:
 
 *Decided by the owner in session on 11 November 2026, for
 [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) and
-[#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694). Nothing in this
-section is built. The shipped renderer is the Low graphics quality
+[#1694](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1694). High is in
+development behind its setting, and no frame of it is accepted:
+[What is built at High](#what-is-built-at-high) lists what is drawn. The shipped renderer
+is the Low graphics quality
 ([graphics-standards.md](graphics-standards.md) gate 6), and every rule released below
 still binds it. Limits 5 and 7 were the author's, written to carry the decision out, and
 the owner confirmed both on the same day
-([#1798](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1798)).*
+([#1798](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1798)). Limit 6 was
+re-read by the owner the same day: a mark carries a plate
+([The plate under a mark](#the-plate-under-a-mark)).*
 
 The owner turned the look down three times in two weeks. Three proposed designs "seem
 lifeless" (26 October, #1637). The free-water slice was "a map editor, not an ocean" on
@@ -36,7 +40,7 @@ The picture is two layers, and each now has its own law.
 
 | Layer | What is on it | Its law |
 | --- | --- | --- |
-| **Tactical layer** | Rungs 4 to 7 of the ladder ([map-visuals.md](map-visuals.md) §5): survey ink, map furniture, instruments and agents. That is every mark, ring and glyph, public life's field marks and stipple, contacts at every tier, own lamps with their halo and collar, the scope and the Pixi HUD | Unchanged at both graphics qualities. Glow is loudness, hue is the faction's, fidelity is asymmetric and the glance test holds ([graphics-standards.md](graphics-standards.md) gates 3, 4, 5 and 7) |
+| **Tactical layer** | Rungs 4 to 7 of the ladder ([map-visuals.md](map-visuals.md) §5): survey ink, map furniture, instruments and agents. That is every mark, ring and glyph, public life's field marks and stipple, contacts at every tier, own lamps with their halo and collar, the scope and the Pixi HUD | Unchanged at both graphics qualities: no mark, ring, lamp or glyph is drawn differently at High. Glow is loudness, hue is the faction's, fidelity is asymmetric and the glance test holds ([graphics-standards.md](graphics-standards.md) gates 3, 4, 5 and 7). At High a mark also carries a plate, which holds the world's light back under it and takes nothing from the mark (limit 6) |
 | **World layer** | Rungs 1 to 3 and world light: the water, stone and ground, flora, the modelled bodies of public life with their light, and the surfaces of hulls, structures, props and landmarks | At Low, every rule as written. At High, lit, inside the limits below |
 
 ### What the world layer may do at High
@@ -80,9 +84,11 @@ The picture is two layers, and each now has its own law.
    rule 4).
 5. **Own light never contradicts gate 3.** Light an own hull throws on the world reads no
    louder than its lamps say. A hull on Silent Running does not floodlight the seabed.
-6. **The tactical layer reads over the lit world.** Each tactical rung's floor still
-   reads over the brightest lit ground the look puts under it, in all four palettes, and
-   gate 7's questions are asked of the lit frame.
+6. **The tactical layer reads over the lit world.** A mark carries a plate: under it the
+   world layer is drawn no brighter than the palest ground the ladder weighs, so each
+   tactical rung's floor reads over the lit world as it reads at Low, in all four
+   palettes ([The plate under a mark](#the-plate-under-a-mark)). Gate 7's questions are
+   asked of the lit frame.
 7. **No blur over play.** Depth of field and motion blur stay off the playfield while the
    player commands. Reduced motion and the colour-vision palettes bind High as they bind
    Low.
@@ -112,6 +118,151 @@ This section sets no number. High's values are written here from the first frame
 owner accepts, not before it, and the `dev-loop` skill's "Look work" is the loop that
 builds toward that frame. The slice, its renderer work and its assets are tracked on
 [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637).
+
+### What is built at High
+
+*In development, a step at a time
+([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)). Nothing here
+is accepted. Every number is TUNABLE in `HIGH_GRAPHICS`
+(`packages/shared/src/constants.ts`) and is written into this section from the first frame
+the owner accepts.*
+
+High draws the one scene as two layers
+(`packages/frontend/src/game/highFrame.ts`):
+
+1. **The world pass** draws the world layer into a linear half-float target with the
+   canvas's four samples. Nothing in it is tone-mapped, so its light stays
+   scene-referred. A fragment there only loses light to the water.
+2. **The scatter pass** draws what the world's own sources scatter in the water, against
+   the world's depth, at half the frame's size.
+3. **The chain** runs at half the frame's size and smaller: ambient occlusion off the
+   world's depth, then the frame's light over a soft threshold, spread down four levels
+   and back as bloom.
+4. **The plate pass** draws where the marks stand into a mask of the frame's size: a
+   band along every line traced on the ground and along every stroke of survey ink, and a
+   disc under every agent's mark at a depth.
+5. **The composite** is one full-screen draw to the canvas. It sums the world's light,
+   occluded, the water's own light by how much of each pixel the water took, the sources'
+   volumes and the bloom. It grades the sum and runs the tone curve, holds the result
+   under the plates, and lays the world's depth so the next pass is hidden by the world
+   as it is at Low.
+6. **The tactical pass** draws everything else on the canvas as Low draws it: the same
+   materials, the same per-material curve, the same fog. The survey ink is drawn here,
+   as a layer of its own over the lit ground. The lamp halo and the chromatic split
+   follow as they always have. The chain and the plates run before this pass, so no
+   mark, ring or lamp is occluded, spread, graded or held down.
+
+Built so far:
+
+- **The ground and the stone are lit by the Lid's glow.** It is light from the whole
+  water above, in the `lid-glow` token ([style-neon-noir.md](style-neon-noir.md) "World
+  light"): a surface takes it by how far it faces up and from no quarter, since there is
+  no sun below the Lid (limit 1), and the water above the ground takes it with depth, so
+  depth still darkens. The albedo is each biome's fill and the stone, lifted by one gain
+  so their hues and their order hold. The slope and the darkening at a cliff's rim, its
+  lee and a stone's scour come from the seabed bake.
+- **The water is a medium.** It keeps the depth ramp's brightness
+  ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
+  of the biome under the water its light comes from, in that biome's water token. A pixel
+  takes that light by what the swim cost its own.
+- **The world's own sources light the world.** The vent embers, the civic lamps and each
+  prop that carries a licensed family stand as lights in their family's token. Each pools
+  on the ground and scatters in the water as a volume that stops at the ground. They are
+  placed by the map alone and answer nothing a match does (limits 2 to 4). A pool lifts
+  the ground as far as its light reaches: the ceiling that first held the lit ground
+  under the marks is gone, and the plates hold limit 6 instead.
+- **Each mark carries a plate**, below.
+- **Ambient occlusion, bloom and a grade.** The ground round a point hides part of the
+  world's own light from it, the Lid's glow and the pools on the ground with it. For the
+  glow that is the one shadow a light with no direction casts. Bloom
+  spreads only what stands over the brightest ground the glow lights, so a source blooms
+  and the ground does not. The grade puts a little weight into the darks and a little
+  chroma back.
+- **The props** draw in the world pass under the shared rig. Their additive clouds, the
+  steam, the haze and the sift, stay in the tactical pass.
+
+Not built yet: shadow cast by a light with a direction, which arrives with the own
+searchlights; and the surfaces of hulls and structures, which draw whole in the tactical
+pass, lamps and all.
+
+#### The plate under a mark
+
+*Decided by the owner in session on 11 November 2026
+([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)). Three
+readings of limit 6 were written. **The lit ground alone**, held by a ceiling on the
+ground's light, was built first: it left light in the water unbound, and the garden's
+glow took the survey frame to 24.6% at the 99th percentile. **Everything the world layer
+draws under a mark** brings the scatter and the bloom down by about three, and the
+garden's glow goes with any pool a later step adds. **Marks carry their own ground** is
+the one the owner took.*
+
+The ladder is tight. Its comparisons for rungs 4 to 7 hold over grey ground up to 11.8%
+encoded luminance in tritanopia, 17.3% in deuteranopia and protanopia, and 18.8% in the
+standard palette ([map-visuals.md](map-visuals.md) §5). Past the first, the unselected
+ring falls under rung 5's floor; past the others, rung 7's quietest outline no longer
+lifts the ground. So a pool that reads as light, as the target frame's do, cannot stand
+under a mark as the marks are.
+
+A **mark plate** is the ground a mark carries at High. Under one, the world layer is
+drawn no brighter than the palest ground the ladder weighs at Low: the palest biome fill
+lifted by the terrain cap, 11.6% encoded luminance. Three things follow from how it is
+drawn.
+
+- **It is a ceiling, never a paint.** A pixel brighter than that level is scaled down to
+  it, hue kept. A pixel under it is not changed, so a plate over ground the Lid alone
+  lights changes nothing, and a mark in dark water looks as it does at Low.
+- **It holds the world layer only.** The composite applies it before the tactical pass
+  draws, so a plate takes nothing from a model, a lamp, its halo or another mark.
+- **It is the mark's, not the map's.** A plate stands where a mark is drawn and nowhere
+  else. A contact's follows its mark's own arrival and fade, so it shows nothing the mark
+  has not yet shown ([audio-direction.md](audio-direction.md) §2, the Precedence Law;
+  limit 2).
+
+What carries one:
+
+- **Survey ink** (rung 4): every stroke, with a margin either side, fading into the water
+  as the stroke does and hidden by the world as the stroke is.
+- **Every mark traced on the ground** (rungs 5 and 6): detection rings, the ping preview,
+  the heard water's rim, resource and hazard rims, currents, shoal and jelly fields,
+  residue, mission markers, a tender's ears, order routes and rally courses. They share
+  one tracer, and the plate is taken from it, so a mark added there carries one. Blocked
+  ground's hatch, the tunnel routes and the map rim carry theirs too.
+- **Every mark billboarded at an agent** (rungs 6 and 7): one disc that holds every
+  steady mark its symbol draws. For an own hull or structure that is its rings, its
+  collar and its bars' slots, to their corners; for an own shot, its mark at its widest;
+  and for a contact once it has a depth, its ring or the outline it has earned, to its
+  corners, with its glyph, its bar and a creature's dots. Two tests hold it.
+  `packages/frontend/test/silhouetteReach.test.ts` draws every structure kind and every
+  hull and measures its outline against the reach a plate takes for it.
+  `packages/frontend/test/rendererSmoke.test.ts` measures the shapes a canned frame's
+  symbols draw against the discs under them, far and close.
+- **Every mark at a point**: an order's waypoint and its acknowledgement, a rally point,
+  a move's preview and the study's foot rings, each on a disc, and the plumb line that
+  drops from one to the ground.
+
+What carries none, and why:
+
+- **A soft fill and a contact's column.** [map-visuals.md](map-visuals.md) §5 weighs a
+  mark by its outline, and a haze by gate 7's glance.
+- **Public life's stipple.** It is additive, so it lifts every ground alike until a
+  channel clips.
+- **A label.** The ladder weighs no text. Whether a name over a pool needs a plate is
+  read off the frames taken on the named GPU.
+- **A flash.** The lock brackets and a hit's burst fade to nothing by design and are
+  weighed at their peak ([map-visuals.md](map-visuals.md) §5). They are drawn about a
+  contact, whose mark carries the disc.
+- **An edge mark.** The study's chevron for a contact off the frame stands at the frame's
+  own edge, in screen space. It is not a mark on the map, and the ladder does not weigh
+  it.
+
+So limit 6 holds by construction rather than by a bright ground being forbidden. The
+ladder's comparisons are linear in the ground's luminance, and
+`packages/frontend/test/ladder.test.ts` holds them from black to that palest ground in
+all four palettes. `packages/frontend/test/markPlates.test.ts` holds the plate's level to
+that ground and runs the same comparisons at it.
+
+Still open, for the frames taken on the named GPU: gate 7's glance at an own hull over a
+pool, and the four palettes, which are read at promotion.
 
 ## World Aesthetic
 

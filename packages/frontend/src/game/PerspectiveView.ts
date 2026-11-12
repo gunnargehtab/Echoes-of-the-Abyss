@@ -37,6 +37,7 @@ import {
   BufferGeometry,
   CanvasTexture,
   Color,
+  CustomBlending,
   DataTexture,
   DirectionalLight,
   DoubleSide,
@@ -49,8 +50,11 @@ import {
   LineLoop,
   LineSegments,
   Matrix4,
+  MaxEquation,
   Mesh,
   MeshBasicMaterial,
+  NormalBlending,
+  OneFactor,
   PerspectiveCamera,
   PlaneGeometry,
   Points,
@@ -65,6 +69,7 @@ import {
   type Intersection,
   type Material,
   type Object3D,
+  type Texture,
   type WebGLRenderTarget,
 } from 'three';
 import {
@@ -72,6 +77,7 @@ import {
   DEPTH,
   Faction,
   FLIGHT_CAMERA,
+  HIGH_GRAPHICS,
   MODEL_LIGHTING,
   MOVEMENT,
   SelfEventKind,
@@ -111,6 +117,7 @@ import {
   cutSeabed,
   EMBER_GAIN,
   emberFlicker,
+  LIT_ALBEDO_GAIN,
   rebakeSeabedCells,
   SEABED_PX_PER_CELL,
   seabedRange,
@@ -164,6 +171,22 @@ import { SiltPlume, plumeStrength, type PlumeSource } from './siltPlume.ts';
 import { WorkLights } from './workLight.ts';
 import { EnvironmentLayer, type StudySwitches } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
+import { HighFrame, WORLD_LAYER } from './highFrame.ts';
+import {
+  installLitGround,
+  installLitRoof,
+  litGroundBytes,
+  litGroundSurface,
+  type LitGroundSurface,
+} from './litGround.ts';
+import {
+  highRefusal,
+  publishGraphicsQualityStatus,
+  type GraphicsQuality,
+  type GraphicsQualityState,
+} from './graphicsQuality.ts';
+import { repaintWaterHue, waterHueTexture } from './waterMedium.ts';
+import { poolTexture, volumeInstances, worldLightsOf, type WorldLightSite } from './worldLights.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
 import { VeilField, VEIL_FLOOR_RGB, veilShade, type VeilListener } from './acousticVeil.ts';
 import {
@@ -173,6 +196,7 @@ import {
   surveyCellTexture,
   surveyFloorTexture,
   type SurveyFloorSamples,
+  type SurveyInkPlateUniforms,
 } from './surveyInk.ts';
 import { forgetRoundedCells } from './roundedCells.ts';
 import {
@@ -200,6 +224,7 @@ import { gatherHaloSplats } from './haloSource.ts';
 import { ChromaticSplit } from './chromaticSplit.ts';
 import { columnsFor, InkOcclusion } from './inkOcclusion.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
+import { MarkPlates } from './markPlates.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
@@ -420,6 +445,10 @@ export interface ProjectedPoint {
   worldY: number;
 }
 
+/** What the lit ground reads where no source of the world's pools on it. */
+const NO_POOLS = new DataTexture(new Uint8Array(4), 1, 1);
+NO_POOLS.needsUpdate = true;
+
 /**
  * Scratch for `projectPoint`. The overlay painter projects every vertex of
  * every ring through here each frame; a fresh Vector3 per call would make the
@@ -432,6 +461,9 @@ const PROJECT_TMP = new Vector3();
  * a Raycaster, a Vector2 and a cloned Vector3 or four on the way.
  */
 const RAY_TMP = new Raycaster();
+// The High quality moves the ground onto the world pass's layer (highFrame.ts);
+// a pointer still lands on it.
+RAY_TMP.layers.enableAll();
 const NDC_TMP = new Vector2();
 const LOOK_TMP = new Vector3();
 const DIR_TMP = new Vector3();
@@ -1072,6 +1104,8 @@ export class PerspectiveView {
   private readonly onContextLost = (): void => {
     this.queueLoad.set(0);
     this.split.disable();
+    // The world pass's target went with the context; the choice is kept.
+    if (this.high.on) this.high.disable();
     if (!this.halo.on) return;
     this.halo.disable();
     this.markLamps(false);
@@ -1083,6 +1117,7 @@ export class PerspectiveView {
     this.canvasStencilBits = (gl.getParameter?.(gl.STENCIL_BITS) as number | undefined) ?? 0;
     if (this.haloWanted) this.setLampHalos(true, true);
     this.setChromaticSplit(this.splitWanted);
+    this.applyGraphicsQuality();
   };
 
   /**
@@ -1113,6 +1148,43 @@ export class PerspectiveView {
    * on wherever its check passes, and off only by the development switch. */
   private readonly split = new ChromaticSplit();
   private splitWanted = true;
+  /**
+   * The Graphics quality (docs/graphics-standards.md gate 6): what the player
+   * asked for, and the High frame that draws it where it can (highFrame.ts).
+   * Low is `high.on` false, and is the frame every build before #1801 drew.
+   */
+  private qualityAsked: GraphicsQuality = 'low';
+  private readonly high = new HighFrame();
+  /** The focus's depth this frame, as the backdrop is anchored (`syncWater`). */
+  private focusDepthNowM = 0;
+  /**
+   * The lit ground (litGround.ts), under High alone: the bake's lit pixels
+   * and their textures, the material that lights them, and the survey ink as
+   * a layer of its own over it. Built with the ground and gone with it.
+   */
+  private litSurface: LitGroundSurface | null = null;
+  private litMaterial: MeshBasicMaterial | null = null;
+  private groundSkin: MeshBasicMaterial | null = null;
+  private inkOverlay: Mesh | null = null;
+  /**
+   * The marks' plates under High (markPlates.ts): the ink's own, a mesh on
+   * the ground's geometry the plate pass draws, and the bands and discs the
+   * chart hands over as it draws its marks, with the lines this view draws.
+   * `platesPacked` is the revision the pass last took.
+   */
+  private inkPlate: Mesh | null = null;
+  private readonly plates = new MarkPlates();
+  private platesPacked = -1;
+  /**
+   * The water's hue over this ground, a plan texture (waterMedium.ts), and
+   * the light the world's own sources pool on it (worldLights.ts), under
+   * High alone. `litPools` is the uniform the lit ground reads the pools
+   * through, so the dressing hands over a new texture without a new program.
+   */
+  private waterHue: DataTexture | null = null;
+  private pools: DataTexture | null = null;
+  private readonly litPools: { value: Texture } = { value: NO_POOLS };
+  private worldLightCount = 0;
   /** Stencil bits the canvas got, read once at mount (the halo needs 8). */
   private canvasStencilBits = 0;
   /** The renders that made the last frame, in order (gate 6's pass list). */
@@ -1217,7 +1289,8 @@ export class PerspectiveView {
 
     // Sorrowgate's rig is the production baseline for all lit models.
     // Baked ground/sprites and instrument ink keep their authored register.
-    this.scene.add(new AmbientLight(MODEL_LIGHTING.AMBIENT_COLOR, MODEL_LIGHTING.AMBIENT));
+    const ambient = new AmbientLight(MODEL_LIGHTING.AMBIENT_COLOR, MODEL_LIGHTING.AMBIENT);
+    this.scene.add(ambient);
     const key = new DirectionalLight(
       MODEL_LIGHTING.KEY_COLOR,
       this.dreamStudy ? 1.2 : MODEL_LIGHTING.KEY
@@ -1230,6 +1303,9 @@ export class PerspectiveView {
     );
     rim.position.set(0, 900, -3000);
     this.scene.add(rim, rim.target);
+    // The High quality's world pass draws another layer of this scene under
+    // the same rig (highFrame.ts): three takes a light by the camera's layers.
+    for (const light of [ambient, key, rim]) light.layers.enable(WORLD_LAYER);
   }
 
   /**
@@ -1290,6 +1366,7 @@ export class PerspectiveView {
     );
     this.halo.marker = (pass) => this.gpuTimer?.mark(pass);
     this.split.marker = (pass) => this.gpuTimer?.mark(pass);
+    this.high.marker = (pass) => this.gpuTimer?.mark(pass);
     this.queueTimer = new GpuTimer(
       this.renderer.getContext() as WebGL2RenderingContext,
       import.meta.env?.PROD !== true,
@@ -1303,6 +1380,7 @@ export class PerspectiveView {
     this.resizeObserver.observe(host);
     this.resize();
     this.setChromaticSplit(this.splitWanted);
+    this.applyGraphicsQuality();
     this.ensureOverview();
     this.rebuildTerrain();
     this.exposeProbe();
@@ -1448,9 +1526,92 @@ export class PerspectiveView {
    * study's survey floor taken beside the skin, or none.
    */
   private bakeOptions(floors?: Float32Array): BakeOptions {
-    return this.erodedGround
-      ? { eroded: { rockTopM: this.groundRockTopM, ...(floors !== undefined ? { floors } : {}) } }
-      : {};
+    return {
+      ...(this.erodedGround
+        ? { eroded: { rockTopM: this.groundRockTopM, ...(floors !== undefined ? { floors } : {}) } }
+        : {}),
+      // Under High the bake writes the lit ground's pixels beside the skin.
+      ...(this.litSurface !== null ? { lit: this.litSurface.bake } : {}),
+    };
+  }
+
+  /**
+   * The Graphics quality the player chose (docs/graphics-standards.md gate 6;
+   * docs/ui-ux.md §14). High draws the world layer lit (highFrame.ts) where
+   * this view can; where it cannot, the frame stays Low, the choice is kept,
+   * and the status says why, as the lamp halo's does.
+   */
+  setGraphicsQuality(quality: GraphicsQuality): void {
+    if (quality === this.qualityAsked) return;
+    this.qualityAsked = quality;
+    this.applyGraphicsQuality();
+  }
+
+  /**
+   * Where the chart writes its marks' plates, or null while no frame draws
+   * them: the Low quality, and a view High does not reach. The chart opens a
+   * group for each layer it redraws (EchoRenderer `draw`).
+   */
+  markPlates(): MarkPlates | null {
+    return this.high.on ? this.plates : null;
+  }
+
+  /** What the view draws, as Settings and the probe read it. */
+  private get qualityState(): GraphicsQualityState {
+    const state = this.high.state;
+    return state === 'on' ? 'high' : state === 'off' ? 'low' : state;
+  }
+
+  /** Bring the frame to the asked quality, and rebuild the ground it lights. */
+  private applyGraphicsQuality(): void {
+    const renderer = this.renderer;
+    if (renderer === null) return;
+    const was = this.high.on;
+    if (this.qualityAsked === 'high') {
+      const refusal = highRefusal({
+        dreamStudy: this.dreamStudy,
+        placed: this.worldRegion !== null,
+        look: this.look,
+      });
+      if (refusal !== null) this.high.disable(refusal);
+      else this.high.enable(renderer);
+    } else {
+      this.high.disable();
+    }
+    publishGraphicsQualityStatus(this.qualityState);
+    // At Low the water is the backdrop's; at High the composite adds it.
+    this.backdrop.mesh.visible = !this.high.on;
+    if (this.high.on === was) return;
+    if (!this.high.on) {
+      this.leaveWorldLayer();
+      // No frame holds the world under a plate now; the chart stops handing
+      // them over when `markPlates` answers null.
+      this.plates.clear();
+      this.high.setPlates(new Float32Array(0));
+      this.platesPacked = -1;
+    }
+    // The ground is another material under High, over another bake.
+    if (this.terrain !== null) this.rebuildTerrain();
+  }
+
+  /**
+   * Which of the prop layer's draws the world pass takes: its opaque models.
+   * Its additive clouds (steam, haze, sift) stay on the canvas as Low draws
+   * them. Read each frame under High, since models land as they decode.
+   */
+  private enterWorldLayer(): void {
+    this.environment.group.traverse((object) => {
+      const mesh = object as Mesh;
+      if (mesh.isMesh !== true) return;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const opaque = materials.every((m) => !m.transparent && m.blending === NormalBlending);
+      mesh.layers.set(opaque ? WORLD_LAYER : 0);
+    });
+  }
+
+  /** Everything back on the one layer Low draws. */
+  private leaveWorldLayer(): void {
+    this.environment.group.traverse((object) => object.layers.set(0));
   }
 
   /**
@@ -1791,6 +1952,8 @@ export class PerspectiveView {
     for (const id of this.residency?.residentIds() ?? []) {
       this.restandDetailProps(this.residency!.get(id)!);
     }
+    // Whether High reaches the view is the look's to say (graphicsQuality.ts `highRefusal`).
+    this.applyGraphicsQuality();
     return true;
   }
 
@@ -1810,6 +1973,8 @@ export class PerspectiveView {
     this.workLights.dispose();
     this.models.dispose();
     this.cues.dispose();
+    this.high.dispose();
+    publishGraphicsQualityStatus('low');
     this.backdrop.dispose();
     this.snow.dispose();
     this.nearSnow?.dispose();
@@ -1842,6 +2007,7 @@ export class PerspectiveView {
     delete (window as unknown as { __freeWaterDecoration?: unknown }).__freeWaterDecoration;
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
     delete (window as unknown as { __perspectiveSplit?: unknown }).__perspectiveSplit;
+    delete (window as unknown as { __perspectivePlates?: unknown }).__perspectivePlates;
     delete (window as unknown as { __perspectiveSplitFrame?: unknown }).__perspectiveSplitFrame;
     delete (window as unknown as { __perspectiveGpuSplit?: unknown }).__perspectiveGpuSplit;
     delete (window as unknown as { __perspectiveGpuQueue?: unknown }).__perspectiveGpuQueue;
@@ -3092,8 +3258,32 @@ export class PerspectiveView {
     if (this.terrainMesh !== null) {
       this.scene.remove(this.terrainMesh);
       this.terrainMesh.geometry.dispose();
-      (this.terrainMesh.material as MeshBasicMaterial).map?.dispose();
-      (this.terrainMesh.material as MeshBasicMaterial).dispose();
+      // The skin, whichever material the mesh wears: under High it wears the
+      // lit one, and its ink is a mesh of its own on the same geometry.
+      this.groundSkin?.map?.dispose();
+      this.groundSkin?.dispose();
+      this.groundSkin = null;
+      if (this.inkOverlay !== null) {
+        this.scene.remove(this.inkOverlay);
+        (this.inkOverlay.material as MeshBasicMaterial).dispose();
+        this.inkOverlay = null;
+      }
+      if (this.inkPlate !== null) {
+        this.high.setInkPlate(null);
+        (this.inkPlate.material as MeshBasicMaterial).dispose();
+        this.inkPlate = null;
+      }
+      this.litMaterial?.dispose();
+      this.litMaterial = null;
+      this.litSurface?.albedo.dispose();
+      this.litSurface?.relief.dispose();
+      this.litSurface = null;
+      this.waterHue?.dispose();
+      this.waterHue = null;
+      this.high.setWater(null);
+      this.pools?.dispose();
+      this.pools = null;
+      this.litPools.value = NO_POOLS;
       this.terrainMesh = null;
       this.surveyCells?.dispose();
       this.surveyFloor?.dispose();
@@ -3195,6 +3385,14 @@ export class PerspectiveView {
     // seating any still bakes its own; so does every entry with no baseline.
     const baseline = this.baselineSkin();
     const apron = this.apron;
+    // Under High the bake below also writes the lit ground's pixels
+    // (`bakeOptions`), so they are allocated before it.
+    if (this.high.on) {
+      this.litSurface = litGroundSurface(
+        terrain,
+        Math.min(4, this.renderer.capabilities.getMaxAnisotropy())
+      );
+    }
     // The study's isobaths read its rounded floor finer than the mesh can
     // carry it, at the bake's own pixels.
     const floorSamples: SurveyFloorSamples | null =
@@ -3260,7 +3458,70 @@ export class PerspectiveView {
         duneSource(this.mapId, terrain)
       );
     }
-    this.terrainMesh = new Mesh(geometry, material);
+    this.groundSkin = material;
+    const drawnSurvey =
+      floorSamples !== null && surveyFloor !== null
+        ? { floor: surveyFloor, samples: floorSamples }
+        : null;
+    if (this.litSurface !== null) {
+      // High: the mesh wears the lit ground and joins the world pass, and the
+      // survey is drawn over it by the tactical pass, as a layer of its own.
+      // The lit chain is the skin's, in the skin's order, with the light last.
+      const lit = new MeshBasicMaterial({ map: this.litSurface.albedo, toneMapped: false });
+      installSurveyInk(lit, terrain, cells, drawnSurvey, 'carrier');
+      installDisplayVeil(lit);
+      if (this.detailTexture !== null) {
+        this.detailUniforms = installGroundDetail(
+          lit,
+          terrain,
+          this.detailTexture,
+          duneSource(this.mapId, terrain)
+        );
+      }
+      installLitGround(lit, this.litSurface.relief, this.litPools);
+      this.litMaterial = lit;
+      // The water over this ground wears its biomes' hues (waterMedium.ts).
+      this.waterHue = waterHueTexture(terrain);
+      this.high.setWater(this.waterHue, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
+      this.terrainMesh = new Mesh(geometry, lit);
+      this.terrainMesh.layers.set(WORLD_LAYER);
+      const ink = new MeshBasicMaterial({
+        toneMapped: false,
+        transparent: true,
+        depthWrite: false,
+        // The composite lays the world's depth a pixel at a time, and this
+        // mesh rasterises a sample at a time: without the offset the ink
+        // fights the ground it lies on.
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+      });
+      installSurveyInk(ink, terrain, cells, drawnSurvey, 'overlay');
+      this.inkOverlay = new Mesh(geometry, ink);
+      // Before every other blended draw of the tactical pass: at Low the ink
+      // is part of the opaque ground, under all of them.
+      this.inkOverlay.renderOrder = -2;
+      this.scene.add(this.inkOverlay);
+      // And the strokes' plates: the same ground in the ink's `plate` mode,
+      // drawn by the plate pass into its mask, where the greater of two
+      // plates stands (markPlates.ts). The mask has no depth; the patch reads
+      // the world's.
+      const plate = new MeshBasicMaterial({
+        toneMapped: false,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        blending: CustomBlending,
+        blendEquation: MaxEquation,
+        blendSrc: OneFactor,
+        blendDst: OneFactor,
+      });
+      const reads = installSurveyInk(plate, terrain, cells, drawnSurvey, 'plate');
+      this.inkPlate = new Mesh(geometry, plate);
+      this.high.setInkPlate(this.inkPlate, reads as SurveyInkPlateUniforms);
+    } else {
+      this.terrainMesh = new Mesh(geometry, material);
+    }
     this.scene.add(this.terrainMesh);
     if (this.apron !== null && this.apron.mesh === null) this.buildApron(grid, baseline);
     this.cutOverview();
@@ -3321,6 +3582,13 @@ export class PerspectiveView {
     const renderer = this.renderer;
     if (renderer === null || !renderer.extensions.has('KHR_parallel_shader_compile')) return;
     const materials = renderer.compile(this.scene, this.camera);
+    // A program is keyed by where it draws, and under High the world layer
+    // draws into a target: those programs link on the driver's threads too.
+    if (this.high.on) {
+      for (const material of this.high.compile(renderer, this.scene, this.camera)) {
+        materials.add(material);
+      }
+    }
     this.linking = { materials, until: performance.now() + PROGRAM_HOLD_MAX_MS };
   }
 
@@ -3367,6 +3635,45 @@ export class PerspectiveView {
     } else {
       this.environment.rebuild(terrain, groundY);
     }
+    this.standWorldLights(terrain);
+  }
+
+  /**
+   * The world's own light at High (worldLights.ts): the vent embers, the
+   * civic lamps and the props that carry a licensed family, as the pools the
+   * lit ground takes and the volumes the water shows. Stood with the dressing
+   * from the same public ground, so it answers nothing a match does
+   * (docs/art-direction.md, "Two layers, two laws", limit 4).
+   */
+  private standWorldLights(terrain: TerrainPayload): void {
+    this.pools?.dispose();
+    this.pools = null;
+    this.litPools.value = NO_POOLS;
+    this.worldLightCount = 0;
+    if (!this.high.on) {
+      this.high.setLights(new Float32Array(0));
+      return;
+    }
+    const sites: WorldLightSite[] = [
+      ...ventEmbers(terrain, this.groundSeed).map((ember) => ({
+        family: 'vent' as const,
+        xM: ember.xM,
+        yM: ember.yM,
+        scale: HIGH_GRAPHICS.WORLD_LIGHT.EMBER_SHARE,
+      })),
+      ...civicLamps(terrain, this.groundSeed).map((lamp) => ({
+        family: 'civic' as const,
+        xM: lamp.xM,
+        yM: lamp.yM,
+      })),
+      ...this.environment.worldLightSites(terrain),
+    ];
+    const lights = worldLightsOf(sites, (xM, yM) => this.groundYAt(xM, yM));
+    this.worldLightCount = lights.length;
+    this.high.setLights(volumeInstances(lights));
+    if (lights.length === 0) return;
+    this.pools = poolTexture(terrain, lights);
+    this.litPools.value = this.pools;
   }
 
   /**
@@ -3431,6 +3738,12 @@ export class PerspectiveView {
       this.bakeOptions(this.surveyFloorSamples?.data)
     );
     texture.needsUpdate = true;
+    if (this.litSurface !== null) {
+      this.litSurface.albedo.needsUpdate = true;
+      this.litSurface.relief.needsUpdate = true;
+    }
+    // A delta can change a cell's biome, and the water's hue is its biome's.
+    if (this.waterHue !== null) repaintWaterHue(this.waterHue, terrain);
 
     this.rebuildDressing();
     // A ground delta can change a cell's biome, and the biome is the water's
@@ -3494,6 +3807,11 @@ export class PerspectiveView {
       });
       installDisplayVeil(material);
       const mesh = new Mesh(geometry, material);
+      // Under High the stone takes the rig's light, in the world pass.
+      if (this.high.on) {
+        installLitRoof(material, LIT_ALBEDO_GAIN);
+        mesh.layers.set(WORLD_LAYER);
+      }
       this.terrainDressing.add(mesh);
       this.roofs.push({ mesh, material });
     }
@@ -3504,6 +3822,10 @@ export class PerspectiveView {
     // (docs/art-direction.md, "Reading the Sea Floor"). Sampled at the
     // heightfield's step so it rides the crag rather than cutting through it.
     // Rung 5, map furniture (docs/map-visuals.md §5), at the ladder's alpha.
+    // Under High a line this view draws carries its plate as the chart's
+    // marks do, fading into the water with it (markPlates.ts).
+    const plates = this.high.on ? this.plates : null;
+    plates?.begin('terrain');
     const routePoints: number[] = [];
     for (const passage of passages.list) {
       const roofY = (xM: number, yM: number) =>
@@ -3528,7 +3850,10 @@ export class PerspectiveView {
           const y0 = a.yM + ((b.yM - a.yM) * k) / steps;
           const x1 = a.xM + ((b.xM - a.xM) * (k + 1)) / steps;
           const y1 = a.yM + ((b.yM - a.yM) * (k + 1)) / steps;
-          routePoints.push(x0, roofY(x0, y0), y0, x1, roofY(x1, y1), y1);
+          const h0 = roofY(x0, y0);
+          const h1 = roofY(x1, y1);
+          routePoints.push(x0, h0, y0, x1, h1, y1);
+          plates?.line(x0, h0, y0, x1, h1, y1, HIGH_GRAPHICS.PLATE.LINE_PX, 1, true);
         }
       }
     }
@@ -3556,6 +3881,11 @@ export class PerspectiveView {
     // unnamed in §5 and placed on rung 1, the deep water the world ends in.
     if (!this.dreamStudy) {
       const rim = perimeter.map((p) => new Vector3(p.x, p.y + 4, p.z));
+      for (let i = 0; i < rim.length; i++) {
+        const a = rim[i]!;
+        const b = rim[(i + 1) % rim.length]!;
+        plates?.line(a.x, a.y, a.z, b.x, b.y, b.z, HIGH_GRAPHICS.PLATE.LINE_PX, 1, true);
+      }
       this.terrainDressing.add(
         new LineLoop(
           new BufferGeometry().setFromPoints(rim),
@@ -3568,6 +3898,8 @@ export class PerspectiveView {
         )
       );
     }
+
+    plates?.close();
 
     // A placed mission has no wall: its exterior is ground that fades
     // (docs/world-map.md §7.4). The rim above stays, as chart ink.
@@ -3591,12 +3923,13 @@ export class PerspectiveView {
     // the world ends at, and a wall that stays crisp while the seabed in
     // front of it dissolves is the hard edge this whole change exists to
     // remove. It falls away into the same water everything else does.
-    this.terrainDressing.add(
-      new Mesh(
-        skirtGeometry,
-        new MeshBasicMaterial({ color: 0x040a12, side: DoubleSide, toneMapped: false })
-      )
+    const skirt = new Mesh(
+      skirtGeometry,
+      new MeshBasicMaterial({ color: 0x040a12, side: DoubleSide, toneMapped: false })
     );
+    // The wall the lit world ends at belongs to its pass.
+    if (this.high.on) skirt.layers.set(WORLD_LAYER);
+    this.terrainDressing.add(skirt);
   }
 
   /** Vent embers as one Points cloud: per-ember flicker rides the colour
@@ -5411,6 +5744,7 @@ export class PerspectiveView {
       ? -this.camera.position.y / DEPTH_VISUAL_M_PER_M
       : -this.focusY() / DEPTH_VISUAL_M_PER_M;
     this.backdrop.update(this.camera, focusDepthM);
+    this.focusDepthNowM = focusDepthM;
     const rect = this.worldRegion === null ? null : this.missionRect();
     if (rect !== null) {
       this.borderStrength = stepBorderStrength(
@@ -5724,10 +6058,30 @@ export class PerspectiveView {
       this.queueTimer?.end();
       renderer.info.reset();
     }
-    this.gpuTimer?.begin('canvas');
+    this.gpuTimer?.begin(this.high.on ? 'high-world' : 'canvas');
     try {
-      renderer.render(this.scene, this.camera);
-      passes.push('canvas');
+      if (this.high.on) {
+        // High: the world layer lit and composited, then the tactical layer
+        // over it on the canvas, as Low draws it (highFrame.ts).
+        this.enterWorldLayer();
+        if (this.plates.revision !== this.platesPacked) {
+          this.platesPacked = this.plates.revision;
+          this.high.setPlates(this.plates.pack());
+        }
+        passes.push(
+          ...this.high.render(renderer, this.scene, this.camera, {
+            focusDepthM: this.focusDepthNowM,
+            // The fog's own reach: the dolly's, over the player's density.
+            reachM:
+              this.scene.fog instanceof FogExp2 && this.scene.fog.density > 0
+                ? 1 / this.scene.fog.density
+                : 0,
+          })
+        );
+      } else {
+        renderer.render(this.scene, this.camera);
+        passes.push('canvas');
+      }
       // A capture reads the canvas before the halo, inside this frame.
       const captured =
         this.haloFrameWaiters.length > 0 && this.halo.on ? readCanvasPixels(renderer) : null;
@@ -5882,6 +6236,23 @@ export class PerspectiveView {
       ) => {
         this.setLampHalos(on);
         return this.halo.state;
+      };
+      // The Graphics quality's capture switch (docs/screenshots/issue-1801):
+      // a Low and High pair on one page, beside the setting a player uses.
+      (
+        window as unknown as { __perspectiveQuality?: (quality: GraphicsQuality) => unknown }
+      ).__perspectiveQuality = (quality: GraphicsQuality) => {
+        this.setGraphicsQuality(quality);
+        return this.qualityState;
+      };
+      // The plates' capture switch (docs/screenshots/issue-1801/plates.mjs):
+      // the High frame with its marks' plates and without, on one page.
+      // Players have no setting: a plate is limit 6 (art-direction.md).
+      (
+        window as unknown as { __perspectivePlates?: (on: boolean) => unknown }
+      ).__perspectivePlates = (on: boolean) => {
+        this.high.platesHeld = on;
+        return this.high.platesHeld;
       };
       // The chromatic split's capture switch (tools/render-stack/split-cost.mjs):
       // its on/off pair for gate 6. Players have no setting (art-direction.md).
@@ -6085,6 +6456,19 @@ export class PerspectiveView {
       split: this.split.state,
       splitBytes: this.split.bytes,
       canvasStencilBits: this.canvasStencilBits,
+      // The Graphics quality (gate 6): what was asked, what is drawn, what
+      // the High frame holds, and the GPU time High is bounded by.
+      graphicsQuality: {
+        asked: this.qualityAsked,
+        drawn: this.qualityState,
+        targetBytes: this.high.bytes,
+        groundBytes: this.litSurface === null ? 0 : litGroundBytes(this.litSurface),
+        // The world's own sources lighting this ground and its water.
+        worldLights: this.worldLightCount,
+        // Bands and discs the plate pass draws under the marks this frame.
+        plates: this.high.platesDrawn,
+        frameGpuBudgetMs: HIGH_GRAPHICS.FRAME_GPU_MS,
+      },
       textures: info?.memory.textures ?? 0,
       // What the GPU shades: the capped pixel ratio, and the drawing buffer
       // it gives. Gate 6 reads GPU time at 1 and 1.5, and the same camera at

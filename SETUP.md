@@ -130,6 +130,7 @@ npm run lint
 | `CORS_ORIGIN` | backend | loopback | Origins allowed to reach matchmaking. |
 | `VITE_SERVER_URL` | frontend, **at build time** | the page's own scheme and host, on `:3000` | Where the client dials the server. |
 | `ECHOES_BUILD` | both images, **at build time** | `dev` | The build tag on every error report and failure line. |
+| `ECHOES_HOSTED` | frontend image, **at build time** | unset | `1` hides the Graphics quality control, as the hosted playtest build does until a High frame is accepted. |
 
 Failures are logged as one JSON object per line on the server's stderr (#1576):
 a client's uncaught error, POSTed to `/reports`, and a throw in a room or the
