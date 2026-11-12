@@ -34,11 +34,11 @@ refuse with the spike.
   between (`round_part`). For a lamp the area from above is then read with
   everything near it in place, so gate 3 reads the light it read and the
   conn view draws the lamp the size it drew. Same material, same emission.
-- Each lamp is moved along its seat's normal until it stands off the
-  smoothed skin what it stood off the blockout's: a light placement moved.
-  `bow_light` moves 0.20 m, since the table's nose under it was a
-  two-vertex wedge and the smooth nose is not; the other six move 5 cm or
-  less.
+- Each lamp is moved until its centre stands off the smoothed skin what it
+  stood off the blockout's: a light placement moved. `bow_light` moves
+  0.19 m, since the table's nose under it was a two-vertex wedge and the
+  smooth nose is not, and `tail_light` 0.09 m, since the peduncle's end is
+  rounded under it. The other five move 5 cm or less.
 - Added, and in no block: a collar along the line where a seed leaves its
   sheath and a calyx where a lamp leaves the skin, 15 small rings of
   ridge, nine and six. A ring is not built where a growth ring would cross
@@ -198,6 +198,20 @@ def under(tree, p):
     """Whether a point is inside a closed part, by its nearest face."""
     foot, n, _, _ = tree.find_nearest(p)
     return (p - foot).dot(n) < 0
+
+
+def stand_off(tree, p):
+    """How far a point stands off a closed part, under it negative, and the
+    way out from the part there. The distance is to the surface itself. The
+    first cut took it to the nearest face's plane, which on the rim of the
+    peduncle's cap read 0.11 m for a lamp standing 0.25 m off, and left the
+    tail lamp perched where the third review found it."""
+    foot, n, _, distance = tree.find_nearest(p)
+    away = p - foot
+    if distance < 1e-6:
+        return 0.0, n
+    side = 1.0 if away.dot(n) >= 0 else -1.0
+    return side * distance, away.normalized() * side
 
 
 def showing(ring, *parts):
@@ -508,7 +522,7 @@ for name in FINS[:4]:
 
 
 # --- the tail ----------------------------------------------------------------
-def stalk(name, around=16, stations=7):
+def stalk(name, around=24, stations=7):
     part = ref[name]
     long = max(range(3), key=lambda i: part.half[i])
     u, v = [i for i in range(3) if i != long]
@@ -560,18 +574,16 @@ for name in LAMPS:
     seat = bpy.data.objects["tail_peduncle" if name == "tail_light" else "hull"]
     # A lamp rests on something (#894), and how deep is part of where it is.
     # The skin under a lamp moves when it is smoothed, most at the nose and
-    # at the peduncle's rounded end, so each lamp is moved along its seat's
-    # normal until its centre stands off the skin what it stood off the
-    # blockout's. That is a light placement moved, and the script says by
-    # how much.
+    # at the peduncle's rounded end, so each lamp is moved until its centre
+    # stands off the skin what it stood off the blockout's. That is a light
+    # placement moved, and the script says by how much.
     was, now = ref[seat.name].bvh(), kit.world_bvh(seat)
     at = part.frame @ part.centre
-    foot, n, _, _ = was.find_nearest(at)
-    stood = (at - foot).dot(n)
+    stood, _ = stand_off(was, at)
     moved = Vector((0, 0, 0))
-    for _ in range(3):
-        foot, n, _, _ = now.find_nearest(at + moved)
-        moved += n * (stood - (at + moved - foot).dot(n))
+    for _ in range(6):
+        stands, outward = stand_off(now, at + moved)
+        moved += outward * (stood - stands)
     bud.matrix_world = Matrix.Translation(moved) @ bud.matrix_world
     print(f"  {name}: stands {stood:.2f} m off its seat, moved {moved.length:.2f} m to keep that")
     # A lip 7 cm high along the line the bud leaves the skin by: low, so it
@@ -647,7 +659,7 @@ keel = h.math(
     "MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(h.math("SUBTRACT", math.pi, turn), 0.0, 0.08)), 0.06
 )
 net = h.cells(h.scaled(p, (1 / 2.2, 1 / 1.4, 1 / 1.4)), 1.0, "DISTANCE_TO_EDGE")
-veinlet = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(net, 0.0, 0.06)), 0.025)
+veinlet = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(net, 0.0, 0.06)), 0.014)
 drift = h.math("MULTIPLY", h.noise(p, 0.3), 7.0)
 growth = h.math(
     "MULTIPLY",
