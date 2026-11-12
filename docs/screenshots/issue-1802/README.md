@@ -17,24 +17,43 @@ Close camera will look. The script is `tools/hull-models/blender/corvette_pelagi
 
 The script reads the approved `docs/concept-art/models/corvette-pelagia.glb` as its
 blockout and rebuilds each part inside that part's own frame. Nothing is a new hull: 80 m,
-the 33 parts by their names, the five materials at the navy's values, the seven lamps at
-their sites. It adds 18 small rings, a collar under each seed and a calyx under each lamp,
-which no block of [asset-prompts-3d.md](../../asset-prompts-3d.md) names.
+the 33 parts by their names under the same nodes, the five materials at the navy's values,
+the seven lamps at their sites.
 
 | | Current | Spike |
 | --- | --- | --- |
 | Generator | three.js r169 primitives | Blender 5.3.0 as `bpy`, Cycles on the CPU |
-| Parts | 33 | 51 |
-| Triangles | 2,652 | 44,924 |
+| Parts | 33 | 50 |
+| Triangles | 2,652 | 44,724 |
 | Materials | 5 | 5, the same names and values |
-| Maps | none | normal 1,024², occlusion 512², one atlas at 15.7 texels a metre |
-| File | 100,964 bytes, 26,156 gzipped | 2,856,728 bytes, 2,470,183 gzipped |
+| Maps | none | normal 1,024², occlusion 512², one atlas at 15.8 texels a metre |
+| File | 100,964 bytes, 26,156 gzipped | 3,135,656 bytes, 2,702,330 gzipped |
 
-Subdivision carries the hull, the jaw, the sheaths, the seeds and the peduncle. The three
-growth rings are bands with a lip, their edges bevelled 0.12 m. The membranes are a lens
-with a round rim where they were a slab. The normal map is baked
-from a height field a material: scutes with growth lines on the chitin, a grain on the
-ridge, rays on the membranes. The occlusion map is the parts' shade of one another.
+Each change below is a shape decision. The spike takes them so there is a hull to look at,
+and each is the owner's to keep or refuse.
+
+- **The hull** is a subdivision cage fitted to the blockout's 16 × 11 table. Its box is
+  within 7 cm of the table's.
+- **The three growth rings** are bands laid on the skin, with a lip whose edges are
+  bevelled 0.12 m. Each blockout ring is an ellipse round a hull that is not one: it floats
+  up to 1.23 m off the skin and sinks up to 0.32 m into it. A band's box moves up to 0.68 m.
+- **The six membranes** keep the blockout's outline and become a lens with a round rim.
+  They are 0.19 m a side thicker at the root and thin to the tip, where the blockout has a
+  0.42 m slab.
+- **The eleven seeds and the seven lamps** were spheres cut to five facets by three. Each
+  is rebuilt as a smooth barrel that shows what its blockout showed from above and from the
+  side, and within 5% of it at camera pitches from 15° to 55°. An ellipsoid misses by 15.7%.
+- **Seventeen rings are added** that no block of
+  [asset-prompts-3d.md](../../asset-prompts-3d.md) names: a collar where a seed leaves its
+  sheath and a calyx where a lamp leaves the skin. `launcher_starboard_seed_4` has none,
+  since a growth ring crosses it.
+- **The chitin's surface is a net of raised veins over growth lines**, on the normal map
+  alone. The Pelagia block names "growth rings and living bioluminescent veins". These
+  veins are relief and emit nothing.
+- **Kept as they were**: the growth rings still run through the three launchers at five
+  pairs, as they do in the approved hull.
+- **Dropped**: the blockout's two unnamed point lights. The conn view keeps a model's
+  meshes alone when it merges one.
 
 ![The two baked maps: normal, then occlusion](baked-maps.png)
 
@@ -52,6 +71,8 @@ node tools/hull-renders/inspect.mjs corvette-pelagia \
 ![Four views, current and spike](lit-table.png)
 
 ![Flank, stern and bow, closer](lit-close.png)
+
+![The bow lamp, the tail lamp and a launcher's seeds](lit-lamps.png)
 
 ## In the game
 
@@ -79,16 +100,18 @@ enlarged twice:
 The High slice's own Close camera is not fixed yet
 ([issue-1799](../issue-1799/README.md#cameras)), so the two near frames stand in for it.
 
-| Camera | Draw calls | Triangles, current | Triangles, spike |
-| --- | --- | --- | --- |
-| Home | 44 | 593,684 | 635,956 |
-| Gate 6's close station | 43 | 593,674 | 635,946 |
-| Near, port | 39 | 589,674 | 631,946 |
-| Near, bow | 36 | 588,378 | 630,650 |
+| Camera | Draw calls | Triangles, current | Triangles, spike | Lamps, current | Lamps, spike |
+| --- | --- | --- | --- | --- | --- |
+| Home | 44 | 593,684 | 635,756 | 12.0 px² | 12.4 px² |
+| Gate 6's close station | 43 | 593,674 | 635,746 | 2.7 px² | 2.6 px² |
+| Near, port | 39 | 589,674 | 631,746 | 123.7 px² | 127.1 px² |
+| Near, bow | 36 | 588,378 | 630,450 | 135.6 px² | 142.0 px² |
 
 Draw calls do not move, since the conn view merges a model by material and the spike has
-the same five. One Corvette adds 42,272 triangles to a frame. `readings-current.json` and
-`readings-spike.json` hold the probe's figures.
+the same five. One Corvette adds 42,072 triangles to a frame. The lamp columns are the
+client's own reading of the Corvette's seven lamps as each camera projects them
+(`packages/frontend/src/game/lampScreen.ts`). `readings-current.json` and
+`readings-spike.json` hold all of it.
 
 ## Through intake
 
@@ -98,49 +121,71 @@ node .claude/skills/hull-intake/scripts/bake.mjs \
 ```
 
 The bake is warning-free: 80.0 m by 25.2 m at a scale of ×1.00002, length on X, 7 emissive
-materials by intake's count of 51, and no material whose meshes disagree on attributes. The current hull reads
-80.0 m by 24.9 m.
+materials by intake's count of 50, and no material whose meshes disagree on attributes. The
+current hull reads 80.0 m by 24.9 m.
 
 ![Intake's four maps at 8 px/m](intake-maps.png)
 
-Each lamp shows from above the plan area its blockout showed, to a thousandth of a square
-metre: the script measures both. Gate 3's raw energy then agrees from 8 px/m up and differs
-below it, where a lamp is a pixel or two wide and a round one samples differently from a
-pentagon.
+Each lamp shows from above the plan area its blockout showed, to 0.002 m²: the script
+measures both with every part in place. Gate 3's raw energy then agrees from 8 px/m up and
+differs below it, where a lamp is a pixel or two wide and a round one samples differently
+from a pentagon.
 
 | Map density | Raw E, current | Raw E, spike |
 | --- | --- | --- |
-| 2 px/m | 3.41 | 3.01 |
-| 4 px/m, the shipped density | 3.35 | 3.04 |
-| 8 px/m | 3.31 | 3.32 |
-| 16 px/m | 3.36 | 3.37 |
+| 2 px/m | 3.41 | 2.88 |
+| 4 px/m, the shipped density | 3.35 | 3.08 |
+| 8 px/m | 3.31 | 3.37 |
+| 16 px/m | 3.36 | 3.38 |
 
 Calibrated at 4 px/m to the Corvette's SIG 28, a target of 3.33, the current hull takes a
-gain of ×0.993 and the spike ×1.095, against a cap of ×64.
+gain of ×0.993 and the spike ×1.081, against a cap of ×64.
 
-The script prints what moved against the blockout, part by part. The growth rings move up
-to 0.66 m, since each now lies on the skin where its torus floated up to 1.23 m off it and
-sank up to 0.32 m into it. The hull's bow tip sits 0.24 m aft. The membranes are 0.19 m
-thicker a side at the root. Every other box is within 0.17 m.
+`tools/hull-models/contacts.mjs` finds 84 pairs that meet where the current hull has 45.
+Every collar meets its seed and its sheath, and every calyx its lamp and its seat.
+
+## The hull-reviewer's reading
+
+The reviewer was asked to judge the file as if it were offered for
+`docs/concept-art/models/` today, and failed it. Its first round found one fault of the
+build's own and four of smaller size, all since fixed:
+
+- The bow lamp floated 0.38 m off the smoothed nose. The cage now reaches the table's tip,
+  the script asserts that every lamp crosses its seat, and all seven keep their sites.
+- A new collar was cut by a growth ring, and three collars stood off their seeds. Collars
+  now follow the line where the seed leaves the sheath, and the cut one is not built.
+- The maps were on the first UV set. They are on the second, as the kit's occlusion map
+  is, and the first is left for a trim sheet.
+- The launchers' three group nodes were missing. They are kept.
+- The lamps drew smaller from the side than the approved ones. They now match, as the
+  table above reads.
+
+Three of its findings stand, because they are what the spike was run to measure:
+
+- **Gate 6, triangles.** 44,724 a hull against Low's 400,000 a frame. Nine such hulls pass
+  it, and the berth ceiling is forty.
+- **Gate 6, texture memory.** About 6.7 MiB on the GPU, against the 1.33 MiB that
+  [art-direction.md](../../art-direction.md#bevels-and-baked-occlusion--spec) holds a model to.
+- **The pipeline of record.** An approved model is `THREE.GLTFExporter` output with no
+  texture but an occlusion map. This file is neither, and `npm run check:models` would
+  fail it over the kit script's.
 
 ## What it costs
 
 - **The toolchain.** `bpy` 5.3.0 installs from PyPI into Python 3.13: a 427.5 MB wheel,
   1.1 GB installed. It imports, bakes and exports in the cloud container with no display
   and no GPU.
-- **Time.** 81 s a hull on four threads: 3 s to build, 78 s to bake at 64 samples.
-- **Bytes.** 28 times the current file. The 128 approved models are 12,671,968 bytes
-  together at `5f2a23404`, so five hulls like this one outweigh the library. The PNGs are
-  1,791,600 bytes of it. The wheel carries no Draco or meshopt library, so the exporter
+- **Time.** 109 s a hull on four threads: 5 s to build, 104 s to bake at 64 samples.
+- **Bytes.** 31 times the current file. The 128 approved models are 12,671,968 bytes
+  together at `5f2a23404`, so five hulls like this one outweigh the library. The two PNGs
+  are 1,851,443 bytes of it. The wheel carries no Draco or meshopt library, so the exporter
   cannot compress the geometry.
-- **Triangles.** One hull is a ninth of Low's 400,000 a frame, and a fleet at the berth
-  ceiling of forty would be 1.8 million. It is a High asset.
-- **Texture memory.** 6.7 MiB a hull kind on the GPU as three uploads it, RGBA8 with
-  mipmaps, against the 1.33 MiB a 512² occlusion map costs.
+- **Triangles and texture memory**, as the reviewer's findings above give them. It is a
+  High asset.
 
 ## What it does not prove
 
-- **That `npm run check:models` can hold it.** Three builds on one machine gave one
+- **That `npm run check:models` can hold it.** Repeated builds on one machine gave one
   SHA-256. Another machine was not tried, and CI installs no `bpy`.
 - **That it reads at High.** High's lighting is not built (#1801). Under Low's rig at the
   nearest camera the gain is visible and small. The lit table is the fairer reading of

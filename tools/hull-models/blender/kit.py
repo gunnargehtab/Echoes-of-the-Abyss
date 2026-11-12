@@ -21,7 +21,9 @@ What this kit adds that kit.mjs cannot:
 - **Subdivision**, on cages moved until the smooth surface passes through
   the points they were laid on (`fit_limit`), not inside them.
 - **Baked maps.** One tangent-space normal map and one occlusion map a hull,
-  on one UV atlas, baked by Cycles on the CPU from the script's own
+  on one atlas on the second UV set, as the kit's occlusion map is
+  (art-direction.md, "Bevels and baked occlusion"), baked by Cycles on the
+  CPU from the script's own
   procedural surface (`bake`). The normal map is what a material's height
   field says; the occlusion map is what the parts shade of one another.
 - **A lamp measured as gate 3 sees it** (`seen_from_above`): the plan area
@@ -75,6 +77,7 @@ class Part:
         self.world = [obj.matrix_world @ v.co for v in obj.data.vertices]
         self.faces = [tuple(p.vertices) for p in obj.data.polygons]
         self.material = obj.data.materials[0].name if obj.data.materials else None
+        self.parent = obj.parent.name if obj.parent else None
         lo = Vector(min(v[i] for v in self.local) for i in range(3))
         hi = Vector(max(v[i] for v in self.local) for i in range(3))
         self.box = (lo, hi)
@@ -95,6 +98,12 @@ class Reference:
         objs = list(bpy.context.scene.objects)
         self.root = next(o.name for o in objs if o.parent is None)
         self.parts = {o.name: Part(o) for o in objs if o.type == "MESH"}
+        # The nodes that only group: a launcher over its sheath and seeds.
+        self.groups = {}
+        for o in objs:
+            if o.type == "EMPTY" and o.parent is not None:
+                loc, rot, _ = o.matrix_world.decompose()
+                self.groups[o.name] = Matrix.Translation(loc) @ rot.to_matrix().to_4x4()
         self.finish = {}
         for m in bpy.data.materials:
             b = m.node_tree.nodes["Principled BSDF"].inputs
@@ -190,22 +199,44 @@ def box_lattice(nx, ny, nz):
     return coords, quads
 
 
-def capsule_rays(coords, length, radius, nose=1.5):
+def capsule_rays(coords, length, radius, nose=1.5, axis=(0.0, 0.0)):
     """A ray a lattice vertex, for a body long on X: square to the axis along
     the middle, fanned from a point inside each end over the last
     `nose × radius` of it. The side rings stay planar stations, so a body
-    re-skinned by these rays keeps its sections where the blockout has them."""
+    re-skinned by these rays keeps its sections where the blockout has them.
+    `axis` stands the rays' line off the box's own, across it: a body pushed
+    out of round has its two tips off that line, and a ray that passes a
+    sharp tip by a hand lands well short of it."""
     reach = max(length - nose * radius, 0.0)
+    off = Vector((0.0, axis[0], axis[1]))
     rays = []
     for a, b, c in coords:
         # The square's rim onto a circle, so rings come out round, not boxed.
         y, z = b * math.sqrt(1 - c * c / 2), c * math.sqrt(1 - b * b / 2)
         if abs(a) < 1:
-            rays.append((Vector((a * reach, 0, 0)), Vector((0, y, z)).normalized()))
+            rays.append((Vector((a * reach, 0, 0)) + off, Vector((0, y, z)).normalized()))
         else:
             rho2 = min(y * y + z * z, 1.0)
             forward = math.copysign(nose * math.sqrt(1 - rho2), a)
-            rays.append((Vector((a * reach, 0, 0)), Vector((forward, y, z)).normalized()))
+            rays.append((Vector((a * reach, 0, 0)) + off, Vector((forward, y, z)).normalized()))
+    return rays
+
+
+def ball_rays(coords):
+    """A ray a lattice vertex, for a part near round: from its centre, evenly
+    over the sphere. `capsule_rays` on a short body sends every side ring
+    out square at one height and the caps up past 45 degrees, and leaves the
+    shoulders between them to a straight chord."""
+    rays = []
+    for a, b, c in coords:
+        aim = Vector(
+            (
+                a * math.sqrt(1 - b * b / 2 - c * c / 2 + b * b * c * c / 3),
+                b * math.sqrt(1 - c * c / 2 - a * a / 2 + c * c * a * a / 3),
+                c * math.sqrt(1 - a * a / 2 - b * b / 2 + a * a * b * b / 3),
+            )
+        )
+        rays.append((Vector((0, 0, 0)), aim.normalized()))
     return rays
 
 
@@ -240,20 +271,39 @@ def fit_limit(points, quads, targets, rounds=60):
     return cage
 
 
-def ellipsoid_hit(radii):
-    """Where a ray from inside an axis-aligned ellipsoid leaves it."""
+def ellipsoid_hit(radii, power=2.0):
+    """Where a ray from inside an axis-aligned ellipsoid leaves it, its long
+    axis first. With `power` above 2 it is a barrel: still round about the
+    long axis, and fuller in the shoulders along it,
+    (y²/b² + z²/c²)^(p/2) + |x/a|^p = 1."""
+
+    def level(p):
+        across = (p[1] / radii[1]) ** 2 + (p[2] / radii[2]) ** 2
+        return across ** (power / 2) + abs(p[0] / radii[0]) ** power
 
     def hit(origin, direction):
-        o = Vector(origin[i] / radii[i] for i in range(3))
-        d = Vector(direction[i] / radii[i] for i in range(3))
-        a, b, c = d.dot(d), 2 * o.dot(d), o.dot(o) - 1
-        t = (-b + math.sqrt(max(b * b - 4 * a * c, 0.0))) / (2 * a)
-        return origin + direction * t
+        lo, hi = 0.0, 4 * max(radii)
+        for _ in range(48):
+            mid = (lo + hi) / 2
+            if level(origin + direction * mid) < 1:
+                lo = mid
+            else:
+                hi = mid
+        return origin + direction * lo
 
     return hit
 
 
 # --- parts -------------------------------------------------------------------
+
+
+def group(name, frame, root):
+    """An empty node in the blockout's frame, for the parts it groups."""
+    obj = bpy.data.objects.new(name, None)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.parent = root
+    obj.matrix_world = frame
+    return obj
 
 
 def add_part(name, frame, verts, faces, material, root, levels=0, seams=()):
@@ -285,20 +335,37 @@ def add_part(name, frame, verts, faces, material, root, levels=0, seams=()):
 
 
 def capsule_part(
-    name, part, material, root, hit=None, lattice=(4, 2, 2), levels=2, nose=1.5, rounds=60
+    name,
+    part,
+    material,
+    root,
+    hit=None,
+    lattice=(4, 2, 2),
+    levels=2,
+    nose=1.5,
+    rounds=60,
+    axis=(0.0, 0.0),
+    power=2.0,
+    ball=False,
 ):
     """A round part rebuilt as a fitted subdivision cage: the lattice box,
     its long side on the part's longest axis, thrown onto the part by
     `capsule_rays`. `hit(origin, direction)` says where a ray lands, in the
     part's frame about its box centre; without one the part is the ellipsoid
-    its box holds, which is what a scaled sphere was meant to be."""
+    its box holds, which is what a scaled sphere was meant to be, or at a
+    `power` above 2 the barrel `ellipsoid_hit` describes. `ball` throws the
+    lattice from the centre instead, for a part as wide as it is long."""
     order = sorted(range(3), key=lambda i: -part.half[i])
     radii = [part.half[i] for i in order]
-    hit = hit or ellipsoid_hit(radii)
+    hit = hit or ellipsoid_hit(radii, power)
     coords, quads = box_lattice(*lattice)
-    rays = capsule_rays(coords, radii[0], max(radii[1], radii[2]), nose)
+    if ball:
+        rays = ball_rays(coords)
+    else:
+        rays = capsule_rays(coords, radii[0], max(radii[1], radii[2]), nose, axis)
     targets = [hit(o, d) for o, d in rays]
-    cage = fit_limit(targets, quads, targets, rounds)
+    # Unsubdivided, the cage is the surface, and it stands on its targets.
+    cage = fit_limit(targets, quads, targets, rounds) if levels else targets
 
     def back(p):
         v = Vector((0, 0, 0))
@@ -361,26 +428,6 @@ def sweep_part(name, frame, rings, material, root, levels=1, around=True, tube=T
     return add_part(name, frame, verts, faces, material, root, levels, seams)
 
 
-def torus_rings(centre, axis, major, minor, around=20, tube=6):
-    """A collar: a torus about `axis` at `centre`, as rings for sweep_part."""
-    axis = axis.normalized()
-    u = axis.orthogonal().normalized()
-    v = axis.cross(u)
-    rings = []
-    for i in range(around):
-        t = 2 * math.pi * i / around
-        out = u * math.cos(t) + v * math.sin(t)
-        rings.append(
-            [
-                centre
-                + out * (major + minor * math.cos(2 * math.pi * k / tube))
-                + axis * (minor * math.sin(2 * math.pi * k / tube))
-                for k in range(tube)
-            ]
-        )
-    return rings
-
-
 def bevel(obj, width, segments=2, sharper_than=25.0):
     """Round every edge sharper than an angle, `width` metres back from it.
     kit.mjs chamfers a plate's rim and nothing else (art-direction.md,
@@ -404,6 +451,12 @@ def realise(obj):
     bpy.data.meshes.remove(old)
     mesh.shade_smooth()
     return obj
+
+
+def meets(a, b):
+    """Whether two parts' surfaces cross: the question contacts.mjs asks of a
+    finished file, asked while the script can still act on the answer."""
+    return bool(world_bvh(a).overlap(world_bvh(b)))
 
 
 def world_bvh(obj):
@@ -533,14 +586,21 @@ def _edit(objs, fn):
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
-def atlas(objs, margin=0.003):
-    """One UV atlas over every mapped part: each unwrapped along the seams
-    its builder marked, islands brought to one texel density, then packed."""
+def atlas(objs, bare=(), margin=0.003):
+    """Two UV sets a part, as art-direction.md's SPECs divide them. `uv0` is
+    the part unwrapped along the seams its builder marked and left at that:
+    the set a navy's trim sheet reads, which a hull laid for its sheet would
+    fill with trim.mjs's layout. `atlas` is the same islands brought to one
+    texel density and packed over every mapped part: the set the baked maps
+    read, glTF's TEXCOORD_1. `bare` parts, the lamps, take `uv0` alone."""
+    for o in list(objs) + list(bare):
+        o.data.uv_layers.new(name="uv0")
+        o.data.uv_layers["uv0"].active = True
+        _edit([o], lambda: bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.0))
     for o in objs:
-        o.data.uv_layers.new(name="atlas")
+        o.data.uv_layers.new(name="atlas")  # a copy of the active set
         o.data.uv_layers["atlas"].active = True
         o.data.uv_layers["atlas"].active_render = True
-        _edit([o], lambda: bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.0))
 
     def pack():
         bpy.ops.uv.average_islands_scale()
@@ -621,7 +681,13 @@ def wire_maps(objs, normal, occlusion):
         bsdf = tree.nodes["Principled BSDF"]
         for link in list(bsdf.inputs["Normal"].links):
             tree.links.remove(link)
+        # Both maps read the atlas by name, so the exporter gives them its set.
+        chart = tree.nodes.new("ShaderNodeUVMap")
+        chart.uv_map = "atlas"
+        for image in (normal, occlusion):
+            tree.links.new(chart.outputs["UV"], tree.nodes[image.name].inputs["Vector"])
         to_normal = tree.nodes.new("ShaderNodeNormalMap")
+        to_normal.uv_map = "atlas"
         tree.links.new(tree.nodes[normal.name].outputs["Color"], to_normal.inputs["Color"])
         tree.links.new(to_normal.outputs["Normal"], bsdf.inputs["Normal"])
         out = tree.nodes.new("ShaderNodeGroup")
@@ -630,14 +696,16 @@ def wire_maps(objs, normal, occlusion):
 
 
 def export_glb(path, objs, root):
-    """GLB, Y up, the atlas as TEXCOORD_0 and nothing else per vertex: no
-    tangents (three derives them a pixel), no helper UV layers."""
+    """GLB, Y up, `uv0` as TEXCOORD_0 and the atlas as TEXCOORD_1 and
+    nothing else per vertex: no tangents (three derives them a pixel), no
+    helper UV layers. Every node under `root` goes, groups included."""
     for o in objs:
-        for layer in [l for l in o.data.uv_layers if l.name != "atlas"]:
+        for layer in [l for l in o.data.uv_layers if l.name not in ("uv0", "atlas")]:
             o.data.uv_layers.remove(layer)
+        o.data.uv_layers["uv0"].active_render = True
     bpy.ops.object.select_all(action="DESELECT")
     root.select_set(True)
-    for o in objs:
+    for o in root.children_recursive:
         o.select_set(True)
     bpy.ops.export_scene.gltf(
         filepath=str(path),
@@ -678,6 +746,7 @@ def finish_glb(path, finish):
         for slot in ("normalTexture", "occlusionTexture"):
             if slot in m:
                 m[slot]["index"] = remap[m[slot]["index"]]
+                assert m[slot].get("texCoord") == 1, f"{m['name']}: {slot} is not on the atlas"
         f = finish[m["name"]]
         pbr = m.setdefault("pbrMetallicRoughness", {})
         pbr["metallicFactor"] = round(f["metallic"], 6)

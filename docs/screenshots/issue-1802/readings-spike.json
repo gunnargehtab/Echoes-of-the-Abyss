@@ -10,7 +10,21 @@
       "name": "home",
       "pose": "the opening pose",
       "drawCalls": 44,
-      "triangles": 635956
+      "triangles": 635756,
+      "lampAreaPx": [
+        12.4
+      ],
+      "lampSitesPx": [
+        [
+          1.4,
+          1.13,
+          1.14,
+          1.15,
+          1.16,
+          1.15,
+          1.1
+        ]
+      ]
     },
     {
       "name": "station",
@@ -21,7 +35,21 @@
         "focusDepthM": null
       },
       "drawCalls": 43,
-      "triangles": 635946
+      "triangles": 635746,
+      "lampAreaPx": [
+        2.6
+      ],
+      "lampSitesPx": [
+        [
+          0.68,
+          0.54,
+          0.54,
+          0.54,
+          0.55,
+          0.54,
+          0.51
+        ]
+      ]
     },
     {
       "name": "near-port",
@@ -32,7 +60,21 @@
         "focusDepthM": 300
       },
       "drawCalls": 39,
-      "triangles": 631946
+      "triangles": 631746,
+      "lampAreaPx": [
+        127.1
+      ],
+      "lampSitesPx": [
+        [
+          4.35,
+          3.64,
+          3.75,
+          3.86,
+          3.6,
+          3.68,
+          3.71
+        ]
+      ]
     },
     {
       "name": "near-bow",
@@ -43,7 +85,21 @@
         "focusDepthM": 300
       },
       "drawCalls": 36,
-      "triangles": 630650
+      "triangles": 630450,
+      "lampAreaPx": [
+        142
+      ],
+      "lampSitesPx": [
+        [
+          5.3,
+          4.11,
+          3.91,
+          3.72,
+          4.03,
+          3.77,
+          3.23
+        ]
+      ]
     }
   ]
 }

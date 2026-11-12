@@ -22,8 +22,9 @@
  *   a hull across the frame, which is where a surface is judged.
  *
  * The readings beside the frames are the probe's calls and triangles at each
- * camera, and the rasteriser's name: a frame a software one drew guides a
- * round and is never offered for acceptance (the dev-loop skill, "Look work").
+ * camera, the Corvette's lamps in pixels there, and the rasteriser's name: a
+ * frame a software one drew guides a round and is never offered for
+ * acceptance (the dev-loop skill, "Look work").
  */
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -60,8 +61,21 @@ export default async ({ page, shot }) => {
       await page.waitForTimeout(2500);
     }
     const probe = await page.evaluate(() => window.__perspectiveProbe());
+    // The Corvette's lamps as this camera projects them (lampScreen.ts): each
+    // site's width and their summed area, in pixels. The maps hold a lamp's
+    // light from above; this is the same lamp from where a player sees it.
+    const lamps = await page.evaluate(
+      () => window.__perspectiveLamps().units.find((unit) => unit.name === 'Corvette').lamps
+    );
     dir = dirname(await shot(name));
-    readings.push({ name, pose: pose ?? 'the opening pose', drawCalls: probe.drawCalls, triangles: probe.triangles });
+    readings.push({
+      name,
+      pose: pose ?? 'the opening pose',
+      drawCalls: probe.drawCalls,
+      triangles: probe.triangles,
+      lampAreaPx: lamps.map((lamp) => lamp.areaPx),
+      lampSitesPx: lamps.map((lamp) => lamp.sitesPx),
+    });
   };
 
   await take('home');
@@ -74,5 +88,6 @@ export default async ({ page, shot }) => {
     `${JSON.stringify({ renderer, software, viewport: page.viewportSize(), readings }, null, 2)}\n`
   );
   console.log(`${software ? 'SOFTWARE RASTERISER' : 'GPU'}: ${renderer}`);
-  for (const r of readings) console.log(`${r.name}: ${r.drawCalls} calls, ${r.triangles} triangles`);
+  for (const r of readings)
+    console.log(`${r.name}: ${r.drawCalls} calls, ${r.triangles} triangles`);
 };

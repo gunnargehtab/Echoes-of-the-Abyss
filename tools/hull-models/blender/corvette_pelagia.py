@@ -7,38 +7,47 @@ The Commune's Corvette at a higher surface bar, built in headless Blender
 It answers to the same blocks as hulls/corvette-pelagia.mjs (the Corvette
 block of docs/asset-prompts-3d.md Block 3, read with the Pelagia FACTION
 block) and reads that script's GLB as its blockout, so nothing here is a
-new hull: 80 m, the same parts by name in the same frames, the same seven
-lamps at the same sites. What changes is what a part is made of.
+new hull: 80 m, the same 33 parts by name under the same nodes, the same
+five materials, the same seven lamps. What changes is what a part is made
+of, and each change below is a shape decision for the owner to take or
+refuse with the spike.
 
-- `hull`: the blockout's 16 × 11 table re-skinned as a subdivision cage.
-  The table is faceted, so the fit stops short of exact on purpose: the
-  skin lies within 3 cm of the table's box in beam and height, and the bow
-  tip 0.24 m aft of the table's two-vertex wedge.
+- `hull`: the blockout's 16 × 11 table re-skinned as a fitted subdivision
+  cage, its rays thrown from the line through the table's two tips. Its
+  box is within 7 cm of the table's.
 - `jaw_lobe` and the three sheaths: the ellipsoid each scaled sphere stood
   for, subdivided.
 - `growth_ring_1..3`: a lipped band laid on the skin, steep astern and long
-  forward, its edges bevelled 0.12 m, at the mean height its blockout torus stood proud. The torus was
-  an ellipse round a hull that is not one, so it floated in places and sank
-  in others; the band follows the skin, and its box moves up to 0.66 m.
+  forward, its edges bevelled 0.12 m, at the mean height its blockout torus
+  stood proud. The torus was an ellipse round a hull that is not one, so it
+  floated in places and sank in others; the band follows the skin, and its
+  box moves up to 0.68 m. Where the blockout's rings run through a
+  launcher the bands still do: that is the approved hull's, and kept.
 - The six membranes: the blockout's own outline, as a lens that swells
   0.19 m a side at the root and thins to the tip, where the blockout had a
   0.42 m slab.
-- `tail_peduncle`: the blockout's frustum, subdivided.
+- `tail_peduncle`: the blockout's frustum, subdivided, its flat end caps
+  rounded.
 - The eleven seeds and the seven lamps: the facet rule cut each sphere to a
-  spindle (#919), and each is rebuilt smooth at the plan area the blockout
-  showed from above (`round_part`). For a lamp that area is read with
-  everything near it in place, so gate 3 reads the light it read. Same
-  sites, same material, same emission.
-- Added, and in no block: a collar where each seed sits in its sheath and a
-  calyx where each lamp leaves the skin, 18 small rings of ridge. The
-  blockout's two unnamed point lights are not carried: the conn view keeps
-  a model's meshes alone when it merges one (rosterModels.ts
+  spindle (#919), nearer a barrel than a ball. Each is rebuilt smooth as a
+  superellipsoid showing what the blockout showed along its pole, square to
+  it and between (`round_part`). For a lamp the area from above is then
+  read with everything near it in place, so gate 3 reads the light it read
+  and the conn view draws the lamp the size it drew. Same sites, same
+  material, same emission: a lamp the rebuilt skin no longer reached would
+  be seated again by kit.mjs `seat`'s rule and reported, and none is.
+- Added, and in no block: a collar along the line where each seed leaves
+  its sheath and a calyx where each lamp leaves the skin, 17 small rings of
+  ridge. `launcher_starboard_seed_4` has none, since a growth ring crosses
+  it. The blockout's two unnamed point lights are not carried: the conn
+  view keeps a model's meshes alone when it merges one (rosterModels.ts
   `mergeByMaterial`), and no map sees them.
 
-Baked: a 1,024² normal map from each material's height field below (scutes
-with growth lines on the chitin, a grain on the ridge, rays on the
-membranes) and a 512² occlusion map of the parts on one another. The last
-lines the script prints are what moved against the blockout, part by part.
+Baked: a 1,024² normal map from each material's height field below (a net
+of veins over growth lines on the chitin, a grain on the ridge, rays on
+the membranes) and a 512² occlusion map of the parts on one another, both
+on the second UV set. The last lines the script prints are what moved
+against the blockout, part by part.
 """
 
 import argparse
@@ -84,33 +93,40 @@ light = kit.material("bio_light", ref.finish["bio_light"])
 
 mapped = []  # every part that takes the two maps: all but the lamps
 lamps = []
+TAU = 2 * math.pi
 
 
 # --- the hull ----------------------------------------------------------------
 def table_hit(part):
     """Rays against the blockout's own faces, in the part's box frame with
-    its long axis first, as kit.capsule_part throws them."""
+    its long axis first, as kit.capsule_part throws them. Also where the
+    table's two tips stand off the box's axis, which is the line the rays
+    must take to find them."""
     order = sorted(range(3), key=lambda i: -part.half[i])
     verts = [Vector((v - part.centre)[i] for i in order) for v in part.local]
     tree = BVHTree.FromPolygons(verts, part.faces)
+    tips = [v for v in verts if abs(abs(v[0]) - part.half[order[0]]) < 1e-3]
+    axis = (sum(v[1] for v in tips) / len(tips), sum(v[2] for v in tips) / len(tips))
 
     def hit(origin, direction):
         location = tree.ray_cast(origin, direction)[0]
         assert location is not None, f"{part.name}: a ray left the blockout"
         return location
 
-    return hit
+    return hit, axis
 
 
+on_table, tips = table_hit(ref["hull"])
 hull = kit.capsule_part(
     "hull",
     ref["hull"],
     chitin,
     root,
-    hit=table_hit(ref["hull"]),
+    hit=on_table,
     lattice=(16, 6, 6),
     levels=2,
-    rounds=14,
+    rounds=60,
+    axis=tips,
 )
 kit.realise(hull)
 mapped.append(hull)
@@ -165,51 +181,163 @@ def growth_ring(name, around=72):
     return kit.realise(obj)
 
 
-for n in (1, 2, 3):
-    mapped.append(growth_ring(f"growth_ring_{n}"))
+bands = [growth_ring(f"growth_ring_{n}") for n in (1, 2, 3)]
+mapped.extend(bands)
 
 
 # --- collars -----------------------------------------------------------------
-def collar(name, at, onto, major, minor=0.14, sink=0.04):
-    """A ring of ridge where a round part leaves a surface: on the surface's
-    nearest point to `at`, about its normal there."""
-    foot, normal, _, _ = onto.find_nearest(at)
-    frame = Matrix.Translation(foot)
-    rings = kit.torus_rings(-normal * sink, normal, major, minor, around=16, tube=6)
-    return kit.sweep_part(name, frame, rings, ridge, root, levels=0, around=True, tube=True)
+def collar(name, bud, seat, minor, parent=None, around=16, tube=6):
+    """A ring of ridge along the line where a round part leaves the surface
+    it sits in, both read as built. From the bud's centre a ray swings from
+    the way out of the seat toward the way in, and stops where the bud's own
+    skin crosses the seat's; sixteen of those are the line. The first cut
+    laid a circle on the seat instead, and a seed is not a sphere: three of
+    the eleven rings stood off their seeds on the narrow side."""
+    centre = sum((bud.matrix_world @ v.co for v in bud.data.vertices), Vector()) / len(
+        bud.data.vertices
+    )
+    own, under = kit.world_bvh(bud), kit.world_bvh(seat)
+
+    def leaves(direction):
+        return own.ray_cast(centre, direction)[0]
+
+    def inside(p):
+        foot, n, _, _ = under.find_nearest(p)
+        return (p - foot).dot(n) < 0
+
+    foot, n, _, _ = under.find_nearest(centre)
+    out = n if inside(centre) else (centre - foot).normalized()
+    assert not inside(leaves(out)) and inside(leaves(-out)), f"{name}: no line to follow"
+    e1 = out.orthogonal().normalized()
+    e2 = out.cross(e1)
+    rings = []
+    for i in range(around):
+        side = e1 * math.cos(TAU * i / around) + e2 * math.sin(TAU * i / around)
+        lo, hi = 0.0, math.pi
+        for _ in range(24):
+            mid = (lo + hi) / 2
+            if inside(leaves(out * math.cos(mid) + side * math.sin(mid))):
+                hi = mid
+            else:
+                lo = mid
+        p = leaves(out * math.cos(lo) + side * math.sin(lo))
+        n = under.find_nearest(p)[1]
+        away = p - centre
+        away = (away - n * away.dot(n)).normalized()
+        rings.append(
+            [
+                p
+                - centre
+                + (away * math.cos(TAU * k / tube) + n * math.sin(TAU * k / tube)) * minor
+                for k in range(tube)
+            ]
+        )
+    return kit.sweep_part(
+        name,
+        Matrix.Translation(centre),
+        rings,
+        ridge,
+        parent or root,
+        levels=0,
+        around=True,
+        tube=True,
+    )
 
 
 # --- seeds and lamps: the small round parts ----------------------------------
-def plan_area(points):
-    flat = [(p.x, p.y) for p in points]
+def outline_area(flat):
     ring = [flat[i] for i in convex_hull_2d(flat)]
-    return (
-        abs(
-            sum(
-                ring[i][0] * ring[(i + 1) % len(ring)][1]
-                - ring[(i + 1) % len(ring)][0] * ring[i][1]
-                for i in range(len(ring))
-            )
+    return abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(ring, ring[1:] + ring[:1]))) / 2
+
+
+def seen(points, pole, elevation, views=8):
+    """The outline area a convex part shows from `elevation` above the plane
+    square to `pole`, the mean round the compass."""
+    u = pole.orthogonal().normalized()
+    v = pole.cross(u)
+    total = 0.0
+    for i in range(views):
+        t = TAU * i / views
+        look = (u * math.cos(t) + v * math.sin(t)) * math.cos(elevation) + pole * math.sin(
+            elevation
         )
-        / 2
-    )
+        a = look.orthogonal().normalized()
+        b = look.cross(a)
+        total += outline_area([(p.dot(a), p.dot(b)) for p in points])
+    return total / views
 
 
-def round_part(name, mat, levels):
-    """A sphere the facet rule cut to five by three (#919) is a spindle,
-    fatter between its rings than the ellipsoid its box holds. Rebuilt
-    smooth, it is that ellipsoid scaled until it shows the plan area the
-    blockout showed from above: for a lamp that is gate 3's own measure,
-    and a seed is held to the same rule. Returns the part and the scale."""
+ALONG, SQUARE = math.pi / 2, 0.0
+# The pitches a conn camera looks down by: the free-water study opens at 15°
+# and the home view is 55° (tools/render-stack/capture.mjs).
+OBLIQUE = tuple(math.radians(deg) for deg in (15, 30, 45, 55))
+
+
+def round_part(name, mat, levels, parent=None, power=None):
+    """A sphere the facet rule cut to five by three (#919) is a spindle on
+    its poles, and nearer a barrel than a ball: along the pole it shows a
+    pentagon, well under the circle it was cut from, square to the pole
+    nearly all of it, and between the two more than an ellipsoid would.
+    Rebuilt smooth it is a barrel on the same box, round about the pole,
+    scaled across until it shows what the blockout showed along the pole and
+    lengthways until it shows the same square to it; `BARREL` is the power
+    that then comes nearest at the pitches between. A lamp's pole is up, so
+    those are the areas gate 3's maps and the conn view read. The first cut
+    was an ellipsoid held from above alone, and its lamps drew a fifth
+    smaller in the game. A seed is held to the same rule. The lattice is
+    four a side: two could not hold the shoulders. Returns the part and its
+    scale across."""
     part = ref[name]
-    showed = plan_area(part.world)
+    axis = max(range(3), key=lambda i: part.half[i])
+    pole = Vector(1.0 if i == axis else 0.0 for i in range(3))
+    showed = [v - part.centre for v in part.local]
     obj = kit.realise(
-        kit.capsule_part(name, part, mat, root, lattice=(2, 2, 2), levels=levels, nose=1.0)
+        kit.capsule_part(
+            name,
+            part,
+            mat,
+            parent or root,
+            lattice=(4, 4, 4),
+            levels=levels,
+            ball=True,
+            power=power or BARREL,
+        )
     )
-    k = math.sqrt(showed / plan_area([obj.matrix_world @ v.co for v in obj.data.vertices]))
+
+    def shows(elevation):
+        return seen([v.co - part.centre for v in obj.data.vertices], pole, elevation)
+
+    across = math.sqrt(seen(showed, pole, ALONG) / shows(ALONG))
     for vert in obj.data.vertices:
-        vert.co = part.centre + (vert.co - part.centre) * k
-    return obj, k
+        d = vert.co - part.centre
+        vert.co = part.centre + pole * d.dot(pole) + (d - pole * d.dot(pole)) * across
+    along = seen(showed, pole, SQUARE) / shows(SQUARE)
+    for vert in obj.data.vertices:
+        d = vert.co - part.centre
+        vert.co = part.centre + d + pole * (d.dot(pole) * (along - 1))
+    obj["miss"] = max(abs(shows(e) / seen(showed, pole, e) - 1) for e in OBLIQUE)
+    return obj, across
+
+
+def barrel_power(name):
+    """The power at which a rebuilt spindle shows most nearly what its
+    blockout showed between along and square, tried on one part: every seed
+    and lamp is the same 5 × 3 sphere at its own scale. An ellipsoid, power
+    2, is tried first, to be seen losing."""
+    tried = []
+    for power in [2.0] + [2.4 + 0.2 * i for i in range(14)]:
+        trial, _ = round_part(name, None, 0, power=power)
+        tried.append((trial["miss"], power))
+        bpy.data.objects.remove(trial, do_unlink=True)
+    miss, power = min(tried)
+    print(
+        f"  seeds and lamps: power {power:.1f}, within {miss:.1%} of the blockout"
+        f" from 15° to 55° (an ellipsoid, {tried[0][0]:.1%})"
+    )
+    return power
+
+
+BARREL = barrel_power("bow_light")
 
 
 # --- launchers ---------------------------------------------------------------
@@ -218,25 +346,25 @@ for launcher, seeds in (
     ("launcher_port_aft", 3),
     ("launcher_starboard", 4),
 ):
+    node = kit.group(launcher, ref.groups[launcher], root)
     sheath = kit.capsule_part(
-        f"{launcher}_sheath", ref[f"{launcher}_sheath"], ridge, root, lattice=(4, 2, 2), levels=2
+        f"{launcher}_sheath", ref[f"{launcher}_sheath"], ridge, node, lattice=(4, 2, 2), levels=2
     )
     mapped.append(kit.realise(sheath))
-    back = kit.world_bvh(sheath)
     for n in range(1, seeds + 1):
         part = ref[f"{launcher}_seed_{n}"]
-        seed, k = round_part(part.name, spore, levels=2)
+        seed, k = round_part(part.name, spore, levels=1, parent=node)
         mapped.append(seed)
-        girth = sorted(part.half)[1] * k
-        mapped.append(
-            collar(
-                f"{launcher}_collar_{n}",
-                part.frame @ part.centre,
-                back,
-                major=girth * 0.98,
-                minor=0.16,
-            )
-        )
+        ring = collar(f"{launcher}_collar_{n}", seed, sheath, minor=0.14, parent=node)
+        assert kit.meets(ring, seed), f"{ring.name} stands off its seed"
+        # A growth ring already crosses two of the launchers, as it does in
+        # the blockout. Where the band runs over a seed, the seed gets no
+        # collar: the ring would only be one more thing the band cuts.
+        if any(kit.meets(ring, band) for band in bands):
+            print(f"  {ring.name}: not built, a growth ring crosses its seed")
+            bpy.data.objects.remove(ring, do_unlink=True)
+        else:
+            mapped.append(ring)
 
 
 # --- membranes ---------------------------------------------------------------
@@ -392,59 +520,95 @@ LAMPS = (
 )
 for name in LAMPS:
     part = ref[name]
-    bud, k = round_part(name, light, levels=1)
+    bud, k = round_part(name, light, levels=0)
     lamps.append(bud)
-    seat = skin if name != "tail_light" else kit.world_bvh(bpy.data.objects["tail_peduncle"])
-    # A low lip clear of the bud: on a sloped shoulder a tall calyx stands
-    # over the lamp it rings, and the first cut hid a seventh of the light.
-    mapped.append(
-        collar(
-            f"{name}_calyx",
-            part.frame @ part.centre,
-            seat,
-            major=max(part.half) * k + 0.12,
-            minor=0.09,
-            sink=0.05,
-        )
-    )
+    seat = bpy.data.objects["tail_peduncle" if name == "tail_light" else "hull"]
+    # A lamp rests on something (#894). A lamp the rebuilt skin no longer
+    # reaches is seated again by kit.mjs `seat`'s rule: on the nearest skin
+    # to its own station, sunk half its radius. That is a light placement
+    # moved, and the script says so when it does it.
+    if not kit.meets(bud, seat):
+        at = part.frame @ part.centre
+        foot, n, _, _ = kit.world_bvh(seat).find_nearest(at)
+        shift = foot + n * (0.5 * k * sum(part.half) / 3) - at
+        bud.matrix_world = Matrix.Translation(shift) @ bud.matrix_world
+        print(f"  {name}: seated again, moved {shift.length:.2f} m to stay on the skin")
+    # A lip 7 cm high along the line the bud leaves the skin by: low, so it
+    # hides none of the lamp it rings from any side.
+    mapped.append(collar(f"{name}_calyx", bud, seat, minor=0.07))
+
 
 # The light a lamp owes gate 3 is the plan area it showed, with everything
-# that now stands near it in place. Each bud is scaled onto the blockout's.
-for _ in range(3):
+# that now stands near it in place: each bud is widened onto the blockout's.
+# A calyx does not scale with its bud, so the area is not quite the square
+# of the scale: the step is damped, and stops inside half a percent. Each
+# step widens the bud and leaves its height, then sets the height again from
+# the side, so a lamp half under the skin is not made taller to show more.
+UP = Vector((0, 0, 1))
+
+
+def world(obj):
+    return [obj.matrix_world @ v.co for v in obj.data.vertices]
+
+
+def stretch(bud, across, upward):
+    part = ref[bud.name]
+    up = part.frame.to_3x3().inverted() @ Vector((0, 0, 1))
+    for vert in bud.data.vertices:
+        d = vert.co - part.centre
+        rise = d.dot(up)
+        vert.co = part.centre + (d - up * rise) * across + up * (rise * upward)
+
+
+for _ in range(16):
     for bud in lamps:
-        k = math.sqrt(ref.shows[bud.name] / kit.seen_from_above(bud))
-        centre = ref[bud.name].centre
-        for vert in bud.data.vertices:
-            vert.co = centre + (vert.co - centre) * k
+        ratio = ref.shows[bud.name] / kit.seen_from_above(bud)
+        if abs(ratio - 1) < 0.005:
+            continue
+        stretch(bud, ratio**0.35, 1.0)
+        stretch(bud, 1.0, seen(ref[bud.name].world, UP, SQUARE) / seen(world(bud), UP, SQUARE))
 for bud in lamps:
+    # A lamp rests on something (#894): each bud still crosses the skin it
+    # grew from. A smoothed nose that left the bow light in the water passed
+    # every box check, since the lamp had not moved and the hull had.
+    seat = bpy.data.objects["tail_peduncle" if bud.name == "tail_light" else "hull"]
+    assert kit.meets(bud, seat), f"{bud.name} floats off {seat.name}"
+    was, now = ref[bud.name].world, world(bud)
     print(
-        f"  {bud.name}: shows {kit.seen_from_above(bud):.3f} m² from above, the blockout {ref.shows[bud.name]:.3f}"
+        f"  {bud.name}: seated, shows {kit.seen_from_above(bud):.3f} m² from above"
+        f" (the blockout {ref.shows[bud.name]:.3f}),"
+        f" {seen(now, UP, SQUARE):.3f} from the side ({seen(was, UP, SQUARE):.3f}),"
+        f" {seen(now, UP, OBLIQUE[0]):.3f} from 15° ({seen(was, UP, OBLIQUE[0]):.3f}),"
+        f" {seen(now, UP, OBLIQUE[3]):.3f} from 55° ({seen(was, UP, OBLIQUE[3]):.3f})"
     )
 
 
 # --- what each material's surface is -----------------------------------------
-TAU = 2 * math.pi
-
 h = kit.Height(chitin)
 p = h.position()
-# Scutes about 5 m long and 3 across, a groove between, each domed and
-# carrying its own growth lines: the navy's "growth rings", at plate scale.
-d = h.cells(h.scaled(p, (1 / 5.0, 1 / 3.0, 1 / 3.0)), 1.0, "DISTANCE_TO_EDGE")
-groove = h.math("MULTIPLY", h.math("SUBTRACT", h.ramp(d, 0.0, 0.07), 1.0), 0.10)
-dome = h.math("MULTIPLY", h.ramp(d, 0.0, 0.45), 0.06)
-lines = h.math(
+# The block's two nouns for this skin: "growth rings and living ... veins".
+# A net of raised veins, a coarse one about 6 m by 3.5 and a fine one
+# inside it, as a leaf carries them, over growth lines square to the keel.
+# Relief only: a vein that glowed would be a lamp, and gate 3 counts lamps.
+warp = h.node("ShaderNodeVectorMath", operation="ADD")
+h.links.new(p, warp.inputs[0])
+wander = h.node("ShaderNodeTexNoise")
+h.links.new(p, wander.inputs["Vector"])
+wander.inputs["Scale"].default_value = 0.18
+h.links.new(wander.outputs["Color"], warp.inputs[1])
+q = warp.outputs[0]
+coarse = h.cells(h.scaled(q, (1 / 6.0, 1 / 3.5, 1 / 3.5)), 1.0, "DISTANCE_TO_EDGE")
+fine = h.cells(h.scaled(q, (1 / 2.2, 1 / 1.4, 1 / 1.4)), 1.0, "DISTANCE_TO_EDGE")
+vein = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(coarse, 0.0, 0.055)), 0.085)
+veinlet = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(fine, 0.0, 0.06)), 0.03)
+drift = h.math("MULTIPLY", h.noise(p, 0.3), 7.0)
+growth = h.math(
     "MULTIPLY",
-    h.math("MULTIPLY", h.math("SINE", h.math("MULTIPLY", d, TAU * 7)), h.ramp(d, 0.05, 0.15)),
-    0.012,
+    h.math("SINE", h.math("ADD", h.math("MULTIPLY", h.axis(p, 0), TAU / 0.9), drift)),
+    0.014,
 )
-drift = h.math("MULTIPLY", h.noise(p, 0.35), 6.0)
-stria = h.math(
-    "MULTIPLY",
-    h.math("SINE", h.math("ADD", h.math("MULTIPLY", h.axis(p, 0), TAU / 1.1), drift)),
-    0.010,
-)
-pits = h.math("MULTIPLY", h.noise(p, 3.0, 3.0), 0.02)
-h.bump(h.total(groove, dome, lines, stria, pits))
+pits = h.math("MULTIPLY", h.noise(p, 3.0, 3.0), 0.015)
+h.bump(h.total(vein, veinlet, growth, pits))
 
 h = kit.Height(ridge)
 p = h.position()
@@ -478,7 +642,7 @@ h.bump(h.total(ray, web))
 
 
 # --- maps and file -----------------------------------------------------------
-kit.atlas(mapped)
+kit.atlas(mapped, bare=lamps)
 density, filled = kit.texel_density(mapped, args.normal_size)
 built = time.time()
 normal, occlusion = kit.bake(mapped, args.normal_size, args.occlusion_size)
