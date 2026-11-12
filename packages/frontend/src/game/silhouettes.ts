@@ -291,6 +291,49 @@ export function drawFactionGlyph(
   }
 }
 
+/**
+ * A hall's block, as multiples of its structure's radius: wide, then deep.
+ * The one place the outline below and its reach both read, so a hall redrawn
+ * wider is a hall whose mark's plate is wider (`structureOutlineReachM`).
+ */
+const STRUCTURE_HALL = {
+  [StructureKind.Refinery]: [1.7, 1.15],
+  [StructureKind.Foundry]: [1.8, 1.25],
+  [StructureKind.Slipway]: [2.0, 1.1],
+  [StructureKind.BaffleBarge]: [2.2, 1.4],
+} as const;
+
+/** A Spore Veil's bed: ten lobes, and how far lobe `i` stands, in radii. */
+const SPORE_LOBES = 10;
+const sporeLobe = (i: number): number => 1 + 0.18 * Math.sin(i * 2.7);
+
+/**
+ * How far a structure's outline stands from its centre, in metres, as
+ * `drawStructureSilhouette` draws it without detail: a hall to its corners, a
+ * Spore Veil to its longest lobe, and every other kind to its radius. A mark's
+ * plate is sized by it at the High graphics quality (EchoRenderer; markPlates.ts):
+ * a structure's `radiusM` is its footing, and five outlines stand past it.
+ * test/silhouetteReach.test.ts draws every kind and holds the two together.
+ */
+export function structureOutlineReachM(kind: StructureKind, radiusM: number): number {
+  switch (kind) {
+    case StructureKind.Refinery:
+    case StructureKind.Foundry:
+    case StructureKind.Slipway:
+    case StructureKind.BaffleBarge: {
+      const [wide, deep] = STRUCTURE_HALL[kind];
+      return (radiusM * Math.hypot(wide, deep)) / 2;
+    }
+    case StructureKind.SporeVeil: {
+      let most = 0;
+      for (let i = 0; i < SPORE_LOBES; i++) most = Math.max(most, sporeLobe(i));
+      return radiusM * most;
+    }
+    default:
+      return radiusM;
+  }
+}
+
 export function drawStructureSilhouette(
   g: Graphics,
   kind: StructureKind,
@@ -333,8 +376,8 @@ export function drawStructureSilhouette(
     }
     case StructureKind.Refinery: {
       // A processing block with a rank of pressure silos: audibly industrial.
-      const w = radiusM * 1.7;
-      const h = radiusM * 1.15;
+      const w = radiusM * STRUCTURE_HALL[kind][0];
+      const h = radiusM * STRUCTURE_HALL[kind][1];
       g.rect(x - w / 2, y - h / 2, w, h).fill(body);
       g.rect(x - w / 2, y - h / 2, w, h).stroke(edge);
       if (style.detail) {
@@ -354,8 +397,8 @@ export function drawStructureSilhouette(
     }
     case StructureKind.Foundry: {
       // Assembly hall with an open launch bay cut into the floor.
-      const w = radiusM * 1.8;
-      const h = radiusM * 1.25;
+      const w = radiusM * STRUCTURE_HALL[kind][0];
+      const h = radiusM * STRUCTURE_HALL[kind][1];
       g.rect(x - w / 2, y - h / 2, w, h).fill(body);
       g.rect(x - w / 2, y - h / 2, w, h).stroke(edge);
       if (style.detail) {
@@ -372,8 +415,8 @@ export function drawStructureSilhouette(
       // itself cut through the whole length — a channel open at the bow end,
       // where the Foundry's bay is a pit. The hulls it launches are the
       // roster's heaviest, and the outline is built to say so.
-      const w = radiusM * 2.0;
-      const h = radiusM * 1.1;
+      const w = radiusM * STRUCTURE_HALL[kind][0];
+      const h = radiusM * STRUCTURE_HALL[kind][1];
       g.rect(x - w / 2, y - h / 2, w, h).fill(body);
       g.rect(x - w / 2, y - h / 2, w, h).stroke(edge);
       if (style.detail) {
@@ -412,8 +455,8 @@ export function drawStructureSilhouette(
     }
     case StructureKind.BaffleBarge: {
       // A moored hull block ringed by baffle vanes: the masking ship.
-      const w = radiusM * 2.2;
-      const h = radiusM * 1.4;
+      const w = radiusM * STRUCTURE_HALL[kind][0];
+      const h = radiusM * STRUCTURE_HALL[kind][1];
       g.rect(x - w / 2, y - h / 2, w, h).fill(body);
       g.rect(x - w / 2, y - h / 2, w, h).stroke(edge);
       if (style.detail) {
@@ -457,9 +500,9 @@ export function drawStructureSilhouette(
     case StructureKind.SporeVeil: {
       // A low grown bed: soft irregular lobes rather than an engineered shape.
       const points: number[] = [];
-      for (let i = 0; i < 10; i++) {
-        const angle = (i / 10) * Math.PI * 2;
-        const wobble = 1 + 0.18 * Math.sin(i * 2.7);
+      for (let i = 0; i < SPORE_LOBES; i++) {
+        const angle = (i / SPORE_LOBES) * Math.PI * 2;
+        const wobble = sporeLobe(i);
         points.push(x + Math.cos(angle) * radiusM * wobble, y + Math.sin(angle) * radiusM * wobble);
       }
       g.poly(points).fill(body);

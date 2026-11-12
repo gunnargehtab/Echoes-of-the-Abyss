@@ -230,9 +230,12 @@ What carries one:
 - **Every mark billboarded at an agent** (rungs 6 and 7): one disc that holds every
   steady mark its symbol draws. For an own hull or structure that is its rings, its
   collar and its bars' slots, to their corners; for an own shot, its mark at its widest;
-  and for a contact once it has a depth, its ring or figure, its glyph, its bar and a
-  creature's dots. `packages/frontend/test/rendererSmoke.test.ts` measures each symbol's
-  drawn shapes against its disc, far and close.
+  and for a contact once it has a depth, its ring or the outline it has earned, to its
+  corners, with its glyph, its bar and a creature's dots. Two tests hold it.
+  `packages/frontend/test/silhouetteReach.test.ts` draws every structure kind and every
+  hull and measures its outline against the reach a plate takes for it.
+  `packages/frontend/test/rendererSmoke.test.ts` measures the shapes a canned frame's
+  symbols draw against the discs under them, far and close.
 - **Every mark at a point**: an order's waypoint and its acknowledgement, a rally point,
   a move's preview and the study's foot rings, each on a disc, and the plumb line that
   drops from one to the ground.

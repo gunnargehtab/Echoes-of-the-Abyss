@@ -149,10 +149,11 @@ palette.
 In the three frames beside the target, the 99th percentile of the world area's luma, out
 of 255, is 64 at Low and 60 at High at Home, 70 and 68 at Close, and 55 and 59 at Survey.
 
-No frame here shows a contact. A contact's disc, and every agent's, is held by
-`rendererSmoke.test.ts` instead: it measures the shapes each symbol draws against the
-disc under it, at the canned frame and close up, for a hull, a structure, both shots and
-five contacts.
+No frame here shows a contact. A contact's disc, and every agent's, is held by two tests
+instead. `rendererSmoke.test.ts` measures the shapes each symbol of a canned frame draws
+against the disc under it, far and close up: a hull, a structure, both shots and six
+contacts. `silhouetteReach.test.ts` draws every structure kind and every hull, and holds
+each outline inside the reach a plate takes for it.
 
 ## Gate 7, asked of the lit frames
 

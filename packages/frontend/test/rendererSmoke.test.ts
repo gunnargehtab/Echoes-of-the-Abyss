@@ -24,16 +24,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
-import {
-  CanvasTextMetrics,
-  Circle,
-  Container,
-  Graphics,
-  Polygon,
-  Sprite,
-  Text,
-  type GraphicsPath,
-} from 'pixi.js';
+import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
 import {
   CAMERA_FEEL,
   FREE_WATER_OPENING,
@@ -105,6 +96,7 @@ import {
   COLS,
   ROWS,
 } from './support/cannedMatch.ts';
+import { farthestInk } from './support/inkReach.ts';
 import {
   collarRadius,
   EchoRenderer,
@@ -2535,63 +2527,34 @@ describe('renderer smoke test: the conn view', () => {
       const probes = (globalThis as unknown as { window: Probes }).window;
       assert.equal(probes.__perspectiveQuality('high'), 'high');
       // The server sends hp for every track (echoLayer.ts), so the canned
-      // torpedo track is given one: a bar with no navy's glyph over it.
+      // torpedo track is given one: a bar with no navy's glyph over it. And a
+      // tracked hall is added, the kind whose outline stands farthest past
+      // its footing: a Baffle Barge's corners are 1.3 radii out.
       const tracked = cannedSnapshot(cannedSnapshot().tick + 1);
-      tracked.contacts = tracked.contacts.map((c) =>
-        c.id === 107 ? { ...c, hp: 40, maxHp: 80 } : c
-      );
+      tracked.contacts = [
+        ...tracked.contacts.map((c) => (c.id === 107 ? { ...c, hp: 40, maxHp: 80 } : c)),
+        {
+          id: 108,
+          tier: ResolutionTier.Track,
+          x: 3300,
+          y: 1400,
+          depth: 1300,
+          structure: StructureKind.BaffleBarge,
+          faction: Faction.Hadron,
+          hp: 300,
+          maxHp: 400,
+          tick: tracked.tick,
+        },
+      ];
       world.chart.applySnapshot(tracked);
       world.conn.applySnapshot(tracked);
       const chart = world.chart as unknown as Record<
         'unitSymbols' | 'structureSymbols' | 'contactSymbols' | 'ordnanceSymbols',
         { held: Map<number, Graphics> }
-      > & { lockFlash: Map<number, number> };
-      /** How far the farthest ink a symbol draws stands from its anchor, in its own units. */
-      const farthest = (g: Graphics): number => {
-        let reach = 0;
-        for (const instruction of g.context.instructions) {
-          if (instruction.action !== 'fill' && instruction.action !== 'stroke') continue;
-          const pad =
-            instruction.action === 'stroke'
-              ? ((instruction.data.style as { width?: number }).width ?? 0) / 2
-              : 0;
-          for (const { shape, transform } of instruction.data.path.shapePath.shapePrimitives) {
-            const at = (x: number, y: number): number =>
-              transform
-                ? Math.hypot(
-                    transform.a * x + transform.c * y + transform.tx,
-                    transform.b * x + transform.d * y + transform.ty
-                  )
-                : Math.hypot(x, y);
-            if (shape instanceof Circle) {
-              reach = Math.max(reach, at(shape.x, shape.y) + shape.radius + pad);
-            } else if (shape instanceof Polygon) {
-              for (let i = 0; i < shape.points.length; i += 2) {
-                reach = Math.max(reach, at(shape.points[i]!, shape.points[i + 1]!) + pad);
-              }
-            } else {
-              const box = shape.getBounds();
-              for (const [x, y] of [
-                [box.left, box.top],
-                [box.right, box.top],
-                [box.left, box.bottom],
-                [box.right, box.bottom],
-              ]) {
-                reach = Math.max(reach, at(x!, y!) + pad);
-              }
-            }
-          }
-        }
-        for (const child of g.children) {
-          if (!child.visible) continue;
-          if (child instanceof Sprite) {
-            reach = Math.max(reach, Math.hypot(child.width, child.height) / 2);
-          } else if (child instanceof Graphics) {
-            reach = Math.max(reach, farthest(child));
-          }
-        }
-        return reach;
-      };
+      > & { lockFlash: Map<number, number>; tracked: Map<number, { firstSeenMs: number }> };
+      // A mark fades in, and its plate with it (the Precedence Law): the hall
+      // is new this snapshot, so it is asked once it has arrived.
+      chart.tracked.get(108)!.firstSeenMs = performance.now() - 60_000;
       const asked: Array<
         [
           'unitSymbols' | 'structureSymbols' | 'contactSymbols' | 'ordnanceSymbols',
@@ -2638,7 +2601,7 @@ describe('renderer smoke test: the conn view', () => {
           for (const id of ids) {
             const symbol = chart[pool].held.get(id);
             if (symbol === undefined || !symbol.visible) continue;
-            const ink = farthest(symbol) * symbol.scale.x;
+            const ink = farthestInk(symbol) * symbol.scale.x;
             const under = discs
               .filter((d) => Math.hypot(d.x - symbol.position.x, d.y - symbol.position.y) < 1)
               .reduce((most, d) => Math.max(most, d.radius), 0);
@@ -2672,9 +2635,9 @@ describe('renderer smoke test: the conn view', () => {
           shot,
         ]),
         // A Tier-3 contact under a navy's glyph, a Tier-4 one with a blade's
-        // point over its bar, a structure, a creature in dots, and a track
-        // with a bar and no navy: each of the last five has failed once.
-        ...[103, 104, 105, 106, 107].map(
+        // point over its bar, a Tier-3 structure, a creature in dots, a track
+        // with a bar and no navy, and a tracked hall in its outline.
+        ...[103, 104, 105, 106, 107, 108].map(
           (id): [string, { x: number; y: number; depth?: number }] => [
             `contact ${id}`,
             tracked.contacts.find((c) => c.id === id)!,

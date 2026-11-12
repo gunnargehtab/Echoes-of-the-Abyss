@@ -236,6 +236,7 @@ import {
   drawStructureSilhouette,
   drawUnitSilhouette,
   HULL_LENGTH_M,
+  structureOutlineReachM,
 } from './silhouettes.ts';
 import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
 import {
@@ -7147,13 +7148,18 @@ export class EchoRenderer {
       const oy = c === null ? p.y : c.y;
       // The structure's plate, under High (markPlates.ts): one disc about
       // the footing that holds every steady mark: the collar, which stands
-      // about the model as drawn, and the bars' slots at the footing, to
-      // their corners. The build bar's top is 14 pixels over the footing.
+      // about the model as drawn; the bars' slots at the footing, to their
+      // corners, the build bar's top 14 pixels over it; and a site's
+      // scaffold, to its outline's corners.
       this.platePoint(
         structure.x,
         structure.y,
         p,
-        Math.max(Math.hypot(ox - p.x, oy - p.y) + collar, Math.hypot(footing, footing + 14))
+        Math.max(
+          Math.hypot(ox - p.x, oy - p.y) + collar,
+          Math.hypot(footing, footing + 14),
+          structureOutlineReachM(structure.kind, radius) * p.pxPerM
+        )
       );
       this.figureFootprints.push(
         Math.min(ox - collar, p.x - footing),
@@ -8119,9 +8125,14 @@ export class EchoRenderer {
       // The mark's plate, under High (markPlates.ts): one disc under a mark
       // at a depth that holds every steady outline the ladder weighs for it
       // (ladder.ts `AGENT_OUTLINES`), each to its farthest corner: the
-      // figure; the glyph, a size to either side and a blade's point 1.1
-      // sizes over its centre (silhouettes.ts `drawFactionGlyph`); the Tier-4
-      // bar, three radii wide at 2.4; and a classified creature's dots. The
+      // figure; a tracked structure's outline, which stands past its footing
+      // for the halls and the Spore Veil (silhouettes.ts
+      // `structureOutlineReachM`); the glyph, a size to either side and a
+      // blade's point 1.1 sizes over its centre (`drawFactionGlyph`); the
+      // Tier-4 bar, three radii wide at 2.4; and a classified creature's dots.
+      // A track's baked sprite needs no term: it is drawn only for a track
+      // the conn view does not model (`modelled`, above), and the plates are
+      // the conn view's, which models every live track that has a sprite. The
       // lock brackets and a hit's burst are flashes, and carry none. As much
       // of a plate as the mark has arrived and not yet faded, so the plate
       // shows nothing before the mark does (docs/audio-direction.md §2). A
@@ -8137,7 +8148,21 @@ export class EchoRenderer {
           contact.maxHp !== undefined &&
           contact.maxHp > 0
         ) {
-          reach = Math.max(reach, Math.hypot(r * 1.5, r * 2.4));
+          // The bar's ends, and a veteran's chevrons off its right end: their
+          // line is a pixel and a half under the bar's top.
+          reach = Math.max(
+            reach,
+            Math.hypot(
+              r * 1.5 + rankChevronReachPx(contact.rank) * inverseScale,
+              r * 2.4 + Math.max(0, rankChevronRisePx(contact.rank) - 1.5) * inverseScale
+            )
+          );
+        }
+        if (contact.tier === ResolutionTier.Track && contact.structure !== undefined) {
+          reach = Math.max(
+            reach,
+            structureOutlineReachM(contact.structure, structureStatsFor(contact.structure).radiusM)
+          );
         }
         if (contact.fauna !== undefined) {
           const dots = agentStippleContext(contact.fauna, contact.tier, anchor.pxPerM)?.bounds;
