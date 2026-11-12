@@ -70,6 +70,7 @@ from mathutils.bvhtree import BVHTree  # noqa: E402
 from mathutils.geometry import convex_hull_2d  # noqa: E402
 
 import kit  # noqa: E402
+import pelagia  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[3]
 BLOCKOUT = REPO / "docs/concept-art/models/corvette-pelagia.glb"
@@ -424,32 +425,15 @@ def membrane_part(name, along=26, across=10):
     place on the fin as (span, chord) in a `param` UV layer, which is what
     the rays of the height field run along."""
     part = ref[name]
-    lo, hi = part.box
-    thin = min(range(3), key=lambda i: part.half[i])
-    span = max(range(3), key=lambda i: part.half[i])
-    chord = 3 - thin - span
-    root_s, tip_s = (lo[span], hi[span]) if abs(lo[span]) < abs(hi[span]) else (hi[span], lo[span])
-
-    # The outline: the edges one cap face owns alone.
-    def key(i):
-        return (round(part.local[i][span], 4), round(part.local[i][chord], 4))
-
-    owners = {}
-    for f in part.faces:
-        if all(abs(part.local[i][thin] - lo[thin]) < 1e-4 for i in f):
-            for s in range(len(f)):
-                a, b = key(f[s]), key(f[(s + 1) % len(f)])
-                if a != b:
-                    owners[tuple(sorted((a, b)))] = owners.get(tuple(sorted((a, b))), 0) + 1
-    outline = [e for e, count in owners.items() if count == 1]
-
-    def chord_at(s):
-        cuts = []
-        for (s0, c0), (s1, c1) in outline:
-            if (s0 - s) * (s1 - s) <= 0 and s0 != s1:
-                cuts.append(c0 + (c1 - c0) * (s - s0) / (s1 - s0))
-        assert len(cuts) >= 2, f"{name}: no chord at span {s:.3f}"
-        return min(cuts), max(cuts)
+    fin = kit.Fin(part)
+    thin, span, chord, root_s, tip_s, chord_at = (
+        fin.thin,
+        fin.span,
+        fin.chord,
+        fin.root,
+        fin.tip,
+        fin.chord_at,
+    )
 
     mid = part.centre[thin]
     verts, param, grid = [], [], {}
@@ -639,65 +623,7 @@ for bud in lamps:
 
 
 # --- what each material's surface is -----------------------------------------
-h = kit.Height(chitin)
-p = h.position()
-# The block's two nouns for this skin: "growth rings and living ... veins".
-# Veins as a leaf carries them: a midrib down the back and a lesser one down
-# the keel, laterals leaving the midrib every 5.5 m and trailing aft as they
-# run down the flank, and a fine net between them, over growth lines square
-# to the keel. The second review read a net alone as scales. Relief only: a
-# vein that glowed would be a lamp, and gate 3 counts lamps.
-along, across, above = h.axis(p, 0), h.axis(p, 1), h.math("ADD", h.axis(p, 2), 0.5)
-turn = h.math("ABSOLUTE", h.math("ARCTAN2", across, above))  # 0 on the back, π on the keel
-wander = h.math("MULTIPLY", h.noise(p, 0.12), 3.0)
-station = h.math("DIVIDE", h.total(along, h.math("MULTIPLY", turn, 5.4), wander), 5.5)
-lateral = h.math(
-    "MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(h.math("PINGPONG", station, 0.5), 0.0, 0.05)), 0.08
-)
-midrib = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(turn, 0.0, 0.08)), 0.10)
-keel = h.math(
-    "MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(h.math("SUBTRACT", math.pi, turn), 0.0, 0.08)), 0.06
-)
-net = h.cells(h.scaled(p, (1 / 2.2, 1 / 1.4, 1 / 1.4)), 1.0, "DISTANCE_TO_EDGE")
-veinlet = h.math("MULTIPLY", h.math("SUBTRACT", 1.0, h.ramp(net, 0.0, 0.06)), 0.014)
-drift = h.math("MULTIPLY", h.noise(p, 0.3), 7.0)
-growth = h.math(
-    "MULTIPLY",
-    h.math("SINE", h.math("ADD", h.math("MULTIPLY", along, TAU / 0.9), drift)),
-    0.014,
-)
-pits = h.math("MULTIPLY", h.noise(p, 3.0, 3.0), 0.015)
-h.bump(h.total(lateral, midrib, keel, veinlet, growth, pits))
-
-h = kit.Height(ridge)
-p = h.position()
-# A grain round the hull: bands square to the keel, and a fibre along them.
-drift = h.math("MULTIPLY", h.noise(p, 0.5), 5.0)
-bands = h.math(
-    "MULTIPLY",
-    h.math("SINE", h.math("ADD", h.math("MULTIPLY", h.axis(p, 0), TAU / 0.55), drift)),
-    0.03,
-)
-fibre = h.math("MULTIPLY", h.noise(h.scaled(p, (4.0, 0.6, 0.6)), 1.0, 3.0), 0.05)
-h.bump(h.total(bands, fibre))
-
-h = kit.Height(spore)
-h.bump(h.math("MULTIPLY", h.noise(h.position(), 2.0), 0.015))
-
-h = kit.Height(membrane)
-uv = h.uv("param")
-along, across = h.axis(uv, 0), h.axis(uv, 1)
-# Eight rays from root to tip, a line of constant chord each, with the web
-# between them finely crossed.
-ray = h.math(
-    "MULTIPLY",
-    h.math(
-        "POWER", h.math("ABSOLUTE", h.math("SINE", h.math("MULTIPLY", across, math.pi * 8))), 8.0
-    ),
-    0.07,
-)
-web = h.math("MULTIPLY", h.math("SINE", h.math("MULTIPLY", along, TAU * 30)), 0.006)
-h.bump(h.total(ray, web))
+pelagia.surfaces(chitin, ridge, spore, membrane)
 
 
 # --- maps and file -----------------------------------------------------------

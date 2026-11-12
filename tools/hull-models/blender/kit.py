@@ -91,9 +91,11 @@ class Part:
 class Reference:
     """The approved GLB as a blockout: its parts by name, in file order, and
     its materials' values. The import is removed again, so nothing of the
-    blockout's geometry reaches the export."""
+    blockout's geometry reaches the export. `keep` leaves it standing
+    instead, lights apart, as `objects` by name: the control that wears a
+    rebuild's surface on the blockout's own geometry."""
 
-    def __init__(self, path):
+    def __init__(self, path, keep=False):
         bpy.ops.import_scene.gltf(filepath=str(path))
         objs = list(bpy.context.scene.objects)
         self.root = next(o.name for o in objs if o.parent is None)
@@ -121,6 +123,14 @@ class Reference:
             for o in objs
             if o.type == "MESH" and self.finish[o.data.materials[0].name]["strength"] > 0
         }
+        self.objects = {}
+        if keep:
+            for o in objs:
+                if o.type == "LIGHT":
+                    bpy.data.objects.remove(o, do_unlink=True)
+                else:
+                    self.objects[o.name] = o
+            return
         for o in objs:
             bpy.data.objects.remove(o, do_unlink=True)
         for block in (bpy.data.meshes, bpy.data.materials, bpy.data.lights):
@@ -129,6 +139,50 @@ class Reference:
 
     def __getitem__(self, name):
         return self.parts[name]
+
+
+class Fin:
+    """A membrane of the blockout read as a fin: a slab extruded from an
+    outline, thin on one axis, long on another, its root at the node's
+    origin. `chord_at` is the outline's two edges at a span, and `place`
+    where a point of the slab sits on the fin as (span, chord), each 0 to 1:
+    what the rays of a membrane's height field run along."""
+
+    def __init__(self, part):
+        self.part = part
+        lo, hi = part.box
+        self.thin = thin = min(range(3), key=lambda i: part.half[i])
+        self.span = span = max(range(3), key=lambda i: part.half[i])
+        self.chord = chord = 3 - thin - span
+        self.root, self.tip = (
+            (lo[span], hi[span]) if abs(lo[span]) < abs(hi[span]) else (hi[span], lo[span])
+        )
+
+        # The outline: the edges one cap face owns alone.
+        def key(i):
+            return (round(part.local[i][span], 4), round(part.local[i][chord], 4))
+
+        owners = {}
+        for f in part.faces:
+            if all(abs(part.local[i][thin] - lo[thin]) < 1e-4 for i in f):
+                for s in range(len(f)):
+                    a, b = key(f[s]), key(f[(s + 1) % len(f)])
+                    if a != b:
+                        owners[tuple(sorted((a, b)))] = owners.get(tuple(sorted((a, b))), 0) + 1
+        self.outline = [e for e, count in owners.items() if count == 1]
+
+    def chord_at(self, s):
+        cuts = []
+        for (s0, c0), (s1, c1) in self.outline:
+            if (s0 - s) * (s1 - s) <= 0 and s0 != s1:
+                cuts.append(c0 + (c1 - c0) * (s - s0) / (s1 - s0))
+        assert len(cuts) >= 2, f"{self.part.name}: no chord at span {s:.3f}"
+        return min(cuts), max(cuts)
+
+    def place(self, p):
+        t = (p[self.span] - self.root) / (self.tip - self.root)
+        c0, c1 = self.chord_at(self.root + (self.tip - self.root) * min(max(t, 0.012), 0.988))
+        return min(max(t, 0.0), 1.0), min(max((p[self.chord] - c0) / (c1 - c0), 0.0), 1.0)
 
 
 def seen_from_above(obj, step=0.02):
@@ -586,21 +640,28 @@ def _edit(objs, fn):
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
-def atlas(objs, bare=(), margin=0.003):
+def atlas(objs, bare=(), margin=0.003, smart=False):
     """Two UV sets a part, as art-direction.md's SPECs divide them. `uv0` is
     the part unwrapped along the seams its builder marked and left at that:
     the set a navy's trim sheet reads, which a hull laid for its sheet would
     fill with trim.mjs's layout. `atlas` is the same islands brought to one
     texel density and packed over every mapped part: the set the baked maps
-    read, glTF's TEXCOORD_1. `bare` parts, the lamps, take `uv0` alone."""
+    read, glTF's TEXCOORD_1. `bare` parts, the lamps, take `uv0` alone.
+    `smart` is for geometry no builder here marked: a part keeps the `uv0`
+    it came with, and its atlas is cut by angle instead of along seams."""
     for o in list(objs) + list(bare):
+        if "uv0" in o.data.uv_layers:
+            continue
         o.data.uv_layers.new(name="uv0")
         o.data.uv_layers["uv0"].active = True
         _edit([o], lambda: bpy.ops.uv.unwrap(method="ANGLE_BASED", margin=0.0))
     for o in objs:
+        o.data.uv_layers["uv0"].active = True
         o.data.uv_layers.new(name="atlas")  # a copy of the active set
         o.data.uv_layers["atlas"].active = True
         o.data.uv_layers["atlas"].active_render = True
+        if smart:
+            _edit([o], lambda: bpy.ops.uv.smart_project(angle_limit=math.radians(66)))
 
     def pack():
         bpy.ops.uv.average_islands_scale()
@@ -610,11 +671,14 @@ def atlas(objs, bare=(), margin=0.003):
 
 
 def texel_density(objs, size):
-    """Texels a metre, the atlas over: √(UV area ÷ surface area) × size."""
+    """Texels a metre, the atlas over: √(UV area ÷ surface area) × size. A
+    part's area is taken through its node's scale, so one left at the
+    blockout's own scale counts in metres too."""
     uv_area = surface = 0.0
     for o in objs:
         mesh = o.data
         uv = mesh.uv_layers["atlas"].data
+        grown = abs(o.matrix_world.to_3x3().determinant()) ** (2 / 3)
         for p in mesh.polygons:
             loops = list(p.loop_indices)
             pts = [uv[i].uv for i in loops]
@@ -627,7 +691,7 @@ def texel_density(objs, size):
                 )
                 / 2
             )
-            surface += p.area
+            surface += p.area * grown
     return math.sqrt(uv_area / surface) * size, uv_area
 
 
