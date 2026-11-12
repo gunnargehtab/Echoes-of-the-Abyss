@@ -10,7 +10,7 @@
       "name": "home",
       "pose": "the opening pose",
       "drawCalls": 44,
-      "triangles": 635372,
+      "triangles": 635916,
       "lampAreaPx": [
         12.4
       ],
@@ -35,7 +35,7 @@
         "focusDepthM": null
       },
       "drawCalls": 43,
-      "triangles": 635362,
+      "triangles": 635906,
       "lampAreaPx": [
         2.6
       ],
@@ -60,7 +60,7 @@
         "focusDepthM": 300
       },
       "drawCalls": 39,
-      "triangles": 631362,
+      "triangles": 631906,
       "lampAreaPx": [
         127
       ],
@@ -85,7 +85,7 @@
         "focusDepthM": 300
       },
       "drawCalls": 36,
-      "triangles": 630066,
+      "triangles": 630610,
       "lampAreaPx": [
         141.5
       ],

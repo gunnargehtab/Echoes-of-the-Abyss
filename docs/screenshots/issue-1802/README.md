@@ -24,10 +24,10 @@ the seven lamps at their sites.
 | --- | --- | --- |
 | Generator | three.js r169 primitives | Blender 5.3.0 as `bpy`, Cycles on the CPU |
 | Parts | 33 | 48 |
-| Triangles | 2,652 | 44,340 |
+| Triangles | 2,652 | 44,884 |
 | Materials | 5 | 5, the same names and values |
-| Maps | none | normal 1,024², occlusion 512², one atlas at 15.8 texels a metre |
-| File | 100,964 bytes, 26,156 gzipped | 3,101,440 bytes, 2,673,575 gzipped |
+| Maps | none | normal 1,024², occlusion 512², one atlas at 15.7 texels a metre |
+| File | 100,964 bytes, 26,156 at gzip level 9 | 3,049,168 bytes, 2,615,691 at gzip level 9 |
 
 Each change below is a shape decision. The spike takes them so there is a hull to look at,
 and each is the owner's to keep or refuse.
@@ -44,8 +44,9 @@ and each is the owner's to keep or refuse.
   is rebuilt as a smooth barrel that shows what its blockout showed from above and from the
   side, and within 5% of it at camera pitches from 15° to 55°. An ellipsoid misses by 15.7%.
 - **Each lamp is moved to stand off the smoothed skin what it stood off the blockout's**,
-  which is a light placement moved. The bow lamp moves 0.20 m, since the table's nose under
-  it was a two-vertex wedge and the smooth nose is not. The other six move 5 cm or less.
+  which is a light placement moved. The bow lamp moves 0.19 m, since the table's nose under
+  it was a two-vertex wedge and the smooth nose is not. The tail lamp moves 0.09 m, since
+  the peduncle's end is rounded under it. The other five move 5 cm or less.
 - **Fifteen rings are added** that no block of
   [asset-prompts-3d.md](../../asset-prompts-3d.md) names: nine collars where a seed leaves
   its sheath and six calyxes where a lamp leaves the skin. A ring is not built where a
@@ -109,13 +110,13 @@ The High slice's own Close camera is not fixed yet
 
 | Camera | Draw calls | Triangles, current | Triangles, spike | Lamps, current | Lamps, spike |
 | --- | --- | --- | --- | --- | --- |
-| Home | 44 | 593,684 | 635,372 | 12.0 px² | 12.4 px² |
-| Gate 6's close station | 43 | 593,674 | 635,362 | 2.7 px² | 2.6 px² |
-| Near, port | 39 | 589,674 | 631,362 | 123.7 px² | 127.0 px² |
-| Near, bow | 36 | 588,378 | 630,066 | 135.6 px² | 141.5 px² |
+| Home | 44 | 593,684 | 635,916 | 12.0 px² | 12.4 px² |
+| Gate 6's close station | 43 | 593,674 | 635,906 | 2.7 px² | 2.6 px² |
+| Near, port | 39 | 589,674 | 631,906 | 123.7 px² | 127.0 px² |
+| Near, bow | 36 | 588,378 | 630,610 | 135.6 px² | 141.5 px² |
 
 Draw calls do not move, since the conn view merges a model by material and the spike has
-the same five. One Corvette adds 41,688 triangles to a frame. The lamp columns are the
+the same five. One Corvette adds 42,232 triangles to a frame. The lamp columns are the
 client's own reading of the area the Corvette's seven lamps project at each camera
 (`packages/frontend/src/game/lampScreen.ts`). Its other reading, a lamp site's radius, is
 6 to 8% smaller on the spike, 1.40 px against 1.51 for the bow lamp at Home: a barrel
@@ -142,13 +143,13 @@ from a pentagon.
 
 | Map density | Raw E, current | Raw E, spike |
 | --- | --- | --- |
-| 2 px/m | 3.41 | 2.96 |
-| 4 px/m, the shipped density | 3.35 | 3.12 |
-| 8 px/m | 3.31 | 3.31 |
-| 16 px/m | 3.36 | 3.39 |
+| 2 px/m | 3.41 | 2.87 |
+| 4 px/m, the shipped density | 3.35 | 3.13 |
+| 8 px/m | 3.31 | 3.30 |
+| 16 px/m | 3.36 | 3.37 |
 
 Calibrated at 4 px/m to the Corvette's SIG 28, a target of 3.33, the current hull takes a
-gain of ×0.993 and the spike ×1.067, against a cap of ×64.
+gain of ×0.993 and the spike ×1.061, against a cap of ×64.
 
 `tools/hull-models/contacts.mjs` finds 79 pairs that meet where the current hull has 45.
 Every collar meets its seed and its sheath, every calyx its lamp and its seat, and every
@@ -157,11 +158,13 @@ lamp its seat.
 ## The hull-reviewer's reading
 
 The reviewer was asked to judge the file as if it were offered for
-`docs/concept-art/models/` today, and failed it twice. Each round was a fresh reviewer.
-What the two rounds found in the build itself is fixed:
+`docs/concept-art/models/` today, and failed it three times. Each round was a fresh
+reviewer. What the three rounds found in the build itself is fixed:
 
-- The bow lamp floated 0.38 m off the smoothed nose. The cage now reaches the table's tip,
-  each lamp is moved to sit as deep as it did, and the script asserts each crosses its seat.
+- The bow lamp floated 0.38 m off the smoothed nose, and the tail lamp stood 0.25 m off
+  the rounded peduncle where the blockout's stood 0.12 m. The cage now reaches the table's
+  tip, each lamp is moved to stand off its seat what it did, measured to the skin itself,
+  and the script asserts each crosses its seat.
 - A new collar was cut by a growth ring, three stood off their seeds, and one lay wholly
   under the hull. A collar now follows the line where its seed leaves its sheath, and one
   a band would cross or a camera could not see is not built.
@@ -171,12 +174,12 @@ What the two rounds found in the build itself is fixed:
 - The lamps projected a fifth less area from the side than the approved ones. They now
   match, as the table above reads.
 - The first surface, plates, read near the Directorate's shell, and the second, a net
-  alone, as scales. The veins now have a midrib and laterals.
+  alone, as scales. The veins now have a midrib and laterals, with the net under them.
 
 Three of its findings stand, because they are what the spike was run to measure:
 
-- **Gate 6, triangles.** 44,340 a hull against Low's 400,000 a frame. Nine such hulls fit
-  under it and ten exceed it; the berth ceiling is forty.
+- **Gate 6, triangles.** 44,884 a hull against Low's 400,000 a frame. Eight such hulls fit
+  under it and nine exceed it; the berth ceiling is forty.
 - **Gate 6, texture memory.** About 6.7 MiB on the GPU, against the 1.33 MiB a model that
   gate 6 of [graphics-standards.md](../../graphics-standards.md) allows.
 - **The pipeline of record.** An approved model is `THREE.GLTFExporter` output with no
@@ -189,10 +192,10 @@ Three of its findings stand, because they are what the spike was run to measure:
   1.1 GB installed. It imports, bakes and exports in the cloud container with no display
   and no GPU.
 - **Time.** 86 s a hull on four threads: 5 s to build, 81 s to bake at 64 samples. A
-  build beside a full gate run took up to 171 s.
-- **Bytes.** 31 times the current file. The 128 approved models are 12,671,968 bytes
+  build beside a full gate run took up to 233 s.
+- **Bytes.** 30 times the current file. The 128 approved models are 12,671,968 bytes
   together at `5f2a23404`, so five hulls like this one outweigh the library. The two PNGs
-  are 1,829,991 bytes of it. The wheel carries no Draco or meshopt library, so the exporter
+  are 1,763,580 bytes of it. The wheel carries no Draco or meshopt library, so the exporter
   cannot compress the geometry.
 - **Triangles and texture memory**, as the reviewer's findings above give them. It is a
   High asset.
