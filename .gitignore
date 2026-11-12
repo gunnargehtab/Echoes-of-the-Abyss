@@ -53,3 +53,6 @@ zprobe*.test.ts
 
 # Scratch for opt-in Dream Loop visual prototypes.
 .dream-loop/
+
+# Bytecode from tools/hull-models/blender/, the one Python in the tree (#1802).
+__pycache__/
