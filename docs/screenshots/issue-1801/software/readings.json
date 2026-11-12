@@ -173,14 +173,14 @@
       "distance": 1200,
       "waterReachM": 1805,
       "calls": 56,
-      "triangles": 660440,
+      "triangles": 660446,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
         "targetBytes": 144439680,
         "groundBytes": 2796203,
         "worldLights": 71,
-        "plates": 531,
+        "plates": 534,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -223,14 +223,14 @@
       "distance": 420,
       "waterReachM": 630,
       "calls": 56,
-      "triangles": 660440,
+      "triangles": 660446,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
         "targetBytes": 144439680,
         "groundBytes": 2796203,
         "worldLights": 71,
-        "plates": 531,
+        "plates": 534,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",

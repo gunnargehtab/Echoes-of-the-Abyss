@@ -154,7 +154,7 @@ import {
 } from './ladder.ts';
 import { fieldRadiusM } from './environment.ts';
 import { roofedPassages } from './passages.ts';
-import { drawRankChevrons, rankChevronReachPx } from './rankChevrons.ts';
+import { drawRankChevrons, rankChevronReachPx, rankChevronRisePx } from './rankChevrons.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -597,7 +597,7 @@ const UNDER_FIRE_PULSE_MS = 2000;
  * a fight from: below this the Directorate's chevrons merge into the
  * Bathyarch's plate and the shape stops carrying what §11 asks it to carry.
  */
-export const GLYPH_MIN_PX = 7;
+const GLYPH_MIN_PX = 7;
 
 /**
  * Vertices per projected circle. Rings are facts about the water, so they lie
@@ -7145,13 +7145,15 @@ export class EchoRenderer {
       const footing = radius * p.pxPerM;
       const ox = c === null ? p.x : c.x;
       const oy = c === null ? p.y : c.y;
-      // The structure's plate, under High: one disc about the figure as
-      // drawn, under its rings and collar (markPlates.ts).
-      this.plates?.disc(
+      // The structure's plate, under High (markPlates.ts): one disc about
+      // the footing that holds every steady mark: the collar, which stands
+      // about the model as drawn, and the bars' slots at the footing, to
+      // their corners. The build bar's top is 14 pixels over the footing.
+      this.platePoint(
         structure.x,
-        c === null ? p.worldY : c.worldY,
         structure.y,
-        collar + HIGH_GRAPHICS.PLATE.AGENT_PX * this.uiScale
+        p,
+        Math.max(Math.hypot(ox - p.x, oy - p.y) + collar, Math.hypot(footing, footing + 14))
       );
       this.figureFootprints.push(
         Math.min(ox - collar, p.x - footing),
@@ -8115,18 +8117,42 @@ export class EchoRenderer {
           : Math.max(figure, r * 2.4);
 
       // The mark's plate, under High (markPlates.ts): one disc under a mark
-      // at a depth, out to the top of its glyph, since the glyph and the bar
-      // are outlines the ladder weighs with the ring (ladder.ts
-      // `AGENT_OUTLINES`). As much of a plate as the mark has arrived and not
-      // yet faded, so the plate shows nothing before the mark does
-      // (docs/audio-direction.md §2). A column is a haze the ladder does not
-      // weigh, and carries none.
-      if (column === null) {
-        this.plates?.disc(
+      // at a depth that holds every steady outline the ladder weighs for it
+      // (ladder.ts `AGENT_OUTLINES`), each to its farthest corner: the
+      // figure; the glyph, a size to either side and a blade's point 1.1
+      // sizes over its centre (silhouettes.ts `drawFactionGlyph`); the Tier-4
+      // bar, three radii wide at 2.4; and a classified creature's dots. The
+      // lock brackets and a hit's burst are flashes, and carry none. As much
+      // of a plate as the mark has arrived and not yet faded, so the plate
+      // shows nothing before the mark does (docs/audio-direction.md §2). A
+      // column is a haze the ladder does not weigh, and carries none.
+      if (column === null && this.plates !== null) {
+        let reach = figure;
+        if (contact.faction !== undefined) {
+          reach = Math.max(reach, Math.hypot(glyph, r * 2.4 + glyph * 2.4));
+        }
+        if (
+          contact.tier === ResolutionTier.Track &&
+          contact.hp !== undefined &&
+          contact.maxHp !== undefined &&
+          contact.maxHp > 0
+        ) {
+          reach = Math.max(reach, Math.hypot(r * 1.5, r * 2.4));
+        }
+        if (contact.fauna !== undefined) {
+          const dots = agentStippleContext(contact.fauna, contact.tier, anchor.pxPerM)?.bounds;
+          if (dots !== undefined) {
+            reach = Math.max(
+              reach,
+              Math.hypot(Math.max(-dots.minX, dots.maxX), Math.max(-dots.minY, dots.maxY))
+            );
+          }
+        }
+        this.plates.disc(
           contact.x,
           anchorWorldY,
           contact.y,
-          up * anchor.pxPerM + HIGH_GRAPHICS.PLATE.AGENT_PX * this.uiScale,
+          reach * anchor.pxPerM + HIGH_GRAPHICS.PLATE.AGENT_PX * this.uiScale,
           Math.max(0, freshness) * arrival
         );
       }
@@ -8444,9 +8470,15 @@ export class EchoRenderer {
       const collar =
         collarRadius(radius, SELECTION_GAP_M.HULL) * p.pxPerM + LOUDNESS_COLLAR.HALO_OUTER_PX / 2;
       const reach = Math.max(collar, radius * 1.2 * p.pxPerM);
-      // The hull's plate, under High: one disc under its rings and its
-      // collar, halo and all (markPlates.ts).
-      this.platePoint(d.x, d.y, p, reach);
+      // The hull's plate, under High (markPlates.ts): one disc that holds
+      // every steady mark about it. The collar, halo and all, is its widest
+      // ring; the bar's slot stands over it, 1.2 radii to either side, with a
+      // veteran's chevrons off its right end and over its line. Sized for the
+      // slot whether or not the bar is up, so the disc does not jump at the
+      // first hit. The break-silence ring is a flash, and carries none.
+      const slotEnd = radius * 1.2 * p.pxPerM + rankChevronReachPx(unit.rank);
+      const slotTop = radius * p.pxPerM + Math.max(12, 10.5 + rankChevronRisePx(unit.rank));
+      this.platePoint(d.x, d.y, p, Math.max(reach, Math.hypot(slotEnd, slotTop)));
       // A veteran's chevrons sit off the bar's right end, so its slot is wider.
       const reachRight = Math.max(reach, radius * 1.2 * p.pxPerM + rankChevronReachPx(unit.rank));
       this.figureFootprints.push(
@@ -8565,8 +8597,9 @@ export class EchoRenderer {
       const inverseScale = 1 / p.pxPerM;
       const r = 6 * this.hullDrawScale();
       const width = 1.5 * inverseScale;
-      // The shot's plate, under High: one disc under its mark (markPlates.ts).
-      this.platePoint(d.x, d.y, p, r * p.pxPerM);
+      // The shot's plate, under High: one disc under its mark, out to the
+      // widest a noisemaker's ring breathes (markPlates.ts).
+      this.platePoint(d.x, d.y, p, r * 1.2 * p.pxPerM);
       switch (shot.kind) {
         case OrdnanceKind.Torpedo: {
           // The run left, as an arc closing from the bow's twelve o'clock.

@@ -187,8 +187,9 @@ export const HIGH_GRAPHICS = {
    * stroke is four pixels, an active hazard's rim, and a line reads against
    * what stands beside it.
    * `INK_PX` is the same for a stroke of survey ink, which is thinner and
-   * everywhere. `AGENT_PX` is how far past an agent's outermost ring its disc
-   * stands whole, and `FEATHER_PX` the soft edge every plate ends in.
+   * everywhere. `AGENT_PX` is how far past an agent's farthest steady mark
+   * its disc stands whole, and `FEATHER_PX` the soft edge every plate ends
+   * in.
    */
   PLATE: { LINE_PX: 4, INK_PX: 2, AGENT_PX: 4, FEATHER_PX: 3 },
   /**

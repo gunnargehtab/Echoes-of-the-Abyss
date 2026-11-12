@@ -227,9 +227,12 @@ What carries one:
   residue, mission markers, a tender's ears, order routes and rally courses. They share
   one tracer, and the plate is taken from it, so a mark added there carries one. Blocked
   ground's hatch, the tunnel routes and the map rim carry theirs too.
-- **Every mark billboarded at an agent** (rungs 6 and 7): one disc under an own hull's or
-  structure's rings and collar, under an own shot's mark, and under a contact's mark once
-  it has a depth, out to the top of its glyph and its bar.
+- **Every mark billboarded at an agent** (rungs 6 and 7): one disc that holds every
+  steady mark its symbol draws. For an own hull or structure that is its rings, its
+  collar and its bars' slots, to their corners; for an own shot, its mark at its widest;
+  and for a contact once it has a depth, its ring or figure, its glyph, its bar and a
+  creature's dots. `packages/frontend/test/rendererSmoke.test.ts` measures each symbol's
+  drawn shapes against its disc, far and close.
 - **Every mark at a point**: an order's waypoint and its acknowledgement, a rally point,
   a move's preview and the study's foot rings, each on a disc, and the plumb line that
   drops from one to the ground.

@@ -24,7 +24,16 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
-import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 'pixi.js';
+import {
+  CanvasTextMetrics,
+  Circle,
+  Container,
+  Graphics,
+  Polygon,
+  Sprite,
+  Text,
+  type GraphicsPath,
+} from 'pixi.js';
 import {
   CAMERA_FEEL,
   FREE_WATER_OPENING,
@@ -99,7 +108,6 @@ import {
 import {
   collarRadius,
   EchoRenderer,
-  GLYPH_MIN_PX,
   SELECTION_GAP_M,
   YIELD,
   yieldToCells,
@@ -2411,39 +2419,6 @@ describe('renderer smoke test: the conn view', () => {
       assert.ok(plates.countOf('nodes') > 0, 'a band along every traced rim');
       assert.ok(plates.countOf('terrain') > 0, 'and along the map’s rim');
       assert.equal(quality(high).plates, plates.count, 'all of them drawn');
-      // A contact at a depth stands on a disc that reaches the top of its
-      // glyph, over its ring and its Tier-4 bar: all three are outlines the
-      // ladder weighs for rung 7 (ladder.ts `AGENT_OUTLINES`). The canned
-      // Tier-3 and Tier-4 contacts with a navy are both asked.
-      const packed = plates.pack();
-      const discAt = (x: number, y: number): number | null => {
-        for (let i = 0; i < packed.length; i += PLATE_STRIDE) {
-          const point =
-            packed[i] === packed[i + 4] &&
-            packed[i + 1] === packed[i + 5] &&
-            packed[i + 2] === packed[i + 6];
-          if (point && packed[i] === x && packed[i + 2] === y) return packed[i + 3]!;
-        }
-        return null;
-      };
-      const tiers = new Set<ResolutionTier>();
-      for (const contact of fleet.contacts) {
-        if (contact.depth === undefined || contact.faction === undefined) continue;
-        if (contact.tier < ResolutionTier.Classification) continue;
-        const at = world.conn.projectPoint(contact.x, contact.y, contact.depth);
-        if (!at.visible) continue;
-        const r = TIER_STYLE[contact.tier as ResolutionTier.Classification].radius;
-        const glyph = Math.max(r * 0.55, GLYPH_MIN_PX / at.pxPerM);
-        const radius = discAt(contact.x, contact.y);
-        assert.ok(radius !== null, `contact ${contact.id} carries a disc`);
-        assert.ok(
-          radius > (r * 2.4 + glyph * 2.3) * at.pxPerM,
-          `contact ${contact.id}'s disc reaches past the top of its glyph`
-        );
-        tiers.add(contact.tier);
-      }
-      assert.ok(tiers.has(ResolutionTier.Classification), 'a Tier-3 contact was in the frame');
-      assert.ok(tiers.has(ResolutionTier.Track), 'and a Tier-4 one');
       // The water is the composite's at High: the backdrop is not drawn.
       assert.ok(!worldPass.includes(backdrop) && !tactical.includes(backdrop));
       // "Unchanged at both graphics qualities", by construction: everything
@@ -2535,6 +2510,189 @@ describe('renderer smoke test: the conn view', () => {
       assert.equal(probes.__perspectiveQuality!('high'), 'unavailable: Sorrowgate is not lit yet');
     } finally {
       sorrowgate.teardown();
+    }
+  });
+
+  it('holds every agent’s ink on its disc at High, far and close (#1801)', async () => {
+    // art-direction.md, "The plate under a mark": "one disc under an own
+    // hull's or structure's rings and collar, under an own shot's mark, and
+    // under a contact's mark once it has a depth, out to the top of its glyph
+    // and its bar". Not one case of it, the property: each symbol the chart
+    // drew is measured off its own shapes, a flash aside, and set against the
+    // disc under it. Asked far, at the canned frame, and close, where a
+    // plate's few pixels of margin are small beside a mark.
+    type Probes = {
+      __perspectiveQuality: (quality: 'low' | 'high') => string;
+      __perspectiveCamera: (
+        x: number,
+        z: number,
+        distance: number,
+        pose: { yawDeg: number; pitchDeg: number; focusDepthM: number | null }
+      ) => unknown;
+    };
+    const world = await boot();
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.equal(probes.__perspectiveQuality('high'), 'high');
+      // The server sends hp for every track (echoLayer.ts), so the canned
+      // torpedo track is given one: a bar with no navy's glyph over it.
+      const tracked = cannedSnapshot(cannedSnapshot().tick + 1);
+      tracked.contacts = tracked.contacts.map((c) =>
+        c.id === 107 ? { ...c, hp: 40, maxHp: 80 } : c
+      );
+      world.chart.applySnapshot(tracked);
+      world.conn.applySnapshot(tracked);
+      const chart = world.chart as unknown as Record<
+        'unitSymbols' | 'structureSymbols' | 'contactSymbols' | 'ordnanceSymbols',
+        { held: Map<number, Graphics> }
+      > & { lockFlash: Map<number, number> };
+      /** How far the farthest ink a symbol draws stands from its anchor, in its own units. */
+      const farthest = (g: Graphics): number => {
+        let reach = 0;
+        for (const instruction of g.context.instructions) {
+          if (instruction.action !== 'fill' && instruction.action !== 'stroke') continue;
+          const pad =
+            instruction.action === 'stroke'
+              ? ((instruction.data.style as { width?: number }).width ?? 0) / 2
+              : 0;
+          for (const { shape, transform } of instruction.data.path.shapePath.shapePrimitives) {
+            const at = (x: number, y: number): number =>
+              transform
+                ? Math.hypot(
+                    transform.a * x + transform.c * y + transform.tx,
+                    transform.b * x + transform.d * y + transform.ty
+                  )
+                : Math.hypot(x, y);
+            if (shape instanceof Circle) {
+              reach = Math.max(reach, at(shape.x, shape.y) + shape.radius + pad);
+            } else if (shape instanceof Polygon) {
+              for (let i = 0; i < shape.points.length; i += 2) {
+                reach = Math.max(reach, at(shape.points[i]!, shape.points[i + 1]!) + pad);
+              }
+            } else {
+              const box = shape.getBounds();
+              for (const [x, y] of [
+                [box.left, box.top],
+                [box.right, box.top],
+                [box.left, box.bottom],
+                [box.right, box.bottom],
+              ]) {
+                reach = Math.max(reach, at(x!, y!) + pad);
+              }
+            }
+          }
+        }
+        for (const child of g.children) {
+          if (!child.visible) continue;
+          if (child instanceof Sprite) {
+            reach = Math.max(reach, Math.hypot(child.width, child.height) / 2);
+          } else if (child instanceof Graphics) {
+            reach = Math.max(reach, farthest(child));
+          }
+        }
+        return reach;
+      };
+      const asked: Array<
+        [
+          'unitSymbols' | 'structureSymbols' | 'contactSymbols' | 'ordnanceSymbols',
+          string,
+          number[],
+        ]
+      > = [
+        ['unitSymbols', 'hull', tracked.units.map((u) => u.id)],
+        ['structureSymbols', 'structure', tracked.structures.map((s) => s.id)],
+        ['ordnanceSymbols', 'shot', tracked.ordnance.map((o) => o.id)],
+        [
+          'contactSymbols',
+          'contact',
+          // A contact with no depth is its column, a haze, and carries none.
+          tracked.contacts.filter((c) => c.depth !== undefined).map((c) => c.id),
+        ],
+      ];
+      /** Every symbol in the frame against the disc under it; the names of those asked. */
+      const holds = (): Set<string> => {
+        // The lock brackets are a flash, and carry no plate (art-direction.md).
+        chart.lockFlash.clear();
+        world.frame(2);
+        const plates = world.conn.markPlates();
+        assert.ok(plates);
+        const packed = plates.pack();
+        const discs: Array<{ x: number; y: number; radius: number }> = [];
+        for (let i = 0; i < packed.length; i += PLATE_STRIDE) {
+          const point =
+            packed[i] === packed[i + 4] &&
+            packed[i + 1] === packed[i + 5] &&
+            packed[i + 2] === packed[i + 6];
+          if (!point) continue;
+          const at = world.conn.projectHeight(packed[i]!, packed[i + 1]!, packed[i + 2]!, {
+            x: 0,
+            y: 0,
+            pxPerM: 1,
+            visible: false,
+            worldY: 0,
+          });
+          discs.push({ x: at.x, y: at.y, radius: packed[i + 3]! });
+        }
+        const seen = new Set<string>();
+        for (const [pool, kind, ids] of asked) {
+          for (const id of ids) {
+            const symbol = chart[pool].held.get(id);
+            if (symbol === undefined || !symbol.visible) continue;
+            const ink = farthest(symbol) * symbol.scale.x;
+            const under = discs
+              .filter((d) => Math.hypot(d.x - symbol.position.x, d.y - symbol.position.y) < 1)
+              .reduce((most, d) => Math.max(most, d.radius), 0);
+            assert.ok(under > 0, `${kind} ${id} carries a disc`);
+            assert.ok(
+              under >= ink,
+              `${kind} ${id}'s disc holds its ink: ${under.toFixed(1)} px against ${ink.toFixed(1)}`
+            );
+            // A noisemaker's ring breathes; its disc is sized for its widest,
+            // 1.2 of the six metres the shot's marks are drawn at.
+            if (kind === 'shot') {
+              assert.ok(under >= 1.2 * 6 * world.conn.hullDrawScale() * symbol.scale.x);
+            }
+            seen.add(`${kind} ${id}`);
+          }
+        }
+        return seen;
+      };
+
+      // Far: the canned frame holds one of each.
+      const hull = tracked.units[0]!;
+      const yard = tracked.structures[0]!;
+      const far = holds();
+      const cases: Array<[string, { x: number; y: number; depth?: number }]> = [
+        // A hull with its bar up, a structure with its bars, and both shots:
+        // a torpedo's dial and a noisemaker's breathing ring.
+        [`hull ${hull.id}`, hull],
+        [`structure ${yard.id}`, yard],
+        ...tracked.ordnance.map((shot): [string, { x: number; y: number; depth?: number }] => [
+          `shot ${shot.id}`,
+          shot,
+        ]),
+        // A Tier-3 contact under a navy's glyph, a Tier-4 one with a blade's
+        // point over its bar, a structure, a creature in dots, and a track
+        // with a bar and no navy: each of the last five has failed once.
+        ...[103, 104, 105, 106, 107].map(
+          (id): [string, { x: number; y: number; depth?: number }] => [
+            `contact ${id}`,
+            tracked.contacts.find((c) => c.id === id)!,
+          ]
+        ),
+      ];
+      for (const [name] of cases) assert.ok(far.has(name), `${name} was in the far frame`);
+      // Close: each in turn, at a dolly where it is some five pixels a metre.
+      for (const [name, at] of cases) {
+        probes.__perspectiveCamera(at.x, at.y, 200, {
+          yawDeg: 0,
+          pitchDeg: 55,
+          focusDepthM: at.depth ?? null,
+        });
+        assert.ok(holds().has(name), `${name} was in its close frame`);
+      }
+    } finally {
+      world.teardown();
     }
   });
 

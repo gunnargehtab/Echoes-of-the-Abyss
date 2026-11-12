@@ -52,14 +52,15 @@ Counted, not timed: a software rasteriser's milliseconds measure the rasteriser.
 
 | Camera | Low: calls, triangles | High: calls, triangles | High's passes |
 | --- | --- | --- | --- |
-| Home | 44, 593,684 | 56, 660,440 | `high-world`, `high-scatter`, `high-occlusion`, `high-bloom`, `high-plates`, `high-composite`, `high-tactical`, then the halo's and the split's |
-| Close | 44, 593,684 | 56, 660,440 | The same |
+| Home | 44, 593,684 | 56, 660,446 | `high-world`, `high-scatter`, `high-occlusion`, `high-bloom`, `high-plates`, `high-composite`, `high-tactical`, then the halo's and the split's |
+| Close | 44, 593,684 | 56, 660,446 | The same |
 | Survey | 45, 594,970 | 57, 661,726 | The same |
 
 High draws twelve calls more. It drops the water backdrop. It adds the survey ink's own
 draw, which is the ground's 32,768 triangles a second time, and the ink's plate, which
 is those triangles a third. It adds one instanced draw for the crater's 71 sources and
-one for the 531 bands and discs of the marks' plates, and nine full-screen draws: the
+one for the bands and discs of the marks' plates, 534 of them at Home, and nine
+full-screen draws: the
 occlusion, the bloom's seven and the composite. At 1920 × 1080 its targets hold
 144,439,680 bytes: four samples of half-float colour and of depth and one resolve of
 each, the half-size and smaller targets of the scatter, the occlusion and the bloom, and
@@ -123,15 +124,15 @@ Read by `read.py` over the world area:
 
 | Camera | Pixels held | Brighter with plates | Held pixels' median, bare | With plates |
 | --- | --- | --- | --- | --- |
-| Over the garden | 15,609, 0.99% | none | 40.9 of 255 | 29.7 |
-| Survey | 2,352, 0.15% | none | 52.2 | 32.6 |
+| Over the garden | 19,770, 1.26% | none | 40.4 of 255 | 29.6 |
+| Survey | 3,567, 0.23% | none | 48.2 | 29.9 |
 
 The difference map over the garden is two things: a disc under each hull that stands in
 the glow, and the band along the detection ring where it crosses the glow. At Survey it
 is the discs and the garden's north rim, where the ink's plate crosses the brightest
 stands. A plate changes no pixel that was under the level, so the rest of each pair is
-the same to the byte: 18,997 of the world area's 1,570,560 pixels differ at all over the
-garden, and 2,690 at Survey.
+the same to the byte: 23,591 of the world area's 1,570,560 pixels differ at all over the
+garden, and 4,108 at Survey.
 
 The held pixels that still stand over the level are, by this session's reading of the
 pair, a plate's soft edge and what the tactical pass blends over the world after the
@@ -146,7 +147,12 @@ it, in all four palettes. It also pins how pale a ground those comparisons hold 
 palette.
 
 In the three frames beside the target, the 99th percentile of the world area's luma, out
-of 255, is 64 at Low and 60 at High at Home, 70 and 69 at Close, and 55 and 59 at Survey.
+of 255, is 64 at Low and 60 at High at Home, 70 and 68 at Close, and 55 and 59 at Survey.
+
+No frame here shows a contact. A contact's disc, and every agent's, is held by
+`rendererSmoke.test.ts` instead: it measures the shapes each symbol draws against the
+disc under it, at the canned frame and close up, for a hull, a structure, both shots and
+five contacts.
 
 ## Gate 7, asked of the lit frames
 
@@ -164,7 +170,8 @@ built them, on a software rasteriser:
 | Over the garden, with plates | Yes. Each hull stands on a dark disc inside its white selection ring, its collar's green arc over the disc and not over the glow. Without plates the upper hull's ring and collar cross the flora's green, which sits near the Pelagia hulls' own | Not the survey's question at this dolly |
 
 The frames taken on the named GPU are where this is judged. One thing to look for there:
-a disc is as wide as a hull's collar, so three hulls close together make one dark patch.
+a disc holds a hull's collar and its bar's slot, so it is a little wider than the collar,
+and three hulls close together make one dark patch.
 
 The ink was checked directly, since at the survey dolly it is faint at both qualities.
 [ink-survey.png](software/ink-survey.png) is the Survey frame at High less the same frame
