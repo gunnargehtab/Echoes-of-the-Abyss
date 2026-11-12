@@ -27,7 +27,9 @@ the seven lamps at their sites.
 | Triangles | 2,652 | 44,884 |
 | Materials | 5 | 5, the same names and values |
 | Maps | none | normal 1,024², occlusion 512², one atlas at 15.7 texels a metre |
-| File | 100,964 bytes, 26,156 at gzip level 9 | 3,049,168 bytes, 2,615,691 at gzip level 9 |
+| File | 100,964 bytes, 26,156 gzipped | 3,049,168 bytes, 2,615,691 gzipped |
+
+The gzipped sizes are Python's `gzip.compress` at level 9.
 
 Each change below is a shape decision. The spike takes them so there is a hull to look at,
 and each is the owner's to keep or refuse.
@@ -46,7 +48,7 @@ and each is the owner's to keep or refuse.
 - **Each lamp is moved to stand off the smoothed skin what it stood off the blockout's**,
   which is a light placement moved. The bow lamp moves 0.19 m, since the table's nose under
   it was a two-vertex wedge and the smooth nose is not. The tail lamp moves 0.09 m, since
-  the peduncle's end is rounded under it. The other five move 5 cm or less.
+  the peduncle's end is rounded under it. The other five move 6 cm or less.
 - **Fifteen rings are added** that no block of
   [asset-prompts-3d.md](../../asset-prompts-3d.md) names: nine collars where a seed leaves
   its sheath and six calyxes where a lamp leaves the skin. A ring is not built where a
@@ -158,8 +160,9 @@ lamp its seat.
 ## The hull-reviewer's reading
 
 The reviewer was asked to judge the file as if it were offered for
-`docs/concept-art/models/` today, and failed it three times. Each round was a fresh
-reviewer. What the three rounds found in the build itself is fixed:
+`docs/concept-art/models/` today. Each round was a fresh reviewer. Three rounds failed
+it, and the fourth passed it with notes: it found no fault in the model, and what stands
+is the owner's to decide. What the first three found in the build itself is fixed:
 
 - The bow lamp floated 0.38 m off the smoothed nose, and the tail lamp stood 0.25 m off
   the rounded peduncle where the blockout's stood 0.12 m. The cage now reaches the table's
@@ -176,7 +179,8 @@ reviewer. What the three rounds found in the build itself is fixed:
 - The first surface, plates, read near the Directorate's shell, and the second, a net
   alone, as scales. The veins now have a midrib and laterals, with the net under them.
 
-Three of its findings stand, because they are what the spike was run to measure:
+Three findings stand through all four rounds, because they are what the spike was run to
+measure. With the shape decisions listed under "What was built", they are the owner's:
 
 - **Gate 6, triangles.** 44,884 a hull against Low's 400,000 a frame. Eight such hulls fit
   under it and nine exceed it; the berth ceiling is forty.

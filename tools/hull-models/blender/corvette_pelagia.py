@@ -38,7 +38,7 @@ refuse with the spike.
   stood off the blockout's: a light placement moved. `bow_light` moves
   0.19 m, since the table's nose under it was a two-vertex wedge and the
   smooth nose is not, and `tail_light` 0.09 m, since the peduncle's end is
-  rounded under it. The other five move 5 cm or less.
+  rounded under it. The other five move 6 cm or less.
 - Added, and in no block: a collar along the line where a seed leaves its
   sheath and a calyx where a lamp leaves the skin, 15 small rings of
   ridge, nine and six. A ring is not built where a growth ring would cross
