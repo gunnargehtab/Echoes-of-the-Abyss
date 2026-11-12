@@ -23,8 +23,9 @@
  *   judged.
  *
  * QUALITY=low or QUALITY=high sets the Graphics quality by its development
- * switch (docs/screenshots/issue-1801/frames.mjs); unset, the view draws what
- * the setting says, which is Low. The readings beside the frames are the
+ * switch (docs/screenshots/issue-1801/frames.mjs). Unset, the view draws what
+ * the setting says, and the readings say `as set`: Low, unless the run's
+ * settings chose High. The readings beside the frames are the
  * probe's calls and triangles at each camera, the Corvette's lamps in pixels
  * there, the quality drawn, and the rasteriser's name: a frame a software
  * one drew guides a round and is never offered for acceptance (the dev-loop
@@ -51,7 +52,7 @@ export default async ({ page, shot }) => {
 
   // The development switch beside the setting, as issue-1801/frames.mjs uses
   // it: the ground is rebuilt for the quality, so wait for its programs.
-  let quality = 'low';
+  let quality = 'as set';
   if (process.env.QUALITY === 'low' || process.env.QUALITY === 'high') {
     quality = await page.evaluate((q) => window.__perspectiveQuality(q), process.env.QUALITY);
     if (quality !== process.env.QUALITY) throw new Error(`the view draws ${quality}`);

@@ -16,11 +16,12 @@ Close camera will look. The script is `tools/hull-models/blender/corvette_pelagi
 ## The decision
 
 The owner decided in session on 12 November 2026: **the roster is not rebuilt in
-Blender.** The reasons are the costs under "What it costs" and the control below, which
-shows that most of what this hull gained is its surface and not its modelling. The
-follow-up is filed as #1811: a navy's surface drawn once and worn by the kit hulls,
-judged beside this hull on the named GPU once own hulls are lit at High. Blender stays a
-candidate for a short list of hero hulls only, if it still clearly wins there.
+Blender.** The reasons are the costs under "What it costs" and the control below: on the
+lit table, most of what this hull gained is its surface and not its modelling. In the game
+the modelling still shows where the surface does not, so the question is not closed. The
+follow-up is filed as #1811: a navy's surface drawn once and worn by the kit hulls, judged
+beside this hull on the named GPU once High lights a hull. Blender stays a candidate for a
+short list of hero hulls only, if it still clearly wins there.
 
 ## What was built
 
@@ -171,7 +172,8 @@ taken at the High graphics quality, by `QUALITY=high` on the same module. High d
 Blender one.
 
 The High slice's Close camera, the Corvette on the right of the frame and bow on, enlarged
-twice. [The whole frame](high-close-current-full.png) has the three hulls across it.
+twice. [The whole frame](high-close-current-full.png) has the fleet's three hulls across
+it, with the current Corvette on the right.
 
 ![The Corvette at the High slice's Close camera, three ways](high-close-three.png)
 
@@ -179,13 +181,21 @@ The nearest camera, off the port quarter:
 
 ![The Corvette at the nearest camera at High, three ways](high-near-port-three.png)
 
-At the Close camera the Corvette is about 70 pixels across and the three cannot be told
-apart. At the nearest camera the Blender hull shows its veins and its fins' rays faintly,
-and the surface-only hull less. High's first step lights the ground and the water, and a
-hull's surface is not in it yet: hulls still draw whole in the tactical pass, as at Low
-([art-direction.md](../../art-direction.md#what-is-built-at-high), "Not built yet"). So
-neither treatment has light to show in. That is the finding: a hull's surface is worth
-building, by either route, only once High lights it.
+At the Close camera the Corvette is about 70 pixels across. Current and surface-only
+cannot be told apart there, and the Blender hull differs by its modelling alone: its rings
+lie on the skin, so its bow shows no ring's outline, and its membranes are thinner.
+
+At the nearest camera the surface shows faintly on both baked hulls, and the modelling
+shows more: the Blender hull's far fins catch light where the kit hull's are black. That
+last is a fault of the conn view's and not of the kit hull. Its two mirrored membranes,
+`keel_blade` and `tail_fluke_lower`, draw near-black at both qualities, where the lit
+table draws them lit (#1812). The Blender hull bakes the mirror into its vertices.
+
+High's first step lights the ground and the water, and a hull's surface is not in it yet:
+hulls still draw whole in the tactical pass, as at Low
+([art-direction.md](../../art-direction.md#what-is-built-at-high), "Not built yet"). So a
+baked surface has little light to show in, and what tells the hulls apart in these frames
+is shape. A hull's surface is worth building, by either route, only once High lights it.
 
 The same three at Low, for the control High owes: [low](low-near-port-three.png).
 

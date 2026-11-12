@@ -9,7 +9,10 @@ The spike changed two things at once: what a part is made of, and what its
 skin carries. This file changes only the second, so the two can be told
 apart. 2,652 triangles, the same five materials, the same lamps untouched,
 and the same two maps from the same height fields (pelagia.py), baked onto
-an atlas cut by angle since no builder here marked a seam.
+an atlas cut by angle since no builder here marked a seam. The blockout's
+seeds and sheaths share meshes, two seeds to each of five and the three
+sheaths to one, and a shared mesh takes one island: its instances wear one
+bake between them, and the printed fill counts that island once for each.
 
 It stands in for the cheaper route, a navy's surface drawn once and worn by
 every kit hull as its trim sheet is: this bakes the surface a hull, which
