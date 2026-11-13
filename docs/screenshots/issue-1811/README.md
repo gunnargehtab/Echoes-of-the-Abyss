@@ -106,9 +106,11 @@ twice:
 
 At these two cameras the surfaced kit hull shows the most surface of the three: the
 laterals as diagonals down the flank, the midrib's line along the flank at the hull's
-axis, the rays on every fin and the bands on the rings. #1802 found its baked surface showed only faintly here.
-The difference is the lean of 2.5, not the route. The Blender hull's modelling still
-shows: rounder seeds and a smoother outline.
+axis, the rays on every fin and the bands on the rings. #1802 found its baked surface
+showed only faintly here. Most of the difference is the lean of 2.5. The line along each
+flank is the route's: a tile draws its midrib wherever `v` is 0, and the baked hull has
+none there. The Blender hull's modelling still shows: rounder seeds and a smoother
+outline.
 
 The High slice's Close camera, the Corvette enlarged three times, and Home:
 
@@ -119,8 +121,8 @@ The High slice's Close camera, the Corvette enlarged three times, and Home:
 At Close the Corvette is bow on and about 70 pixels across. No vein, ring or ray can be
 picked out on any of the three there, as #1802 found: a slope averages to level down the
 mip chain. The surfaced hull is not identical to main's at that size: down the middle of
-the bow its rows differ from main's by up to about ten levels of summed RGB, and no band
-crosses it. Whole frames, surfaced:
+the bow its rows differ from main's by up to 27 levels of summed RGB, where an edge falls
+a row later than main's, and no band crosses it. Whole frames, surfaced:
 [Close](high-close-full.png) · [Home](high-home-full.png).
 
 The Survey camera, at half size, at both qualities on main and on this branch. A hull is
