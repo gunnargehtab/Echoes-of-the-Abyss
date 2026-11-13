@@ -69,7 +69,7 @@ import {
 import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
 import { BLOOM_THRESHOLD_GLSL, LightChain } from './highChain.ts';
 import { LightVolumes } from './lightVolumes.ts';
-import { PLATE_HOLD_GLSL, PlatePass } from './markPlates.ts';
+import { PLATE_HOLD_GLSL, PLATE_MEDIUM_GLSL, PlatePass } from './markPlates.ts';
 import { WATER_HUE } from './palette.ts';
 import type { SurveyInkPlateUniforms } from './surveyInk.ts';
 import { BACKDROP_SPAN_M, HIGH_WORLD_FOG_SIGN, WATER_RAMP_GLSL } from './water.ts';
@@ -125,9 +125,11 @@ const COMPOSITE_FRAGMENT = [
   WATER_RAMP_GLSL,
   WATER_MEDIUM_GLSL,
   BLOOM_THRESHOLD_GLSL,
-  // The frame's light at this pixel, scene-referred, before the bloom: what
-  // the prefilter cuts and what the composite grades.
-  'vec3 echoesHighLight( out float depth ) {',
+  // The frame's light at this pixel, scene-referred, before the bloom, in two
+  // parts: what the world's surfaces send, returned, and `medium`, what the
+  // water adds between them and the eye. The prefilter cuts their sum and
+  // the composite grades it; a plate under a model holds the second alone.
+  'vec3 echoesHighLight( out float depth, out vec3 medium ) {',
   '  vec4 world = texture2D( tWorld, vUv );',
   '  depth = texture2D( tDepth, vUv ).r;',
   // The water a pixel looks into: where there is ground, the water the ground
@@ -156,17 +158,21 @@ const COMPOSITE_FRAGMENT = [
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, 0.5 ) ).r +',
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( 0.5, - 0.5 ) ).r +',
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, - 0.5 ) ).r );',
-  `  vec3 light = world.rgb * mix( 1.0, open, ${glsl(HIGH_GRAPHICS.AO.STRENGTH)} );`,
-  '  light += ( 1.0 - clamp( world.a, 0.0, 1.0 ) ) * water;',
-  '  return light + texture2D( tScatter, vUv ).rgb;',
+  '  medium = ( 1.0 - clamp( world.a, 0.0, 1.0 ) ) * water + texture2D( tScatter, vUv ).rgb;',
+  `  return world.rgb * mix( 1.0, open, ${glsl(HIGH_GRAPHICS.AO.STRENGTH)} );`,
   '}',
   'void main() {',
   '  float depth;',
-  '  vec3 light = echoesHighLight( depth );',
+  '  vec3 medium;',
+  '  vec3 light = echoesHighLight( depth, medium );',
   '  #ifdef BLOOM_PREFILTER',
-  '    gl_FragColor = vec4( echoesBloomCut( light ), 1.0 );',
+  '    gl_FragColor = vec4( echoesBloomCut( light + medium ), 1.0 );',
   '  #else',
-  `    light += texture2D( tBloom, vUv ).rgb * ${glsl(HIGH_GRAPHICS.BLOOM.INTENSITY)};`,
+  `    medium += texture2D( tBloom, vUv ).rgb * ${glsl(HIGH_GRAPHICS.BLOOM.INTENSITY)};`,
+  // Where a model stands in front of a mark's plate, the water's light is
+  // held and the model's is not (markPlates.ts).
+  PLATE_MEDIUM_GLSL,
+  '    light += medium;',
   // The grade, before the curve: slope, offset and power a channel, then
   // saturation about the luminance.
   `    light = pow( max( light * ${vec3(HIGH_GRAPHICS.GRADE.SLOPE)} + ${vec3(HIGH_GRAPHICS.GRADE.OFFSET)}, 0.0 ), ${vec3(HIGH_GRAPHICS.GRADE.POWER)} );`,

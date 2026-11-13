@@ -48,6 +48,8 @@ interface Part {
   readonly frame: Frame;
   /** Whether it draws a lamp, and so reads the batch's glow. */
   readonly lit: boolean;
+  /** Whether it is cladding the High world pass draws (`Template.world`). */
+  readonly world: boolean;
 }
 
 /**
@@ -83,7 +85,8 @@ class Batch {
   constructor(
     readonly template: Template,
     private readonly group: Group,
-    readonly solo: boolean
+    readonly solo: boolean,
+    private worldPass: boolean
   ) {
     // A solo copy takes the template lamp's shader hooks by reference, since
     // clone() drops them and they are pure string patches of the program.
@@ -157,6 +160,12 @@ class Batch {
     }
   }
 
+  /** Whether a frame with a world pass draws this batch (`RosterBatches.setWorldPass`). */
+  setWorldPass(on: boolean): void {
+    this.worldPass = on;
+    for (const { mesh, world } of this.parts) layer(mesh, world && on);
+  }
+
   /** The gate-3 factor a slot's lamps draw at, or null without a lamp. */
   glowAt(index: number): number | null {
     return this.glow === null ? null : this.glow.getX(index);
@@ -203,12 +212,9 @@ class Batch {
       // (rosterModels.ts `Template.world`): those parts leave the canvas for
       // that pass, and a lamp never does (highFrame.ts; gate 3). Low's names
       // none, so every part of it stays where it was.
-      if (!lit && materials.every((m) => this.template.world.has(m))) {
-        mesh.layers.set(WORLD_LAYER);
-        // And the plate pass draws them alone, to cut them from its mask.
-        mesh.layers.enable(MODEL_LAYER);
-      }
-      this.parts.push({ mesh, frame, lit });
+      const world = !lit && materials.every((m) => this.template.world.has(m));
+      layer(mesh, world && this.worldPass);
+      this.parts.push({ mesh, frame, lit, world });
       this.group.add(mesh);
     });
     for (let i = 0; i < this.instances.length; i++) this.write(i);
@@ -261,6 +267,15 @@ class Batch {
   }
 }
 
+/**
+ * A part's layers: the world pass's, and the one the plate pass draws the
+ * models alone by to cut them from its mask (markPlates.ts), or the canvas's.
+ */
+function layer(mesh: InstancedMesh, world: boolean): void {
+  mesh.layers.set(world ? WORLD_LAYER : 0);
+  if (world) mesh.layers.enable(MODEL_LAYER);
+}
+
 /** Whether `array` holds `matrix` at `offset`, compared as the buffer stores it. */
 function holds(array: ArrayLike<number>, offset: number, matrix: ArrayLike<number>): boolean {
   for (let i = 0; i < 16; i++) if (array[offset + i] !== Math.fround(matrix[i]!)) return false;
@@ -302,12 +317,24 @@ export class RosterBatches {
   private readonly shared = new Map<Template, Batch>();
   private readonly slots = new Map<RosterModelInstance, { batch: Batch; index: number }>();
   private solo: Batch | null = null;
+  private worldPass = true;
+
+  /**
+   * Whether the frame has a world pass to draw a High template's cladding in.
+   * A view that leaves High says no: a model keeps the template it has until
+   * the other is built (PerspectiveView `syncEntity`), and for those frames
+   * its cladding draws on the canvas with the rest of it, not nowhere.
+   */
+  setWorldPass(on: boolean): void {
+    this.worldPass = on;
+    for (const batch of this.batches()) batch.setWorldPass(on);
+  }
 
   attach(instance: RosterModelInstance): void {
     if (this.slots.has(instance)) return;
     let batch = this.shared.get(instance.template);
     if (batch === undefined) {
-      batch = new Batch(instance.template, this.group, false);
+      batch = new Batch(instance.template, this.group, false, this.worldPass);
       this.shared.set(instance.template, batch);
     }
     this.slots.set(instance, { batch, index: batch.add(instance) });
@@ -387,7 +414,7 @@ export class RosterBatches {
     }
     if (instance === null) return;
     this.detach(instance);
-    this.solo = new Batch(instance.template, this.group, true);
+    this.solo = new Batch(instance.template, this.group, true, this.worldPass);
     this.slots.set(instance, { batch: this.solo, index: this.solo.add(instance) });
     this.place(instance);
   }

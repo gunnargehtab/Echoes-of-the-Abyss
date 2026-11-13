@@ -36,8 +36,11 @@ drawn there outputs scene-referred light, and the fog chunk's High half only att
 survey ink never moves into the world pass. At High a mark also carries a plate
 (`markPlates.ts`): the chart hands the view a band or a disc in world space for each mark
 it draws, and the composite holds the world's light under them before the tactical pass.
-A hull's cladding wears its navy's surface at High (`navySurface.ts`, #1811), on a
-template of its own (`rosterModels.ts` `surfaceVariant`), so Low's is never patched.
+An own model's cladding is the world pass's at High (#1814), on a template of its own
+(`rosterModels.ts` `highVariant`), so Low's is never patched. It takes the Lid's glow and
+the pools beside the rig (`hullLight.ts`), wears its navy's surface (#1811,
+`navySurface.ts`), and no plate holds it: only the water in front of it. Its lamps, and a
+contact's whole model, stay in the tactical pass.
 
 ## Tests run under a Vite shim
 

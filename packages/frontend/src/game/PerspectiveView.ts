@@ -1592,6 +1592,7 @@ export class PerspectiveView {
     // At Low the water is the backdrop's; at High the composite adds it.
     this.backdrop.mesh.visible = !this.high.on;
     if (this.high.on === was) return;
+    this.models.setWorldPass(this.high.on);
     if (!this.high.on) {
       this.leaveWorldLayer();
       // No frame holds the world under a plate now; the chart stops handing

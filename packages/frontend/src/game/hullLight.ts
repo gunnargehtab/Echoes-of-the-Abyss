@@ -13,9 +13,9 @@
  *   darkens as the ground under it does.
  * - **The pools**, from below. The plan texture the ground reads
  *   (worldLights.ts `poolTexture`) holds the light a source puts on the
- *   ground and the ground's own height beside it, so a hull takes that light
- *   by how far over the ground it hangs and by how far a face looks down. A
- *   keel over a vent field goes amber and its back does not.
+ *   ground and the ground's own height beside it, so a hull takes a share of
+ *   that light by how far over the ground it hangs and by how far a face
+ *   looks down. A keel over a vent field goes amber and its back does not.
  *
  * Both are added to the rig's indirect light, where three sums an ambient,
  * and again as what a face mirrors, so a metalled plate answers them too.
@@ -79,7 +79,7 @@ const VERTEX_BODY = `
   vHullWorld = ( modelMatrix * hullAt ).xyz;
 }`;
 
-const { LID, POOL, POOL_REACH_M, POOL_HORIZON } = HIGH_GRAPHICS.HULL_LIGHT;
+const { LID, POOL, POOL_REACH_M } = HIGH_GRAPHICS.HULL_LIGHT;
 
 const FRAGMENT_HEAD = `
 uniform sampler2D uHullPools;
@@ -91,12 +91,13 @@ ${LIT_IRRADIANCE_GLSL}
 vec3 echoesHullLight( vec3 facing, vec3 at ) {
   vec3 light = echoesLitIrradiance( facing, at.y ) * ${glsl(LID)};
   // rgb: what the sources put on the ground under this point. a: that
-  // ground's height. The light is the ground's whole at the ground, and
-  // falls by the square of the height over it.
+  // ground's height. The light falls by the square of the height over the
+  // ground, and comes from below: all of it on a face looking down, a
+  // quarter on a flank and none on a back, so it shapes the hull it lights.
   vec4 pool = texture2D( uHullPools, at.xz / uHullPoolMap );
   float over = max( 0.0, at.y - pool.a ) / ${glsl(POOL_REACH_M)};
-  float below = mix( ${glsl(POOL_HORIZON)}, 1.0, max( 0.0, - facing.y ) );
-  return light + pool.rgb * ( ${glsl(POOL)} * below / ( 1.0 + over * over ) );
+  float below = 0.5 - 0.5 * facing.y;
+  return light + pool.rgb * ( ${glsl(POOL)} * below * below / ( 1.0 + over * over ) );
 }`;
 
 // After three has summed the rig's ambient into \`irradiance\` and opened

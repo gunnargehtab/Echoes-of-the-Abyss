@@ -23,7 +23,9 @@ still binds it. Limits 5 and 7 were the author's, written to carry the decision 
 the owner confirmed both on the same day
 ([#1798](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1798)). Limit 6 was
 re-read by the owner the same day: a mark carries a plate
-([The plate under a mark](#the-plate-under-a-mark)).*
+([The plate under a mark](#the-plate-under-a-mark)). On 13 November 2026 the owner read
+limits 2 and 6 for a model in the world pass
+([A model in the world's light](#a-model-in-the-worlds-light)).*
 
 The owner turned the look down three times in two weeks. Three proposed designs "seem
 lifeless" (26 October, #1637). The free-water slice was "a map editor, not an ocean" on
@@ -75,7 +77,9 @@ The picture is two layers, and each now has its own law.
    from above is the Lid's glow, from everywhere and nowhere in particular.
 2. **Nothing unresolved is drawn.** Light, shadow, wake and silt come from the world and
    from the player's own force. A contact casts none of them, and an enemy's lamp lights
-   nothing: light from a contact would draw more than its tier resolves (gate 5).
+   nothing: light from a contact would draw more than its tier resolves (gate 5). A
+   contact's model is drawn whole in the tactical pass at both qualities, so its body
+   hides no light from the ground and feeds no bloom.
 3. **Faction and interface hues are reserved.** World light and the water keep their own
    tokens, away from the neons ([style-neon-noir.md](style-neon-noir.md) "World light",
    rule 5). A new source or a water hue takes a token there before it is drawn (gate 4).
@@ -87,8 +91,8 @@ The picture is two layers, and each now has its own law.
 6. **The tactical layer reads over the lit world.** A mark carries a plate: under it the
    world layer is drawn no brighter than the palest ground the ladder weighs, so each
    tactical rung's floor reads over the lit world as it reads at Low, in all four
-   palettes ([The plate under a mark](#the-plate-under-a-mark)). Gate 7's questions are
-   asked of the lit frame.
+   palettes ([The plate under a mark](#the-plate-under-a-mark)). A model is not ground,
+   and no plate holds one. Gate 7's questions are asked of the lit frame.
 7. **No blur over play.** Depth of field and motion blur stay off the playfield while the
    player commands. Reduced motion and the colour-vision palettes bind High as they bind
    Low.
@@ -130,8 +134,8 @@ the owner accepts.*
 High draws the one scene as two layers
 (`packages/frontend/src/game/highFrame.ts`):
 
-1. **The world pass** draws the world layer into a linear half-float target with the
-   canvas's four samples. Nothing in it is tone-mapped, so its light stays
+1. **The world pass** draws the world layer, the cladding of the player's own models
+   with it, into a linear half-float target with the canvas's four samples. Nothing in it is tone-mapped, so its light stays
    scene-referred. A fragment there only loses light to the water.
 2. **The scatter pass** draws what the world's own sources scatter in the water, against
    the world's depth, at half the frame's size.
@@ -140,14 +144,17 @@ High draws the one scene as two layers
    and back as bloom.
 4. **The plate pass** draws where the marks stand into a mask of the frame's size: a
    band along every line traced on the ground and along every stroke of survey ink, and a
-   disc under every agent's mark at a depth.
+   disc under every agent's mark at a depth. It then marks in the mask wherever an own
+   model's cladding is what the world pass showed.
 5. **The composite** is one full-screen draw to the canvas. It sums the world's light,
    occluded, the water's own light by how much of each pixel the water took, the sources'
    volumes and the bloom. It grades the sum and runs the tone curve, holds the result
    under the plates, and lays the world's depth so the next pass is hidden by the world
-   as it is at Low.
+   as it is at Low. Where a model stands in front of a plate it holds the water's part of
+   the sum before the curve, and not the model's.
 6. **The tactical pass** draws everything else on the canvas as Low draws it: the same
-   materials, the same per-material curve, the same fog. The survey ink is drawn here,
+   materials, the same per-material curve, the same fog. Every lamp is drawn here, and
+   so is a contact's model, whole. The survey ink is drawn here,
    as a layer of its own over the lit ground. The lamp halo and the chromatic split
    follow as they always have. The chain and the plates run before this pass, so no
    mark, ring or lamp is occluded, spread, graded or held down.
@@ -183,11 +190,78 @@ Built so far:
 - **A navy's cladding wears a surface**
   ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811)), the
   Commune's four materials first. Below.
+- **An own model's cladding is lit by the world**
+  ([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)). Below.
 
 Not built yet: shadow cast by a light with a direction, which arrives with the own
-searchlights; and the world's light on hulls and structures, which still draw whole in
-the tactical pass, lamps and all, under the rig Low lights them by
-([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)).
+searchlights.
+
+#### A model in the world's light
+
+*In development with the rest of High, and not accepted. The owner took three calls in
+session on 13 November 2026, for
+[#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814), each from
+options written with the first frames
+([issue-1814](screenshots/issue-1814/README.md)).*
+
+The world pass draws the cladding of the player's own hulls and structures: every opaque
+material that is no lamp. So the water takes a hull's light as it takes the ground's, and
+the occlusion, the bloom and the grade reach it.
+
+- **The rig stays, and the world's light is added to it.** The other reading dropped the
+  rig's key and rim, since there is no sun below the Lid (limit 1): a hull went darker
+  and flatter until the own searchlights land. The props keep the rig in this pass, and a
+  hull keeps it with them. Beside it a face takes the two lights the ground takes. The
+  Lid's glow is the ground's own function of it: by how far the face looks up and by the
+  water over it, so a hull that dives darkens as the ground under it does. The pools
+  reach it from below: a hull takes what the sources put on the ground under it, by how
+  far over that ground it hangs and by how far a face looks down: all of a hull's share
+  on a keel, a quarter on a flank and none on a back, so the light shapes the hull. A
+  keel over a vent field goes amber and its back does not. That share is well short of
+  the ground's, since the ground beside a hull is held under its plate and a hull that
+  outshone it would read as loud (gate 3). Both are added as indirect light, so a navy's
+  surface shades them with the rest, and again as what a face mirrors, so a metalled
+  plate answers them.
+- **The ink and its register do not move.** Colour is never written: hue is the
+  faction's (gate 4), and each material keeps the brightness the recolour gave it
+  against its model's brightest. The light is the world's own, placed by the map and the
+  same for every client (limits 3 and 4).
+- **A lamp stays in the tactical pass**, with a blended material such as a haze. Its
+  hue, its strength and its halo are what Low draws (gate 3), and the world's depth
+  hides it as Low's does.
+- **No plate holds a model.** Every own hull stands inside its own mark's disc, so a
+  plate that held the hull as it holds ground capped its cladding at 11.6% encoded
+  luminance, darker than Low draws it. The third reading held it at a level of its own,
+  which no pool or bloom could then lift. So the plate pass marks the models in its
+  mask, and the composite does not hold them: a plate is the ground a mark carries, and
+  a model is not ground. Few marks cross a model's body. A line traced on the ground
+  passes behind one, and the selection ring and the collar are sized to stand round it
+  ([map-visuals.md](map-visuals.md) §5). Ground, stone or a prop in front of a hull
+  keeps its plate.
+- **The water in front of a model is still held.** The first cut left a model's whole
+  pixel alone, and in the garden a hull showed as a flat bright shape: the glow the
+  water scatters between the eye and the hull, held everywhere else under the disc and
+  not there. That glow is the world's light under a mark. So under a plate the
+  composite holds the water's own light, the sources' volumes and the bloom in front of
+  a model to the plate's level, before the curve, and leaves the light the model's own
+  surface sends.
+- **A contact's model is not in this pass.** A live Tier-4 track stands as its model
+  ([map-visuals.md](map-visuals.md) §5), and it keeps the template Low draws, whole in
+  the tactical pass. In the world pass its body would hide the Lid's glow from the
+  ground beside it and feed the bloom, and a contact casts neither shadow nor light
+  (limit 2). The other reading counted both as light received. Fidelity stays asymmetric
+  (gate 5): the player's own navy is in the world's light and a contact is not.
+
+A model draws from a template of its own at High, as a surfaced one already did, so
+nothing Low draws is built, patched or keyed differently:
+`packages/frontend/test/hullLight.test.ts` holds that, the split of the two passes and
+the plate's two holds. `HIGH_GRAPHICS.HULL_LIGHT` in `packages/shared/src/constants.ts` holds how much
+of each light a hull takes, TUNABLE like every High number.
+
+Still open, for the frames taken on the named GPU: whether a mark that does cross a
+hull's body reads over a hull a pool lights; whether a hull's glint feeding the bloom
+reads as loudness (gate 3, limit 5); and what a second draw of the cladding into the
+mask costs against gate 6's 8 ms.
 
 #### A navy's surface
 
@@ -221,7 +295,9 @@ tiles.
   the Commune's twenty-eight carry at least one of the four.
 - **It leans the normal and shades the indirect light, and nothing else.** The slope
   tilts the shading normal. The height lifts and lowers the rig's ambient and environment
-  light about the surface's own mean, as a baked occlusion map touches indirect light
+  light, and the world's with them
+  ([A model in the world's light](#a-model-in-the-worlds-light)), about the surface's own
+  mean, as a baked occlusion map touches indirect light
   alone ([Bevels and baked occlusion](#bevels-and-baked-occlusion--spec)). Colour is never
   written, so hue stays the faction's ink (gate 4). A lamp wears none, so gate 3 holds
   unaltered. It adds no pass, call or triangle.
@@ -252,8 +328,8 @@ back, so the midrib follows the model's frame and a wide deck takes another ever
 Still open, for the frames taken on the named GPU
 ([issue-1811](screenshots/issue-1811/README.md)): whether the kit Corvette wearing this
 reads beside the Blender one at the Close and nearest cameras, and what three taps a
-clad fragment cost against gate 6's 8 ms. Until High lights a hull (#1814), the surface
-shows under the rig Low lights a hull by.
+clad fragment cost against gate 6's 8 ms. The lean was set under Low's rig, before the
+world lit a hull (#1814), and is read again on those frames.
 
 #### The plate under a mark
 
@@ -275,14 +351,17 @@ under a mark as the marks are.
 
 A **mark plate** is the ground a mark carries at High. Under one, the world layer is
 drawn no brighter than the palest ground the ladder weighs at Low: the palest biome fill
-lifted by the terrain cap, 11.6% encoded luminance. Three things follow from how it is
+lifted by the terrain cap, 11.6% encoded luminance. Four things follow from how it is
 drawn.
 
 - **It is a ceiling, never a paint.** A pixel brighter than that level is scaled down to
   it, hue kept. A pixel under it is not changed, so a plate over ground the Lid alone
   lights changes nothing, and a mark in dark water looks as it does at Low.
 - **It holds the world layer only.** The composite applies it before the tactical pass
-  draws, so a plate takes nothing from a model, a lamp, its halo or another mark.
+  draws, so a plate takes nothing from a lamp, its halo or another mark.
+- **It holds no model.** An own model's cladding is the world layer's, and under a plate
+  the composite holds the water in front of it and not the model
+  ([A model in the world's light](#a-model-in-the-worlds-light)).
 - **It is the mark's, not the map's.** A plate stands where a mark is drawn and nowhere
   else. A contact's follows its mark's own arrival and fade, so it shows nothing the mark
   has not yet shown ([audio-direction.md](audio-direction.md) §2, the Precedence Law;

@@ -13,18 +13,20 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   BoxGeometry,
+  CustomBlending,
   DataUtils,
   Group,
   Layers,
   Material,
   Mesh,
   MeshStandardMaterial,
-  NoBlending,
   PerspectiveCamera,
   Scene,
   ShaderLib,
   ShaderMaterial,
+  SrcColorFactor,
   Texture,
+  ZeroFactor,
   type DepthTexture,
   type Object3D,
   type WebGLRenderer,
@@ -40,7 +42,15 @@ import {
   setHullPools,
   takesHullLight,
 } from '../src/game/hullLight.ts';
-import { MarkPlates, PlatePass } from '../src/game/markPlates.ts';
+import {
+  MarkPlates,
+  PLATE_HOLD_GLSL,
+  PLATE_LEVEL,
+  PLATE_MEDIUM_GLSL,
+  PLATE_SCENE_LEVEL,
+  PlatePass,
+  shownGrey,
+} from '../src/game/markPlates.ts';
 import { ACTIVE_PALETTE } from '../src/game/palette.ts';
 import { RosterBatches } from '../src/game/rosterBatches.ts';
 import { buildTemplate, instantiate, type Template } from '../src/game/rosterModels.ts';
@@ -132,6 +142,13 @@ describe('a model’s cladding in the world pass (#1814)', () => {
     // The plate pass draws the same cladding alone, to cut it from its mask.
     assert.deepEqual(names(drawn(batches, MODEL_LAYER)), names(world));
     for (const mesh of world) assert.ok(!tactical.includes(mesh), 'drawn once');
+    // A view that leaves High keeps a model's template until Low's is built,
+    // and a frame with no world pass draws it whole on the canvas meanwhile.
+    batches.setWorldPass(false);
+    assert.equal(drawn(batches, 0).length, 4);
+    assert.equal(drawn(batches, WORLD_LAYER).length, 0);
+    batches.setWorldPass(true);
+    assert.deepEqual(names(drawn(batches, WORLD_LAYER)), names(world));
     batches.dispose();
 
     // Low's template, and so a contact's at High: the canvas draws it whole.
@@ -257,14 +274,19 @@ describe('a model’s cladding in the world pass (#1814)', () => {
       ['chitin_hull', 'grown_steel'],
       'then the cladding alone: no ground, no lamp'
     );
-    // In a material that empties the mask where the model is what the world
-    // pass showed, and writes nothing where the world stands in front.
+    // In a material that takes the mask's green away where the model is what
+    // the world pass showed, keeps its red, and writes nothing where the
+    // world stands in front.
     const material = overrides[1] as ShaderMaterial;
     assert.ok(material instanceof ShaderMaterial);
     assert.equal(overrides[0], null);
-    assert.equal(material.blending, NoBlending);
+    assert.deepEqual(
+      [material.blending, material.blendSrc, material.blendDst],
+      [CustomBlending, ZeroFactor, SrcColorFactor],
+      'the mask times what the draw writes'
+    );
     assert.match(material.fragmentShader, /gl_FragCoord\.z > world[^;]*\) discard;/);
-    assert.match(material.fragmentShader, /gl_FragColor = vec4\( 0\.0, 0\.0, 0\.0, 1\.0 \);/);
+    assert.match(material.fragmentShader, /gl_FragColor = vec4\( 1\.0, 0\.0, 1\.0, 1\.0 \);/);
     assert.equal(scene.overrideMaterial, null, 'the scene is handed back as it came');
     // The caller restores the camera (highFrame.ts); it was left on the models.
     const models = new Layers();
@@ -273,5 +295,23 @@ describe('a model’s cladding in the world pass (#1814)', () => {
     camera.layers.mask = mask;
     pass.dispose();
     batches.dispose();
+  });
+
+  it('holds the water in front of a model under a plate, and never the model', () => {
+    // The plate's level before the curve is the level after it, walked back.
+    assert.ok(Math.abs(shownGrey(PLATE_SCENE_LEVEL) - PLATE_LEVEL) < 1e-9);
+    assert.ok(PLATE_SCENE_LEVEL > 0 && PLATE_SCENE_LEVEL < PLATE_LEVEL);
+    // The hold after the curve reads the plates less the models, so a
+    // model's pixel is not scaled; the water's light is held before the
+    // curve where the two differ, and `light` is not in that line.
+    assert.ok(PLATE_HOLD_GLSL.includes('texture2D( tPlates, vUv ).g'));
+    assert.ok(PLATE_MEDIUM_GLSL.includes('max( 0.0, plates.r - plates.g )'));
+    assert.ok(PLATE_MEDIUM_GLSL.includes(`${PLATE_SCENE_LEVEL.toFixed(6)} / max( swum, 1e-6 )`));
+    assert.doesNotMatch(PLATE_MEDIUM_GLSL, /light/);
+    const hold = (medium: number, over: number) =>
+      medium * (1 + (Math.min(1, PLATE_SCENE_LEVEL / Math.max(medium, 1e-6)) - 1) * over);
+    assert.equal(hold(0.5, 0), 0.5, 'no plate under a model, nothing held');
+    assert.ok(Math.abs(hold(0.5, 1) - PLATE_SCENE_LEVEL) < 1e-12, 'a glow is held to the level');
+    assert.equal(hold(PLATE_SCENE_LEVEL / 2, 1), PLATE_SCENE_LEVEL / 2, 'a ceiling, never a paint');
   });
 });

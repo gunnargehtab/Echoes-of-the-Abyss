@@ -24,8 +24,9 @@
  * - `PLATE_HOLD_GLSL` is what the composite does with that mask, after its
  *   curve and before the tactical pass draws. So a plate takes nothing from
  *   a lamp, its halo or a mark. A model's cladding is in the world pass
- *   since #1814, and the pass cuts it from the mask, so a plate takes
- *   nothing from a model either.
+ *   since #1814, and the pass marks it in the mask, so a plate takes nothing
+ *   from a model either: only from the water in front of it
+ *   (`PLATE_MEDIUM_GLSL`).
  */
 
 import {
@@ -38,22 +39,23 @@ import {
   LinearFilter,
   MaxEquation,
   Mesh,
-  NoBlending,
   OneFactor,
   PlaneGeometry,
   RGBAFormat,
   Scene,
   ShaderMaterial,
+  SrcColorFactor,
   UnsignedByteType,
   Vector2,
   WebGLRenderTarget,
+  ZeroFactor,
   type DepthTexture,
   type FogExp2,
   type PerspectiveCamera,
   type Texture,
   type WebGLRenderer,
 } from 'three';
-import { HIGH_GRAPHICS, TERRAIN_LIFT } from '@echoes/shared';
+import { HIGH_GRAPHICS, MODEL_LIGHTING, TERRAIN_LIFT } from '@echoes/shared';
 import { encodedLuminance } from './ladder.ts';
 import { BIOME_COLOR, scaleRgb } from './palette.ts';
 import type { SurveyInkPlateUniforms } from './surveyInk.ts';
@@ -87,9 +89,59 @@ export const PLATE_LEVEL = encodedLuminance(PLATE_GROUND);
  * so the hue is kept, and by the plate's coverage at its soft edge.
  */
 export const PLATE_HOLD_GLSL = [
-  '    float plate = texture2D( tPlates, vUv ).r;',
+  // Green: the plates, less where a model stands in front (`PlatePass`).
+  '    float plate = texture2D( tPlates, vUv ).g;',
   '    float shown = dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );',
   `    gl_FragColor.rgb *= mix( 1.0, min( 1.0, ${glsl(PLATE_LEVEL)} / max( shown, 1e-5 ) ), plate );`,
+].join('\n');
+
+/** three's sRGB encode, constants as the fragment writes them. */
+const encode = (linear: number): number =>
+  linear <= 0.0031308 ? linear * 12.92 : Math.pow(linear, 0.41666) * 1.055 - 0.055;
+
+/**
+ * What the composite's curve makes of a grey, encoded: three's ACES fit
+ * (`ACESFilmicToneMapping`, r187), whose two matrices keep a grey a grey, at
+ * the exposure the composite draws at.
+ */
+export function shownGrey(scene: number): number {
+  const v = (scene * HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE) / 0.6;
+  const fit = (v * (v + 0.0245786) - 0.000090537) / (v * (0.983729 * v + 0.432951) + 0.238081);
+  return encode(Math.min(1, Math.max(0, fit)));
+}
+
+/**
+ * The scene-referred light that is shown at `PLATE_LEVEL`: the plate's level
+ * before the curve, where the composite still holds the water's light apart
+ * from a model's. Derived from the level by walking the curve back, which
+ * rises all the way. The grade is left out: it moves a grey this dark by
+ * under a hundredth of the level.
+ */
+export const PLATE_SCENE_LEVEL = (() => {
+  let low = 0;
+  let high = 1;
+  for (let i = 0; i < 60; i++) {
+    const mid = (low + high) / 2;
+    if (shownGrey(mid) < PLATE_LEVEL) low = mid;
+    else high = mid;
+  }
+  return (low + high) / 2;
+})();
+
+/**
+ * What a plate does where a model stands in front of it, on the light the
+ * composite is about to sum (highFrame.ts): `medium`, the water's own light,
+ * the sources' volumes and the bloom, is scaled down to the plate's level,
+ * hue kept, and the model's own light is left as the world lit it. No plate
+ * holds a model (docs/art-direction.md, "A model in the world's light"), and
+ * the water in front of one is still the world's light under a mark. Red is
+ * every plate and green the plates less the models, so their difference is a
+ * plate under a model.
+ */
+export const PLATE_MEDIUM_GLSL = [
+  '    vec2 plates = texture2D( tPlates, vUv ).rg;',
+  '    float swum = dot( medium, vec3( 0.2126, 0.7152, 0.0722 ) );',
+  `    medium *= mix( 1.0, min( 1.0, ${glsl(PLATE_SCENE_LEVEL)} / max( swum, 1e-6 ) ), max( 0.0, plates.r - plates.g ) );`,
 ].join('\n');
 
 /**
@@ -259,7 +311,9 @@ const FRAGMENT = [
 
 // A model's cladding, drawn over the mask where it is what the world pass
 // showed: the world's depth at the pixel is its own. Ground, stone or a prop
-// in front of a hull is nearer than this fragment, and keeps its plate.
+// in front of a hull is nearer than this fragment, and keeps its plate. The
+// draw multiplies: green goes and red stays, so the composite knows a plate
+// under a model from a plate under ground (`PLATE_MEDIUM_GLSL`).
 const CUT_VERTEX = [
   '#include <common>',
   'void main() {',
@@ -276,7 +330,7 @@ const CUT_FRAGMENT = [
   // The resolve keeps one sample's depth, so a face seen edge on is given
   // its own slope's worth of room.
   '  if ( gl_FragCoord.z > world + 3.0 * fwidth( gl_FragCoord.z ) + 1e-6 ) discard;',
-  '  gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );',
+  '  gl_FragColor = vec4( 1.0, 0.0, 1.0, 1.0 );',
   '}',
 ].join('\n');
 
@@ -312,16 +366,21 @@ export class PlatePass {
     uCutTexel: { value: new Vector2(1, 1) },
   };
   /**
-   * What a model's cladding is drawn in over the mask: nothing, where the
-   * model is what the world pass showed (`CUT_FRAGMENT`). Both faces, since
-   * a membrane is drawn both ways.
+   * What a model's cladding is drawn in over the mask: the mask's green
+   * taken away, where the model is what the world pass showed
+   * (`CUT_FRAGMENT`). Both faces, since a membrane is drawn both ways.
    */
   private readonly cut = new ShaderMaterial({
     uniforms: this.cutUniforms,
     vertexShader: CUT_VERTEX,
     fragmentShader: CUT_FRAGMENT,
     side: DoubleSide,
-    blending: NoBlending,
+    transparent: true,
+    blending: CustomBlending,
+    blendSrc: ZeroFactor,
+    blendDst: SrcColorFactor,
+    blendSrcAlpha: ZeroFactor,
+    blendDstAlpha: OneFactor,
     depthTest: false,
     depthWrite: false,
   });
@@ -424,10 +483,12 @@ export class PlatePass {
    * `depth`, and hand back the mask the composite holds the world under.
    *
    * A plate is the ground a mark carries, and a model is not ground: where
-   * the cladding on `models.layer` is what the world pass showed, the mask
-   * is emptied again, so no plate holds a model (docs/art-direction.md, "The
-   * plate under a mark"; the owner's call on #1814). At Low a mark over a
-   * hull reads over whatever the rig lit, and here over what the world did.
+   * the cladding on `models.layer` is what the world pass showed, the mask's
+   * green is taken away, so no plate holds a model (docs/art-direction.md,
+   * "The plate under a mark"; the owner's call on #1814). At Low a mark over
+   * a hull reads over whatever the rig lit, and here over what the world did.
+   * Red still says a plate stands there, for the water in front of the model
+   * (`PLATE_MEDIUM_GLSL`).
    *
    * The renderer's target and clear state, the camera's layers and the
    * scene's override are the caller's to restore.
