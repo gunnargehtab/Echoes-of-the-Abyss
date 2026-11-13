@@ -901,6 +901,7 @@ and no row below is open.
 | A square passage’s route line running across its way | [#1759](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1759) |
 | The mission log standing in the hint line’s row | [#1762](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1762) |
 | The free-water rim ray reading as a body in the opening frame | [#1780](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1780) |
+| Mirrored hull parts drawing near-black in the conn view | [#1812](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1812) |
 
 **How the project runs**
 
@@ -983,6 +984,7 @@ recorded and left.
 | --- | --- |
 | An independent read of the story | [#469](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/469) |
 | Improve the in-game graphics: three design paths, the owner picks | [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) |
+| The High plate darkening open water Low draws, and the grade dimming the ramp | [#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816) |
 
 A reading of the world is worth less done by the hands that wrote it, so no unattended run
 takes this one.

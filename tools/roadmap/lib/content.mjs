@@ -617,6 +617,8 @@ export const items = {
   1785: 'The four remaining fleet-wide upgrades and a rank for each ship, from the progression design',
   1792: 'A damaged armoured ship still giving away its armour to a listener that tracks it',
   1780: 'The open-water trial’s giant ray looking like a sliver instead of a body',
+  1812: 'Parts of a ship’s hull that are mirrored copies drawing nearly black in the game view',
+  1816: 'On the richer graphics setting, the dark discs under marks showing over shallow water that the standard look keeps clear',
   1777: 'The opening view of the open-water patch showing no sea life large enough to see',
   1600: 'Whether picking and ordering should make any interface sound',
   1601: 'How big the game’s sound files may be, and how they load',
