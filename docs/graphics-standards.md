@@ -737,6 +737,11 @@ trim sheet ([art-direction.md](art-direction.md#uv-layout-and-trim-sheets--spec)
 the same and no more, once a **navy** rather than once a model: 512² and 1.33 MiB for each
 navy with a sheet whose models have loaded, resident for the page's lifetime and shared by
 every laid-out material of that navy, and nothing for a model whose script passes no `trim`.
+A navy's surface ([art-direction.md](art-direction.md#a-navys-surface)) is High's alone and
+is not capped, as no High texture is. It is reported here: one image a navy material, the
+Commune's hull skin at 512² and its other three at 256², **2.33 MiB** as three uploads
+them with their mipmaps, once the navy's models have loaded at High. It adds three taps a
+clad fragment, which are read against the 8 ms on the named GPU.
 Nor are the vignette and the sway
 ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)): the browser
 composites the one, and the other moves a camera the frame already draws through.

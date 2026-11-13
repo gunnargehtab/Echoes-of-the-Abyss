@@ -123,6 +123,11 @@ detail and seated stones — SPEC". Its rules hold for any cosmetic on that mate
   `trimSheets.ts` attaches as `map` at load, multiplying the recoloured ink and never
   reaching `emissive` (#1005, the Bulwark first). `node tools/render-stack/audit.mjs`
   counts what the library carries.
+- **A relief that must tile both ways needs no layout.** At High a navy material's
+  surface (`navySurface.ts`, #1811) is read by a fragment's place on the model in metres,
+  on three planes, from one slope-and-height image a material that
+  `tools/hull-models/surface.mjs` draws. It leans the normal and shades indirect light,
+  never `diffuseColor`, and it is installed only on the High quality's own template.
 
 ## Prove the surface
 

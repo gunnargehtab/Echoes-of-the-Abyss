@@ -21,11 +21,11 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs (buildability
                    finishes.mjs finds at two values inside one navy, and on a model file
                    that is neither an env- prop nor named -<navy>.glb (#888); CI runs it in
                    the models job. It reads uv1 and the occlusion map a script bakes
-                   (#1002), UV0 and the trim tag one lays (trim.mjs, #1005), and each
-                   navy's sheet (sheets.mjs). diff.mjs answers the one thing check.mjs
-                   cannot — what a port changed about a shape — by reading the pre-port
-                   binary out of git history, since after a port the committed file is the
-                   script's own output and the check is comparing it against itself.
+                   (#1002), UV0 and the trim tag one lays (trim.mjs, #1005), each navy's
+                   sheet (sheets.mjs) and each navy material's High surface (surface.mjs,
+                   surfaces.mjs, #1811). diff.mjs answers what check.mjs cannot — what a
+                   port changed about a shape — from the pre-port binary in git history,
+                   since after a port the committed file is the script's own output.
                    parts.mjs reads a file the way a script is written — each node's
                    transform, which primitive its buffer is, which nodes share one — and is
                    what a port transcribes from. Port is -z: the bow is on +X and Y is up,
@@ -62,9 +62,9 @@ tools/hull-renders The same models photographed rather than measured: render.mjs
                    here. scene.html draws the game's frame: the curve per material, glow
                    after it, lamp core and lamp halo, from the frontend through frame.mjs
                    (#1015). Both pages put a navy's trim sheet on the materials tagged for
-                   it, as the conn view does (trimSheets.mjs, #1112). inspect.mjs's page
-                   tone-maps once in OutputPass, lamps included: take glow from scene.html
-                   or run-game, never it. Not a workspace or a gate — a picture is a
+                   it, as the conn view does (trimSheets.mjs, #1112); inspect.mjs --surface
+                   adds a column wearing a navy's High surface (#1811), and tone-maps lamps:
+                   take glow from scene.html or run-game. No workspace or gate — a picture is a
                    presentation artifact, and a model is still approved by hull-intake and
                    check.mjs, which measure.
 tools/steam-capsules The Steam store and library art (#1651): render.mjs draws the title
