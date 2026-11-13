@@ -35,7 +35,7 @@ selects them, and takes the High frame with its marks' plates and without them, 
 | Camera | Low | High | What High shows so far |
 | --- | --- | --- | --- |
 | Home | [low](software/01-low-home.png) | [high](software/04-high-home.png) | The garden beyond the rim glowing in the flora's own green: its stands pool on the ground and scatter in the water over it, and the glow blooms. The rim under the hulls is dark, lit by the Lid's glow alone, and reads as silt: scours and dune troughs darker than the crests between them, with the survey ink over it |
-| Close | [low](software/02-low-close.png) | [high](software/05-high-close.png) | The rim in the foreground, the three hulls across the frame, and the bowl's open water behind, the water in the Coral Ruins' hue. The rim's dunes lie across the frame as dark bands that close up toward the horizon. No source of the world's stands near this camera, so the frame is as dark as Low's |
+| Close | [low](software/02-low-close.png) | [high](software/05-high-close.png) | The rim in the foreground, the three hulls across the frame, and the bowl's open water behind, the water in the Coral Ruins' hue. The rim's dunes lie across the frame as dark bands that close up toward the horizon. No source of the world's stands near this camera: the frame's brightest is Low's, and its ground is darker than Low's |
 | Survey | [low](software/03-low-survey.png) | [high](software/06-high-survey.png) | Depth still reads as luminance: the rim, the garden, the bowl's flanks and the black pocket. Each of the garden's stands has its pool on the ground and its glow in the water. The silt's relief is gone by this dolly, as Low's detail is |
 
 The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camera moved
@@ -44,8 +44,9 @@ from Home to Close at High, at 1280 × 720 and six times the speed the rasterise
 ## The ground under the Lid
 
 The second pull request of the step lit the silt. Through #1807 the lit ground took the
-Lid's glow flat, and the crater's ground carried no silt detail at either quality, so
-High drew the rim as one sheet. The lit ground now takes the dunes, ripples and scours as
+Lid's glow flat, and the crater's ground carried no silt detail at either quality: the
+bake's rim and lee lines crossed the rim, and nothing finer. The lit ground now takes the
+dunes, ripples and scours as
 relief ([art-direction.md](../../art-direction.md#what-is-built-at-high)), and the Lid's
 level went from 3 to 3.3, just under its two bounds.
 
@@ -91,8 +92,12 @@ Counted, not timed: a software rasteriser's milliseconds measure the rasteriser.
 | Survey | 45, 594,970 | 57, 661,726 | The same |
 
 High draws twelve calls more, as it did before the relief, which is the lit ground's own
-fragment shader and fetches no more than Low's painted detail does. It drops the water
-backdrop. It adds the survey ink's own
+fragment shader. On a standard map it fetches no more than Low's painted detail does. In
+the crater Low paints none, so the relief is new work there: its fetches on every
+fragment of the lit ground, which gate 6's reading on the named GPU has to cover, a
+texture of the cells' strengths, 1,024 bytes for this map, and the detail's noise
+lattice, 65,536, which the page holds once. None of that is in the bytes below. It drops
+the water backdrop. It adds the survey ink's own
 draw, which is the ground's 32,768 triangles a second time, and the ink's plate, which
 is those triangles a third. It adds one instanced draw for the crater's 71 sources and
 one for the bands and discs of the marks' plates, 534 of them at Home, and nine
@@ -214,8 +219,31 @@ collar, and three hulls close together make one dark patch. At Close each hull's
 stands over water Low draws paler than the plate's level, and its upper edge shows: the
 luma steps 3.5 of 255 across it where Low's own gradient is 2.2
 ([#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816)). And the rim's
-relief runs under the hulls' rings at Home and Close. It only darkens the ground and no
-mark is dark, so by this session's reading no band is taken for a mark.
+relief runs under the hulls at Home and Close, where it stands against the one dark mark
+the study draws: a hull's ground shadow, which is its depth
+([art-direction.md](../../art-direction.md), "Depth is drawn, not implied"). A trough is
+now as dark as a shadow.
+
+| Frame | The shadow's median luma | The ground's 5th percentile beside it |
+| --- | --- | --- |
+| Home, Low | 17.4 | 20.9 |
+| Home, High at #1807 | 12.5 | 14.3 |
+| Home, High now | 10.7 | 10.1 |
+| Close, Low | 19.7 | 21.5 |
+| Close, High at #1807 | 17.0 | 17.0 |
+| Close, High now | 14.4 | 15.2 |
+
+At Home the shadow is the left hull's, 625, 765 to 680, 785, against the rim's box
+above. At Close it is the middle hull's, 810, 690 to 940, 705, against the ground either
+side of it on the same rows. At Close the shadow already stood at the ground's 5th
+percentile before the relief; at Home the relief took that margin away, and the rim's
+1st percentile is 8.0. The round's critic could not tell the middle hull's shadow from
+the dune bands at Close.
+
+This is not settled here. Three options are written for the owner in the pull request:
+bound the relief so its deepest trough stays above a shadow, which leaves about the
+spread the rim had; hold the relief out from under each hull's shadow, which is a new
+hold keyed to agents; or keep it and judge the two on the named GPU's frames.
 
 The ink was checked directly, since at the survey dolly it is faint at both qualities.
 [ink-survey.png](software/ink-survey.png) is the Survey frame at High less the same frame

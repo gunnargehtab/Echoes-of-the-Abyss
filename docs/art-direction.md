@@ -173,7 +173,10 @@ Built so far:
   and of a pool. Nothing reads a heading, since the glow has none (limit 1), and nothing
   lifts: a crest takes what level ground takes. The grain stays the silt's own colour.
   The free-water study's ground carries the relief too, where its Low ground is a smooth
-  bake and stays one: Low is High's control and does not move.
+  bake and stays one: Low is High's control and does not move. Open: a trough stands as
+  dark as an own hull's ground shadow, which is its depth ("Depth is drawn, not implied",
+  below). Which of the two yields is the owner's to read off the named GPU's frames
+  ([the frames](screenshots/issue-1801/README.md#gate-7-asked-of-the-lit-frames)).
 - **The water is a medium.** It keeps the depth ramp's brightness
   ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
   of the biome under the water its light comes from, in that biome's water token. A pixel
