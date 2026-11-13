@@ -6,11 +6,12 @@
  * one scene, told apart by three's layers:
  *
  * 1. **The world pass.** Everything on `WORLD_LAYER` (the lit ground and
- *    stone, the props, the cladding of the player's own models) is drawn into a linear half-float target with the
- *    canvas's own four samples. Nothing in it is tone-mapped: three never
- *    tone-maps a draw into a target, so light stays scene-referred. The fog
- *    chunk is asked for its other half there (water.ts `installWaterFog`): a
- *    fragment only loses light to the water, and alpha holds what survived.
+ *    stone, the props, the cladding of the player's own models) is drawn
+ *    into a linear half-float target with the canvas's own four samples.
+ *    Nothing in it is tone-mapped: three never tone-maps a draw into a
+ *    target, so light stays scene-referred. The fog chunk is asked for its
+ *    other half there (water.ts `installWaterFog`): a fragment only loses
+ *    light to the water, and alpha holds what survived.
  * 2. **The scatter pass**, where the ground stands a source of its own: the
  *    light those sources scatter in the water, summed against the world's
  *    depth into a half-resolution target (lightVolumes.ts).
