@@ -18,14 +18,15 @@
  *    the water above each point the ground round it hides, and the light
  *    over a soft threshold spread down four levels and back.
  * 4. **The plate pass** (markPlates.ts): where the marks stand, as a mask of
- *    the frame's size, less where a model stands in front. A mark carries
- *    its own ground at High (limit 6), and a model is not ground.
+ *    the frame's size, and where a model stands in front of one. A mark
+ *    carries its own ground at High (limit 6), and a model is not ground.
  * 5. **The composite.** One full-screen draw to the canvas sums the frame's
  *    light: the world's, occluded; the water's own, by what each pixel lost
  *    (waterMedium.ts); the sources' volumes; and the bloom. It grades the
  *    sum, runs the curve, holds the result under the plates, and writes the
  *    world's depth, so the pass after it is hidden by the world as it is at
- *    Low.
+ *    Low. In front of a model a plate holds the water's part of the sum
+ *    alone, before the curve.
  * 6. **The tactical pass.** Everything else in the scene, drawn to the canvas
  *    exactly as the Low quality draws it: the same materials, the same
  *    per-material tone curve, the same fog. That is the law's "unchanged at
