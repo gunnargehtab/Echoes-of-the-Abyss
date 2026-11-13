@@ -34,12 +34,45 @@ selects them, and takes the High frame with its marks' plates and without them, 
 
 | Camera | Low | High | What High shows so far |
 | --- | --- | --- | --- |
-| Home | [low](software/01-low-home.png) | [high](software/04-high-home.png) | The garden beyond the rim glowing in the flora's own green: its stands pool on the ground and scatter in the water over it, and the glow blooms. The rim under the hulls is dark, lit by the Lid's glow alone, with the survey ink over it |
-| Close | [low](software/02-low-close.png) | [high](software/05-high-close.png) | The rim in the foreground, the three hulls across the frame, and the bowl's open water behind, the water in the Coral Ruins' hue. No source of the world's stands near this camera, so the frame is as dark as Low's |
-| Survey | [low](software/03-low-survey.png) | [high](software/06-high-survey.png) | Depth still reads as luminance: the rim, the garden, the bowl's flanks and the black pocket. Each of the garden's stands has its pool on the ground and its glow in the water |
+| Home | [low](software/01-low-home.png) | [high](software/04-high-home.png) | The garden beyond the rim glowing in the flora's own green: its stands pool on the ground and scatter in the water over it, and the glow blooms. The rim under the hulls is dark, lit by the Lid's glow alone, and reads as silt: scours and dune troughs darker than the crests between them, with the survey ink over it |
+| Close | [low](software/02-low-close.png) | [high](software/05-high-close.png) | The rim in the foreground, the three hulls across the frame, and the bowl's open water behind, the water in the Coral Ruins' hue. The rim's dunes lie across the frame as dark bands that close up toward the horizon. No source of the world's stands near this camera, so the frame is as dark as Low's |
+| Survey | [low](software/03-low-survey.png) | [high](software/06-high-survey.png) | Depth still reads as luminance: the rim, the garden, the bowl's flanks and the black pocket. Each of the garden's stands has its pool on the ground and its glow in the water. The silt's relief is gone by this dolly, as Low's detail is |
 
 The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camera moved
-from Home to Close at High, at 1280 × 720 and twice the speed the rasteriser drew it.
+from Home to Close at High, at 1280 × 720 and six times the speed the rasteriser drew it.
+
+## The ground under the Lid
+
+The second pull request of the step lit the silt. Through #1807 the lit ground took the
+Lid's glow flat, and the crater's ground carried no silt detail at either quality, so
+High drew the rim as one sheet. The lit ground now takes the dunes, ripples and scours as
+relief ([art-direction.md](../../art-direction.md#what-is-built-at-high)), and the Lid's
+level went from 3 to 3.45, its bound.
+
+Read off the High frames before and after, with Low beside them: the median and the 5th
+to 95th percentile of luma, out of 255.
+
+| Where | Low | High, #1807 | High now |
+| --- | --- | --- | --- |
+| Home, the rim left of the hulls | 22.9, 20.9 to 23.9 | 17.9, 14.3 to 18.8 | 16.2, 10.7 to 20.6 |
+| Close, the rim under the hulls | 22.9, 21.1 to 23.7 | 18.7, 15.2 to 18.9 | 17.1, 10.8 to 20.7 |
+| Survey, the west rim | 23.2, 21.4 to 24.2 | 17.8, 12.5 to 17.9 | 19.5, 14.3 to 20.5 |
+| Survey, the bowl's west flank | 18.8, 17.8 to 19.6 | 13.2, 12.2 to 14.0 | 14.1, 12.2 to 15.7 |
+
+The boxes are 100, 560 to 560, 780 at Home, 500, 700 to 1400, 860 at Close, and 660, 300
+to 790, 480 and 830, 500 to 880, 640 at Survey. The marine snow and the hulls' ground
+shadows are in the first two.
+
+Two things to read there. The spread on the rim doubled, which is the relief: 4.5 to 9.9
+at Home. And the ground the Lid alone lights is still darker than Low's, by 4 to 7 of
+255. That is the Lid's bound and not a setting left low: its brightest ground may be no
+paler than the palest ground a plate holds the world to, 29.6, and that ground is the
+palest fill, level, at the Lid itself. The rim is Coral Ruins under 600 m of water. Low
+shades a map's shallowest ground at its fill's own level, whatever its depth.
+
+The relief shows most where a source lights the ground. In
+[the garden frame](software/plates/01-garden-plates.png) the stands' pools lie over dune
+troughs, which stay dark under them.
 
 What the target shows and these do not: the searchlights of the player's own hulls and
 their pools, which are the target's brightest light and the issue's next step; shadow
@@ -56,7 +89,9 @@ Counted, not timed: a software rasteriser's milliseconds measure the rasteriser.
 | Close | 44, 593,684 | 56, 660,446 | The same |
 | Survey | 45, 594,970 | 57, 661,726 | The same |
 
-High draws twelve calls more. It drops the water backdrop. It adds the survey ink's own
+High draws twelve calls more, as it did before the relief, which is the lit ground's own
+fragment shader and fetches no more than Low's painted detail does. It drops the water
+backdrop. It adds the survey ink's own
 draw, which is the ground's 32,768 triangles a second time, and the ink's plate, which
 is those triangles a third. It adds one instanced draw for the crater's 71 sources and
 one for the bands and discs of the marks' plates, 534 of them at Home, and nine
@@ -71,7 +106,7 @@ owed: the capture takes it on a GPU and records `insideBudget` beside it.
 ## Low does not move
 
 The Low quality is the non-target control. `low-control/` holds `main`'s Low frames at
-the branch's base, 96180933f, taken by the same module with `QUALITY=low`.
+the second pull request's base, 9945c1fb, taken by the same module with `QUALITY=low`.
 
 A match is live, so two runs never match pixel for pixel. A second run of `main` against
 the first gives the floor, read as [issue-1800](../issue-1800/README.md) reads it: the
@@ -80,13 +115,13 @@ mean, over the world area, of each pixel's largest channel difference, out of 25
 
 | Camera | `main` against `main` | `main` against the branch | Calls and triangles |
 | --- | --- | --- | --- |
-| Home | 0.07 | 0.18 | 44 and 593,684, both |
-| Close | 0.15 | 0.36 | 44 and 593,684, both |
+| Home | 0.01 | 0.03 | 44 and 593,684, both |
+| Close | 0.03 | 0.07 | 44 and 593,684, both |
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
 
-The branch's Home and Close figures move run to run with the snow: the same comparison
-read 0.15 and 0.31 at this pull request's first commit, 0.04 and 0.08 at its second and
-0.19 and 0.36 at its third.
+The figures move run to run with the snow. #1807 read the same comparison against its own
+base, 96180933f, four times: 0.15 to 0.19 and 0.31 to 0.36 at Home and Close on three, and
+0.04 and 0.08 on one.
 
 The difference maps paint a pixel red where any channel moved by more than 2. At Close
 both maps are marine snow and nothing else: the motes sink, and a later frame finds them
@@ -96,7 +131,9 @@ ring, lamp or ink pixel moved, and the survey frame matches to the pixel.
 
 In counted work, `packages/frontend/test/rendererSmoke.test.ts` holds the rest: at Low the
 frame is the canvas pass it was, and at High every draw of the tactical pass is one Low
-makes, in a material of the kind Low makes it in.
+makes, in a material of the kind Low makes it in. The same file holds the relief off Low:
+the crater's Low ground draws with no silt detail before High and after it, and a
+standard map's Low ground paints the detail in the program it always had.
 
 ## The plate under a mark
 
@@ -105,8 +142,8 @@ ground ([art-direction.md](../../art-direction.md#the-plate-under-a-mark)). Unde
 mark's plate the world layer is shown no brighter than the palest ground the ladder
 weighs, 11.6% encoded luminance, which is 29.6 of 255. The ceiling that first held the
 lit ground is gone, so a stand's pool now reads on the ground: over the garden at Survey
-the 99th percentile of encoded luminance is 14.8% at Low and 30.4% at High, and the
-cores reach 45.4% at the 99.9th. That is past every figure the ladder holds to, which is
+the 99th percentile of encoded luminance is 14.8% at Low and 30.1% at High, and the
+cores reach 45.3% at the 99.9th, read over 800, 290 to 1115, 470. That is past every figure the ladder holds to, which is
 what the plates are for.
 
 `plates.mjs` puts three marks over that light: the hulls sent into the garden and
@@ -124,15 +161,15 @@ Read by `read.py` over the world area:
 
 | Camera | Pixels held | Brighter with plates | Held pixels' median, bare | With plates |
 | --- | --- | --- | --- | --- |
-| Over the garden | 19,770, 1.26% | none | 40.4 of 255 | 29.6 |
-| Survey | 3,567, 0.23% | none | 48.2 | 29.9 |
+| Over the garden | 17,377, 1.11% | none | 39.7 of 255 | 29.6 |
+| Survey | 3,720, 0.24% | none | 47.5 | 29.9 |
 
 The difference map over the garden is two things: a disc under each hull that stands in
 the glow, and the band along the detection ring where it crosses the glow. At Survey it
 is the discs and the garden's north rim, where the ink's plate crosses the brightest
 stands. A plate changes no pixel that was under the level, so the rest of each pair is
-the same to the byte: 23,591 of the world area's 1,570,560 pixels differ at all over the
-garden, and 4,108 at Survey.
+the same to the byte: 20,880 of the world area's 1,570,560 pixels differ at all over the
+garden, and 4,311 at Survey.
 
 The held pixels that still stand over the level are, by this session's reading of the
 pair, a plate's soft edge and what the tactical pass blends over the world after the
@@ -147,7 +184,7 @@ it, in all four palettes. It also pins how pale a ground those comparisons hold 
 palette.
 
 In the three frames beside the target, the 99th percentile of the world area's luma, out
-of 255, is 64 at Low and 60 at High at Home, 70 and 68 at Close, and 55 and 59 at Survey.
+of 255, is 63 at Low and 61 at High at Home, 64 and 64 at Close, and 50 and 55 at Survey.
 
 No frame here shows a contact. A contact's disc, and every agent's, is held by two tests
 instead. `rendererSmoke.test.ts` measures the shapes each symbol of a canned frame draws
@@ -170,16 +207,21 @@ built them, on a software rasteriser:
 | Survey | Yes. The three hulls and their rings read on the west rim as at Low | Yes. The coast round the rim, the pocket, the garden and the rock wall, and the isobaths down each scarp, are drawn as at Low |
 | Over the garden, with plates | Yes. Each hull stands on a dark disc inside its white selection ring, its collar's green arc over the disc and not over the glow. Without plates the upper hull's ring and collar cross the flora's green, which sits near the Pelagia hulls' own | Not the survey's question at this dolly |
 
-The frames taken on the named GPU are where this is judged. One thing to look for there:
-a disc holds a hull's collar and its bar's slot, so it is a little wider than the collar,
-and three hulls close together make one dark patch.
+The frames taken on the named GPU are where this is judged. Three things to look for
+there. A disc holds a hull's collar and its bar's slot, so it is a little wider than the
+collar, and three hulls close together make one dark patch. At Close each hull's disc
+stands over water Low draws paler than the plate's level, and its upper edge shows: the
+luma steps 3.5 of 255 across it where Low's own gradient is 2.2
+([#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816)). And the rim's
+relief runs under the hulls' rings at Home and Close. It only darkens the ground and no
+mark is dark, so by this session's reading no band is taken for a mark.
 
 The ink was checked directly, since at the survey dolly it is faint at both qualities.
 [ink-survey.png](software/ink-survey.png) is the Survey frame at High less the same frame
 with the ink's draw hidden by a switch that was not committed, amplified twelve times: the
-coastlines and the scarps' isobaths, and nothing else. It was taken at this pull
-request's third commit, where the ink moved 1.80% of the world area's pixels by more than
-2 of 255 at Survey, and 0.46% at Home.
+coastlines and the scarps' isobaths, and nothing else. It was taken at #1807's third
+commit, where the ink moved 1.80% of the world area's pixels by more than 2 of 255 at
+Survey, and 0.46% at Home.
 
 ## Related
 
