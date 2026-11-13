@@ -130,23 +130,26 @@ the owner accepts.*
 High draws the one scene as two layers
 (`packages/frontend/src/game/highFrame.ts`):
 
-1. **The world pass** draws the world layer into a linear half-float target with the
+1. **The hold pass** draws, in plan over the map, the level ground each own entity's
+   ground shadow carries: a disc a shadow, into a small mask the lit ground reads. It
+   draws only where a shadow stands, and reads no camera.
+2. **The world pass** draws the world layer into a linear half-float target with the
    canvas's four samples. Nothing in it is tone-mapped, so its light stays
    scene-referred. A fragment there only loses light to the water.
-2. **The scatter pass** draws what the world's own sources scatter in the water, against
+3. **The scatter pass** draws what the world's own sources scatter in the water, against
    the world's depth, at half the frame's size.
-3. **The chain** runs at half the frame's size and smaller: ambient occlusion off the
+4. **The chain** runs at half the frame's size and smaller: ambient occlusion off the
    world's depth, then the frame's light over a soft threshold, spread down four levels
    and back as bloom.
-4. **The plate pass** draws where the marks stand into a mask of the frame's size: a
+5. **The plate pass** draws where the marks stand into a mask of the frame's size: a
    band along every line traced on the ground and along every stroke of survey ink, and a
    disc under every agent's mark at a depth.
-5. **The composite** is one full-screen draw to the canvas. It sums the world's light,
+6. **The composite** is one full-screen draw to the canvas. It sums the world's light,
    occluded, the water's own light by how much of each pixel the water took, the sources'
    volumes and the bloom. It grades the sum and runs the tone curve, holds the result
    under the plates, and lays the world's depth so the next pass is hidden by the world
    as it is at Low.
-6. **The tactical pass** draws everything else on the canvas as Low draws it: the same
+7. **The tactical pass** draws everything else on the canvas as Low draws it: the same
    materials, the same per-material curve, the same fog. The survey ink is drawn here,
    as a layer of its own over the lit ground. The lamp halo and the chromatic split
    follow as they always have. The chain and the plates run before this pass, so no
@@ -173,10 +176,20 @@ Built so far:
   and of a pool. Nothing reads a heading, since the glow has none (limit 1), and nothing
   lifts: a crest takes what level ground takes. The grain stays the silt's own colour.
   The free-water study's ground carries the relief too, where its Low ground is a smooth
-  bake and stays one: Low is High's control and does not move. Open: a trough stands as
-  dark as an own hull's ground shadow, which is its depth ("Depth is drawn, not implied",
-  below). Which of the two yields is the owner's to read off the named GPU's frames
-  ([the frames](screenshots/issue-1801/README.md#gate-7-asked-of-the-lit-frames)).
+  bake and stays one: Low is High's control and does not move.
+- **A ground shadow carries a hold.** *Decided by the owner in session on 13 November
+  2026 ([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)).* A
+  hull's height above its own shadow is its depth ("Depth is drawn, not implied", below),
+  and a dune's trough stood as dark as a shadow, so a shadow lying across one could not
+  be told from it. Three options were written. **Bound the relief** above a shadow's
+  level leaves the rim, by estimate, about 6 of 255 of spread for the relief's 9.7.
+  **Keep both** leaves the depth cue to chance. **Hold the relief out from under the shadow** is the one the owner
+  took. Under an own entity's ground shadow, and out to 1.3 of its radius, the lit ground
+  carries no relief: it takes the light level ground takes. The relief is all back by
+  2.2 radii. Like a plate, the hold is the mark's and not the map's. It stands where the
+  view draws an own shadow and nowhere else, it only ever returns ground to level, and a
+  contact has no shadow to carry one (limit 2). The bake's own rim, lee and scour are not
+  held: they stood under the shadows before the relief did.
 - **The water is a medium.** It keeps the depth ramp's brightness
   ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
   of the biome under the water its light comes from, in that biome's water token. A pixel

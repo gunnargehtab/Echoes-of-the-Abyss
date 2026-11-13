@@ -145,9 +145,18 @@ export const HIGH_GRAPHICS = {
    * from straight above shades a true slope by a hundredth. `HOLLOW` is how
    * fast the silt detail's hollows lose the water above them: a hollow of
    * strength s keeps exp(-HOLLOW × s) of its light, so a Coral Ruins dune's
-   * trough, 0.1, keeps half.
+   * trough, 0.1, keeps half. `SHADOW_HOLD` is the level ground an own
+   * entity's ground shadow carries, in shadow radii: no relief out to `FULL`,
+   * all of it back by `REACH`, so the shadow's edge stands on ground as even
+   * as Low's and a trough beside it reads apart from it.
    */
-  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8, HOLLOW: 7 },
+  GROUND: {
+    ALBEDO_LUMINANCE: 0.2,
+    ALBEDO_SATURATION: 0.6,
+    RELIEF_GAIN: 8,
+    HOLLOW: 7,
+    SHADOW_HOLD: { FULL: 1.3, REACH: 2.2 },
+  },
   /**
    * The water. `HUE_REACH` is how far along a sight line, in reaches, the
    * water whose hue a pixel wears stands: most of the light the water adds

@@ -113,6 +113,7 @@ export const LIT_IRRADIANCE_GLSL = [
 export const LIT_GROUND_GLSL = [
   'uniform sampler2D uLitRelief;',
   'uniform sampler2D uLitPools;',
+  'uniform sampler2D uLitHold;',
   'varying float vLitWorldY;',
   // How much of the water above the ground's fine relief leaves a pixel: 1 on
   // a crest and on ground with no silt detail, less in a dune's trough, a
@@ -130,12 +131,15 @@ export const LIT_GROUND_GLSL = [
   // the ground, which the water above it does not take. Nothing holds the sum
   // down here: a mark carries its own ground (markPlates.ts; limit 6).
   '  vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;',
-  // A hollow hides both from the ground in it, as the bake's occlusion does.
-  '  return albedo * irradiance * relief.g * echoesLitSky * 0.3183098861837907;',
+  // A hollow hides both from the ground in it, as the bake's occlusion does,
+  // but for under an own entity's ground shadow, which carries level ground
+  // of its own so that it reads apart from a trough (shadowHold.ts).
+  '  float sky = mix( echoesLitSky, 1.0, texture2D( uLitHold, uv ).r );',
+  '  return albedo * irradiance * relief.g * sky * 0.3183098861837907;',
   '}',
 ].join('\n');
 
-const LIT_GROUND_KEY = ':lit-ground-5';
+const LIT_GROUND_KEY = ':lit-ground-6';
 const LIT_ROOF_KEY = ':lit-roof-1';
 
 /** The unlit sum the patch replaces: three's basic material, r187. */
@@ -148,16 +152,18 @@ const UNLIT_SUM = 'vec3 outgoingLight = reflectedLight.indirectDiffuse;';
  * lights; it chains their hooks and suffixes their key. `pools` is the light
  * the world's own sources put on the ground (worldLights.ts `poolTexture`),
  * as a uniform the caller keeps, so the dressing can hand over a new texture
- * without a new program.
+ * without a new program. `hold` is the plan texture of the ground shadows'
+ * holds (shadowHold.ts), kept by the frame that draws it, the same way.
  */
 export function installLitGround(
   material: MeshBasicMaterial,
   relief: DataTexture,
-  pools: { value: Texture }
+  pools: { value: Texture },
+  hold: { value: Texture }
 ): void {
   const before = material.onBeforeCompile;
   const key = material.customProgramCacheKey();
-  const uniforms = { uLitRelief: { value: relief }, uLitPools: pools };
+  const uniforms = { uLitRelief: { value: relief }, uLitPools: pools, uLitHold: hold };
   material.onBeforeCompile = (shader, renderer) => {
     before.call(material, shader, renderer);
     if (!shader.fragmentShader.includes(UNLIT_SUM)) {

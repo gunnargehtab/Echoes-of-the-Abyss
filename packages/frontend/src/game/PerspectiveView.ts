@@ -3292,6 +3292,7 @@ export class PerspectiveView {
       this.waterHue?.dispose();
       this.waterHue = null;
       this.high.setWater(null);
+      this.high.setHoldGround(1, 1, 0, 0);
       this.pools?.dispose();
       this.pools = null;
       this.litPools.value = NO_POOLS;
@@ -3497,11 +3498,18 @@ export class PerspectiveView {
           'relief'
         );
       }
-      installLitGround(lit, this.litSurface.relief, this.litPools);
+      installLitGround(lit, this.litSurface.relief, this.litPools, this.high.hold);
       this.litMaterial = lit;
       // The water over this ground wears its biomes' hues (waterMedium.ts).
       this.waterHue = waterHueTexture(terrain);
       this.high.setWater(this.waterHue, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
+      // And the ground shadows' holds lie on it, at the bake's own density.
+      this.high.setHoldGround(
+        terrain.cols * terrain.cellM,
+        terrain.rows * terrain.cellM,
+        terrain.cols * SEABED_PX_PER_CELL,
+        terrain.rows * SEABED_PX_PER_CELL
+      );
       this.terrainMesh = new Mesh(geometry, lit);
       this.terrainMesh.layers.set(WORLD_LAYER);
       const ink = new MeshBasicMaterial({
@@ -6078,7 +6086,10 @@ export class PerspectiveView {
       this.queueTimer?.end();
       renderer.info.reset();
     }
-    this.gpuTimer?.begin(this.high.on ? 'high-world' : 'canvas');
+    // An own entity's ground shadow carries level ground at High, drawn
+    // before the world pass that reads it (shadowHold.ts).
+    if (this.high.on) this.high.setShadows(this.cues.packShadows());
+    this.gpuTimer?.begin(this.high.on ? this.high.opening : 'canvas');
     try {
       if (this.high.on) {
         // High: the world layer lit and composited, then the tactical layer
@@ -6487,6 +6498,8 @@ export class PerspectiveView {
         worldLights: this.worldLightCount,
         // Bands and discs the plate pass draws under the marks this frame.
         plates: this.high.platesDrawn,
+        // Ground shadows that carry level ground this frame (shadowHold.ts).
+        holds: this.high.holdsDrawn,
         frameGpuBudgetMs: HIGH_GRAPHICS.FRAME_GPU_MS,
       },
       textures: info?.memory.textures ?? 0,
