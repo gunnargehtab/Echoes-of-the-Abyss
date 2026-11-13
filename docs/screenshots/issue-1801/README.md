@@ -47,28 +47,29 @@ The second pull request of the step lit the silt. Through #1807 the lit ground t
 Lid's glow flat, and the crater's ground carried no silt detail at either quality, so
 High drew the rim as one sheet. The lit ground now takes the dunes, ripples and scours as
 relief ([art-direction.md](../../art-direction.md#what-is-built-at-high)), and the Lid's
-level went from 3 to 3.45, its bound.
+level went from 3 to 3.3, just under its two bounds.
 
 Read off the High frames before and after, with Low beside them: the median and the 5th
 to 95th percentile of luma, out of 255.
 
 | Where | Low | High, #1807 | High now |
 | --- | --- | --- | --- |
-| Home, the rim left of the hulls | 22.9, 20.9 to 23.9 | 17.9, 14.3 to 18.8 | 16.2, 10.7 to 20.6 |
-| Close, the rim under the hulls | 22.9, 21.1 to 23.7 | 18.7, 15.2 to 18.9 | 17.1, 10.8 to 20.7 |
-| Survey, the west rim | 23.2, 21.4 to 24.2 | 17.8, 12.5 to 17.9 | 19.5, 14.3 to 20.5 |
-| Survey, the bowl's west flank | 18.8, 17.8 to 19.6 | 13.2, 12.2 to 14.0 | 14.1, 12.2 to 15.7 |
+| Home, the rim left of the hulls | 22.9, 20.9 to 23.9 | 17.9, 14.3 to 18.8 | 16.0, 10.1 to 19.8 |
+| Close, the rim under the hulls | 22.9, 21.1 to 23.7 | 18.7, 15.2 to 18.9 | 17.0, 10.0 to 20.4 |
+| Survey, the west rim | 23.2, 21.4 to 24.2 | 17.8, 12.5 to 17.9 | 18.7, 13.5 to 19.8 |
+| Survey, the bowl's west flank | 18.8, 17.8 to 19.6 | 13.2, 12.2 to 14.0 | 14.0, 11.4 to 14.9 |
 
 The boxes are 100, 560 to 560, 780 at Home, 500, 700 to 1400, 860 at Close, and 660, 300
 to 790, 480 and 830, 500 to 880, 640 at Survey. The marine snow and the hulls' ground
 shadows are in the first two.
 
-Two things to read there. The spread on the rim doubled, which is the relief: 4.5 to 9.9
+Two things to read there. The spread on the rim doubled, which is the relief: 4.5 to 9.7
 at Home. And the ground the Lid alone lights is still darker than Low's, by 4 to 7 of
-255. That is the Lid's bound and not a setting left low: its brightest ground may be no
-paler than the palest ground a plate holds the world to, 29.6, and that ground is the
-palest fill, level, at the Lid itself. The rim is Coral Ruins under 600 m of water. Low
-shades a map's shallowest ground at its fill's own level, whatever its depth.
+255. That is the Lid's bounds and not a setting left low. Its brightest ground may be no
+paler than the palest ground a plate holds the world to, 29.6, nor reach the bloom's
+knee, and that ground is the palest fill, level, at the Lid itself. The rim is Coral Ruins
+under 600 m of water. Low shades a map's shallowest ground at its fill's own level,
+whatever its depth.
 
 The relief shows most where a source lights the ground. In
 [the garden frame](software/plates/01-garden-plates.png) the stands' pools lie over dune
@@ -115,8 +116,8 @@ mean, over the world area, of each pixel's largest channel difference, out of 25
 
 | Camera | `main` against `main` | `main` against the branch | Calls and triangles |
 | --- | --- | --- | --- |
-| Home | 0.01 | 0.03 | 44 and 593,684, both |
-| Close | 0.03 | 0.07 | 44 and 593,684, both |
+| Home | 0.01 | 0.04 | 44 and 593,684, both |
+| Close | 0.03 | 0.09 | 44 and 593,684, both |
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
 
 The figures move run to run with the snow. #1807 read the same comparison against its own
@@ -142,8 +143,8 @@ ground ([art-direction.md](../../art-direction.md#the-plate-under-a-mark)). Unde
 mark's plate the world layer is shown no brighter than the palest ground the ladder
 weighs, 11.6% encoded luminance, which is 29.6 of 255. The ceiling that first held the
 lit ground is gone, so a stand's pool now reads on the ground: over the garden at Survey
-the 99th percentile of encoded luminance is 14.8% at Low and 30.1% at High, and the
-cores reach 45.3% at the 99.9th, read over 800, 290 to 1115, 470. That is past every figure the ladder holds to, which is
+the 99th percentile of encoded luminance is 14.8% at Low and 30.0% at High, and the
+cores reach 45.0% at the 99.9th, read over 800, 290 to 1115, 470. That is past every figure the ladder holds to, which is
 what the plates are for.
 
 `plates.mjs` puts three marks over that light: the hulls sent into the garden and
@@ -161,15 +162,15 @@ Read by `read.py` over the world area:
 
 | Camera | Pixels held | Brighter with plates | Held pixels' median, bare | With plates |
 | --- | --- | --- | --- | --- |
-| Over the garden | 17,377, 1.11% | none | 39.7 of 255 | 29.6 |
-| Survey | 3,720, 0.24% | none | 47.5 | 29.9 |
+| Over the garden | 17,113, 1.09% | none | 39.7 of 255 | 29.6 |
+| Survey | 3,584, 0.23% | none | 47.7 | 29.9 |
 
 The difference map over the garden is two things: a disc under each hull that stands in
 the glow, and the band along the detection ring where it crosses the glow. At Survey it
 is the discs and the garden's north rim, where the ink's plate crosses the brightest
 stands. A plate changes no pixel that was under the level, so the rest of each pair is
-the same to the byte: 20,880 of the world area's 1,570,560 pixels differ at all over the
-garden, and 4,311 at Survey.
+the same to the byte: 20,582 of the world area's 1,570,560 pixels differ at all over the
+garden, and 4,166 at Survey.
 
 The held pixels that still stand over the level are, by this session's reading of the
 pair, a plate's soft edge and what the tactical pass blends over the world after the
@@ -184,7 +185,7 @@ it, in all four palettes. It also pins how pale a ground those comparisons hold 
 palette.
 
 In the three frames beside the target, the 99th percentile of the world area's luma, out
-of 255, is 63 at Low and 61 at High at Home, 64 and 64 at Close, and 50 and 55 at Survey.
+of 255, is 63 at Low and 60 at High at Home, 64 and 64 at Close, and 50 and 55 at Survey.
 
 No frame here shows a contact. A contact's disc, and every agent's, is held by two tests
 instead. `rendererSmoke.test.ts` measures the shapes each symbol of a canned frame draws
