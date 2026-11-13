@@ -41,6 +41,7 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeByMaterial } from './rosterModels.ts';
+import { bakeTransform } from './bakeTransform.ts';
 import { swayWeight } from './environment.ts';
 import { installPropSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
@@ -264,7 +265,7 @@ export function buildTemplate(
   merged.traverse((child) => {
     if (!(child instanceof Mesh) || Array.isArray(child.material)) return;
     const geometry = (child.geometry as BufferGeometry).clone();
-    geometry.applyMatrix4(child.matrixWorld);
+    bakeTransform(geometry, child.matrixWorld);
     geometry.translate(-centre.x, -box.min.y, -centre.z);
     geometry.scale(scale, scale, scale);
     geometry.computeBoundingSphere();
