@@ -59,6 +59,7 @@ import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts'
 import { installHullSurface, type WorldLook } from './tutorialLook.ts';
 import { installInstanceGlow, keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { trimSheet } from './trimSheets.ts';
+import { bakeTransform } from './bakeTransform.ts';
 
 /**
  * TUNABLE — the linear diffuse luminance a model's *brightest* cladding
@@ -397,7 +398,7 @@ export function mergeByMaterial(root: Group): Group {
       return;
     }
     const geometry = (child.geometry as BufferGeometry).clone();
-    geometry.applyMatrix4(child.matrixWorld);
+    bakeTransform(geometry, child.matrixWorld);
     const bucket = buckets.get(child.material);
     if (bucket === undefined) buckets.set(child.material, [geometry]);
     else bucket.push(geometry);

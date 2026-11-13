@@ -40,6 +40,7 @@ import { installPropSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { installPropVeil } from './veilShading.ts';
 import { CIVIC_LAMP } from './palette.ts';
+import { bakeTransform } from './bakeTransform.ts';
 import {
   FALL_ATTRIBUTE,
   FALL_COUNT,
@@ -244,7 +245,7 @@ function mergeState(root: Object3D, rootInverse: Object3D['matrixWorld'], scale:
     // transform is baked in, since a hung fitting's weight is its depth below
     // the node's own origin, the pivot (landmarkLight.ts).
     layMotionAttributes(geometry, child.name, child.userData);
-    geometry.applyMatrix4(inModel);
+    bakeTransform(geometry, inModel);
     geometry.scale(scale, scale, scale);
     const position = geometry.getAttribute('position');
     triangles += Math.floor((geometry.index?.count ?? position.count) / 3);
