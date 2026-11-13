@@ -174,9 +174,9 @@ Built so far:
   The free-water study's ground carries the relief too, where its Low ground is a smooth
   bake and stays one: Low is High's control and does not move.
 - **The water is a medium.** It keeps the depth ramp's brightness
-  ([Reading the Water](#reading-the-water)), carried through the grade and the curve, and
-  wears the hue of the biome under the water its light comes from, in that biome's water
-  token. A pixel takes that light by what the swim cost its own.
+  ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
+  of the biome under the water its light comes from, in that biome's water token. A pixel
+  takes that light by what the swim cost its own.
 - **The world's own sources light the world.** The vent embers, the civic lamps and each
   prop that carries a licensed family stand as lights in their family's token. Each pools
   on the ground and scatters in the water as a volume that stops at the ground. They are

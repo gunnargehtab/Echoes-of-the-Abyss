@@ -33,7 +33,6 @@ import {
 import { DEPTH_VISUAL_M_PER_M } from '../src/game/perspectiveTerrain.ts';
 import { installSurveyInk, surveyCellClasses, surveyCellTexture } from '../src/game/surveyInk.ts';
 import { installDisplayVeil } from '../src/game/veilShading.ts';
-import { highDisplay } from './support/highDisplay.ts';
 
 const decode = (byte: number): number => {
   const c = byte / 255;
@@ -267,8 +266,31 @@ describe('the lit ground’s material (#1801)', () => {
     );
   });
 
-  // What the composite shows of scene-referred light (support/highDisplay.ts).
-  const shown = highDisplay;
+  /**
+   * What the composite shows of scene-referred light: its grade, three's
+   * ACESFilmicToneMapping (two matrices and a fit), then sRGB, as bytes.
+   */
+  const shown = (light: number[]): number => {
+    const { SLOPE, OFFSET, POWER, SATURATION } = HIGH_GRAPHICS.GRADE;
+    const cdl = light.map((c, k) => Math.pow(Math.max(0, c * SLOPE[k]! + OFFSET[k]!), POWER[k]!));
+    const luma = 0.2126 * cdl[0]! + 0.7152 * cdl[1]! + 0.0722 * cdl[2]!;
+    const k = (HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE) / 0.6;
+    const [x, y, z] = cdl.map((c) => Math.max(0, luma + (c - luma) * SATURATION) * k);
+    const fit = (v: number) =>
+      (v * (v + 0.0245786) - 0.000090537) / (v * (0.983729 * v + 0.432951) + 0.238081);
+    const a = [
+      fit(0.59719 * x! + 0.35458 * y! + 0.04823 * z!),
+      fit(0.076 * x! + 0.90834 * y! + 0.01566 * z!),
+      fit(0.0284 * x! + 0.13383 * y! + 0.83777 * z!),
+    ];
+    const srgb = (l: number) => (l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055);
+    const [r, g, b] = [
+      1.60475 * a[0]! - 0.53108 * a[1]! - 0.07367 * a[2]!,
+      -0.10208 * a[0]! + 1.10813 * a[1]! - 0.00605 * a[2]!,
+      -0.00327 * a[0]! - 0.07276 * a[1]! + 1.07602 * a[2]!,
+    ].map((c) => Math.round(255 * srgb(Math.min(1, Math.max(0, c)))));
+    return (r! << 16) | (g! << 8) | b!;
+  };
   /** Every albedo the bake writes, at its mottle's top: the six fills and the stone. */
   const albedos = (): number[][] => {
     const { surface, at } = bakeLit(flatTerrain());
