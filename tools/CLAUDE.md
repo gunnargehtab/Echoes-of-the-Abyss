@@ -63,8 +63,8 @@ tools/hull-renders The same models photographed rather than measured: render.mjs
                    after it, lamp core and lamp halo, from the frontend through frame.mjs
                    (#1015). Both pages put a navy's trim sheet on the materials tagged for
                    it, as the conn view does (trimSheets.mjs, #1112); inspect.mjs --surface
-                   adds a column wearing a navy's High surface (#1811), and tone-maps lamps:
-                   take glow from scene.html or run-game. No workspace or gate — a picture is a
+                   adds a column in a navy's High surface (#1811). Its page tone-maps lamps
+                   too: take glow from scene.html or run-game. No workspace or gate — a picture is a
                    presentation artifact, and a model is still approved by hull-intake and
                    check.mjs, which measure.
 tools/steam-capsules The Steam store and library art (#1651): render.mjs draws the title

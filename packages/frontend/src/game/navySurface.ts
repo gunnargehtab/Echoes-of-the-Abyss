@@ -8,7 +8,12 @@
  * fragment reads it by its own place on the model in metres, on the three
  * planes of the model's frame, each weighted by how squarely the face looks
  * down that plane's axis. `u` is the keel's axis on the two planes that hold
- * it, which is what lets the drawn patterns say "square to the keel".
+ * it, which is what lets the drawn patterns say "square to the keel". `v` is
+ * the beam from above and from ahead, and the height from the side, so the
+ * image's `v` 0 is the model's centreline on a back, a bow and a stern, and
+ * its axis along a flank. Ahead, `u` is the height: the owner's call, taken
+ * in session on 13 November 2026, after the first cut read that plane the
+ * other way up and drew whatever runs along `v` 0 as a band across every bow.
  *
  * Two things read it, and neither is colour:
  *
@@ -77,13 +82,13 @@ const FRAGMENT_NORMAL = `
   vec3 navyWeight = pow( abs( navyFace ), vec3( 4.0 ) );
   navyWeight /= navyWeight.x + navyWeight.y + navyWeight.z;
   vec3 navyAt = vNavyAt * uNavyScale.x;
-  vec3 navyAcross = texture2D( uNavySurface, navyAt.zy ).rgb;
+  vec3 navyAcross = texture2D( uNavySurface, navyAt.yz ).rgb;
   vec3 navyAbove = texture2D( uNavySurface, navyAt.xz ).rgb;
   vec3 navyAbeam = texture2D( uNavySurface, navyAt.xy ).rgb;
   vec2 navySlopeX = ( navyAcross.rg - ${LEVEL} ) * uNavyScale.y;
   vec2 navySlopeY = ( navyAbove.rg - ${LEVEL} ) * uNavyScale.y;
   vec2 navySlopeZ = ( navyAbeam.rg - ${LEVEL} ) * uNavyScale.y;
-  vec3 navyRise = navyWeight.x * vec3( 0.0, navySlopeX.y, navySlopeX.x )
+  vec3 navyRise = navyWeight.x * vec3( 0.0, navySlopeX.x, navySlopeX.y )
                 + navyWeight.y * vec3( navySlopeY.x, 0.0, navySlopeY.y )
                 + navyWeight.z * vec3( navySlopeZ.x, navySlopeZ.y, 0.0 );
   navyRise -= navyFace * dot( navyRise, navyFace );

@@ -192,6 +192,11 @@ describe("a navy's surface on a roster model", () => {
     assert.match(shader.vertexShader, /vNavyAt = position \* uNavyMetres;/);
     assert.match(shader.fragmentShader, /normal = normalize\( normal - faceDirection \*/);
     assert.match(shader.fragmentShader, /reflectedLight\.indirectDiffuse \*= navyShade;/);
+    // Each plane's v is what puts the image's v 0 where the section says:
+    // the beam from above and from ahead, the height from the side.
+    assert.match(shader.fragmentShader, /navyAcross = texture2D\( uNavySurface, navyAt\.yz \)/);
+    assert.match(shader.fragmentShader, /navyAbove = texture2D\( uNavySurface, navyAt\.xz \)/);
+    assert.match(shader.fragmentShader, /navyAbeam = texture2D\( uNavySurface, navyAt\.xy \)/);
     // Colour is never written: hue stays the ink's.
     assert.doesNotMatch(shader.fragmentShader, /diffuseColor[^;]*navy/);
   });

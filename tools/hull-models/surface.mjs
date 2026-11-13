@@ -14,9 +14,11 @@
  * three planes of the model's own frame, weighted by its normal
  * (packages/frontend/src/game/navySurface.ts). `u` is the keel's axis on the
  * two planes that hold it, so a line drawn at constant `u` here is a ring
- * square to the keel on a hull's back and on its flank alike, and `v` 0 is
- * the model's own centreline from above and its axis from the side. A pattern
- * may lean on both: the veined skin's midrib runs down `v` 0.
+ * square to the keel on a hull's back and on its flank alike. `v` 0 is the
+ * model's own centreline from above and from ahead, and its axis from the
+ * side. A pattern may lean on both, and whatever it draws along `v` 0 is
+ * drawn in all three places: the veined skin's midrib runs down a back, down
+ * a bow and a stern at the centreline, and along each flank at the axis.
  *
  * The image is three bytes a texel. Red and green are the relief's slope
  * along `u` and `v`, in units of the table's `slope`, 128 for level ground;

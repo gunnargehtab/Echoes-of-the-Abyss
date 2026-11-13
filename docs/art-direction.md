@@ -198,7 +198,7 @@ built before the step that lights a hull, and a hull wears it without a layout.*
 
 [#1802](screenshots/issue-1802/README.md) rebuilt one hull in Blender and baked a surface
 onto it, and its control showed that surface carried most of the gain on the lit table at
-the kit hull's own 2,652 triangles. A map a hull costs 2 MB a hull. This is the cheap
+the kit hull's own 2,652 triangles. A map a hull costs 2 MB. This is the cheap
 route that record names: the relief belongs to the navy's material, is drawn once, and
 tiles.
 
@@ -213,10 +213,12 @@ tiles.
   a triangle at a time. So a fragment reads the image by its own place on the model in
   metres, on the three planes of the model's frame, each weighted by how squarely the
   face looks down that plane's axis. The keel's axis is one axis of the image on the two
-  planes that hold it, so a pattern can run square to the keel. A material is found by
-  its navy and its own name. No GLB changed, and every model of the navy that carries the
-  material wears its surface: twenty-seven of the Commune's twenty-eight carry at least
-  one of the four.
+  planes that hold it, so a pattern can run square to the keel. The image's other axis,
+  `v`, is the beam from above and from ahead and the height from the side. So the line
+  where `v` is 0 is the model's centreline on a back, a bow and a stern, and its axis
+  along a flank. A material is found by its navy and its own name. No GLB changed, and
+  every model of the navy that carries the material wears its surface: twenty-seven of
+  the Commune's twenty-eight carry at least one of the four.
 - **It leans the normal and shades the indirect light, and nothing else.** The slope
   tilts the shading normal. The height lifts and lowers the rig's ambient and environment
   light about the surface's own mean, as a baked occlusion map touches indirect light
@@ -231,8 +233,11 @@ tiles.
   its file wears no second one over it.
 
 The Commune's four are the fields #1802 baked, said as tiles. `chitin_hull` is a leaf's
-venation over growth lines: a midrib down the model's centreline, laterals trailing aft
-from it, a net of veinlets between. `growth_ridge` is a grain of rings square to the
+venation over growth lines: a midrib, laterals trailing aft from it, and a net of
+veinlets between. The midrib is drawn where the image's `v` is 0, so it runs down the
+back and the keel, down the bow and the stern at the centreline, and as a line along each
+flank at the hull's axis. The owner took the bow and the stern in session on 13 November
+2026: the first cut drew it across them as a band. `growth_ridge` is a grain of rings square to the
 keel, `spore_pod` a pored skin, and `algae_membrane` a fin's rays. The navy's block asks
 for "growth rings and living bioluminescent veins"
 ([asset-prompts-3d.md](asset-prompts-3d.md)); these veins are relief and emit nothing.
@@ -241,7 +246,7 @@ Their heights are in the table, in metres. `HIGH_GRAPHICS.HULL_SURFACE` in
 every High number.
 
 Two things a tile cannot do, which the Blender hull does. It cannot find a hull's own
-back, so the midrib follows the model's centreline and a wide deck takes another every
+back, so the midrib follows the model's frame and a wide deck takes another every
 16 m. And it cannot follow a fin, so every ray stands square to the keel.
 
 Still open, for the frames taken on the named GPU

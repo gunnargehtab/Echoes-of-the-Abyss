@@ -350,8 +350,9 @@ export const TRIM = {
  * growth lines every 0.89 m for its 0.9, the ridge's rings every 0.53 m for
  * its 0.55. The spike found its back and its keel from the hull's own
  * section. A tile cannot, so the midrib runs down `v` 0, which is the
- * centreline of a model seen from above and its axis seen from the side, and
- * a wide deck takes another every 16 m. A fin's rays ran along a chart of
+ * centreline of a model seen from above and from ahead and its axis seen
+ * from the side: down the back, down the bow and the stern, and as a line
+ * along each flank. A wide deck takes another every 16 m. A fin's rays ran along a chart of
  * that fin. Here they stand square to the keel, which is root to tip on any
  * fin that stands off it, and wander a quarter metre so two fins do not rule
  * alike.
