@@ -333,14 +333,14 @@ describe('the lit ground’s material (#1801)', () => {
     // (markPlates.ts `PLATE_LEVEL`). The Lid's level is set so its brightest
     // ground is no paler than that, so a plate bites only where a source of
     // the world's stands, and a mark over open ground looks as it does at
-    // Low. Not held needlessly dark either: within a twentieth of it, since
-    // the bound leaves the Lid little and the ground wants all of it.
+    // Low. Not held needlessly dark either: within a tenth of it. The bloom's
+    // knee is the bound that stops it short of the rest (highChain.test.ts).
     const brightest = Math.max(...brightestUnderLid().map(encodedLuminance));
     assert.ok(
       brightest <= PLATE_LEVEL,
       `${(brightest * 100).toFixed(1)}% past ${(PLATE_LEVEL * 100).toFixed(1)}%`
     );
-    assert.ok(brightest > 0.95 * PLATE_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
+    assert.ok(brightest > 0.9 * PLATE_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
   });
 
   it('takes a hollow’s share off the Lid’s glow and the pools alike, and never adds', () => {

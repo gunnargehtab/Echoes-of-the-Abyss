@@ -127,12 +127,14 @@ export const HIGH_GRAPHICS = {
    * ground takes at the Lid, in the renderer's linear units; it is held where
    * the palest ground it lights is no paler than the palest ground the
    * loudness ladder weighs, so a mark's plate changes nothing the Lid alone
-   * lights, and within a twentieth of that ground, so none of the little the
-   * bound leaves is given away (test/litGround.test.ts). `FALLOFF_M` is
+   * lights (test/litGround.test.ts), and where no ground it lights reaches
+   * the bloom's knee, so only a source blooms (test/highChain.test.ts). The
+   * second binds first: at 3.3 the palest ground stands within a tenth of the
+   * plate's, and little of what the bounds leave is given away. `FALLOFF_M` is
    * the depth over which the water above takes it to 1/e, so depth still
    * darkens. `HORIZON` is what a vertical face keeps of it.
    */
-  LID: { IRRADIANCE: 3.45, FALLOFF_M: 3000, HORIZON: 0.3 },
+  LID: { IRRADIANCE: 3.3, FALLOFF_M: 3000, HORIZON: 0.3 },
   /**
    * The lit ground. `ALBEDO_LUMINANCE` is the linear luminance the palest
    * biome fill is lifted to as an albedo; every fill and the stone take the

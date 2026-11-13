@@ -161,8 +161,9 @@ Built so far:
   depth still darkens. The albedo is each biome's fill and the stone, lifted by one gain
   so their hues and their order hold. The slope and the darkening at a cliff's rim, its
   lee and a stone's scour come from the seabed bake. The glow's level stands at its
-  bound: the palest ground it lights is the palest ground the ladder weighs, within a
-  twentieth, so a plate still changes nothing the Lid alone lights.
+  bounds: the palest ground it lights is within a tenth of the palest ground the ladder
+  weighs, so a plate still changes nothing the Lid alone lights, and just under the
+  bloom's knee, so it spreads nothing.
 - **The silt is relief, not paint.** Low paints its dunes, ripples and scours as a
   hillshade from the bake's key light
   ([Silt detail and seated stones — SPEC](#silt-detail-and-seated-stones--spec)). The lit
