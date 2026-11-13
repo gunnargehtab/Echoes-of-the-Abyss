@@ -114,6 +114,11 @@ export const LIT_GROUND_GLSL = [
   'uniform sampler2D uLitRelief;',
   'uniform sampler2D uLitPools;',
   'varying float vLitWorldY;',
+  // How much of the water above the ground's fine relief leaves a pixel: 1 on
+  // a crest and on ground with no silt detail, less in a dune's trough, a
+  // ripple's lee and a scour (seabedDetail.ts, its `relief` mode, which
+  // writes it before the sum below reads it).
+  'float echoesLitSky = 1.0;',
   LIT_IRRADIANCE_GLSL,
   // The slope is the bake's, steepened there; the occlusion is the rim, the
   // lee and the scour the Low bake darkens, which no light here casts.
@@ -125,11 +130,12 @@ export const LIT_GROUND_GLSL = [
   // the ground, which the water above it does not take. Nothing holds the sum
   // down here: a mark carries its own ground (markPlates.ts; limit 6).
   '  vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;',
-  '  return albedo * irradiance * relief.g * 0.3183098861837907;',
+  // A hollow hides both from the ground in it, as the bake's occlusion does.
+  '  return albedo * irradiance * relief.g * echoesLitSky * 0.3183098861837907;',
   '}',
 ].join('\n');
 
-const LIT_GROUND_KEY = ':lit-ground-4';
+const LIT_GROUND_KEY = ':lit-ground-5';
 const LIT_ROOF_KEY = ':lit-roof-1';
 
 /** The unlit sum the patch replaces: three's basic material, r187. */

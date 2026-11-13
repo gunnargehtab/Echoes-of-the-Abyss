@@ -12,10 +12,10 @@
  *    (docs/style-neon-noir.md "World light", the water hues). Hue is biome and
  *    biome is propagation factor, so water in its biome's hue tells the player
  *    what the ground under it does.
- * 2. **The brightness**, the Low ramp's own, carried through the tone curve:
- *    the composite adds the water's light before the curve, so each stop is
- *    the scene-referred level the curve brings back to the stop's luminance.
- *    Depth still darkens, by the table it always did.
+ * 2. **The brightness**, the Low ramp's own, carried through the grade and
+ *    the tone curve: the composite adds the water's light before both, so
+ *    each stop is the scene-referred level the two bring back to the stop's
+ *    luminance. Depth still darkens, by the table it always did.
  * 3. **The scattering**, by distance: a pixel takes the water's light by how
  *    much of its own the swim cost it, which the world pass leaves in alpha.
  *
@@ -41,41 +41,61 @@ const glsl = (value: number): string => {
   return text.includes('.') ? text : `${text}.0`;
 };
 
+/** The exposure the composite's curve runs at: the chain's, times the renderer's. */
+export const WATER_CURVE_EXPOSURE = HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE;
+
 /**
- * three's ACES filmic curve on a grey, as `ACESFilmicToneMapping` runs it:
- * the exposure over 0.6, then the RRT and ODT fit. Its two matrices keep a
- * grey grey, so one channel is the whole of it.
+ * The luminance the composite shows of a scene-referred grey (highFrame.ts):
+ * its grade, which takes the grey off grey a channel at a time, then three's
+ * `ACESFilmicToneMapping` whole: the exposure over 0.6, both matrices and
+ * the fit. The grade is in it because its powers take a tenth of the ramp's
+ * brightness on the way to the curve: a level solved against the curve alone
+ * showed that tenth dark.
  */
-export function acesGrey(linear: number, exposure: number): number {
-  const v = (linear * exposure) / 0.6;
-  const mapped = (v * (v + 0.0245786) - 0.000090537) / (v * (0.983729 * v + 0.432951) + 0.238081);
-  return Math.min(1, Math.max(0, mapped));
+export function highShownGrey(linear: number): number {
+  const { SLOPE, OFFSET, POWER, SATURATION } = HIGH_GRAPHICS.GRADE;
+  const cdl = [0, 1, 2].map((k) =>
+    Math.pow(Math.max(0, linear * SLOPE[k]! + OFFSET[k]!), POWER[k]!)
+  );
+  const luma = 0.2126 * cdl[0]! + 0.7152 * cdl[1]! + 0.0722 * cdl[2]!;
+  const scale = WATER_CURVE_EXPOSURE / 0.6;
+  const [r, g, b] = cdl.map((c) => Math.max(0, luma + (c - luma) * SATURATION) * scale);
+  const fit = (v: number) =>
+    (v * (v + 0.0245786) - 0.000090537) / (v * (0.983729 * v + 0.432951) + 0.238081);
+  // ACESInputMat, the RRT and ODT fit, ACESOutputMat, as three's chunk has them.
+  const x = fit(0.59719 * r! + 0.35458 * g! + 0.04823 * b!);
+  const y = fit(0.076 * r! + 0.90834 * g! + 0.01566 * b!);
+  const z = fit(0.0284 * r! + 0.13383 * g! + 0.83777 * b!);
+  const clamp = (v: number) => Math.min(1, Math.max(0, v));
+  return (
+    0.2126 * clamp(1.60475 * x - 0.53108 * y - 0.07367 * z) +
+    0.7152 * clamp(-0.10208 * x + 1.10813 * y - 0.00605 * z) +
+    0.0722 * clamp(-0.00327 * x - 0.07276 * y + 1.07602 * z)
+  );
 }
 
-/** The scene-referred grey the curve brings back to `display`, by bisection. */
-export function acesGreyInverse(display: number, exposure: number): number {
+/** The scene-referred grey the grade and the curve bring back to `display`, by bisection. */
+export function highShownGreyInverse(display: number): number {
   let low = 0;
   let high = 64;
   for (let i = 0; i < 60; i++) {
     const mid = (low + high) / 2;
-    if (acesGrey(mid, exposure) < display) low = mid;
+    if (highShownGrey(mid) < display) low = mid;
     else high = mid;
   }
   return (low + high) / 2;
 }
 
-/** The exposure the composite's curve runs at: the chain's, times the renderer's. */
-export const WATER_CURVE_EXPOSURE = HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE;
-
 /**
  * The water's light at each of the Low ramp's stops: the level that, through
- * the curve, shows the stop's own luminance. So the ramp's brightness stands
- * on the screen, and the stops stay water.ts's to tune.
+ * the composite's grade and curve, shows the stop's own luminance. So the
+ * ramp's brightness stands on the screen, and the stops stay water.ts's to
+ * tune.
  */
 export const WATER_LIGHT_STOPS: readonly { depthM: number; light: number }[] =
   WATER_RAMP_DEPTHS_M.map((depthM) => ({
     depthM,
-    light: acesGreyInverse(waterLuminanceAt(depthM), WATER_CURVE_EXPOSURE),
+    light: highShownGreyInverse(waterLuminanceAt(depthM)),
   }));
 
 /** The same chained smoothstep the ramp runs (water.ts `waterColorAt`), on those levels. */

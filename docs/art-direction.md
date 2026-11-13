@@ -160,11 +160,23 @@ Built so far:
   no sun below the Lid (limit 1), and the water above the ground takes it with depth, so
   depth still darkens. The albedo is each biome's fill and the stone, lifted by one gain
   so their hues and their order hold. The slope and the darkening at a cliff's rim, its
-  lee and a stone's scour come from the seabed bake.
+  lee and a stone's scour come from the seabed bake. The glow's level stands at its
+  bound: the palest ground it lights is the palest ground the ladder weighs, within a
+  twentieth, so a plate still changes nothing the Lid alone lights.
+- **The silt is relief, not paint.** Low paints its dunes, ripples and scours as a
+  hillshade from the bake's key light
+  ([Silt detail and seated stones — SPEC](#silt-detail-and-seated-stones--spec)). The lit
+  ground takes the same three as hollows instead: a dune's trough and the foot of its
+  lee, a ripple's lee and a scour each lose a share of the water above them, by their
+  biome's own strength, and the ground in them takes that much less of the Lid's glow
+  and of a pool. Nothing reads a heading, since the glow has none (limit 1), and nothing
+  lifts: a crest takes what level ground takes. The grain stays the silt's own colour.
+  The free-water study's ground carries the relief too, where its Low ground is a smooth
+  bake and stays one: Low is High's control and does not move.
 - **The water is a medium.** It keeps the depth ramp's brightness
-  ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
-  of the biome under the water its light comes from, in that biome's water token. A pixel
-  takes that light by what the swim cost its own.
+  ([Reading the Water](#reading-the-water)), carried through the grade and the curve, and
+  wears the hue of the biome under the water its light comes from, in that biome's water
+  token. A pixel takes that light by what the swim cost its own.
 - **The world's own sources light the world.** The vent embers, the civic lamps and each
   prop that carries a licensed family stand as lights in their family's token. Each pools
   on the ground and scatters in the water as a volume that stops at the ground. They are

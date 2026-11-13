@@ -33,6 +33,7 @@ import {
 import { DEPTH_VISUAL_M_PER_M } from '../src/game/perspectiveTerrain.ts';
 import { installSurveyInk, surveyCellClasses, surveyCellTexture } from '../src/game/surveyInk.ts';
 import { installDisplayVeil } from '../src/game/veilShading.ts';
+import { highDisplay } from './support/highDisplay.ts';
 
 const decode = (byte: number): number => {
   const c = byte / 255;
@@ -241,7 +242,7 @@ describe('the lit ground’s material (#1801)', () => {
     assert.ok(shader.vertexShader.includes('vLitWorldY = ( modelMatrix'));
     const key = material.customProgramCacheKey();
     assert.ok(key.startsWith('survey-ink-carrier'), key);
-    assert.ok(key.endsWith(':lit-ground-4'), key);
+    assert.ok(key.endsWith(':lit-ground-5'), key);
   });
 
   it('lights the ground from the Lid’s glow: from above, from no quarter, dimmed by depth', () => {
@@ -266,31 +267,8 @@ describe('the lit ground’s material (#1801)', () => {
     );
   });
 
-  /**
-   * What the composite shows of scene-referred light: its grade, three's
-   * ACESFilmicToneMapping (two matrices and a fit), then sRGB, as bytes.
-   */
-  const shown = (light: number[]): number => {
-    const { SLOPE, OFFSET, POWER, SATURATION } = HIGH_GRAPHICS.GRADE;
-    const cdl = light.map((c, k) => Math.pow(Math.max(0, c * SLOPE[k]! + OFFSET[k]!), POWER[k]!));
-    const luma = 0.2126 * cdl[0]! + 0.7152 * cdl[1]! + 0.0722 * cdl[2]!;
-    const k = (HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE) / 0.6;
-    const [x, y, z] = cdl.map((c) => Math.max(0, luma + (c - luma) * SATURATION) * k);
-    const fit = (v: number) =>
-      (v * (v + 0.0245786) - 0.000090537) / (v * (0.983729 * v + 0.432951) + 0.238081);
-    const a = [
-      fit(0.59719 * x! + 0.35458 * y! + 0.04823 * z!),
-      fit(0.076 * x! + 0.90834 * y! + 0.01566 * z!),
-      fit(0.0284 * x! + 0.13383 * y! + 0.83777 * z!),
-    ];
-    const srgb = (l: number) => (l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055);
-    const [r, g, b] = [
-      1.60475 * a[0]! - 0.53108 * a[1]! - 0.07367 * a[2]!,
-      -0.10208 * a[0]! + 1.10813 * a[1]! - 0.00605 * a[2]!,
-      -0.00327 * a[0]! - 0.07276 * a[1]! + 1.07602 * a[2]!,
-    ].map((c) => Math.round(255 * srgb(Math.min(1, Math.max(0, c)))));
-    return (r! << 16) | (g! << 8) | b!;
-  };
+  // What the composite shows of scene-referred light (support/highDisplay.ts).
+  const shown = highDisplay;
   /** Every albedo the bake writes, at its mottle's top: the six fills and the stone. */
   const albedos = (): number[][] => {
     const { surface, at } = bakeLit(flatTerrain());
@@ -333,13 +311,32 @@ describe('the lit ground’s material (#1801)', () => {
     // (markPlates.ts `PLATE_LEVEL`). The Lid's level is set so its brightest
     // ground is no paler than that, so a plate bites only where a source of
     // the world's stands, and a mark over open ground looks as it does at
-    // Low. Not held needlessly dark either: within a quarter of it.
+    // Low. Not held needlessly dark either: within a twentieth of it, since
+    // the bound leaves the Lid little and the ground wants all of it.
     const brightest = Math.max(...brightestUnderLid().map(encodedLuminance));
     assert.ok(
       brightest <= PLATE_LEVEL,
       `${(brightest * 100).toFixed(1)}% past ${(PLATE_LEVEL * 100).toFixed(1)}%`
     );
-    assert.ok(brightest > 0.75 * PLATE_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
+    assert.ok(brightest > 0.95 * PLATE_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
+  });
+
+  it('takes a hollow’s share off the Lid’s glow and the pools alike, and never adds', () => {
+    // art-direction.md, "What is built at High": the silt detail is relief
+    // under the Lid's glow. The ground's sum reads one share of the water
+    // above, 1 unless the detail's relief wrote less (seabedDetail.ts), so
+    // the brightest ground above is still the brightest.
+    assert.ok(LIT_GROUND_GLSL.includes('float echoesLitSky = 1.0;'));
+    assert.ok(
+      LIT_GROUND_GLSL.includes(
+        'return albedo * irradiance * relief.g * echoesLitSky * 0.3183098861837907;'
+      )
+    );
+    assert.ok(
+      LIT_GROUND_GLSL.indexOf('float echoesLitSky = 1.0;') <
+        LIT_GROUND_GLSL.indexOf('vec3 echoesLitGround('),
+      'declared before the sum that reads it'
+    );
   });
 
   it('lights a roof from its own face, by the ground’s gain', () => {

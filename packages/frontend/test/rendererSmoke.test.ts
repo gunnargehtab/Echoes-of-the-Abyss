@@ -2245,6 +2245,51 @@ describe('renderer smoke test: the conn view', () => {
     assert.equal(lampHaloStatus(), 'off', 'a view that is gone has refused nothing');
   });
 
+  it('lights the silt detail as relief at High, on the study’s ground too, and leaves Low’s ground as it was (#1801)', async () => {
+    // docs/art-direction.md, "What is built at High": the lit ground takes
+    // the silt detail as relief under the Lid's glow, in the free-water study
+    // as in every match. Low paints it where it always did, and the study's
+    // Low ground stays the smooth bake it was: Low does not move.
+    type Probes = {
+      __perspectiveQuality?: (quality: 'low' | 'high') => string;
+      __perspectiveSplit: (on: boolean) => string;
+    };
+    const keysOf = (pass: Iterable<Object3D>): string[] =>
+      [...pass]
+        .map((o) => ((o as Mesh).material as Material).customProgramCacheKey())
+        .filter((key) => key.includes(':seabed-detail-'))
+        .sort();
+    for (const look of ['standard', 'free-water'] as const) {
+      const world = await boot({ look });
+      try {
+        const probes = (globalThis as unknown as { window: Probes }).window;
+        probes.__perspectiveSplit(false);
+        world.frame(3);
+        const low = keysOf(world.gl.frameDraws[0]!);
+        if (look === 'standard') {
+          assert.equal(low.length, 1, 'Low paints the detail into its one ground');
+          assert.ok(low[0]!.endsWith(':seabed-detail-5'), low[0]);
+        } else {
+          assert.deepEqual(low, [], 'the study’s Low ground carries none');
+        }
+
+        assert.equal(probes.__perspectiveQuality!('high'), 'high');
+        world.frame(3);
+        const passes = world.gl.frameDraws.map((pass) => keysOf(pass));
+        const lit = passes[0]!;
+        assert.equal(lit.length, 1, `${look}: the world pass draws one ground with the detail`);
+        assert.ok(lit[0]!.endsWith(':seabed-detail-5-relief-1:lit-ground-5'), lit[0]);
+        assert.deepEqual(passes.slice(1).flat(), [], `${look}: and no later pass paints it`);
+
+        assert.equal(probes.__perspectiveQuality!('low'), 'low');
+        world.frame(3);
+        assert.deepEqual(keysOf(world.gl.frameDraws[0]!), low, `${look}: Low again is what it was`);
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
   it('draws High as a lit world pass under the tactical pass Low draws, and Low as it always did (#1801)', async () => {
     // docs/art-direction.md, "Two layers, two laws": the world layer is lit
     // at High, and the tactical layer is "unchanged at both graphics

@@ -884,6 +884,17 @@ export class PerspectiveView {
    * build opened with `?seabed-detail=0`.
    */
   private seabedDetail: boolean;
+  /**
+   * Whether the High graphics quality's lit ground carries the silt detail,
+   * as relief (seabedDetail.ts, `relief`): wherever Low's skin does, and on
+   * the free-water study's ground as well. That ground is a smooth bake at
+   * Low, and stays one, since Low is High's control and does not move
+   * (docs/art-direction.md, "What is built at High"). No stone is seated for
+   * it: the study's dressing is its own.
+   */
+  private get litDetail(): boolean {
+    return SEABED_DETAIL_ON && this.look !== 'sorrowgate';
+  }
   private detailCells: Uint8Array<ArrayBuffer> | null = null;
   private detailTexture: DataTexture | null = null;
   private detailUniforms: GroundDetailUniforms | null = null;
@@ -3470,12 +3481,20 @@ export class PerspectiveView {
       const lit = new MeshBasicMaterial({ map: this.litSurface.albedo, toneMapped: false });
       installSurveyInk(lit, terrain, cells, drawnSurvey, 'carrier');
       installDisplayVeil(lit);
+      // The lit ground carries the silt detail on the free-water study's
+      // ground too, where Low's skin draws none (`litDetail`).
+      if (this.detailTexture === null && this.litDetail) {
+        this.detailCells = groundDetailCells(terrain);
+        this.detailTexture = groundDetailTexture(terrain, this.detailCells);
+      }
       if (this.detailTexture !== null) {
+        // As relief the Lid's glow lights, not as Low's painted hillshade.
         this.detailUniforms = installGroundDetail(
           lit,
           terrain,
           this.detailTexture,
-          duneSource(this.mapId, terrain)
+          duneSource(this.mapId, terrain),
+          'relief'
         );
       }
       installLitGround(lit, this.litSurface.relief, this.litPools);
@@ -3726,7 +3745,8 @@ export class PerspectiveView {
       patchGroundDetailCells(this.detailCells, terrain, touched);
       this.detailTexture.needsUpdate = true;
       // Seats read their cell and its ring, which the rebake below covers.
-      this.stones = stoneSeats(terrain, duneSource(this.mapId, terrain));
+      // The lit ground's detail alone seats none (`litDetail`).
+      if (this.seabedDetail) this.stones = stoneSeats(terrain, duneSource(this.mapId, terrain));
     }
     rebakeSeabedCells(
       canvas,

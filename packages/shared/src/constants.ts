@@ -127,11 +127,12 @@ export const HIGH_GRAPHICS = {
    * ground takes at the Lid, in the renderer's linear units; it is held where
    * the palest ground it lights is no paler than the palest ground the
    * loudness ladder weighs, so a mark's plate changes nothing the Lid alone
-   * lights (test/litGround.test.ts). `FALLOFF_M` is
+   * lights, and within a twentieth of that ground, so none of the little the
+   * bound leaves is given away (test/litGround.test.ts). `FALLOFF_M` is
    * the depth over which the water above takes it to 1/e, so depth still
    * darkens. `HORIZON` is what a vertical face keeps of it.
    */
-  LID: { IRRADIANCE: 3, FALLOFF_M: 3000, HORIZON: 0.3 },
+  LID: { IRRADIANCE: 3.45, FALLOFF_M: 3000, HORIZON: 0.3 },
   /**
    * The lit ground. `ALBEDO_LUMINANCE` is the linear luminance the palest
    * biome fill is lifted to as an albedo; every fill and the stone take the
@@ -139,9 +140,12 @@ export const HIGH_GRAPHICS = {
    * much of a fill's chroma the albedo keeps: a fill authored at 5 to 10%
    * luminance reads as paint when it is lifted whole. `RELIEF_GAIN` steepens
    * the baked slope the light reads: the column is drawn at 0.22, and light
-   * from straight above shades a true slope by a hundredth.
+   * from straight above shades a true slope by a hundredth. `HOLLOW` is how
+   * fast the silt detail's hollows lose the water above them: a hollow of
+   * strength s keeps exp(-HOLLOW × s) of its light, so a Coral Ruins dune's
+   * trough, 0.1, keeps half.
    */
-  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8 },
+  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8, HOLLOW: 7 },
   /**
    * The water. `HUE_REACH` is how far along a sight line, in reaches, the
    * water whose hue a pixel wears stands: most of the light the water adds
