@@ -23,11 +23,14 @@
  *   composite.
  * - `PLATE_HOLD_GLSL` is what the composite does with that mask, after its
  *   curve and before the tactical pass draws. So a plate takes nothing from
- *   a model, a lamp, its halo or a mark.
+ *   a lamp, its halo or a mark. A model's cladding is in the world pass
+ *   since #1814, and the pass cuts it from the mask, so a plate takes
+ *   nothing from a model either.
  */
 
 import {
   CustomBlending,
+  DoubleSide,
   DynamicDrawUsage,
   InstancedBufferGeometry,
   InstancedInterleavedBuffer,
@@ -35,6 +38,7 @@ import {
   LinearFilter,
   MaxEquation,
   Mesh,
+  NoBlending,
   OneFactor,
   PlaneGeometry,
   RGBAFormat,
@@ -253,6 +257,35 @@ const FRAGMENT = [
   '}',
 ].join('\n');
 
+// A model's cladding, drawn over the mask where it is what the world pass
+// showed: the world's depth at the pixel is its own. Ground, stone or a prop
+// in front of a hull is nearer than this fragment, and keeps its plate.
+const CUT_VERTEX = [
+  '#include <common>',
+  'void main() {',
+  '  #include <begin_vertex>',
+  '  #include <project_vertex>',
+  '}',
+].join('\n');
+
+const CUT_FRAGMENT = [
+  'uniform sampler2D uCutDepth;',
+  'uniform vec2 uCutTexel;',
+  'void main() {',
+  '  float world = texture2D( uCutDepth, gl_FragCoord.xy * uCutTexel ).r;',
+  // The resolve keeps one sample's depth, so a face seen edge on is given
+  // its own slope's worth of room.
+  '  if ( gl_FragCoord.z > world + 3.0 * fwidth( gl_FragCoord.z ) + 1e-6 ) discard;',
+  '  gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );',
+  '}',
+].join('\n');
+
+/** The scene whose models the plate pass cuts from its mask, and the layer they are on. */
+export interface PlateModels {
+  scene: Scene;
+  layer: number;
+}
+
 export class PlatePass {
   private target: WebGLRenderTarget | null = null;
   private readonly uniforms = {
@@ -271,6 +304,24 @@ export class PlatePass {
     blendEquation: MaxEquation,
     blendSrc: OneFactor,
     blendDst: OneFactor,
+    depthTest: false,
+    depthWrite: false,
+  });
+  private readonly cutUniforms = {
+    uCutDepth: { value: null as DepthTexture | null },
+    uCutTexel: { value: new Vector2(1, 1) },
+  };
+  /**
+   * What a model's cladding is drawn in over the mask: nothing, where the
+   * model is what the world pass showed (`CUT_FRAGMENT`). Both faces, since
+   * a membrane is drawn both ways.
+   */
+  private readonly cut = new ShaderMaterial({
+    uniforms: this.cutUniforms,
+    vertexShader: CUT_VERTEX,
+    fragmentShader: CUT_FRAGMENT,
+    side: DoubleSide,
+    blending: NoBlending,
     depthTest: false,
     depthWrite: false,
   });
@@ -370,8 +421,16 @@ export class PlatePass {
 
   /**
    * Draw the plates for a frame whose world is `width` × `height` pixels with
-   * `depth`, and hand back the mask the composite holds the world under. The
-   * renderer's target and clear state are the caller's to restore.
+   * `depth`, and hand back the mask the composite holds the world under.
+   *
+   * A plate is the ground a mark carries, and a model is not ground: where
+   * the cladding on `models.layer` is what the world pass showed, the mask
+   * is emptied again, so no plate holds a model (docs/art-direction.md, "The
+   * plate under a mark"; the owner's call on #1814). At Low a mark over a
+   * hull reads over whatever the rig lit, and here over what the world did.
+   *
+   * The renderer's target and clear state, the camera's layers and the
+   * scene's override are the caller's to restore.
    */
   render(
     renderer: WebGLRenderer,
@@ -379,7 +438,8 @@ export class PlatePass {
     fog: FogExp2 | null,
     depth: DepthTexture,
     width: number,
-    height: number
+    height: number,
+    models: PlateModels | null = null
   ): Texture {
     const target = this.sized(width, height);
     const ratio = renderer.getPixelRatio();
@@ -400,6 +460,19 @@ export class PlatePass {
     renderer.setClearColor(0x000000, 0);
     renderer.autoClear = true;
     renderer.render(this.scene, camera);
+    if (models !== null) {
+      this.cutUniforms.uCutDepth.value = depth;
+      this.cutUniforms.uCutTexel.value.set(1 / width, 1 / height);
+      const override = models.scene.overrideMaterial;
+      models.scene.overrideMaterial = this.cut;
+      camera.layers.set(models.layer);
+      renderer.autoClear = false;
+      try {
+        renderer.render(models.scene, camera);
+      } finally {
+        models.scene.overrideMaterial = override;
+      }
+    }
     return target.texture;
   }
 
@@ -414,5 +487,6 @@ export class PlatePass {
     this.setInk(null);
     this.geometry.dispose();
     this.material.dispose();
+    this.cut.dispose();
   }
 }

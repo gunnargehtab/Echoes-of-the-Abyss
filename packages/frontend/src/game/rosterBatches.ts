@@ -32,6 +32,7 @@ import {
   type MeshStandardMaterial,
   type Object3D,
 } from 'three';
+import { MODEL_LAYER, WORLD_LAYER } from './highFrame.ts';
 import { markLamp } from './lampHaloPass.ts';
 import type { RosterModelInstance, Template } from './rosterModels.ts';
 
@@ -198,6 +199,15 @@ class Batch {
       const frame = this.frameAt(localMatrix(root, child));
       mesh.instanceMatrix = frame.matrices;
       mesh.name = `own_${child.name || 'part'}_${this.parts.length}`;
+      // The High quality's template names the cladding its world pass draws
+      // (rosterModels.ts `Template.world`): those parts leave the canvas for
+      // that pass, and a lamp never does (highFrame.ts; gate 3). Low's names
+      // none, so every part of it stays where it was.
+      if (!lit && materials.every((m) => this.template.world.has(m))) {
+        mesh.layers.set(WORLD_LAYER);
+        // And the plate pass draws them alone, to cut them from its mask.
+        mesh.layers.enable(MODEL_LAYER);
+      }
       this.parts.push({ mesh, frame, lit });
       this.group.add(mesh);
     });

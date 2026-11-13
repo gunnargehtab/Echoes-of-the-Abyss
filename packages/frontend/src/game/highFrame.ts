@@ -6,7 +6,7 @@
  * one scene, told apart by three's layers:
  *
  * 1. **The world pass.** Everything on `WORLD_LAYER` (the lit ground and
- *    stone, the props) is drawn into a linear half-float target with the
+ *    stone, the props, the cladding of the player's own models) is drawn into a linear half-float target with the
  *    canvas's own four samples. Nothing in it is tone-mapped: three never
  *    tone-maps a draw into a target, so light stays scene-referred. The fog
  *    chunk is asked for its other half there (water.ts `installWaterFog`): a
@@ -18,7 +18,8 @@
  *    the water above each point the ground round it hides, and the light
  *    over a soft threshold spread down four levels and back.
  * 4. **The plate pass** (markPlates.ts): where the marks stand, as a mask of
- *    the frame's size. A mark carries its own ground at High (limit 6).
+ *    the frame's size, less where a model stands in front. A mark carries
+ *    its own ground at High (limit 6), and a model is not ground.
  * 5. **The composite.** One full-screen draw to the canvas sums the frame's
  *    light: the world's, occluded; the water's own, by what each pixel lost
  *    (waterMedium.ts); the sources' volumes; and the bloom. It grades the
@@ -76,6 +77,13 @@ import { WATER_MEDIUM_GLSL } from './waterMedium.ts';
 
 /** The layer the world pass draws: every renderable the High quality lights. */
 export const WORLD_LAYER = 1;
+
+/**
+ * The layer a model's world-pass cladding is on as well (rosterBatches.ts),
+ * so the plate pass can draw the models alone: a plate never holds a model
+ * (markPlates.ts `PlatePass.render`).
+ */
+export const MODEL_LAYER = 2;
 
 /** `on` while the frame is drawn by this path; `unavailable` says why it is not. */
 export type HighFrameState = 'off' | 'on' | `unavailable: ${string}`;
@@ -497,7 +505,8 @@ export class HighFrame {
           fog,
           target.depthTexture!,
           target.width,
-          target.height
+          target.height,
+          { scene, layer: MODEL_LAYER }
         );
       } else {
         this.uniforms.tPlates.value = this.dark;

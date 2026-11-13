@@ -228,6 +228,17 @@ export const HIGH_GRAPHICS = {
    * four taps, for the same low camera.
    */
   HULL_SURFACE: { RELIEF: 2.5, CAVITY: 0.5, ANISOTROPY: 4 },
+  /**
+   * The world's light on a model's cladding (#1814; hullLight.ts), added to
+   * the rig's. `LID` is how much of the Lid's glow a face takes of what level
+   * ground takes at its depth, and `POOL` how much of a pool's light a hull
+   * resting on the ground takes of what that ground takes. `POOL_REACH_M` is
+   * the height over the ground, in the world's drawn metres, at which that
+   * has halved: the sources stand tens of metres up, and a hull at 300 m
+   * hangs 66 drawn metres over a 600 m floor. `POOL_HORIZON` is what a face
+   * not looking down keeps of it.
+   */
+  HULL_LIGHT: { LID: 1, POOL: 1, POOL_REACH_M: 80, POOL_HORIZON: 0.3 },
 } as const;
 
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
