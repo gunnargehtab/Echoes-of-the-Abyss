@@ -5,6 +5,9 @@
  * The picture is two layers under two laws, so the frame is two passes of the
  * one scene, told apart by three's layers:
  *
+ * 0. **The hold pass**, where an own entity's ground shadow is drawn: the
+ *    level ground each shadow carries, in plan, for the lit ground to read
+ *    (shadowHold.ts). It draws first, since the world pass reads it.
  * 1. **The world pass.** Everything on `WORLD_LAYER` (the lit ground and
  *    stone, the props) is drawn into a linear half-float target with the
  *    canvas's own four samples. Nothing in it is tone-mapped: three never
@@ -69,6 +72,7 @@ import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
 import { BLOOM_THRESHOLD_GLSL, LightChain } from './highChain.ts';
 import { LightVolumes } from './lightVolumes.ts';
 import { PLATE_HOLD_GLSL, PlatePass } from './markPlates.ts';
+import { ShadowHold } from './shadowHold.ts';
 import { WATER_HUE } from './palette.ts';
 import type { SurveyInkPlateUniforms } from './surveyInk.ts';
 import { BACKDROP_SPAN_M, HIGH_WORLD_FOG_SIGN, WATER_RAMP_GLSL } from './water.ts';
@@ -218,6 +222,14 @@ export class HighFrame {
   };
   /** The light the world's own sources scatter in the water (lightVolumes.ts). */
   private readonly volumes = new LightVolumes();
+  /** The level ground each ground shadow carries (shadowHold.ts). */
+  private readonly holds = new ShadowHold();
+  /**
+   * The plan texture of those holds, as the uniform the lit ground reads
+   * (litGround.ts `installLitGround`): black, which holds nothing, until a
+   * frame draws a shadow.
+   */
+  readonly hold: { value: Texture } = { value: this.dark };
   private readonly material = new ShaderMaterial({
     uniforms: this.uniforms,
     vertexShader: COMPOSITE_VERTEX,
@@ -276,8 +288,32 @@ export class HighFrame {
       pixels * (8 + 4) * (HIGH_GRAPHICS.SAMPLES + 1) +
       this.volumes.bytes +
       this.chain.bytes +
-      this.plates.bytes
+      this.plates.bytes +
+      this.holds.bytes
     );
+  }
+
+  /**
+   * The ground the shadows' holds lie on: its size in metres, and the plan
+   * target's in texels (shadowHold.ts `setGround`). No ground is a size of 0.
+   */
+  setHoldGround(widthM: number, heightM: number, width: number, height: number): void {
+    this.holds.setGround(widthM, heightM, width, height);
+  }
+
+  /** This frame's ground shadows, as `DepthCues.packShadows` lays them out. */
+  setShadows(shadows: Float32Array): void {
+    this.holds.setShadows(shadows);
+  }
+
+  /** Ground shadows that carry a hold this frame. */
+  get holdsDrawn(): number {
+    return this.on && this.holds.drawn ? this.holds.count : 0;
+  }
+
+  /** The frame's first pass, for whoever times it: the hold's when one draws. */
+  get opening(): string {
+    return this.on && this.holds.drawn ? 'high-hold' : 'high-world';
   }
 
   /** Sources whose light the scatter pass draws. */
@@ -338,6 +374,8 @@ export class HighFrame {
     this.volumes.release();
     this.chain.release();
     this.plates.release();
+    this.holds.release();
+    this.hold.value = this.dark;
     this.uniforms.tWorld.value = null;
     this.uniforms.tDepth.value = null;
     this.uniforms.tScatter.value = this.dark;
@@ -352,6 +390,7 @@ export class HighFrame {
     this.volumes.dispose();
     this.chain.dispose();
     this.plates.dispose();
+    this.holds.dispose();
     this.dark.dispose();
     this.open.dispose();
     this.openWater.dispose();
@@ -431,7 +470,17 @@ export class HighFrame {
     renderer.getClearColor(this.clear);
     const mask = camera.layers.mask;
     if (fog !== null) this.fogColor.copy(fog.color);
+    const held = this.holds.drawn;
     try {
+      // 0. The level ground each ground shadow carries, which the lit ground
+      // reads in the pass after.
+      if (held) {
+        this.hold.value = this.holds.render(renderer);
+        this.marker?.('high-world');
+      } else {
+        this.hold.value = this.dark;
+      }
+
       // 1. The world, scene-referred. Cleared to nothing kept: open water is
       // all in-scatter, which the composite adds.
       scene.background = null;
@@ -516,6 +565,7 @@ export class HighFrame {
       camera.layers.mask = mask;
       renderer.render(scene, camera);
       return [
+        ...(held ? ['high-hold'] : []),
         'high-world',
         ...(scattered ? ['high-scatter'] : []),
         'high-occlusion',

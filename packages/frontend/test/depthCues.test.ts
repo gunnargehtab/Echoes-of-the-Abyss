@@ -70,4 +70,17 @@ describe('depth cues', () => {
     assert.equal(cues.group.children[0]!.visible, true);
     assert.deepEqual(cues.plumbAt(a), { x: 1, hullY: -2, groundY: -3, z: 4 });
   });
+  it('packs every slot’s shadow in plan, a released slot at no radius', () => {
+    // The hold a shadow carries at the High graphics quality reads these
+    // (shadowHold.ts): plan x, plan z and the drawn radius, a slot a triple.
+    const cues = new DepthCues(0x00ffff, 4);
+    const a = cues.allocate();
+    const b = cues.allocate();
+    cues.setShadow(a, 10, -499, 20, 12);
+    cues.setShadow(b, 30, -480, 40, 7);
+    assert.deepEqual([...cues.packShadows()], [10, 20, 12, 30, 40, 7]);
+    cues.release(a);
+    assert.deepEqual([...cues.packShadows()], [0, 0, 0, 30, 40, 7]);
+    assert.equal(cues.packShadows(), cues.packShadows(), 'one array, reused');
+  });
 });

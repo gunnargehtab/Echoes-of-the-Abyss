@@ -218,10 +218,12 @@ describe('the lit ground’s material (#1801)', () => {
     installSurveyInk(material, terrain, cells, null, 'carrier');
     installDisplayVeil(material);
     const pools = { value: surface.relief };
-    installLitGround(material, surface.relief, pools);
+    const hold = { value: surface.relief };
+    installLitGround(material, surface.relief, pools, hold);
     const shader = compile(material);
     assert.equal(shader.uniforms.uLitRelief !== undefined, true, 'the relief is bound');
     assert.equal(shader.uniforms.uLitPools, pools, 'and the pools, by the caller’s own uniform');
+    assert.equal(shader.uniforms.uLitHold, hold, 'and the shadows’ holds, by the frame’s');
     assert.ok(shader.fragmentShader.includes(LIT_GROUND_GLSL));
     assert.ok(
       shader.fragmentShader.includes(
@@ -241,7 +243,7 @@ describe('the lit ground’s material (#1801)', () => {
     assert.ok(shader.vertexShader.includes('vLitWorldY = ( modelMatrix'));
     const key = material.customProgramCacheKey();
     assert.ok(key.startsWith('survey-ink-carrier'), key);
-    assert.ok(key.endsWith(':lit-ground-4'), key);
+    assert.ok(key.endsWith(':lit-ground-6'), key);
   });
 
   it('lights the ground from the Lid’s glow: from above, from no quarter, dimmed by depth', () => {
@@ -333,13 +335,43 @@ describe('the lit ground’s material (#1801)', () => {
     // (markPlates.ts `PLATE_LEVEL`). The Lid's level is set so its brightest
     // ground is no paler than that, so a plate bites only where a source of
     // the world's stands, and a mark over open ground looks as it does at
-    // Low. Not held needlessly dark either: within a quarter of it.
+    // Low. Not held needlessly dark either: within a tenth of it. The bloom's
+    // knee is the bound that stops it short of the rest (highChain.test.ts).
     const brightest = Math.max(...brightestUnderLid().map(encodedLuminance));
     assert.ok(
       brightest <= PLATE_LEVEL,
       `${(brightest * 100).toFixed(1)}% past ${(PLATE_LEVEL * 100).toFixed(1)}%`
     );
-    assert.ok(brightest > 0.75 * PLATE_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
+    assert.ok(brightest > 0.9 * PLATE_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
+  });
+
+  it('takes a hollow’s share off the Lid’s glow and the pools alike, and never adds', () => {
+    // art-direction.md, "What is built at High": the silt detail is relief
+    // under the Lid's glow. The ground's sum reads one share of the water
+    // above, 1 unless the detail's relief wrote less (seabedDetail.ts), so
+    // the brightest ground above is still the brightest.
+    assert.ok(LIT_GROUND_GLSL.includes('float echoesLitSky = 1.0;'));
+    assert.ok(
+      LIT_GROUND_GLSL.includes('return albedo * irradiance * relief.g * sky * 0.3183098861837907;')
+    );
+    assert.ok(
+      LIT_GROUND_GLSL.indexOf('float echoesLitSky = 1.0;') <
+        LIT_GROUND_GLSL.indexOf('vec3 echoesLitGround('),
+      'declared before the sum that reads it'
+    );
+  });
+
+  it('levels the relief under a ground shadow’s hold, and only toward level ground', () => {
+    // art-direction.md, "What is built at High": "A ground shadow carries a
+    // hold". The share is mixed toward 1 by the hold's plan texture, read by
+    // the ground's own uv as the pools are: whole under a shadow, the
+    // relief's own where no shadow stands. A mix toward 1 of a share that is
+    // at most 1 never lifts ground past level ground's light.
+    assert.ok(LIT_GROUND_GLSL.includes('uniform sampler2D uLitHold;'));
+    assert.ok(
+      LIT_GROUND_GLSL.includes('float sky = mix( echoesLitSky, 1.0, texture2D( uLitHold, uv ).r );')
+    );
+    assert.equal(LIT_GROUND_GLSL.split('uLitHold').length - 1, 2, 'declared, and read once');
   });
 
   it('lights a roof from its own face, by the ground’s gain', () => {
@@ -355,7 +387,7 @@ describe('the lit ground’s material (#1801)', () => {
   it('fails loudly if three moves the unlit sum it replaces', () => {
     const material = new MeshBasicMaterial();
     const relief = litGroundSurface(terrain, 1).relief;
-    installLitGround(material, relief, { value: relief });
+    installLitGround(material, relief, { value: relief }, { value: relief });
     const shader = { ...ShaderLib.basic, uniforms: {}, fragmentShader: 'void main() {}' };
     assert.throws(() => material.onBeforeCompile(shader as never, {} as never), /unlit sum/);
   });

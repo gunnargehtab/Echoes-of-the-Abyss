@@ -52,6 +52,8 @@ export class DepthCues {
   private live = 0;
   /** Whether the plumbs draw; a growth builds them again, so it is kept here. */
   private plumbsDrawn = true;
+  /** `packShadows`' array, kept so a frame allocates nothing. */
+  private packed = new Float32Array(0);
 
   private readonly plumbMaterial: LineBasicMaterial;
   private readonly shadowMaterial: MeshBasicMaterial;
@@ -160,6 +162,23 @@ export class DepthCues {
     this.shadows.getMatrixAt(slot, TMP_MATRIX);
     const e = TMP_MATRIX.elements;
     return { x: e[12]!, groundY: e[13]!, z: e[14]!, radius: e[0]! };
+  }
+
+  /**
+   * Every slot's shadow as plan x, plan z and radius, three floats a slot, for
+   * the hold a shadow carries at the High graphics quality (shadowHold.ts). A
+   * released slot's radius is 0. The array is reused from call to call.
+   */
+  packShadows(): Float32Array {
+    if (this.packed.length !== this.highWater * 3)
+      this.packed = new Float32Array(this.highWater * 3);
+    const matrices = this.shadows.instanceMatrix.array;
+    for (let slot = 0; slot < this.highWater; slot++) {
+      this.packed[slot * 3] = matrices[slot * 16 + 12]!;
+      this.packed[slot * 3 + 1] = matrices[slot * 16 + 14]!;
+      this.packed[slot * 3 + 2] = matrices[slot * 16]!;
+    }
+    return this.packed;
   }
 
   dispose(): void {
