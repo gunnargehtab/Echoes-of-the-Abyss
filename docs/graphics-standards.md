@@ -747,6 +747,13 @@ Commune's hull skin at 512² and its other three at 256², **2.33 MiB** as three
 them with their mipmaps, once the navy's models have loaded at High. It adds three taps a
 clad fragment, which are read against the 8 ms on the named GPU.
 
+An own model's cladding in the world pass
+([art-direction.md](art-direction.md#a-model-in-the-worlds-light)) adds no pass and no
+target. The plate pass draws that cladding a second time into its mask, one call a clad
+material: ten calls and 7,608 triangles for the crater's three hulls
+([issue-1814](screenshots/issue-1814/README.md)). The world's light is two taps a clad
+fragment. Both are read against the 8 ms on the named GPU.
+
 **Lamp halo** ([art-direction.md](art-direction.md#lamp-halo--spec), on by default:
 the Lamp halos toggle in Settings turns it off, and a development switch drives captures). With Lamp halos off it spends no pass, call, triangle or target. The one cost it
 keeps is the canvas's stencil, which the canvas always asks for so the setting stays live
