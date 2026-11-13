@@ -34,8 +34,8 @@ selects them, and takes the High frame with its marks' plates and without them, 
 
 | Camera | Low | High | What High shows so far |
 | --- | --- | --- | --- |
-| Home | [low](software/01-low-home.png) | [high](software/04-high-home.png) | The garden beyond the rim glowing in the flora's own green: its stands pool on the ground and scatter in the water over it, and the glow blooms. The rim under the hulls is dark, lit by the Lid's glow alone, and reads as silt: scours and dune troughs darker than the crests between them, with the survey ink over it |
-| Close | [low](software/02-low-close.png) | [high](software/05-high-close.png) | The rim in the foreground, the three hulls across the frame, and the bowl's open water behind, the water in the Coral Ruins' hue. The rim's dunes lie across the frame as dark bands that close up toward the horizon. No source of the world's stands near this camera: the frame's brightest is Low's, and its ground is darker than Low's |
+| Home | [low](software/01-low-home.png) | [high](software/04-high-home.png) | The garden beyond the rim glowing in the flora's own green: its stands pool on the ground and scatter in the water over it, and the glow blooms. The rim under the hulls is dark, lit by the Lid's glow alone, and reads as silt: scours and dune troughs darker than the crests between them, with the survey ink over it. Each hull's ground shadow lies on a patch of level ground |
+| Close | [low](software/02-low-close.png) | [high](software/05-high-close.png) | The rim in the foreground, the three hulls across the frame, and the bowl's open water behind, the water in the Coral Ruins' hue. The rim's dunes lie across the frame as dark bands that close up toward the horizon, and stop short of each hull's ground shadow. No source of the world's stands near this camera: the frame's brightest is Low's, and its ground is darker than Low's |
 | Survey | [low](software/03-low-survey.png) | [high](software/06-high-survey.png) | Depth still reads as luminance: the rim, the garden, the bowl's flanks and the black pocket. Each of the garden's stands has its pool on the ground and its glow in the water. The silt's relief is gone by this dolly, as Low's detail is |
 
 The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camera moved
@@ -56,7 +56,7 @@ to 95th percentile of luma, out of 255.
 | Where | Low | High, #1807 | High now |
 | --- | --- | --- | --- |
 | Home, the rim left of the hulls | 22.9, 20.9 to 23.9 | 17.9, 14.3 to 18.8 | 16.0, 10.1 to 19.8 |
-| Close, the rim under the hulls | 22.9, 21.1 to 23.7 | 18.7, 15.2 to 18.9 | 17.0, 10.0 to 20.4 |
+| Close, the rim under the hulls | 22.9, 21.1 to 23.7 | 18.7, 15.2 to 18.9 | 17.0, 10.0 to 20.5 |
 | Survey, the west rim | 23.2, 21.4 to 24.2 | 17.8, 12.5 to 17.9 | 18.7, 13.5 to 19.8 |
 | Survey, the bowl's west flank | 18.8, 17.8 to 19.6 | 13.2, 12.2 to 14.0 | 14.0, 11.4 to 14.9 |
 
@@ -88,12 +88,13 @@ Counted, not timed: a software rasteriser's milliseconds measure the rasteriser.
 
 | Camera | Low: calls, triangles | High: calls, triangles | High's passes |
 | --- | --- | --- | --- |
-| Home | 44, 593,684 | 56, 660,446 | `high-world`, `high-scatter`, `high-occlusion`, `high-bloom`, `high-plates`, `high-composite`, `high-tactical`, then the halo's and the split's |
-| Close | 44, 593,684 | 56, 660,446 | The same |
-| Survey | 45, 594,970 | 57, 661,726 | The same |
+| Home | 44, 593,684 | 57, 660,452 | `high-hold`, `high-world`, `high-scatter`, `high-occlusion`, `high-bloom`, `high-plates`, `high-composite`, `high-tactical`, then the halo's and the split's |
+| Close | 44, 593,684 | 57, 660,452 | The same |
+| Survey | 45, 594,970 | 58, 661,732 | The same |
 
-High draws twelve calls more, as it did before the relief, which is the lit ground's own
-fragment shader. On a standard map it fetches no more than Low's painted detail does. In
+High draws thirteen calls more: twelve as it did before the relief, which is the lit
+ground's own fragment shader, and one for the holds the ground shadows carry, an
+instanced quad a shadow, three here. On a standard map it fetches no more than Low's painted detail does. In
 the crater Low paints none, so the relief is new work there: its fetches on every
 fragment of the lit ground, which gate 6's reading on the named GPU has to cover, a
 texture of the cells' strengths, 1,024 bytes for this map, and the detail's noise
@@ -104,9 +105,10 @@ is those triangles a third. It adds one instanced draw for the crater's 71 sourc
 one for the bands and discs of the marks' plates, 534 of them at Home, and nine
 full-screen draws: the
 occlusion, the bloom's seven and the composite. At 1920 × 1080 its targets hold
-144,439,680 bytes: four samples of half-float colour and of depth and one resolve of
-each, the half-size and smaller targets of the scatter, the occlusion and the bloom, and
-the plates' mask at the frame's size. The lit ground's two textures hold 2,796,203. Gate 6 bounds
+144,701,824 bytes: four samples of half-float colour and of depth and one resolve of
+each, the half-size and smaller targets of the scatter, the occlusion and the bloom, the
+plates' mask at the frame's size, and the holds' plan mask, 512 × 512 at a byte a texel
+for this map. The lit ground's two textures hold 2,796,203. Gate 6 bounds
 High by GPU time, at most 8 ms read queued and unpaced on the named GPU. That reading is
 owed: the capture takes it on a GPU and records `insideBudget` beside it.
 
@@ -122,13 +124,14 @@ mean, over the world area, of each pixel's largest channel difference, out of 25
 
 | Camera | `main` against `main` | `main` against the branch | Calls and triangles |
 | --- | --- | --- | --- |
-| Home | 0.01 | 0.04 | 44 and 593,684, both |
-| Close | 0.03 | 0.09 | 44 and 593,684, both |
+| Home | 0.01 | 0.13 | 44 and 593,684, both |
+| Close | 0.03 | 0.27 | 44 and 593,684, both |
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
 
-The figures move run to run with the snow. #1807 read the same comparison against its own
-base, 96180933f, four times: 0.15 to 0.19 and 0.31 to 0.36 at Home and Close on three, and
-0.04 and 0.08 on one.
+The figures move run to run with the snow, by how far into the match a run took its
+frame. Two earlier runs of this branch read 0.03 and 0.07, then 0.04 and 0.09. #1807 read
+the same comparison against its own base, 96180933f, four times: 0.15 to 0.19 and 0.31 to
+0.36 at Home and Close on three, and 0.04 and 0.08 on one.
 
 The difference maps paint a pixel red where any channel moved by more than 2. At Close
 both maps are marine snow and nothing else: the motes sink, and a later frame finds them
@@ -168,15 +171,15 @@ Read by `read.py` over the world area:
 
 | Camera | Pixels held | Brighter with plates | Held pixels' median, bare | With plates |
 | --- | --- | --- | --- | --- |
-| Over the garden | 17,113, 1.09% | none | 39.7 of 255 | 29.6 |
-| Survey | 3,584, 0.23% | none | 47.7 | 29.9 |
+| Over the garden | 17,692, 1.13% | none | 39.8 of 255 | 29.6 |
+| Survey | 3,658, 0.23% | none | 47.7 | 29.9 |
 
 The difference map over the garden is two things: a disc under each hull that stands in
 the glow, and the band along the detection ring where it crosses the glow. At Survey it
 is the discs and the garden's north rim, where the ink's plate crosses the brightest
 stands. A plate changes no pixel that was under the level, so the rest of each pair is
-the same to the byte: 20,582 of the world area's 1,570,560 pixels differ at all over the
-garden, and 4,166 at Survey.
+the same to the byte: 21,297 of the world area's 1,570,560 pixels differ at all over the
+garden, and 4,220 at Survey.
 
 The held pixels that still stand over the level are, by this session's reading of the
 pair, a plate's soft edge and what the tactical pass blends over the world after the
@@ -215,38 +218,15 @@ built them, on a software rasteriser:
 | Over the garden, with plates | Yes. Each hull stands on a dark disc inside its white selection ring, its collar's green arc over the disc and not over the glow. Without plates the upper hull's ring and collar cross the flora's green, which sits near the Pelagia hulls' own | Not the survey's question at this dolly |
 
 The frames taken on the named GPU are where this is judged. Three things to look for
-there. A disc holds a hull's collar and its bar's slot, so it is a little wider than the
-collar, and three hulls close together make one dark patch. At Close each hull's disc
+there, the third with a section of its own below. A disc holds a hull's collar and its
+bar's slot, so it is a little wider than the collar, and three hulls close together make
+one dark patch. At Close each hull's disc
 stands over water Low draws paler than the plate's level, and its upper edge shows: the
 luma steps 3.5 of 255 across it where Low's own gradient is 2.2
 ([#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816)). And the rim's
 relief runs under the hulls at Home and Close, where it stands against the one dark mark
 the study draws: a hull's ground shadow, which is its depth
-([art-direction.md](../../art-direction.md), "Depth is drawn, not implied"). A trough is
-now as dark as a shadow.
-
-| Frame | The shadow's median luma | The ground's 5th percentile beside it |
-| --- | --- | --- |
-| Home, Low | 17.4 | 20.9 |
-| Home, High at #1807 | 12.5 | 14.3 |
-| Home, High now | 10.7 | 10.1 |
-| Close, Low | 19.7 | 21.5 |
-| Close, High at #1807 | 17.0 | 17.0 |
-| Close, High now | 14.4 | 15.2 |
-
-At Home the shadow is the left hull's, 625, 765 to 680, 785, against the rim's box
-above. At Close it is the middle hull's, 810, 690 to 940, 705, against the ground either
-side of it on the same rows. At Close the shadow already stood at the ground's 5th
-percentile before the relief; at Home the relief took that margin away, and the rim's
-1st percentile is 8.0. The round's critic could not tell the middle hull's shadow from
-the dune bands at Close.
-
-This is not settled here. Three options are written for the owner in the pull request:
-bound the relief so its deepest trough stays above a shadow; hold the relief out from
-under each hull's shadow, which is a new hold keyed to agents; or keep it and judge the
-two on the named GPU's frames. The first was not built or measured. By estimate it leaves
-the rim at Home a spread of about 6 of 255, against 4.5 at #1807 and 9.7 now: the crests
-stand near 19.8, and a shadow over ground with no relief near 13.7 at this Lid.
+([art-direction.md](../../art-direction.md), "Depth is drawn, not implied").
 
 The ink was checked directly, since at the survey dolly it is faint at both qualities.
 [ink-survey.png](software/ink-survey.png) is the Survey frame at High less the same frame
@@ -254,6 +234,46 @@ with the ink's draw hidden by a switch that was not committed, amplified twelve 
 coastlines and the scarps' isobaths, and nothing else. It was taken at #1807's third
 commit, where the ink moved 1.80% of the world area's pixels by more than 2 of 255 at
 Survey, and 0.46% at Home.
+
+### The hold under a ground shadow
+
+With the relief alone a trough was as dark as a shadow. At Home the left hull's shadow
+read 10.7, 625, 765 to 680, 785, against a 5th percentile of 10.1 over the rim's box and
+a 1st of 8.0, where #1807 had 12.5 against 14.3. The round's critic could not tell the
+middle hull's shadow from the dune bands at Close. Three options were written, and the
+owner took the third in session on 13 November 2026: hold the relief out from under the
+shadows ([art-direction.md](../../art-direction.md#what-is-built-at-high)).
+
+![The shadows at Home and Close, the relief with no hold and with it, brightened four times](software/shadow-hold.png)
+
+The sheet is the same crops of the Home and Close frames before the hold, at 68bbff24,
+and now, each multiplied by four so the ground can be seen. With the hold each shadow is
+an ellipse on even ground, and the dune bands stop a little short of it.
+
+Read on the row through each shadow's middle: the shadow's median luma, the ground's just
+outside its edge, and the step between them.
+
+| Frame | The shadow | The ground beside it | The step |
+| --- | --- | --- | --- |
+| Home, Low | 17.4 | 23.1 | 5.7 |
+| Home, High at #1807 | 12.5 | 16.9 | 4.4 |
+| Home, High with the relief and no hold | 10.7 | 15.2 | 4.5 |
+| Home, High now | 14.3 | 18.0 | 3.7 |
+| Close, Low | 19.7 | 23.3 | 3.6 |
+| Close, High at #1807 | 17.0 | 19.0 | 1.9 |
+| Close, High with the relief and no hold | 14.3 | 17.9 | 3.6 |
+| Close, High now | 17.1 | 19.8 | 2.7 |
+
+At Home the shadow is the left hull's, 630, 768 to 680, 782, against 590 to 604 and 708
+to 718 on the same rows. At Close it is the middle hull's, 830, 692 to 920, 703, against
+775 to 800 and 950 to 968.
+
+Two things the table does and does not say. The step is no proof by itself: with no hold
+it read 4.5 at Home because that shadow happened to lie in a trough, which is the fault
+and not a margin. And the hold does not make a shadow the darkest thing on the rim. A
+trough away from any shadow still reads 10.1 at its 5th percentile, under the shadow's
+14.3. What the hold gives a shadow is its own even ground: an edge with nothing dark
+running into it. Whether that is enough at a glance is for the named GPU's frames.
 
 ## Related
 
