@@ -149,7 +149,7 @@ import { ACTIVE_PALETTE } from './palette.ts';
 import {
   applyLiveGlow,
   rosterModelInstance,
-  surfaceVariant,
+  highVariant,
   standingY,
   type RosterModelInstance,
   type RosterModelKey,
@@ -173,6 +173,7 @@ import { WorkLights } from './workLight.ts';
 import { EnvironmentLayer, type StudySwitches } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
 import { HighFrame, WORLD_LAYER } from './highFrame.ts';
+import { setHullPools } from './hullLight.ts';
 import {
   installLitGround,
   installLitRoof,
@@ -656,6 +657,11 @@ interface EntitySpec {
   stands: boolean;
   /** False for a track, which takes no readability factor (`EntityHandle.scaled`). */
   scaled?: boolean;
+  /**
+   * True for a track. A contact's model stays whole on the canvas at both
+   * qualities (rosterModels.ts `highVariant`; the owner's call on #1814).
+   */
+  contact?: boolean;
 }
 
 /**
@@ -1594,6 +1600,7 @@ export class PerspectiveView {
     // At Low the water is the backdrop's; at High the composite adds it.
     this.backdrop.mesh.visible = !this.high.on;
     if (this.high.on === was) return;
+    this.models.setWorldPass(this.high.on);
     if (!this.high.on) {
       this.leaveWorldLayer();
       // No frame holds the world under a plate now; the chart stops handing
@@ -3700,7 +3707,7 @@ export class PerspectiveView {
     this.worldLightCount = lights.length;
     this.high.setLights(volumeInstances(lights));
     if (lights.length === 0) return;
-    this.pools = poolTexture(terrain, lights);
+    this.pools = poolTexture(terrain, lights, (xM, yM) => this.groundYAt(xM, yM));
     this.litPools.value = this.pools;
   }
 
@@ -5101,15 +5108,16 @@ export class PerspectiveView {
     // The model path: swap in the approved mesh the moment its template is
     // ready. A construction site passes modelDesc null and stays schematic
     // (gate 1's scaffold register) until commissioned.
-    // A hull's cladding wears its navy's surface at High alone, on a
-    // template of its own (rosterModels.ts `surfaceVariant`), so that is part
-    // of the key: a quality switch swaps such a model the next time it is
-    // placed, and the one it had keeps drawing until the other is built.
-    const surfaced =
-      spec.modelDesc !== null && surfaceVariant(spec.modelDesc, this.look, this.high.on);
-    const modelKey = surfaced ? `${spec.modelCacheKey}:surfaced` : spec.modelCacheKey;
+    // At High an own model draws from a template of its own, whose cladding
+    // the world pass lights (rosterModels.ts `highVariant`), so that is part
+    // of the key: a quality switch swaps a model the next time it is placed,
+    // and the one it had keeps drawing until the other is built. A contact's
+    // keeps Low's template (`EntitySpec.contact`).
+    const lit =
+      spec.modelDesc !== null && highVariant(this.look, this.high.on, spec.contact !== true);
+    const modelKey = lit ? `${spec.modelCacheKey}:high` : spec.modelCacheKey;
     if (spec.modelDesc !== null && handle.modelKey !== modelKey) {
-      const instance = rosterModelInstance(spec.modelDesc, this.look, this.high.on);
+      const instance = rosterModelInstance(spec.modelDesc, this.look, lit);
       if (instance !== null) {
         if (handle.model !== null) this.models.detach(handle.model);
         handle.model = instance;
@@ -5496,7 +5504,14 @@ export class PerspectiveView {
       }
     }
     for (const track of this.tracks) {
-      const where = { x: track.x, z: track.y, depthM: track.depth, dimmed: false, scaled: false };
+      const where = {
+        x: track.x,
+        z: track.y,
+        depthM: track.depth,
+        dimmed: false,
+        scaled: false,
+        contact: true,
+      };
       if (track.kind !== undefined) {
         const key = `unit:${track.kind}:${track.faction}:${ACTIVE_PALETTE.name}`;
         const restSig = statsFor(track.kind).sigIdle;
@@ -6103,6 +6118,10 @@ export class PerspectiveView {
         // High: the world layer lit and composited, then the tactical layer
         // over it on the canvas, as Low draws it (highFrame.ts).
         this.enterWorldLayer();
+        // The pools are this ground's, and a model's template is the page's.
+        const terrain = this.terrain;
+        if (this.pools === null || terrain === null) setHullPools(null);
+        else setHullPools(this.pools, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
         if (this.plates.revision !== this.platesPacked) {
           this.platesPacked = this.plates.revision;
           this.high.setPlates(this.plates.pack());

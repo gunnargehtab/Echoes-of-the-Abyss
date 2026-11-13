@@ -2370,16 +2370,18 @@ describe('renderer smoke test: the conn view', () => {
       ]);
       // The holds, the world, the scatter, the chain and the plates draw into
       // targets: the occlusion, the bloom's prefilter, three levels down and
-      // three back up, then the plates' mask. The composite and the tactical
-      // pass draw to the canvas.
+      // three back up, then the plates' mask, twice: the plates, then the
+      // models cut from them. The composite and the tactical pass draw to the
+      // canvas.
       const [hold, target, scatter, ...after] = world.gl.frameTargets;
       assert.ok(hold !== null && hold !== undefined, 'the hold pass has its plan target');
       assert.equal(hold.texture.name, 'high-hold');
       assert.equal(hold.depthBuffer, false, 'a plan mask, with no depth');
       const chain = after.slice(0, 8);
       const mask = after[8];
-      const rest = after.slice(9);
+      const rest = after.slice(10);
       assert.ok(mask !== null && mask !== undefined, 'the plate pass has its mask');
+      assert.equal(after[9], mask, 'and cuts the models from the same mask (#1814)');
       assert.deepEqual([mask.width, mask.height], [1280, 720], 'at the frame’s own size');
       assert.deepEqual(
         chain.map((t) => t?.width),
@@ -2405,9 +2407,17 @@ describe('renderer smoke test: the conn view', () => {
 
       const draws = drawsOf(world.gl);
       const [held, worldPass, volumes] = draws as [Object3D[], Object3D[], Object3D[]];
-      const [plated, composite, tactical] = draws.slice(-3) as [Object3D[], Object3D[], Object3D[]];
-      assert.equal(draws.length, 14);
+      const [plated, cut, composite, tactical] = draws.slice(-4) as [
+        Object3D[],
+        Object3D[],
+        Object3D[],
+        Object3D[],
+      ];
+      assert.equal(draws.length, 15);
       assert.equal(held.length, 1, 'every shadow’s hold is one instanced draw');
+      // No model decodes on this runner, so the cut draws nothing here;
+      // test/hullLight.test.ts holds what it draws over real hulls.
+      assert.equal(cut.length, 0, 'the plate pass cuts only models');
       for (const pass of draws.slice(3, 11)) assert.equal(pass.length, 1, 'one full-screen draw');
       assert.equal(volumes.length, 1, 'every source is one instanced draw');
       assert.equal(composite.length, 1, 'the composite is one full-screen draw');

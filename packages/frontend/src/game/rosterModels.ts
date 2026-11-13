@@ -45,6 +45,7 @@ import {
   Material,
   Mesh,
   MeshStandardMaterial,
+  NormalBlending,
   Object3D,
   Vector3,
 } from 'three';
@@ -60,7 +61,8 @@ import { installHullSurface, type WorldLook } from './tutorialLook.ts';
 import { installInstanceGlow, keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { trimSheet } from './trimSheets.ts';
 import { installNavySurface } from './navySurface.ts';
-import { hasNavySurface, navySurface } from './navySurfaces.ts';
+import { navySurface } from './navySurfaces.ts';
+import { installHullLight } from './hullLight.ts';
 import { bakeTransform } from './bakeTransform.ts';
 
 /**
@@ -278,6 +280,12 @@ export interface Template {
    * their glow, and each instance's own factor scales it (modelLighting.ts).
    */
   emissives: readonly Emissive[];
+  /**
+   * The cladding the High quality's world pass draws and lights
+   * (`highVariant`): every opaque material that is no lamp. Empty on the
+   * template Low draws, whose every part stays on the canvas.
+   */
+  world: ReadonlySet<Material>;
   lengthM: number;
   beamM: number;
   heightM: number;
@@ -458,7 +466,7 @@ function designLengthM(key: RosterModelKey): number {
  * draws. `groundM` is where the file's own y 0 lands after the same yaw, scale
  * and centring; a yaw is about Y, so it leaves the ground where it was.
  */
-function normalise(scene: Group, key: RosterModelKey): Omit<Template, 'emissives'> {
+function normalise(scene: Group, key: RosterModelKey): Omit<Template, 'emissives' | 'world'> {
   const raw = new Box3().setFromObject(scene).getSize(new Vector3());
   if (raw.z > raw.x) scene.rotation.y = Math.PI / 2;
 
@@ -496,7 +504,7 @@ export function buildTemplate(
   key: RosterModelKey,
   look: WorldLook = 'standard',
   palette: Palette = ACTIVE_PALETTE,
-  surfaced = false
+  high = false
 ): Template {
   // Clone before recolouring: the parse cache stays hue-neutral so a
   // palette switch can recolour fresh rather than compounding tints.
@@ -527,17 +535,28 @@ export function buildTemplate(
       installHullSurface(material, key.faction, template.baseScale);
     }
   }
-  // The High quality's template alone (`surfaceVariant`): each cladding
-  // material its navy has drawn a surface for wears it, by the material's
-  // own name. Low's template is built without this line and stays the
-  // object it always was. A material that brings a normal map of its own
-  // keeps that one: a hull with a surface baked into its file (#1802's
-  // spike) is not given a second over it.
-  if (surfaced) {
+  // The High quality's template alone (`highVariant`). Its cladding, every
+  // opaque material that is no lamp, is the world layer's: the world pass
+  // draws it, in the world's light (hullLight.ts, #1814), and each material
+  // its navy has drawn a surface for wears it, by the material's own name
+  // (#1811). Low's template is built without this block and stays the object
+  // it always was. A material that brings a normal map of its own keeps that
+  // one: a hull with a surface baked into its file (#1802's spike) is not
+  // given a second over it. A blended material stays on the canvas, as a
+  // prop's cloud does: the world pass's alpha is what the water left.
+  const world = new Set<Material>();
+  if (high) {
     for (const material of materialClones.values()) {
-      if (!(material instanceof MeshStandardMaterial) || material.normalMap !== null) continue;
-      const surface = navySurface(FACTION_SLUG[key.faction], material.name);
-      if (surface !== null) installNavySurface(material, surface, template.baseScale);
+      if (!(material instanceof MeshStandardMaterial)) continue;
+      // A lamp, as `isLamp` tells one.
+      if (material.emissive.getHex() !== 0) continue;
+      if (material.transparent || material.blending !== NormalBlending) continue;
+      if (material.normalMap === null) {
+        const surface = navySurface(FACTION_SLUG[key.faction], material.name);
+        if (surface !== null) installNavySurface(material, surface, template.baseScale);
+      }
+      installHullLight(material);
+      world.add(material);
     }
   }
   const emissives: Emissive[] = [];
@@ -549,7 +568,7 @@ export function buildTemplate(
     keepGlowOutsideToneMapping(material);
     emissives.push({ material, restIntensity: material.emissiveIntensity });
   }
-  return { ...template, emissives };
+  return { ...template, emissives, world };
 }
 
 /** A lamp, as gate 3 dims one: a standard material whose emission has a colour. */
@@ -563,7 +582,7 @@ function loadTemplate(
   load: () => Promise<string>,
   key: RosterModelKey,
   look: WorldLook,
-  surfaced: boolean
+  high: boolean
 ): void {
   templates.set(templateKey, null);
   // The user can switch palettes before decoding finishes. Keep the ink
@@ -578,7 +597,7 @@ function loadTemplate(
   }
   scene
     .then((raw) => {
-      templates.set(templateKey, buildTemplate(raw, key, look, palette, surfaced));
+      templates.set(templateKey, buildTemplate(raw, key, look, palette, high));
     })
     .catch(() => {
       // A model that fails to decode is a missing model: the entry stays
@@ -588,23 +607,29 @@ function loadTemplate(
 }
 
 /**
- * Whether a view drawing `high` takes a template of its own for this model:
- * the High quality's, whose cladding wears its navy's surface (#1811). Only
- * where High draws and the navy has one drawn. Sorrowgate keeps its own
- * laminate and High does not reach it (graphicsQuality.ts `highRefusal`).
- * Everywhere else the two qualities share the one template, so nothing a Low
- * frame draws is built, patched or keyed differently for High existing.
+ * Whether a view drawing `high` takes a template of its own for a model: the
+ * High quality's, whose cladding the world pass draws and lights (#1814) and
+ * which wears its navy's surface where one is drawn (#1811). Only for a model
+ * of the player's `own`: a contact's keeps the template Low draws, whole on
+ * the canvas, since in the world pass its body would hide the Lid's glow from
+ * the ground beside it and feed the bloom, and a contact casts neither shadow
+ * nor light (docs/art-direction.md, "Two layers, two laws", limit 2).
+ * Sorrowgate keeps its own laminate and High does not reach it
+ * (graphicsQuality.ts `highRefusal`). At Low the template is the one every
+ * build before High drew, so nothing a Low frame draws is built, patched or
+ * keyed differently for High existing. `own` has no default: a caller that
+ * forgot it would put a contact in the world pass.
  */
-export function surfaceVariant(key: RosterModelKey, look: WorldLook, high: boolean): boolean {
-  return high && look !== 'sorrowgate' && hasNavySurface(FACTION_SLUG[key.faction]);
+export function highVariant(look: WorldLook, high: boolean, own: boolean): boolean {
+  return high && own && look !== 'sorrowgate';
 }
 
 /**
  * A per-entity instance of the approved model, or null while it loads (or
  * when none exists — a kind whose navy has no variant, a failed decode).
  * Callers fall back to the Phase-1 sprite until this returns something, so a
- * null is never a hole on screen. `high` is whether the asking view draws
- * the High quality (`surfaceVariant`).
+ * null is never a hole on screen. `high` asks for the High quality's template,
+ * which the caller has already decided this model takes (`highVariant`).
  */
 export function rosterModelInstance(
   key: RosterModelKey,
@@ -614,11 +639,12 @@ export function rosterModelInstance(
   const slug = slugFor(key);
   const load = MODEL_BY_FILE.get(`${slug}.glb`);
   if (load === undefined) return null;
-  const surfaced = surfaceVariant(key, look, high);
-  const templateKey = `${slug}:${ACTIVE_PALETTE.name}:${look}${surfaced ? ':surfaced' : ''}`;
+  // The caller's `high` has weighed whose model this is; only the look is left.
+  const lit = highVariant(look, high, true);
+  const templateKey = `${slug}:${ACTIVE_PALETTE.name}:${look}${lit ? ':high' : ''}`;
   const template = templates.get(templateKey);
   if (template === undefined) {
-    loadTemplate(templateKey, `${slug}.glb`, load, key, look, surfaced);
+    loadTemplate(templateKey, `${slug}.glb`, load, key, look, lit);
     return null;
   }
   if (template === null) return null;

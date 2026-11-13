@@ -178,7 +178,9 @@ the High graphics quality rung 3's 5–10% band, rung 1's one blue and world lig
 three rules are released. The order of the rungs is not. At High a mark carries a plate,
 under which the lit world is drawn no brighter than the palest ground weighed here, so each
 tactical floor reads as it does at Low
-([art-direction.md](art-direction.md#the-plate-under-a-mark)). At Low, and on the chart at
+([art-direction.md](art-direction.md#the-plate-under-a-mark)). A plate holds no model: an
+own model's surface is lit by the world, and a contact's is drawn as Low draws it
+([art-direction.md](art-direction.md#a-model-in-the-worlds-light)). At Low, and on the chart at
 both qualities, the table stands as written.
 
 **A mark on the ground ends at the rim.** The rings, fills and lines rungs 5 and 6 lay on the

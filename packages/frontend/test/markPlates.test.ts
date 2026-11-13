@@ -115,7 +115,7 @@ describe('a mark’s plate', () => {
       'scaled to the level, and never up'
     );
     assert.ok(PLATE_HOLD_GLSL.includes('mix( 1.0, min('), 'by the plate’s coverage');
-    assert.ok(PLATE_HOLD_GLSL.includes('texture2D( tPlates, vUv ).r'));
+    assert.ok(PLATE_HOLD_GLSL.includes('texture2D( tPlates, vUv ).g'));
     const hold = (rgb: number[], plate: number): number[] => {
       const shown = 0.2126 * rgb[0]! + 0.7152 * rgb[1]! + 0.0722 * rgb[2]!;
       const k = 1 + (Math.min(1, PLATE_LEVEL / Math.max(shown, 1e-5)) - 1) * plate;

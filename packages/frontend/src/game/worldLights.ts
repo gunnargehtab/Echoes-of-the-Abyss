@@ -146,8 +146,16 @@ export const POOL_PX_PER_CELL = 16;
  * The light the ground takes from every source, as a plan texture: linear
  * half-float RGB, row 0 the north edge as the skin's is, filtered. Static,
  * as the sources are: a ground delta rebuilds it with the dressing.
+ *
+ * Alpha is the drawn ground's height at the pixel, where `groundY` is given:
+ * a hull over the ground takes the pool under it by how far over it hangs
+ * (hullLight.ts). The ground itself never reads it.
  */
-export function poolTexture(terrain: TerrainPayload, lights: readonly WorldLight[]): DataTexture {
+export function poolTexture(
+  terrain: TerrainPayload,
+  lights: readonly WorldLight[],
+  groundY: ((xM: number, yM: number) => number) | null = null
+): DataTexture {
   const width = terrain.cols * POOL_PX_PER_CELL;
   const height = terrain.rows * POOL_PX_PER_CELL;
   const mPerPx = terrain.cellM / POOL_PX_PER_CELL;
@@ -173,7 +181,11 @@ export function poolTexture(terrain: TerrainPayload, lights: readonly WorldLight
     data[i * 4] = DataUtils.toHalfFloat(sum[i * 3]!);
     data[i * 4 + 1] = DataUtils.toHalfFloat(sum[i * 3 + 1]!);
     data[i * 4 + 2] = DataUtils.toHalfFloat(sum[i * 3 + 2]!);
-    data[i * 4 + 3] = DataUtils.toHalfFloat(1);
+    data[i * 4 + 3] = DataUtils.toHalfFloat(
+      groundY === null
+        ? 1
+        : groundY(((i % width) + 0.5) * mPerPx, (Math.floor(i / width) + 0.5) * mPerPx)
+    );
   }
   const texture = new DataTexture(data, width, height, RGBAFormat, HalfFloatType);
   texture.name = 'world-light-pools';

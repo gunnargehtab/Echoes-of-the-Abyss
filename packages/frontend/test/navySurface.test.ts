@@ -23,7 +23,7 @@ import {
   Texture,
 } from 'three';
 import { Faction, HIGH_GRAPHICS, UnitKind } from '@echoes/shared';
-import { buildTemplate, surfaceVariant } from '../src/game/rosterModels.ts';
+import { buildTemplate, highVariant } from '../src/game/rosterModels.ts';
 import { ACTIVE_PALETTE } from '../src/game/palette.ts';
 import {
   NAVY_SURFACE_ANCHORS,
@@ -63,8 +63,8 @@ const materialsOf = (root: Group): MeshStandardMaterial[] => {
 };
 
 const KEY = { unit: UnitKind.Corvette, faction: Faction.Pelagia };
-const build = (surfaced: boolean, raw = hull()) =>
-  materialsOf(buildTemplate(raw, KEY, 'standard', ACTIVE_PALETTE, surfaced).root);
+const build = (high: boolean, raw = hull()) =>
+  materialsOf(buildTemplate(raw, KEY, 'standard', ACTIVE_PALETTE, high).root);
 
 describe("a navy's surface on a roster model", () => {
   it('ships the Commune four, each once, as repeating data', () => {
@@ -88,14 +88,18 @@ describe("a navy's surface on a roster model", () => {
     assert.ok(!hasNavySurface('bathyarch'));
   });
 
-  it('asks for a template of its own only where High draws a navy that has one', () => {
-    assert.equal(surfaceVariant(KEY, 'standard', true), true);
-    assert.equal(surfaceVariant(KEY, 'free-water', true), true);
-    assert.equal(surfaceVariant(KEY, 'standard', false), false);
+  it('asks for a template of its own wherever High draws, whatever the navy', () => {
+    // Since #1814 the High template is also what the world pass lights, so a
+    // navy with no surface drawn takes one too (test/hullLight.test.ts).
+    assert.equal(highVariant('standard', true, true), true);
+    assert.equal(highVariant('free-water', true, true), true);
+    assert.equal(highVariant('standard', false, true), false);
     // Sorrowgate keeps its laminate, and High does not reach it.
-    assert.equal(surfaceVariant(KEY, 'sorrowgate', true), false);
-    const klaxon = { unit: UnitKind.Corvette, faction: Faction.Bathyarch };
-    assert.equal(surfaceVariant(klaxon, 'standard', true), false);
+    assert.equal(highVariant('sorrowgate', true, true), false);
+    // A contact's model keeps Low's template at High: it casts no shadow
+    // and no light (art-direction.md, limit 2; #1814).
+    assert.equal(highVariant('standard', true, false), false);
+    assert.equal(highVariant('free-water', true, false), false);
   });
 
   it("leaves the Low quality's template as it was built before any surface", () => {
@@ -123,7 +127,11 @@ describe("a navy's surface on a roster model", () => {
         worn ? `pelagia-${material.name}` : undefined,
         material.name
       );
-      assert.equal(/:navy-surface-1$/.test(material.customProgramCacheKey()), worn, material.name);
+      assert.equal(
+        material.customProgramCacheKey().includes(':navy-surface-1'),
+        worn,
+        material.name
+      );
       // Gate 4: the ink is the recolour's. Gate 3: so is the light.
       assert.deepEqual(material.color, low[i]!.color, `${material.name} changed its ink`);
       assert.deepEqual(material.emissive, low[i]!.emissive);

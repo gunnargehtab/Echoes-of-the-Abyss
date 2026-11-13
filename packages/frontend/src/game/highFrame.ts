@@ -9,11 +9,12 @@
  *    level ground each shadow carries, in plan, for the lit ground to read
  *    (shadowHold.ts). It draws first, since the world pass reads it.
  * 1. **The world pass.** Everything on `WORLD_LAYER` (the lit ground and
- *    stone, the props) is drawn into a linear half-float target with the
- *    canvas's own four samples. Nothing in it is tone-mapped: three never
- *    tone-maps a draw into a target, so light stays scene-referred. The fog
- *    chunk is asked for its other half there (water.ts `installWaterFog`): a
- *    fragment only loses light to the water, and alpha holds what survived.
+ *    stone, the props, the cladding of the player's own models) is drawn
+ *    into a linear half-float target with the canvas's own four samples.
+ *    Nothing in it is tone-mapped: three never tone-maps a draw into a
+ *    target, so light stays scene-referred. The fog chunk is asked for its
+ *    other half there (water.ts `installWaterFog`): a fragment only loses
+ *    light to the water, and alpha holds what survived.
  * 2. **The scatter pass**, where the ground stands a source of its own: the
  *    light those sources scatter in the water, summed against the world's
  *    depth into a half-resolution target (lightVolumes.ts).
@@ -21,13 +22,15 @@
  *    the water above each point the ground round it hides, and the light
  *    over a soft threshold spread down four levels and back.
  * 4. **The plate pass** (markPlates.ts): where the marks stand, as a mask of
- *    the frame's size. A mark carries its own ground at High (limit 6).
+ *    the frame's size, and where a model stands in front of one. A mark
+ *    carries its own ground at High (limit 6), and a model is not ground.
  * 5. **The composite.** One full-screen draw to the canvas sums the frame's
  *    light: the world's, occluded; the water's own, by what each pixel lost
  *    (waterMedium.ts); the sources' volumes; and the bloom. It grades the
  *    sum, runs the curve, holds the result under the plates, and writes the
  *    world's depth, so the pass after it is hidden by the world as it is at
- *    Low.
+ *    Low. In front of a model a plate holds the water's part of the sum
+ *    alone, before the curve.
  * 6. **The tactical pass.** Everything else in the scene, drawn to the canvas
  *    exactly as the Low quality draws it: the same materials, the same
  *    per-material tone curve, the same fog. That is the law's "unchanged at
@@ -71,7 +74,7 @@ import {
 import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
 import { BLOOM_THRESHOLD_GLSL, LightChain } from './highChain.ts';
 import { LightVolumes } from './lightVolumes.ts';
-import { PLATE_HOLD_GLSL, PlatePass } from './markPlates.ts';
+import { PLATE_HOLD_GLSL, PLATE_MEDIUM_GLSL, PlatePass } from './markPlates.ts';
 import { ShadowHold } from './shadowHold.ts';
 import { WATER_HUE } from './palette.ts';
 import type { SurveyInkPlateUniforms } from './surveyInk.ts';
@@ -80,6 +83,13 @@ import { WATER_MEDIUM_GLSL } from './waterMedium.ts';
 
 /** The layer the world pass draws: every renderable the High quality lights. */
 export const WORLD_LAYER = 1;
+
+/**
+ * The layer a model's world-pass cladding is on as well (rosterBatches.ts),
+ * so the plate pass can draw the models alone: a plate never holds a model
+ * (markPlates.ts `PlatePass.render`).
+ */
+export const MODEL_LAYER = 2;
 
 /** `on` while the frame is drawn by this path; `unavailable` says why it is not. */
 export type HighFrameState = 'off' | 'on' | `unavailable: ${string}`;
@@ -121,9 +131,11 @@ const COMPOSITE_FRAGMENT = [
   WATER_RAMP_GLSL,
   WATER_MEDIUM_GLSL,
   BLOOM_THRESHOLD_GLSL,
-  // The frame's light at this pixel, scene-referred, before the bloom: what
-  // the prefilter cuts and what the composite grades.
-  'vec3 echoesHighLight( out float depth ) {',
+  // The frame's light at this pixel, scene-referred, before the bloom, in two
+  // parts: what the world's surfaces send, returned, and `medium`, what the
+  // water adds between them and the eye. The prefilter cuts their sum and
+  // the composite grades it; a plate under a model holds the second alone.
+  'vec3 echoesHighLight( out float depth, out vec3 medium ) {',
   '  vec4 world = texture2D( tWorld, vUv );',
   '  depth = texture2D( tDepth, vUv ).r;',
   // The water a pixel looks into: where there is ground, the water the ground
@@ -152,17 +164,21 @@ const COMPOSITE_FRAGMENT = [
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, 0.5 ) ).r +',
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( 0.5, - 0.5 ) ).r +',
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, - 0.5 ) ).r );',
-  `  vec3 light = world.rgb * mix( 1.0, open, ${glsl(HIGH_GRAPHICS.AO.STRENGTH)} );`,
-  '  light += ( 1.0 - clamp( world.a, 0.0, 1.0 ) ) * water;',
-  '  return light + texture2D( tScatter, vUv ).rgb;',
+  '  medium = ( 1.0 - clamp( world.a, 0.0, 1.0 ) ) * water + texture2D( tScatter, vUv ).rgb;',
+  `  return world.rgb * mix( 1.0, open, ${glsl(HIGH_GRAPHICS.AO.STRENGTH)} );`,
   '}',
   'void main() {',
   '  float depth;',
-  '  vec3 light = echoesHighLight( depth );',
+  '  vec3 medium;',
+  '  vec3 light = echoesHighLight( depth, medium );',
   '  #ifdef BLOOM_PREFILTER',
-  '    gl_FragColor = vec4( echoesBloomCut( light ), 1.0 );',
+  '    gl_FragColor = vec4( echoesBloomCut( light + medium ), 1.0 );',
   '  #else',
-  `    light += texture2D( tBloom, vUv ).rgb * ${glsl(HIGH_GRAPHICS.BLOOM.INTENSITY)};`,
+  `    medium += texture2D( tBloom, vUv ).rgb * ${glsl(HIGH_GRAPHICS.BLOOM.INTENSITY)};`,
+  // Where a model stands in front of a mark's plate, the water's light is
+  // held and the model's is not (markPlates.ts).
+  PLATE_MEDIUM_GLSL,
+  '    light += medium;',
   // The grade, before the curve: slope, offset and power a channel, then
   // saturation about the luminance.
   `    light = pow( max( light * ${vec3(HIGH_GRAPHICS.GRADE.SLOPE)} + ${vec3(HIGH_GRAPHICS.GRADE.OFFSET)}, 0.0 ), ${vec3(HIGH_GRAPHICS.GRADE.POWER)} );`,
@@ -546,7 +562,8 @@ export class HighFrame {
           fog,
           target.depthTexture!,
           target.width,
-          target.height
+          target.height,
+          { scene, layer: MODEL_LAYER }
         );
       } else {
         this.uniforms.tPlates.value = this.dark;
