@@ -741,6 +741,12 @@ Nor are the vignette and the sway
 ([#1003](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1003)): the browser
 composites the one, and the other moves a camera the frame already draws through.
 
+A navy's surface ([art-direction.md](art-direction.md#a-navys-surface)) is High's alone and
+is not capped, as no High texture is. It is reported here: one image a navy material, the
+Commune's hull skin at 512² and its other three at 256², **2.33 MiB** as three uploads
+them with their mipmaps, once the navy's models have loaded at High. It adds three taps a
+clad fragment, which are read against the 8 ms on the named GPU.
+
 **Lamp halo** ([art-direction.md](art-direction.md#lamp-halo--spec), on by default:
 the Lamp halos toggle in Settings turns it off, and a development switch drives captures). With Lamp halos off it spends no pass, call, triangle or target. The one cost it
 keeps is the canvas's stencil, which the canvas always asks for so the setting stays live

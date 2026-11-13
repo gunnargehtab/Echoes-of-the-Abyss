@@ -1,7 +1,7 @@
 /**
- * #1802's frames, as a run-game `--steps` module: the Commune's Corvette in
- * the free-water crater from five held cameras, HUD on, so one hull can be
- * shown beside another from the same eye.
+ * #1802's frames, and #1811's, as a run-game `--steps` module: the Commune's
+ * Corvette in the free-water crater from six held cameras, HUD on, so one hull
+ * can be shown beside another from the same eye.
  *
  *   QUALITY=high node .claude/skills/run-game/scripts/drive.mjs \
  *     --url 'http://localhost:5173/?study=free-water' --out <dir> \
@@ -21,6 +21,16 @@
  * - `near-port` and `near-bow` are a low eye 190 m and 240 m off the hull at
  *   its own depth: the nearest the conn camera comes, where a surface is
  *   judged.
+ * - `survey` is the study's survey dolly, north up, the whole bowl in frame
+ *   (docs/screenshots/issue-1799/README.md). It is taken last, so the five
+ *   before it keep their numbers.
+ *
+ * CLIP=1 with drive.mjs's RECORD_VIDEO=<dir> takes no frame set. It swings
+ * the eye round the Corvette at the nearest camera's range instead, 60° of
+ * yaw in CLIP_STEPS steps (60) of CLIP_STEP_MS each (50; a software
+ * rasteriser wants 1,200), for the clip a look is shown with (#1811): a
+ * surface read by a fragment's place on the model has to hold still on the
+ * hull while the camera moves.
  *
  * QUALITY=low or QUALITY=high sets the Graphics quality by its development
  * switch (docs/screenshots/issue-1801/frames.mjs). Unset, the view draws what
@@ -59,6 +69,30 @@ export default async ({ page, shot }) => {
     await page.waitForFunction(() => !window.__perspectiveProbe().programHold.holding, null, {
       timeout: 120000,
     });
+  }
+
+  if (process.env.CLIP === '1') {
+    const steps = Number(process.env.CLIP_STEPS ?? 60);
+    const aim = (yawDeg) =>
+      page.evaluate(
+        ({ hull, yawDeg }) =>
+          window.__perspectiveCamera(hull.xM, hull.zM, 190, {
+            yawDeg,
+            pitchDeg: 16,
+            focusDepthM: hull.depthM,
+          }),
+        { hull, yawDeg }
+      );
+    await aim(-150);
+    await page.waitForTimeout(software ? 9000 : 2500);
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      await aim(-150 + 60 * t * t * (3 - 2 * t));
+      await page.waitForTimeout(Number(process.env.CLIP_STEP_MS ?? 50));
+    }
+    await page.waitForTimeout(software ? 4000 : 1500);
+    await shot('clip-end');
+    return;
   }
 
   const readings = [];
@@ -107,6 +141,14 @@ export default async ({ page, shot }) => {
   await take('station', { distance: 1800, yawDeg: 0, pitchDeg: 55, focusDepthM: null });
   await take('near-port', { distance: 190, yawDeg: -150, pitchDeg: 16, focusDepthM: hull.depthM });
   await take('near-bow', { distance: 240, yawDeg: 125, pitchDeg: 22, focusDepthM: hull.depthM });
+  await take('survey', {
+    xM: 2000,
+    zM: 2000,
+    distance: 10000,
+    yawDeg: 0,
+    pitchDeg: 88,
+    focusDepthM: null,
+  });
 
   writeFileSync(
     join(dir, 'readings.json'),

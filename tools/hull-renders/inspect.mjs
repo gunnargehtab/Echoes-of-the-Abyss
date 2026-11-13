@@ -35,6 +35,13 @@
  * change to the sheet itself. A model with no tag is photographed bare, as
  * it was before the sheets.
  *
+ * `--surface <navy>` adds the model once more as the next column, its
+ * cladding wearing that navy's surfaces as the High graphics quality puts
+ * them on (#1811, surface.mjs): the client's own shader patch over the
+ * images in packages/frontend/src/assets/surface/. So a kit hull stands
+ * beside itself surfaced, and beside any file `--with` adds, from one
+ * camera. A material with a normal map of its own keeps it and wears none.
+ *
  * Not a gate, like render.mjs: a picture informs a review and never passes
  * one. hull-intake and check.mjs measure; this shows.
  */
@@ -46,7 +53,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { TRIM_SHEET } from '@echoes/shared';
+import { HIGH_GRAPHICS, TRIM_SHEET } from '@echoes/shared';
+import { SURFACE_DIR } from '../hull-models/surface.mjs';
 import { SHEET_DIR } from '../hull-models/trim.mjs';
 import { spawn } from '../lib/spawn.mjs';
 import { CHROMIUM_ARGS, emptyFrame } from './chromium.mjs';
@@ -84,6 +92,11 @@ const title = flag('--title', before ? `${slug}: ${before} → working tree` : s
 const exposure = Number(flag('--exposure', 1.15));
 const floorGap = Number(flag('--floor-gap', 0));
 const own = args.includes('--own');
+const surfaceNavy = flag('--surface', null);
+if (surfaceNavy !== null && !/^[a-z]+$/.test(surfaceNavy)) {
+  console.error('--surface takes a navy: bathyarch, pelagia, directorate or hadron');
+  process.exit(1);
+}
 
 const parseView = (s) => {
   const [id, az, el, zoom, parts] = s.split(':');
@@ -117,6 +130,14 @@ if (before) {
   models.push({ id: 'before', label: `before — ${before}`, file: at });
 }
 models.push({ id: 'after', label: before ? 'after — this tree' : slug, file });
+// The same file again, wearing its navy's surfaces as High draws them.
+if (surfaceNavy !== null)
+  models.push({
+    id: 'surfaced',
+    label: `${slug}, wearing the ${surfaceNavy} surfaces`,
+    file,
+    surface: surfaceNavy,
+  });
 // `--with a,b` adds other models as further columns, for a family read.
 for (const other of (flag('--with', '') || '').split(',').filter(Boolean)) {
   const at = other.endsWith('.glb') ? resolve(other) : join(MODELS, `${other}.glb`);
@@ -185,6 +206,29 @@ const sheetAt = (modelId, name) => {
   return at;
 };
 
+// The conn view's surface patch, bundled for the page as render.mjs bundles
+// frame.mjs: three external, so the page's importmap gives both one three.
+let surfaceJs = null;
+if (surfaceNavy !== null) {
+  if (!existsSync(join(repo, 'packages/shared/dist/index.js'))) {
+    console.error('packages/shared/dist is missing — run `npm run build:shared` first.');
+    process.exit(1);
+  }
+  const { build } = await import('esbuild');
+  surfaceJs = (
+    await build({
+      entryPoints: [join(here, 'surface.mjs')],
+      bundle: true,
+      format: 'esm',
+      platform: 'browser',
+      target: 'es2022',
+      external: ['three', 'three/*'],
+      write: false,
+      logLevel: 'error',
+    })
+  ).outputFiles[0].contents;
+}
+
 const MIME = {
   '.html': 'text/html',
   '.js': 'text/javascript',
@@ -195,8 +239,17 @@ const MIME = {
 const server = createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   let path = null;
+  if (url.pathname === '/surface.js' && surfaceJs !== null) {
+    res.writeHead(200, { 'Content-Type': 'text/javascript' }).end(surfaceJs);
+    return;
+  }
   if (url.pathname === '/inspect.html') path = join(here, 'inspect.html');
   else if (url.pathname === '/trimSheets.mjs') path = join(here, 'trimSheets.mjs');
+  else if (url.pathname.startsWith('/surface/')) {
+    // Only ever a drawn surface's name: a navy, a hyphen, a material.
+    const name = url.pathname.slice('/surface/'.length).replace(/\.png$/, '');
+    if (/^[a-z]+-[a-z0-9_]+$/.test(name)) path = join(repo, SURFACE_DIR, `${name}.png`);
+  }
   else if (url.pathname.startsWith('/trim/')) {
     const [modelId, file] = url.pathname.slice('/trim/'.length).split('/');
     if (models.some((m) => m.id === modelId) && file?.endsWith('.png'))
@@ -233,7 +286,12 @@ try {
     own,
     views,
     anisotropy: TRIM_SHEET.ANISOTROPY,
-    models: models.map((m) => ({ id: m.id, url: `/model/${m.id}.glb` })),
+    surfaceAnisotropy: HIGH_GRAPHICS.HULL_SURFACE.ANISOTROPY,
+    models: models.map((m) => ({
+      id: m.id,
+      url: `/model/${m.id}.glb`,
+      surface: m.surface ?? null,
+    })),
   });
   await page.goto(`http://127.0.0.1:${port}/inspect.html`);
   await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 300000 });
@@ -253,6 +311,11 @@ try {
       console.log(`${m.id}: trim sheet ${t.sheets.join(', ')} on ${t.materials} material(s)`);
     if (t.missing.length > 0)
       console.warn(`${m.id}: no sheet named ${t.missing.join(', ')}; left bare`);
+    if (t.surface) {
+      console.log(`${m.id}: ${m.surface} surface on ${t.surface.worn.join(', ') || 'no material'}`);
+      if (t.surface.missing.length > 0)
+        console.warn(`${m.id}: no surface image for ${t.surface.missing.join(', ')}; left bare`);
+    }
   }
   await page.close();
 

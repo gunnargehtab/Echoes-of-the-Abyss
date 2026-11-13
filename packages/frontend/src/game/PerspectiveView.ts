@@ -149,6 +149,7 @@ import { ACTIVE_PALETTE } from './palette.ts';
 import {
   applyLiveGlow,
   rosterModelInstance,
+  surfaceVariant,
   standingY,
   type RosterModelInstance,
   type RosterModelKey,
@@ -5072,12 +5073,19 @@ export class PerspectiveView {
     // The model path: swap in the approved mesh the moment its template is
     // ready. A construction site passes modelDesc null and stays schematic
     // (gate 1's scaffold register) until commissioned.
-    if (spec.modelDesc !== null && handle.modelKey !== spec.modelCacheKey) {
-      const instance = rosterModelInstance(spec.modelDesc, this.look);
+    // A hull's cladding wears its navy's surface at High alone, on a
+    // template of its own (rosterModels.ts `surfaceVariant`), so that is part
+    // of the key: a quality switch swaps such a model the next time it is
+    // placed, and the one it had keeps drawing until the other is built.
+    const surfaced =
+      spec.modelDesc !== null && surfaceVariant(spec.modelDesc, this.look, this.high.on);
+    const modelKey = surfaced ? `${spec.modelCacheKey}:surfaced` : spec.modelCacheKey;
+    if (spec.modelDesc !== null && handle.modelKey !== modelKey) {
+      const instance = rosterModelInstance(spec.modelDesc, this.look, this.high.on);
       if (instance !== null) {
         if (handle.model !== null) this.models.detach(handle.model);
         handle.model = instance;
-        handle.modelKey = spec.modelCacheKey;
+        handle.modelKey = modelKey;
         this.models.attach(instance);
         this.sceneGrew = true;
       }

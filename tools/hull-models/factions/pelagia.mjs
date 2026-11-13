@@ -331,6 +331,106 @@ export const TRIM = {
 };
 
 /**
+ * The Commune's surfaces: one tiling relief for each of its four clad
+ * materials, worn at the High graphics quality (#1811; surface.mjs draws
+ * them, surfaces.mjs writes them into the client's assets, and
+ * docs/art-direction.md "What is built at High" says where they stand).
+ *
+ * #1802's Blender spike baked these four fields onto one Corvette, a map a
+ * hull (tools/hull-models/blender/pelagia.py). They are the same four here,
+ * said as tiles: what the navy's block names for the skin is "growth rings
+ * and living bioluminescent veins" (docs/asset-prompts-3d.md, the Pelagia
+ * FACTION block), so the chitin is a leaf's venation over growth lines, and
+ * every vein is relief that emits nothing. A vein that glowed would be a
+ * lamp, and gate 3 counts lamps.
+ *
+ * Heights are the spike's, in metres, and what moved is what a tile needs.
+ * Every count is a whole number a tile, so each field closes on itself: the
+ * laterals every 5.33 m where the spike's left the midrib every 5.5, the
+ * growth lines every 0.89 m for its 0.9, the ridge's rings every 0.53 m for
+ * its 0.55. The spike found its back and its keel from the hull's own
+ * section. A tile cannot, so the midrib runs down `v` 0, which is the
+ * centreline of a model seen from above and from ahead and its axis seen
+ * from the side: down the back, down the bow and the stern, and as a line
+ * along each flank. A wide deck takes another every 16 m. A fin's rays ran along a chart of
+ * that fin. Here they stand square to the keel, which is root to tip on any
+ * fin that stands off it, and wander a quarter metre so two fins do not rule
+ * alike.
+ *
+ * Every texel is 3.1 cm: the hull's skin at 512² over 16 m, since it is most
+ * of what a camera sees of a hull, and the other three at 256² over 8 m.
+ * `slope` is the steepest rise a channel can hold, set a little over each
+ * field's own steepest so none is clipped (test/surface.test.mjs).
+ */
+export const SURFACE = {
+  name: 'pelagia',
+  materials: {
+    chitin_hull: {
+      pattern: 'veined',
+      size: 512,
+      tileM: 16,
+      slope: 1.2,
+      laterals: 3,
+      rake: 0.7,
+      taper: 0.45,
+      lateralM: 0.08,
+      lateralHalfM: 0.3,
+      midribM: 0.1,
+      midribHalfM: 0.4,
+      wanderM: 0.45,
+      wanderCells: 4,
+      net: [8, 12],
+      netJitter: 0.8,
+      netM: 0.011,
+      netHalfM: 0.09,
+      growthLines: 18,
+      growthM: 0.006,
+      driftRad: 2.2,
+      driftCells: 5,
+      pitM: 0.01,
+      pitCells: 40,
+    },
+    growth_ridge: {
+      pattern: 'banded',
+      size: 256,
+      tileM: 8,
+      slope: 1.6,
+      bands: 15,
+      bandM: 0.022,
+      driftRad: 1.2,
+      driftCells: 4,
+      fibre: [32, 5],
+      fibreM: 0.035,
+    },
+    spore_pod: {
+      pattern: 'pored',
+      size: 256,
+      tileM: 8,
+      slope: 0.8,
+      mottleM: 0.015,
+      mottleCells: 16,
+      pores: [24, 24],
+      poreJitter: 0.7,
+      poreM: 0.012,
+      poreHalfM: 0.09,
+    },
+    algae_membrane: {
+      pattern: 'rayed',
+      size: 256,
+      tileM: 8,
+      slope: 1,
+      rays: 6,
+      rayM: 0.07,
+      rayHalfM: 0.22,
+      wanderM: 0.25,
+      wanderCells: [3, 4],
+      webs: 32,
+      webM: 0.003,
+    },
+  },
+};
+
+/**
  * The Veil's facet rule and panel bands (docs/asset-prompts-3d.md Block 2c,
  * #919; `tools/hull-models/facets.mjs` is the measure). A grown thing adds
  * the same increment whatever its size — a growth ring is the width it is on

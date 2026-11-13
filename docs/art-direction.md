@@ -180,10 +180,80 @@ Built so far:
   chroma back.
 - **The props** draw in the world pass under the shared rig. Their additive clouds, the
   steam, the haze and the sift, stay in the tactical pass.
+- **A navy's cladding wears a surface**
+  ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811)), the
+  Commune's four materials first. Below.
 
 Not built yet: shadow cast by a light with a direction, which arrives with the own
-searchlights; and the surfaces of hulls and structures, which draw whole in the tactical
-pass, lamps and all.
+searchlights; and the world's light on hulls and structures, which still draw whole in
+the tactical pass, lamps and all, under the rig Low lights them by
+([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)).
+
+#### A navy's surface
+
+*In development with the rest of High, and not accepted. The owner chose its route in
+session on 13 November 2026, for
+[#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811): the surface is
+built before the step that lights a hull, and a hull wears it without a layout.*
+
+[#1802](screenshots/issue-1802/README.md) rebuilt one hull in Blender and baked a surface
+onto it, and its control showed that surface carried most of the gain on the lit table at
+the kit hull's own 2,652 triangles. A map a hull costs 2 MB. This is the cheap
+route that record names: the relief belongs to the navy's material, is drawn once, and
+tiles.
+
+- **One image a navy material.** `tools/hull-models/surface.mjs` draws each from a row of
+  the navy's `SURFACE` table (`tools/hull-models/factions/`), with no random number in
+  it, and `npm run check:models` holds the committed image to the draw. Red and green are
+  the relief's slope along the tile's two axes and blue is its height, so nothing in it
+  is colour.
+- **No model carries it and none is laid out for it.** A trim sheet's layout
+  ([UV layout and trim sheets](#uv-layout-and-trim-sheets--spec)) packs a part's width
+  into strake bands, which tile along a part and not across it, and it lays a grown body
+  a triangle at a time. So a fragment reads the image by its own place on the model in
+  metres, on the three planes of the model's frame, each weighted by how squarely the
+  face looks down that plane's axis. The keel's axis is one axis of the image on the two
+  planes that hold it, so a pattern can run square to the keel. The image's other axis,
+  `v`, is the beam from above and from ahead and the height from the side. So the line
+  where `v` is 0 is the model's centreline on a back, a bow and a stern, and its axis
+  along a flank. A material is found by its navy and its own name. No GLB changed, and
+  every model of the navy that carries the material wears its surface: twenty-seven of
+  the Commune's twenty-eight carry at least one of the four.
+- **It leans the normal and shades the indirect light, and nothing else.** The slope
+  tilts the shading normal. The height lifts and lowers the rig's ambient and environment
+  light about the surface's own mean, as a baked occlusion map touches indirect light
+  alone ([Bevels and baked occlusion](#bevels-and-baked-occlusion--spec)). Colour is never
+  written, so hue stays the faction's ink (gate 4). A lamp wears none, so gate 3 holds
+  unaltered. It adds no pass, call or triangle.
+- **It is the world layer's, at High alone.** A hull's surface is on the world layer
+  ([Two layers, two laws](#two-layers-two-laws)). The High quality builds a model's
+  template apart from Low's, so nothing Low draws is built, patched or keyed differently:
+  `packages/frontend/test/navySurface.test.ts` holds that.
+- **A hull that brings a surface of its own keeps it.** A material with a normal map in
+  its file wears no second one over it.
+
+The Commune's four are the fields #1802 baked, said as tiles. `chitin_hull` is a leaf's
+venation over growth lines: a midrib, laterals trailing aft from it, and a net of
+veinlets between. The midrib is drawn where the image's `v` is 0, so it runs down the
+back and the keel, down the bow and the stern at the centreline, and as a line along each
+flank at the hull's axis. The owner took the bow and the stern in session on 13 November
+2026: the first cut drew it across them as a band. `growth_ridge` is a grain of rings square to the
+keel, `spore_pod` a pored skin, and `algae_membrane` a fin's rays. The navy's block asks
+for "growth rings and living bioluminescent veins"
+([asset-prompts-3d.md](asset-prompts-3d.md)); these veins are relief and emit nothing.
+Their heights are in the table, in metres. `HIGH_GRAPHICS.HULL_SURFACE` in
+`packages/shared/src/constants.ts` holds how far the client leans them, TUNABLE like
+every High number.
+
+Two things a tile cannot do, which the Blender hull does. It cannot find a hull's own
+back, so the midrib follows the model's frame and a wide deck takes another every
+16 m. And it cannot follow a fin, so every ray stands square to the keel.
+
+Still open, for the frames taken on the named GPU
+([issue-1811](screenshots/issue-1811/README.md)): whether the kit Corvette wearing this
+reads beside the Blender one at the Close and nearest cameras, and what three taps a
+clad fragment cost against gate 6's 8 ms. Until High lights a hull (#1814), the surface
+shows under the rig Low lights a hull by.
 
 #### The plate under a mark
 
