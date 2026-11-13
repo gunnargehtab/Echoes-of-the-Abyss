@@ -609,14 +609,18 @@ function loadTemplate(
 /**
  * Whether a view drawing `high` takes a template of its own for a model: the
  * High quality's, whose cladding the world pass draws and lights (#1814) and
- * which wears its navy's surface where one is drawn (#1811). Sorrowgate keeps
- * its own laminate and High does not reach it (graphicsQuality.ts
- * `highRefusal`). At Low the template is the one every build before High
- * drew, so nothing a Low frame draws is built, patched or keyed differently
- * for High existing.
+ * which wears its navy's surface where one is drawn (#1811). Only for a model
+ * of the player's `own`: a contact's keeps the template Low draws, whole on
+ * the canvas, since in the world pass its body would hide the Lid's glow from
+ * the ground beside it and feed the bloom, and a contact casts neither shadow
+ * nor light (docs/art-direction.md, "Two layers, two laws", limit 2).
+ * Sorrowgate keeps its own laminate and High does not reach it
+ * (graphicsQuality.ts `highRefusal`). At Low the template is the one every
+ * build before High drew, so nothing a Low frame draws is built, patched or
+ * keyed differently for High existing.
  */
-export function highVariant(look: WorldLook, high: boolean): boolean {
-  return high && look !== 'sorrowgate';
+export function highVariant(look: WorldLook, high: boolean, own = true): boolean {
+  return high && own && look !== 'sorrowgate';
 }
 
 /**

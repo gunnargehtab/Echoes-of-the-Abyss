@@ -96,6 +96,10 @@ describe("a navy's surface on a roster model", () => {
     assert.equal(highVariant('standard', false), false);
     // Sorrowgate keeps its laminate, and High does not reach it.
     assert.equal(highVariant('sorrowgate', true), false);
+    // A contact's model keeps Low's template at High: it casts no shadow
+    // and no light (art-direction.md, limit 2; #1814).
+    assert.equal(highVariant('standard', true, false), false);
+    assert.equal(highVariant('free-water', true, false), false);
   });
 
   it("leaves the Low quality's template as it was built before any surface", () => {

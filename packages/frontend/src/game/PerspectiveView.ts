@@ -659,10 +659,7 @@ interface EntitySpec {
   scaled?: boolean;
   /**
    * True for a track. A contact's model stays whole on the canvas at both
-   * qualities: in the world pass its body would hide the Lid's glow from the
-   * ground beside it and feed the bloom, and a contact casts neither shadow
-   * nor light (docs/art-direction.md, "Two layers, two laws", limit 2; the
-   * owner's call on #1814).
+   * qualities (rosterModels.ts `highVariant`; the owner's call on #1814).
    */
   contact?: boolean;
 }
@@ -5089,7 +5086,7 @@ export class PerspectiveView {
     // and the one it had keeps drawing until the other is built. A contact's
     // keeps Low's template (`EntitySpec.contact`).
     const lit =
-      spec.modelDesc !== null && spec.contact !== true && highVariant(this.look, this.high.on);
+      spec.modelDesc !== null && highVariant(this.look, this.high.on, spec.contact !== true);
     const modelKey = lit ? `${spec.modelCacheKey}:high` : spec.modelCacheKey;
     if (spec.modelDesc !== null && handle.modelKey !== modelKey) {
       const instance = rosterModelInstance(spec.modelDesc, this.look, lit);
