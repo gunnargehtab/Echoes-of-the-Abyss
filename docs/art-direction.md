@@ -188,8 +188,12 @@ Built so far:
   carries no relief: it takes the light level ground takes. The relief is all back by
   2.2 radii. Like a plate, the hold is the mark's and not the map's. It stands where the
   view draws an own shadow and nowhere else, it only ever returns ground to level, and a
-  contact has no shadow to carry one (limit 2). The bake's own rim, lee and scour are not
-  held: they stood under the shadows before the relief did.
+  contact has no shadow to carry one (limit 2). It places and moves no light, so limit 4
+  does not reach it: it is part of the own shadow limit 2 licenses, and differs between
+  clients only as their own forces do. The bake's own rim, lee and scour are not held:
+  they stood under the shadows before the relief did. Open for the named GPU's frames:
+  the held ground is a crest's level, a little paler than the troughed ground round it,
+  and whether that patch reads as a hull's own light is limit 5's question.
 - **The water is a medium.** It keeps the depth ramp's brightness
   ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
   of the biome under the water its light comes from, in that biome's water token. A pixel

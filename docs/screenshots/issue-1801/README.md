@@ -275,6 +275,16 @@ trough away from any shadow still reads 10.1 at its 5th percentile, under the sh
 14.3. What the hold gives a shadow is its own even ground: an edge with nothing dark
 running into it. Whether that is enough at a glance is for the named GPU's frames.
 
+One more thing to look for there. The held ground stands at a crest's level, and the
+relief only darkens, so each own hull now carries a patch paler than the troughed rim
+round it, and the patch moves with the hull. Over 560, 745 to 740, 800 at Home, shadow
+and all, the median went from 12.6 to 17.7, where the rim away from the hulls, 100, 700
+to 450, 780, stayed at 14.4. Over 780, 680 to 960, 720 at Close it went from 16.1 to 18.9,
+against 16.5 away from them, 100, 780 to 500, 850. The hold places no light and lifts
+nothing past level ground, so it is no light a hull throws. But a paler disc under every
+own hull, there at any loudness, is what limit 5 exists to keep honest: whether it reads
+as the hull's own light is the owner's to judge.
+
 ## Related
 
 - [The target frame](../issue-1799/README.md) — the cameras, and who captures
