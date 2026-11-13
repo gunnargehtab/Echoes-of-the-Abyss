@@ -215,7 +215,8 @@ tiles.
   face looks down that plane's axis. The keel's axis is one axis of the image on the two
   planes that hold it, so a pattern can run square to the keel. A material is found by
   its navy and its own name. No GLB changed, and every model of the navy that carries the
-  material wears its surface.
+  material wears its surface: twenty-seven of the Commune's twenty-eight carry at least
+  one of the four.
 - **It leans the normal and shades the indirect light, and nothing else.** The slope
   tilts the shading normal. The height lifts and lowers the rig's ambient and environment
   light about the surface's own mean, as a baked occlusion map touches indirect light
