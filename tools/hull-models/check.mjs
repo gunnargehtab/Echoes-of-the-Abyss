@@ -38,7 +38,9 @@
  * part's UV0 and the trim tag on its materials are read the same way, so a
  * layout a script lays (trim.mjs) is held to the file too, and each navy's
  * sheet, drawn once into the client's assets (sheets.mjs), is held to its
- * draw. It still does not read vertex colours — nothing writes them — so a
+ * draw. Since #1811 each navy material's surface is held the same way
+ * (surfaces.mjs), with the scales its draw writes for the client. It still
+ * does not read vertex colours — nothing writes them — so a
  * change to those passes here against a stale file.
  *
  * The normals are compared because the conn view lights a hull by the
@@ -75,9 +77,15 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readGlb, boundsOf, finishFields, diffNodes } from './glb.mjs';
-import { decodeGray } from './png.mjs';
+import { decodeGray, decodeRgb } from './png.mjs';
 import { drawTrimSheet } from './trim.mjs';
 import { navyTrims, sheetPath } from './sheets.mjs';
+import {
+  SURFACE_FILE,
+  drawAll as drawSurfaces,
+  renderSource as renderSurfaceSource,
+  surfacePath,
+} from './surfaces.mjs';
 import { OUTLINE_FILE, renderSource } from '../hull-maps/outlines.mjs';
 import { NAVIES, splitsIn } from './finishes.mjs';
 
@@ -406,6 +414,43 @@ try {
       );
     } else console.log(`✓ trim sheet ${name}.png agrees with its draw`);
   }
+
+  // Each navy material's surface is drawn once into the client's assets too
+  // (surfaces.mjs, #1811), three bytes a texel, and held to the same slack.
+  // The scales the client reads an image by are the draw's own, so the
+  // module that carries them is held to it as the outlines' is.
+  const surfaces = await drawSurfaces();
+  for (const { name, drawn } of surfaces) {
+    let committed;
+    try {
+      committed = decodeRgb(readFileSync(surfacePath(name)));
+    } catch {
+      failed++;
+      console.error(`✗ surface ${name}.png is not committed — run tools/hull-models/surfaces.mjs`);
+      continue;
+    }
+    const lines = diffSheet(drawn, committed).map((line) => line.replace('trim sheet', 'surface'));
+    if (lines.length) {
+      failed++;
+      console.error(
+        `✗ surface ${name}.png drifted:\n    ${lines.join('\n    ')}\n` +
+          '  run `node tools/hull-models/surfaces.mjs` and commit the PNG'
+      );
+    } else console.log(`✓ surface ${name}.png agrees with its draw`);
+  }
+  let scales = null;
+  try {
+    scales = readFileSync(SURFACE_FILE, 'utf8');
+  } catch {
+    /* missing counts as drift */
+  }
+  if (scales !== (await renderSurfaceSource(surfaces))) {
+    failed++;
+    console.error(
+      `✗ ${SURFACE_FILE.slice(repo.length + 1)} ${scales === null ? 'is missing' : 'disagrees with the draw'}\n` +
+        '  run `node tools/hull-models/surfaces.mjs` and commit it'
+    );
+  } else console.log(`✓ ${SURFACE_FILE.slice(repo.length + 1)} agrees with the draw`);
 
   const want = await renderSource();
   let have = null;

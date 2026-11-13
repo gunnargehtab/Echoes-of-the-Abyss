@@ -59,6 +59,8 @@ import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts'
 import { installHullSurface, type WorldLook } from './tutorialLook.ts';
 import { installInstanceGlow, keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { trimSheet } from './trimSheets.ts';
+import { installNavySurface } from './navySurface.ts';
+import { hasNavySurface, navySurface } from './navySurfaces.ts';
 import { bakeTransform } from './bakeTransform.ts';
 
 /**
@@ -493,7 +495,8 @@ export function buildTemplate(
   raw: Group,
   key: RosterModelKey,
   look: WorldLook = 'standard',
-  palette: Palette = ACTIVE_PALETTE
+  palette: Palette = ACTIVE_PALETTE,
+  surfaced = false
 ): Template {
   // Clone before recolouring: the parse cache stays hue-neutral so a
   // palette switch can recolour fresh rather than compounding tints.
@@ -524,6 +527,19 @@ export function buildTemplate(
       installHullSurface(material, key.faction, template.baseScale);
     }
   }
+  // The High quality's template alone (`surfaceVariant`): each cladding
+  // material its navy has drawn a surface for wears it, by the material's
+  // own name. Low's template is built without this line and stays the
+  // object it always was. A material that brings a normal map of its own
+  // keeps that one: a hull with a surface baked into its file (#1802's
+  // spike) is not given a second over it.
+  if (surfaced) {
+    for (const material of materialClones.values()) {
+      if (!(material instanceof MeshStandardMaterial) || material.normalMap !== null) continue;
+      const surface = navySurface(FACTION_SLUG[key.faction], material.name);
+      if (surface !== null) installNavySurface(material, surface, template.baseScale);
+    }
+  }
   const emissives: Emissive[] = [];
   for (const material of materialClones.values()) {
     if (!isLamp(material)) continue;
@@ -546,7 +562,8 @@ function loadTemplate(
   file: string,
   load: () => Promise<string>,
   key: RosterModelKey,
-  look: WorldLook
+  look: WorldLook,
+  surfaced: boolean
 ): void {
   templates.set(templateKey, null);
   // The user can switch palettes before decoding finishes. Keep the ink
@@ -561,7 +578,7 @@ function loadTemplate(
   }
   scene
     .then((raw) => {
-      templates.set(templateKey, buildTemplate(raw, key, look, palette));
+      templates.set(templateKey, buildTemplate(raw, key, look, palette, surfaced));
     })
     .catch(() => {
       // A model that fails to decode is a missing model: the entry stays
@@ -571,22 +588,37 @@ function loadTemplate(
 }
 
 /**
+ * Whether a view drawing `high` takes a template of its own for this model:
+ * the High quality's, whose cladding wears its navy's surface (#1811). Only
+ * where High draws and the navy has one drawn. Sorrowgate keeps its own
+ * laminate and High does not reach it (graphicsQuality.ts `highRefusal`).
+ * Everywhere else the two qualities share the one template, so nothing a Low
+ * frame draws is built, patched or keyed differently for High existing.
+ */
+export function surfaceVariant(key: RosterModelKey, look: WorldLook, high: boolean): boolean {
+  return high && look !== 'sorrowgate' && hasNavySurface(FACTION_SLUG[key.faction]);
+}
+
+/**
  * A per-entity instance of the approved model, or null while it loads (or
  * when none exists — a kind whose navy has no variant, a failed decode).
  * Callers fall back to the Phase-1 sprite until this returns something, so a
- * null is never a hole on screen.
+ * null is never a hole on screen. `high` is whether the asking view draws
+ * the High quality (`surfaceVariant`).
  */
 export function rosterModelInstance(
   key: RosterModelKey,
-  look: WorldLook = 'standard'
+  look: WorldLook = 'standard',
+  high = false
 ): RosterModelInstance | null {
   const slug = slugFor(key);
   const load = MODEL_BY_FILE.get(`${slug}.glb`);
   if (load === undefined) return null;
-  const templateKey = `${slug}:${ACTIVE_PALETTE.name}:${look}`;
+  const surfaced = surfaceVariant(key, look, high);
+  const templateKey = `${slug}:${ACTIVE_PALETTE.name}:${look}${surfaced ? ':surfaced' : ''}`;
   const template = templates.get(templateKey);
   if (template === undefined) {
-    loadTemplate(templateKey, `${slug}.glb`, load, key, look);
+    loadTemplate(templateKey, `${slug}.glb`, load, key, look, surfaced);
     return null;
   }
   if (template === null) return null;

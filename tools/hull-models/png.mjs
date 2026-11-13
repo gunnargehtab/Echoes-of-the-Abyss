@@ -15,6 +15,10 @@
  * of the five row filters, taking the first channel — so a reader can
  * check a map another tool wrote. Interlaced and 16-bit files are refused:
  * nothing here writes them, and a refusal is better than a guess.
+ *
+ * `encodeRgb` and `decodeRgb` are the same file at colour type 2, three
+ * bytes a texel (#1811): a navy's surface carries two slopes and a height,
+ * which one grey channel cannot.
  */
 import { deflateSync, inflateSync } from 'node:zlib';
 
@@ -43,17 +47,27 @@ function chunk(type, data) {
 
 /** A `width` × `height` grey image, one byte a texel, row 0 first. */
 export function encodeGray(width, height, pixels) {
-  if (pixels.length !== width * height)
-    throw new Error(`encodeGray: ${pixels.length} texels for ${width} × ${height}`);
+  return encode(width, height, pixels, 1, 'encodeGray');
+}
+
+/** A `width` × `height` RGB image, three bytes a texel, row 0 first. */
+export function encodeRgb(width, height, pixels) {
+  return encode(width, height, pixels, 3, 'encodeRgb');
+}
+
+function encode(width, height, pixels, channels, who) {
+  const stride = width * channels;
+  if (pixels.length !== stride * height)
+    throw new Error(`${who}: ${pixels.length} bytes for ${width} × ${height}`);
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
   ihdr[8] = 8; // bit depth
-  ihdr[9] = 0; // greyscale
-  const rows = Buffer.alloc((width + 1) * height);
+  ihdr[9] = channels === 1 ? 0 : 2; // greyscale, or truecolour
+  const rows = Buffer.alloc((stride + 1) * height);
   for (let y = 0; y < height; y++) {
-    rows[y * (width + 1)] = 0; // filter: none
-    rows.set(pixels.subarray(y * width, (y + 1) * width), y * (width + 1) + 1);
+    rows[y * (stride + 1)] = 0; // filter: none
+    rows.set(pixels.subarray(y * stride, (y + 1) * stride), y * (stride + 1) + 1);
   }
   return Buffer.concat([
     SIGNATURE,
@@ -65,6 +79,15 @@ export function encodeGray(width, height, pixels) {
 
 /** `{ width, height, pixels }` from a PNG's bytes, the first channel of each texel. */
 export function decodeGray(buf) {
+  return decode(buf, 1);
+}
+
+/** `{ width, height, pixels }` from an RGB or RGBA PNG's bytes, three bytes a texel. */
+export function decodeRgb(buf) {
+  return decode(buf, 3);
+}
+
+function decode(buf, keep) {
   buf = Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength);
   if (!buf.subarray(0, 8).equals(SIGNATURE)) throw new Error('decodeGray: not a PNG');
   let off = 8;
@@ -91,9 +114,10 @@ export function decodeGray(buf) {
     off += 12 + len;
   }
   if (!width || !channels) throw new Error('decodeGray: no IHDR');
+  if (channels < keep) throw new Error(`decodeRgb: the file has ${channels} channel(s)`);
   const raw = inflateSync(Buffer.concat(idat));
   const stride = width * channels;
-  const pixels = new Uint8Array(width * height);
+  const pixels = new Uint8Array(width * height * keep);
   const prev = new Uint8Array(stride);
   const cur = new Uint8Array(stride);
   for (let y = 0; y < height; y++) {
@@ -116,7 +140,8 @@ export function decodeGray(buf) {
       } else if (filter !== 0) throw new Error(`decodeGray: row ${y} has filter ${filter}`);
       cur[i] = x & 0xff;
     }
-    for (let i = 0; i < width; i++) pixels[y * width + i] = cur[i * channels];
+    for (let i = 0; i < width; i++)
+      for (let k = 0; k < keep; k++) pixels[(y * width + i) * keep + k] = cur[i * channels + k];
     prev.set(cur);
   }
   return { width, height, pixels };

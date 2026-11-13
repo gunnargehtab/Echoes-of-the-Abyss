@@ -217,6 +217,17 @@ export const HIGH_GRAPHICS = {
     VOLUME_FALLOFF: 24,
     EMBER_SHARE: 0.2,
   },
+  /**
+   * A navy material's surface on a hull's cladding (#1811;
+   * tools/hull-models/surface.mjs draws it, navySurface.ts reads it). `RELIEF`
+   * scales the drawn slopes, 1 being the relief as its table gives it in
+   * metres: a vein 8 cm proud is under a pixel at every conn camera, so the
+   * skin leans further than it stands. `CAVITY` is how far the rig's
+   * indirect light falls in the deepest hollow and rises on the highest
+   * crest, about the surface's own mean. `ANISOTROPY` is the trim sheets'
+   * four taps, for the same low camera.
+   */
+  HULL_SURFACE: { RELIEF: 2.5, CAVITY: 0.5, ANISOTROPY: 4 },
 } as const;
 
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */

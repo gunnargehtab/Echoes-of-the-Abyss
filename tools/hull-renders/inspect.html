@@ -27,6 +27,9 @@
   a before and an after differ only by the model. The cameras frame the
   union of every model's box, or of the named focus parts.
 
+  A column the driver marks `surface` wears that navy's surfaces as the High
+  graphics quality draws them (surface.mjs, #1811).
+
   Query params: none. The job arrives as window.__job, set by the driver.
 -->
 <html>
@@ -111,6 +114,18 @@
         const raw = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
         if (raw.z > raw.x) root.rotation.y = Math.PI / 2;
         root.updateMatrixWorld(true);
+        // A column asked to wear its navy's surfaces takes them as the High
+        // quality puts them on: the client's patch, over parts baked into
+        // the model's frame as the conn view's merge bakes them (#1811).
+        if (m.surface) {
+          const { wearNavySurface } = await import('/surface.js');
+          trims[m.id].surface = await wearNavySurface(
+            root,
+            m.surface,
+            (name) => `/surface/${name}.png`,
+            { anisotropy: job.surfaceAnisotropy }
+          );
+        }
         root.traverse((o) => {
           if (!o.isMesh) return;
           o.castShadow = true;
