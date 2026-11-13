@@ -12,7 +12,7 @@ taken on the named GPU, by the commands under "Who captures".
 
 ## The decisions
 
-The owner decided two things in session on 13 November 2026.
+The owner decided three things in session on 13 November 2026.
 
 - **The surface is built before the step that lights a hull.** The issue was filed as
   waiting on that step. The other reading was to build the step first, in a pull request
@@ -24,6 +24,12 @@ The owner decided two things in session on 13 November 2026.
   sheet has. That layout packs a part's width into strake bands, so it does not tile
   across a part, and each laid hull is re-exported:
   the Consortium's Corvette went from 132,708 to 301,128 bytes when it was laid.
+- **The midrib runs down a bow and a stern, not across them.** The first cut read the
+  fore-and-aft plane with the image's `v` along the height, so the chitin's midrib, drawn
+  where `v` is 0, crossed every end face as a band. It showed as a lit stroke on the
+  bow-on Corvette at the Close camera. That plane reads the beam now, so the midrib comes
+  down the bow at the centreline. The other readings were the midrib from above only,
+  which loses the line along each flank, and the band left and written down.
 
 [art-direction.md](../../art-direction.md#a-navys-surface) says what the surface is and
 what it may touch.
@@ -67,11 +73,12 @@ node tools/hull-renders/inspect.mjs corvette-pelagia --surface pelagia \
 
 ![Four views: kit, kit surfaced, Blender](lit-table.png)
 
-![Flank, bow and stern, closer](lit-close.png)
+![Flank, bow and stern closer, and bow on](lit-close.png)
 
 On the table the tiled surface holds what the baked one holds: the midrib and the
 laterals on the back, the net between them, the grain on the rings and the rays on the
-fins, at 2,652 triangles and no bytes a hull. What the Blender hull still has is its
+fins, at 2,652 triangles and no bytes a hull. Bow on, the midrib comes down the nose at
+the centreline on both. What the Blender hull still has is its
 modelling. Its seeds and lamps are round where the kit's are faceted, its rings lie on
 the skin, and its fins have a rim. Two things the tile does worse. Its rays stand square to
 the keel, so on the raked dorsal blade they cross the fin instead of following it. And its
@@ -98,8 +105,8 @@ twice:
 [The whole frame](high-near-port-full.png) of the first, surfaced, with the HUD.
 
 At these two cameras the surfaced kit hull shows the most surface of the three: the
-laterals as diagonals down the flank, a line along the hull's axis, the rays on every
-fin and the bands on the rings. #1802 found its baked surface showed only faintly here.
+laterals as diagonals down the flank, the midrib's line along the flank at the hull's
+axis, the rays on every fin and the bands on the rings. #1802 found its baked surface showed only faintly here.
 The difference is the lean of 2.5, not the route. The Blender hull's modelling still
 shows: rounder seeds and a smoother outline.
 
@@ -109,10 +116,23 @@ The High slice's Close camera, the Corvette enlarged three times, and Home:
 
 ![Home at High, three ways](high-home-three.png)
 
-At Close the Corvette is about 70 pixels across and the three cannot be told apart by
-their surface, as #1802 found. A slope averages to level down the mip chain, so the
-relief is gone there, and nothing shimmers in its place. Whole frames, surfaced:
+At Close the Corvette is bow on and about 70 pixels across. No vein, ring or ray can be
+picked out on any of the three there, as #1802 found: a slope averages to level down the
+mip chain. The surfaced hull is not identical to main's at that size: down the middle of
+the bow its rows differ from main's by up to about ten levels of summed RGB, and no band
+crosses it. Whole frames, surfaced:
 [Close](high-close-full.png) · [Home](high-home-full.png).
+
+The Survey camera, at half size, at both qualities on main and on this branch. A hull is
+a few pixels there, and the four differ by the quality alone:
+
+![Survey, Low and High, main and this branch](survey-four.png)
+
+[The clip](clip-near-orbit.mp4) swings the eye 60° round the Corvette at the nearest
+camera's range, at High, at 1280 × 720 and three times the speed the rasteriser drew it.
+It is Playwright's screencast, so its compression takes most of the relief with it. It
+shows the hull and its lamps steady under a moving camera, and it is no evidence about
+shimmer.
 
 ### Readings
 
@@ -127,10 +147,11 @@ count at every camera, at both qualities, and on the Corvette's seven lamps to t
 | Gate 6's close station | 55 | 660,430 | 43 | 593,674 | 1.8 px² |
 | Near, port | 51 | 656,432 | 39 | 589,674 | 85.9 px² |
 | Near, bow | 48 | 655,140 | 36 | 588,378 | 94.2 px² |
+| Survey | 57 | 661,726 | 45 | 594,970 | 0.8 px² |
 
 The hull's own brightness does not move. Over the pixels the Corvette covers at the two
-near cameras, the mean linear luminance at High is 0.0415 on main and 0.0417 surfaced off
-the port quarter, and 0.0492 and 0.0496 off the bow. The surface shades about its own
+near cameras, the mean linear luminance at High is 0.0412 on main and 0.0416 surfaced off
+the port quarter, and 0.0492 and 0.0498 off the bow. The surface shades about its own
 mean, so it moves light between a hollow and a crest and adds none.
 
 ### Low does not move
@@ -143,9 +164,13 @@ differs. The frames agree, main on the left:
 
 ![Low off the bow, main and this branch](low-near-bow-two.png)
 
+![Low at the Close camera, main and this branch](low-close-two.png)
+
+![Low at Home, main and this branch](low-home-two.png)
+
 The two runs are not pixel for pixel, since the marine snow drifts between them. Over the
-hull's pixels the mean linear luminance reads 0.04107 and 0.04111 off the port quarter,
-and 0.04883 and 0.04878 off the bow.
+hull's pixels the mean linear luminance reads 0.04112 and 0.04099 off the port quarter,
+and 0.04867 and 0.04869 off the bow.
 
 ## What it costs
 
@@ -169,8 +194,8 @@ and 0.04883 and 0.04878 off the bow.
   short list only if it does. That is the owner's reading of the named GPU's frames.
 - **A second navy.** A plated hull wants seams that follow a part, which a tile read by
   place cannot give. The trim sheets already draw those.
-- **A clip.** The relief is fixed to the model and fades by mip. No frame here shows it
-  under a moving camera.
+- **That nothing shimmers.** The relief is fixed to the model and fades by mip, which is
+  the reason to expect none. The clip here is too compressed to show it either way.
 
 ## Who captures
 
@@ -192,7 +217,8 @@ git checkout docs/concept-art/models/corvette-pelagia.glb
 ```
 
 `02-close.png`, `04-near-port.png` and `05-near-bow.png` of each set are the frames the
-issue asks to be judged side by side. Gate 6's time is read by
+issue asks to be judged side by side. `CLIP=1` with `RECORD_VIDEO=<dir>` on the first
+command records the swing round the hull instead. Gate 6's time is read by
 [issue-1799](../issue-1799/README.md)'s unpaced command, on this tree.
 
 ## Related

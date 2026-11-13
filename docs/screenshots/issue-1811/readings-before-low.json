@@ -128,6 +128,33 @@
           2.9
         ]
       ]
+    },
+    {
+      "name": "survey",
+      "pose": {
+        "xM": 2000,
+        "zM": 2000,
+        "distance": 10000,
+        "yawDeg": 0,
+        "pitchDeg": 88,
+        "focusDepthM": null
+      },
+      "drawCalls": 45,
+      "triangles": 594970,
+      "lampAreaPx": [
+        0.8
+      ],
+      "lampSitesPx": [
+        [
+          0.44,
+          0.35,
+          0.36,
+          0.36,
+          0.35,
+          0.36,
+          0.33
+        ]
+      ]
     }
   ]
 }
