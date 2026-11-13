@@ -40,8 +40,8 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs (buildability
                    closed part (#1373), and every part under the model's y 0, testing only
                    pairs whose boxes overlap, so a sweep is under a second. A contact is a
                    question, mount or clip, so it is advisory too: #947's hand sweep for
-                   clips no gate asks about, kept (#953) and held by
-                   test/contacts.test.mjs.
+                   clips no gate asks about, kept (#953) and held by test/contacts.test.mjs.
+                   blender/ is #1802's spike, in no gate: kit.py's header says what it is.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), all 106 or the slugs named (#1055),
                    then outlines.mjs writes hullOutlines.generated.ts (no browser)
