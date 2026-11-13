@@ -61,8 +61,9 @@ to 95th percentile of luma, out of 255.
 | Survey, the bowl's west flank | 18.8, 17.8 to 19.6 | 13.2, 12.2 to 14.0 | 14.0, 11.4 to 14.9 |
 
 The boxes are 100, 560 to 560, 780 at Home, 500, 700 to 1400, 860 at Close, and 660, 300
-to 790, 480 and 830, 500 to 880, 640 at Survey. The marine snow and the hulls' ground
-shadows are in the first two.
+to 790, 480 and 830, 500 to 880, 640 at Survey. The marine snow is in the first two.
+Home's box holds no hull's ground shadow, so its dark pixels are the relief's; Close's
+takes in part of the middle hull's.
 
 Two things to read there. The spread on the rim doubled, which is the relief: 4.5 to 9.7
 at Home. And the ground the Lid alone lights is still darker than Low's, by 4 to 7 of
@@ -241,9 +242,11 @@ percentile before the relief; at Home the relief took that margin away, and the 
 the dune bands at Close.
 
 This is not settled here. Three options are written for the owner in the pull request:
-bound the relief so its deepest trough stays above a shadow, which leaves about the
-spread the rim had; hold the relief out from under each hull's shadow, which is a new
-hold keyed to agents; or keep it and judge the two on the named GPU's frames.
+bound the relief so its deepest trough stays above a shadow; hold the relief out from
+under each hull's shadow, which is a new hold keyed to agents; or keep it and judge the
+two on the named GPU's frames. The first was not built or measured. By estimate it leaves
+the rim at Home a spread of about 6 of 255, against 4.5 at #1807 and 9.7 now: the crests
+stand near 19.8, and a shadow over ground with no relief near 13.7 at this Lid.
 
 The ink was checked directly, since at the survey dolly it is faint at both qualities.
 [ink-survey.png](software/ink-survey.png) is the Survey frame at High less the same frame
