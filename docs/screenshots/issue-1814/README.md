@@ -11,6 +11,13 @@ frames to judge are taken on the named GPU, by the commands under "Who captures"
 
 [art-direction.md](../../art-direction.md#a-model-in-the-worlds-light) says what is built.
 
+Every frame and reading below was taken at `44cd4e1a`, before
+[#1817](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/1817) lit the silt as
+relief and raised the Lid's level from 3 to 3.3. This branch has `main` merged in since.
+The merged tree was drawn once more over the garden to see that it draws: the frame has
+#1817's hold pass before the world pass and one call more, 67, and the hulls read as they
+do below. The frames here were not retaken.
+
 ## The decisions
 
 The owner took three calls in session on 13 November 2026, each from written options and
