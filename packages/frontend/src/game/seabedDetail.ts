@@ -41,7 +41,7 @@ import {
   RGBAFormat,
   UnsignedByteType,
 } from 'three';
-import { Biome, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
+import { Biome, HIGH_GRAPHICS, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { KEY_LIGHT } from './palette.ts';
 import { propHash } from './environment.ts';
@@ -256,7 +256,7 @@ vec4 groundNoise(vec2 x) {
 `;
 }
 
-function fragmentMain(): string {
+function fragmentMain(mode: GroundDetailMode): string {
   const d = SEABED_DETAIL;
   const [lx, lz] = lightHeading();
   const stoss = 1 - d.DUNE_LEE;
@@ -351,16 +351,65 @@ function fragmentMain(): string {
       0.8 * (groundNoise(gp / ${f(d.GRAIN_FINE_M)} + 19.0).a - ${f(GRAIN_MEAN[1])}) *
           smoothstep(${f(d.GRAIN_PX[0])}, ${f(d.GRAIN_PX[1])}, ${f(d.GRAIN_FINE_M)} / gMpp);
 
-  // In encoded space, as the bake scales its bytes: a strength here is the
+${mode === 'relief' ? reliefTail() : paintTail()}
+}
+`;
+}
+
+/**
+ * Low's end of the layer: every term painted into the ground's colour, as the
+ * hillshade the key light would give it.
+ */
+function paintTail(): string {
+  return `  // In encoded space, as the bake scales its bytes: a strength here is the
   // same gain as RELIEF_DEPTH there, so the bound compares like with like. The
   // clamp is what makes the dark bound structural: no term past 1, whatever a
   // later edit does to one. The min is the lift's cap.
   vec4 gTerms = clamp(vec4(gDune, gRipple, gScour, gGrain), -1.0, 1.0);
   float gGain = min(1.0 - gFade * dot(gStrength, gTerms), ${f(1 + DETAIL_LIFT)});
-  diffuseColor.rgb = surveyDecode(surveyEncode(diffuseColor.rgb) * gGain);
+  diffuseColor.rgb = surveyDecode(surveyEncode(diffuseColor.rgb) * gGain);`;
 }
-`;
+
+/**
+ * The lit ground's end of it (litGround.ts; docs/art-direction.md, "What is
+ * built at High"). A hillshade is a light standing in a quarter, and there is
+ * no sun below the Lid (limit 1): the Lid's glow comes from the whole water
+ * above. So the same dunes, ripples and scours are handed over as relief
+ * instead: how much of that water each hollow hides from the ground in it,
+ * which the lit sum takes off the Lid's glow and off the pools alike. A
+ * dune's trough and the foot of its lee lose most, its crest nothing; a
+ * ripple's lee and a scour's hollow the same way. Nothing here lifts: the
+ * crest takes the light level ground takes, so the brightest ground the Lid
+ * lights is the bake's (test/litGround.test.ts).
+ *
+ * The grain is not relief. It is the silt's own colour, and stays painted
+ * into the albedo as Low paints it, under the same cap.
+ */
+function reliefTail(): string {
+  const d = SEABED_DETAIL;
+  const rippleStoss = 1 - d.RIPPLE_LEE;
+  return `  // A dune's hollow: deepest along the trough at the foot of the lee.
+  float gDuneHollow = gPatch * (1.0 - gProfile) * (1.0 - gProfile);
+  // A ripple's is its lee, in a dune's trough, at every heading: no face is
+  // turned from a light that stands nowhere.
+  float gRippleHollow =
+      (gR >= ${f(rippleStoss)} ? sin(PI * (gR - ${f(rippleStoss)}) / ${f(d.RIPPLE_LEE)}) : 0.0) *
+      (1.0 - gProfile) *
+      smoothstep(${f(d.RIPPLE_PX[0])}, ${f(d.RIPPLE_PX[1])}, ${f(d.RIPPLE_M)} / gMpp);
+  // A scour's is the hollow itself, uncentred: the mean is the light's to lose.
+  float gScourHollow = gScour + ${f(SCOUR_MEAN)};
+  float gHollow = dot(gStrength.rgb, vec3(gDuneHollow, gRippleHollow, gScourHollow));
+  echoesLitSky = exp(-${f(HIGH_GRAPHICS.GROUND.HOLLOW)} * gFade * gHollow);
+  float gGain = min(1.0 - gFade * gStrength.a * clamp(gGrain, -1.0, 1.0), ${f(1 + DETAIL_LIFT)});
+  diffuseColor.rgb = surveyDecode(surveyEncode(diffuseColor.rgb) * gGain);`;
 }
+
+/**
+ * How the layer ends. `paint` is every match's ground at the Low graphics
+ * quality; `relief` is the lit ground's at High, which is installed after
+ * this and owns `echoesLitSky` (litGround.ts `installLitGround`).
+ */
+export type GroundDetailMode = 'paint' | 'relief';
 
 export interface GroundDetailUniforms {
   uGroundDetail: { value: DataTexture };
@@ -374,13 +423,15 @@ export interface GroundDetailUniforms {
  * Patch the terrain's material to shade the silt detail. Install after the
  * survey ink: it reads the ink's world position (`vSurveyXZ`) and its sRGB
  * transfer, chains the ink's hook and key, and lands right after the bake's
- * colour — before the veil (veilShading.ts), the ink and the fog.
+ * colour — before the veil (veilShading.ts), the ink and the fog. `mode` is
+ * `relief` for the lit ground alone, which is then installed after it.
  */
 export function installGroundDetail(
   material: Material,
   terrain: TerrainPayload,
   texture: DataTexture,
-  source: [number, number] = duneSource(null, terrain)
+  source: [number, number] = duneSource(null, terrain),
+  mode: GroundDetailMode = 'paint'
 ): GroundDetailUniforms {
   const uniforms: GroundDetailUniforms = {
     uGroundDetail: { value: texture },
@@ -395,9 +446,10 @@ export function installGroundDetail(
     Object.assign(shader.uniforms, uniforms);
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\n${fragmentPars()}`)
-      .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain()}`);
+      .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentMain(mode)}`);
   };
-  material.customProgramCacheKey = () => `${key}:seabed-detail-5`;
+  material.customProgramCacheKey = () =>
+    `${key}:seabed-detail-5${mode === 'relief' ? '-relief-1' : ''}`;
   material.needsUpdate = true;
   return uniforms;
 }

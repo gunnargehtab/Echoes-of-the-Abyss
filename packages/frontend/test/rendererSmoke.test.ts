@@ -2245,6 +2245,49 @@ describe('renderer smoke test: the conn view', () => {
     assert.equal(lampHaloStatus(), 'off', 'a view that is gone has refused nothing');
   });
 
+  it('lights the silt detail as relief at High, on the study’s ground too, and leaves Low’s ground as it was (#1801)', async () => {
+    // docs/art-direction.md, "What is built at High": the lit ground takes
+    // the silt detail as relief under the Lid's glow, in the free-water study
+    // as in every match. Low paints it where it always did, and the study's
+    // Low ground stays the smooth bake it was: Low does not move.
+    type Probes = {
+      __perspectiveQuality?: (quality: 'low' | 'high') => string;
+      __perspectiveSplit: (on: boolean) => string;
+    };
+    const keysOf = (pass: Iterable<Object3D>): string[] =>
+      [...pass]
+        .map((o) => ((o as Mesh).material as Material).customProgramCacheKey())
+        .filter((key) => key.includes(':seabed-detail-'))
+        .sort();
+    for (const look of ['standard', 'free-water'] as const) {
+      const world = await boot({ look });
+      try {
+        const probes = (globalThis as unknown as { window: Probes }).window;
+        probes.__perspectiveSplit(false);
+        world.frame(3);
+        const low = keysOf(world.gl.frameDraws[0]!);
+        if (look === 'standard') {
+          assert.equal(low.length, 1, 'Low paints the detail into its one ground');
+          assert.ok(low[0]!.endsWith(':seabed-detail-5'), low[0]);
+        } else {
+          assert.deepEqual(low, [], 'the study’s Low ground carries none');
+        }
+
+        assert.equal(probes.__perspectiveQuality!('high'), 'high');
+        world.frame(3);
+        const lit = world.gl.frameDraws.flatMap((pass) => keysOf(pass));
+        assert.equal(lit.length, 1, `${look}: one ground carries the detail, in one pass`);
+        assert.ok(lit[0]!.endsWith(':seabed-detail-5-relief-1:lit-ground-6'), lit[0]);
+
+        assert.equal(probes.__perspectiveQuality!('low'), 'low');
+        world.frame(3);
+        assert.deepEqual(keysOf(world.gl.frameDraws[0]!), low, `${look}: Low again is what it was`);
+      } finally {
+        world.teardown();
+      }
+    }
+  });
+
   it('draws High as a lit world pass under the tactical pass Low draws, and Low as it always did (#1801)', async () => {
     // docs/art-direction.md, "Two layers, two laws": the world layer is lit
     // at High, and the tactical layer is "unchanged at both graphics
@@ -2275,6 +2318,7 @@ describe('renderer smoke test: the conn view', () => {
           groundBytes: 0,
           worldLights: 0,
           plates: 0,
+          holds: 0,
           frameGpuBudgetMs: 8,
         },
         'Low holds nothing of High’s'
@@ -2311,7 +2355,11 @@ describe('renderer smoke test: the conn view', () => {
       // The canned ground stands vent embers, which are sources of the
       // world's own at High, so their light scatters in a pass of its own.
       assert.ok((quality(high).worldLights as number) > 0, 'the ground’s own sources are lit');
+      // The canned force's ground shadows each carry level ground, drawn in
+      // plan before the world pass that reads it (shadowHold.ts).
+      assert.ok((quality(high).holds as number) > 0, 'the own force’s shadows carry holds');
       assert.deepEqual(high.passes, [
+        'high-hold',
         'high-world',
         'high-scatter',
         'high-occlusion',
@@ -2320,11 +2368,15 @@ describe('renderer smoke test: the conn view', () => {
         'high-composite',
         'high-tactical',
       ]);
-      // The world, the scatter, the chain and the plates draw into targets:
-      // the occlusion, the bloom's prefilter, three levels down and three
-      // back up, then the plates' mask, twice: the plates, then the models
-      // cut from them. The composite and the tactical pass draw to the canvas.
-      const [target, scatter, ...after] = world.gl.frameTargets;
+      // The holds, the world, the scatter, the chain and the plates draw into
+      // targets: the occlusion, the bloom's prefilter, three levels down and
+      // three back up, then the plates' mask, twice: the plates, then the
+      // models cut from them. The composite and the tactical pass draw to the
+      // canvas.
+      const [hold, target, scatter, ...after] = world.gl.frameTargets;
+      assert.ok(hold !== null && hold !== undefined, 'the hold pass has its plan target');
+      assert.equal(hold.texture.name, 'high-hold');
+      assert.equal(hold.depthBuffer, false, 'a plan mask, with no depth');
       const chain = after.slice(0, 8);
       const mask = after[8];
       const rest = after.slice(10);
@@ -2348,23 +2400,25 @@ describe('renderer smoke test: the conn view', () => {
           640 * 360 * 8 +
           640 * 360 * 4 +
           (640 * 360 + 320 * 180 + 160 * 90 + 80 * 45) * 8 +
-          1280 * 720 * 4
+          1280 * 720 * 4 +
+          hold.width * hold.height
       );
       assert.ok((quality(high).groundBytes as number) > 0, 'the lit ground holds its pixels');
 
       const draws = drawsOf(world.gl);
-      const [worldPass, volumes] = draws as [Object3D[], Object3D[]];
+      const [held, worldPass, volumes] = draws as [Object3D[], Object3D[], Object3D[]];
       const [plated, cut, composite, tactical] = draws.slice(-4) as [
         Object3D[],
         Object3D[],
         Object3D[],
         Object3D[],
       ];
-      assert.equal(draws.length, 14);
+      assert.equal(draws.length, 15);
+      assert.equal(held.length, 1, 'every shadow’s hold is one instanced draw');
       // No model decodes on this runner, so the cut draws nothing here;
       // test/hullLight.test.ts holds what it draws over real hulls.
       assert.equal(cut.length, 0, 'the plate pass cuts only models');
-      for (const pass of draws.slice(2, 10)) assert.equal(pass.length, 1, 'one full-screen draw');
+      for (const pass of draws.slice(3, 11)) assert.equal(pass.length, 1, 'one full-screen draw');
       assert.equal(volumes.length, 1, 'every source is one instanced draw');
       assert.equal(composite.length, 1, 'the composite is one full-screen draw');
       // Two layers, one draw each: nothing is lit and then drawn again.
@@ -2452,6 +2506,7 @@ describe('renderer smoke test: the conn view', () => {
       assert.equal(world.conn.markPlates(), null, 'and no mark carries a plate');
       assert.equal(plates.count, 0);
       assert.equal(quality(again).plates, 0);
+      assert.equal(quality(again).holds, 0, 'and no shadow a hold');
       const againDraws = drawsOf(world.gl)[0]!;
       for (const object of againDraws)
         assert.equal(object.layers.mask, 1, 'back on Low’s one layer');

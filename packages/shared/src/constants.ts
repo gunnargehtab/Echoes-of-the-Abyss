@@ -127,11 +127,14 @@ export const HIGH_GRAPHICS = {
    * ground takes at the Lid, in the renderer's linear units; it is held where
    * the palest ground it lights is no paler than the palest ground the
    * loudness ladder weighs, so a mark's plate changes nothing the Lid alone
-   * lights (test/litGround.test.ts). `FALLOFF_M` is
+   * lights (test/litGround.test.ts), and where no ground it lights reaches
+   * the bloom's knee, so only a source blooms (test/highChain.test.ts). The
+   * second binds first: at 3.3 the palest ground stands within a tenth of the
+   * plate's, and little of what the bounds leave is given away. `FALLOFF_M` is
    * the depth over which the water above takes it to 1/e, so depth still
    * darkens. `HORIZON` is what a vertical face keeps of it.
    */
-  LID: { IRRADIANCE: 3, FALLOFF_M: 3000, HORIZON: 0.3 },
+  LID: { IRRADIANCE: 3.3, FALLOFF_M: 3000, HORIZON: 0.3 },
   /**
    * The lit ground. `ALBEDO_LUMINANCE` is the linear luminance the palest
    * biome fill is lifted to as an albedo; every fill and the stone take the
@@ -139,9 +142,21 @@ export const HIGH_GRAPHICS = {
    * much of a fill's chroma the albedo keeps: a fill authored at 5 to 10%
    * luminance reads as paint when it is lifted whole. `RELIEF_GAIN` steepens
    * the baked slope the light reads: the column is drawn at 0.22, and light
-   * from straight above shades a true slope by a hundredth.
+   * from straight above shades a true slope by a hundredth. `HOLLOW` is how
+   * fast the silt detail's hollows lose the water above them: a hollow of
+   * strength s keeps exp(-HOLLOW × s) of its light, so a Coral Ruins dune's
+   * trough, 0.1, keeps half. `SHADOW_HOLD` is the level ground an own
+   * entity's ground shadow carries, in shadow radii: no relief out to `FULL`,
+   * all of it back by `REACH`, so the shadow's edge stands on ground as even
+   * as Low's and a trough beside it reads apart from it.
    */
-  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8 },
+  GROUND: {
+    ALBEDO_LUMINANCE: 0.2,
+    ALBEDO_SATURATION: 0.6,
+    RELIEF_GAIN: 8,
+    HOLLOW: 7,
+    SHADOW_HOLD: { FULL: 1.3, REACH: 2.2 },
+  },
   /**
    * The water. `HUE_REACH` is how far along a sight line, in reaches, the
    * water whose hue a pixel wears stands: most of the light the water adds

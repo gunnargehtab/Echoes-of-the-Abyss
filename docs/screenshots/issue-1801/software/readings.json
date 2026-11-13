@@ -43,6 +43,7 @@
         "groundBytes": 0,
         "worldLights": 0,
         "plates": 0,
+        "holds": 0,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -87,6 +88,7 @@
         "groundBytes": 0,
         "worldLights": 0,
         "plates": 0,
+        "holds": 0,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -131,6 +133,7 @@
         "groundBytes": 0,
         "worldLights": 0,
         "plates": 0,
+        "holds": 0,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -144,6 +147,7 @@
       "name": "home",
       "quality": "high",
       "passes": [
+        "high-hold",
         "high-world",
         "high-scatter",
         "high-occlusion",
@@ -172,15 +176,16 @@
       },
       "distance": 1200,
       "waterReachM": 1805,
-      "calls": 56,
-      "triangles": 660446,
+      "calls": 57,
+      "triangles": 660452,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 144439680,
+        "targetBytes": 144701824,
         "groundBytes": 2796203,
         "worldLights": 71,
         "plates": 534,
+        "holds": 3,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -194,6 +199,7 @@
       "name": "close",
       "quality": "high",
       "passes": [
+        "high-hold",
         "high-world",
         "high-scatter",
         "high-occlusion",
@@ -222,15 +228,16 @@
       },
       "distance": 420,
       "waterReachM": 630,
-      "calls": 56,
-      "triangles": 660446,
+      "calls": 57,
+      "triangles": 660452,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 144439680,
+        "targetBytes": 144701824,
         "groundBytes": 2796203,
         "worldLights": 71,
         "plates": 534,
+        "holds": 3,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -244,6 +251,7 @@
       "name": "survey",
       "quality": "high",
       "passes": [
+        "high-hold",
         "high-world",
         "high-scatter",
         "high-occlusion",
@@ -272,15 +280,16 @@
       },
       "distance": 10000,
       "waterReachM": 32000,
-      "calls": 57,
-      "triangles": 661726,
+      "calls": 58,
+      "triangles": 661732,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
-        "targetBytes": 144439680,
+        "targetBytes": 144701824,
         "groundBytes": 2796203,
         "worldLights": 71,
         "plates": 531,
+        "holds": 3,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",

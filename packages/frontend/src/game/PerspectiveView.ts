@@ -891,6 +891,17 @@ export class PerspectiveView {
    * build opened with `?seabed-detail=0`.
    */
   private seabedDetail: boolean;
+  /**
+   * Whether the High graphics quality's lit ground carries the silt detail,
+   * as relief (seabedDetail.ts, `relief`): wherever Low's skin does, and on
+   * the free-water study's ground as well. That ground is a smooth bake at
+   * Low, and stays one, since Low is High's control and does not move
+   * (docs/art-direction.md, "What is built at High"). No stone is seated for
+   * it: the study's dressing is its own.
+   */
+  private get litDetail(): boolean {
+    return SEABED_DETAIL_ON && this.look !== 'sorrowgate';
+  }
   private detailCells: Uint8Array<ArrayBuffer> | null = null;
   private detailTexture: DataTexture | null = null;
   private detailUniforms: GroundDetailUniforms | null = null;
@@ -3289,6 +3300,7 @@ export class PerspectiveView {
       this.waterHue?.dispose();
       this.waterHue = null;
       this.high.setWater(null);
+      this.high.setHoldGround(1, 1, 0, 0);
       this.pools?.dispose();
       this.pools = null;
       this.litPools.value = NO_POOLS;
@@ -3478,19 +3490,34 @@ export class PerspectiveView {
       const lit = new MeshBasicMaterial({ map: this.litSurface.albedo, toneMapped: false });
       installSurveyInk(lit, terrain, cells, drawnSurvey, 'carrier');
       installDisplayVeil(lit);
+      // The lit ground carries the silt detail on the free-water study's
+      // ground too, where Low's skin draws none (`litDetail`).
+      if (this.detailTexture === null && this.litDetail) {
+        this.detailCells = groundDetailCells(terrain);
+        this.detailTexture = groundDetailTexture(terrain, this.detailCells);
+      }
       if (this.detailTexture !== null) {
+        // As relief the Lid's glow lights, not as Low's painted hillshade.
         this.detailUniforms = installGroundDetail(
           lit,
           terrain,
           this.detailTexture,
-          duneSource(this.mapId, terrain)
+          duneSource(this.mapId, terrain),
+          'relief'
         );
       }
-      installLitGround(lit, this.litSurface.relief, this.litPools);
+      installLitGround(lit, this.litSurface.relief, this.litPools, this.high.hold);
       this.litMaterial = lit;
       // The water over this ground wears its biomes' hues (waterMedium.ts).
       this.waterHue = waterHueTexture(terrain);
       this.high.setWater(this.waterHue, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
+      // And the ground shadows' holds lie on it, at the bake's own density.
+      this.high.setHoldGround(
+        terrain.cols * terrain.cellM,
+        terrain.rows * terrain.cellM,
+        terrain.cols * SEABED_PX_PER_CELL,
+        terrain.rows * SEABED_PX_PER_CELL
+      );
       this.terrainMesh = new Mesh(geometry, lit);
       this.terrainMesh.layers.set(WORLD_LAYER);
       const ink = new MeshBasicMaterial({
@@ -3734,7 +3761,8 @@ export class PerspectiveView {
       patchGroundDetailCells(this.detailCells, terrain, touched);
       this.detailTexture.needsUpdate = true;
       // Seats read their cell and its ring, which the rebake below covers.
-      this.stones = stoneSeats(terrain, duneSource(this.mapId, terrain));
+      // The lit ground's detail alone seats none (`litDetail`).
+      if (this.seabedDetail) this.stones = stoneSeats(terrain, duneSource(this.mapId, terrain));
     }
     rebakeSeabedCells(
       canvas,
@@ -6081,7 +6109,10 @@ export class PerspectiveView {
       this.queueTimer?.end();
       renderer.info.reset();
     }
-    this.gpuTimer?.begin(this.high.on ? 'high-world' : 'canvas');
+    // An own entity's ground shadow carries level ground at High, drawn
+    // before the world pass that reads it (shadowHold.ts).
+    if (this.high.on) this.high.setShadows(this.cues.packShadows());
+    this.gpuTimer?.begin(this.high.on ? this.high.opening : 'canvas');
     try {
       if (this.high.on) {
         // High: the world layer lit and composited, then the tactical layer
@@ -6494,6 +6525,8 @@ export class PerspectiveView {
         worldLights: this.worldLightCount,
         // Bands and discs the plate pass draws under the marks this frame.
         plates: this.high.platesDrawn,
+        // Ground shadows that carry level ground this frame (shadowHold.ts).
+        holds: this.high.holdsDrawn,
         frameGpuBudgetMs: HIGH_GRAPHICS.FRAME_GPU_MS,
       },
       textures: info?.memory.textures ?? 0,

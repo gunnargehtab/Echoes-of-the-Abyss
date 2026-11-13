@@ -20,7 +20,7 @@ import {
   ShaderLib,
   UnsignedByteType,
 } from 'three';
-import { Biome, MAP_HEADERS, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
+import { Biome, HIGH_GRAPHICS, MAP_HEADERS, SEABED_DETAIL, TERRAIN_LIFT } from '@echoes/shared';
 import {
   DETAIL_LIFT,
   detailStrengths,
@@ -554,5 +554,86 @@ describe('the silt detail shader', () => {
     assert.equal(material.type, 'MeshBasicMaterial');
     assert.match(shader.vertexShader, /vSurveyXZ = /);
     assert.match(shader.vertexShader, /#include <color_vertex>/);
+  });
+});
+
+describe('the silt detail as relief, on the lit ground (#1801)', () => {
+  // docs/art-direction.md, "What is built at High": at High the lit ground
+  // takes the dunes, ripples and scours as relief under the Lid's glow, not
+  // as the hillshade Low paints.
+  const terrain = demoTerrain();
+  const build = (mode?: 'paint' | 'relief') => {
+    const material = new MeshBasicMaterial({ vertexColors: true });
+    installSurveyInk(material, terrain, surveyCellTexture(terrain, surveyCellClasses(terrain)));
+    const texture = groundDetailTexture(terrain, groundDetailCells(terrain));
+    if (mode === undefined) installGroundDetail(material, terrain, texture);
+    else installGroundDetail(material, terrain, texture, duneSource(null, terrain), mode);
+    return { material, fragment: compile(material).fragmentShader };
+  };
+  const relief = build('relief');
+  // The relief's own lines: from its first hollow to the albedo it leaves.
+  const tail = relief.fragment.slice(
+    relief.fragment.indexOf('float gDuneHollow'),
+    relief.fragment.indexOf('* gGain);') + 9
+  );
+
+  it('keys itself apart, and leaves the painted layer’s program as it was', () => {
+    assert.equal(relief.material.customProgramCacheKey(), 'survey-ink:seabed-detail-5-relief-1');
+    const paint = build('paint');
+    assert.equal(paint.material.customProgramCacheKey(), 'survey-ink:seabed-detail-5');
+    assert.equal(paint.fragment, build().fragment, 'paint is the default, to the byte');
+    assert.ok(!paint.fragment.includes('echoesLitSky'), 'Low’s ground hands no light anything');
+    assert.ok(paint.fragment.includes('dot(gStrength, gTerms)'), 'and paints all four terms');
+  });
+
+  it('hands the light a share of the water above, from the hollows alone', () => {
+    // A dune's trough, a ripple's lee and a scour's hollow, each by its
+    // biome's own strength (SEABED_DETAIL.STRENGTH), through one falloff.
+    assert.ok(tail.includes('float gDuneHollow = gPatch * (1.0 - gProfile) * (1.0 - gProfile);'));
+    assert.match(tail, /float gScourHollow = gScour \+ [0-9.]+;/);
+    assert.ok(
+      tail.includes('dot(gStrength.rgb, vec3(gDuneHollow, gRippleHollow, gScourHollow))'),
+      'the grain is no hollow'
+    );
+    assert.ok(
+      tail.includes(
+        `echoesLitSky = exp(-${HIGH_GRAPHICS.GROUND.HOLLOW.toFixed(1)} * gFade * gHollow);`
+      ),
+      'and fades with the layer'
+    );
+  });
+
+  it('never lifts: no hollow is negative, so the share is at most 1', () => {
+    // The scour's centre is added back, so its hollow is the smoothstep's
+    // own, from 0; a dune's is a square, and a ripple's a sine over half a
+    // turn. The crest then takes what level ground takes, and the brightest
+    // ground the Lid lights is still the bake's (test/litGround.test.ts).
+    const centre = Number(/float gScourHollow = gScour \+ ([0-9.]+);/.exec(tail)![1]);
+    assert.equal(centre, SCOUR_MEAN);
+    assert.match(tail, /\? sin\(PI \* \(gR - [0-9.]+\) \/ [0-9.]+\) : 0\.0\)/);
+    assert.ok(HIGH_GRAPHICS.GROUND.HOLLOW > 0);
+  });
+
+  it('stands no light in a quarter: the relief reads no heading', () => {
+    // art-direction.md limit 1: "No sun below the Lid". Low's hillshade turns
+    // a face from the key light; the relief's hollows read no heading at all.
+    assert.ok(relief.fragment.includes('vec2 gLight ='), 'the painted terms above still do');
+    assert.doesNotMatch(tail, /gLight|gAway|gDune\b|gRipple\b/);
+  });
+
+  it('paints the grain alone into the albedo, under the lift’s cap', () => {
+    // The grain is the silt's own colour, not relief.
+    const gain =
+      /float gGain = min\(1\.0 - gFade \* gStrength\.a \* clamp\(gGrain, -1\.0, 1\.0\), ([0-9.]+)\);/.exec(
+        tail
+      );
+    assert.ok(gain, 'the grain’s gain');
+    assert.ok(Math.abs(Number(gain[1]) - (1 + DETAIL_LIFT)) < 1e-9);
+    assert.match(tail, /surveyDecode\(surveyEncode\(diffuseColor\.rgb\) \* gGain\)/);
+  });
+
+  it('spends no fetch the painted layer does not', () => {
+    const fetches = (s: string) => (s.match(/texture2D\(|groundNoise\(/g) ?? []).length;
+    assert.equal(fetches(relief.fragment), fetches(build('paint').fragment));
   });
 });

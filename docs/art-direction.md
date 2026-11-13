@@ -134,25 +134,29 @@ the owner accepts.*
 High draws the one scene as two layers
 (`packages/frontend/src/game/highFrame.ts`):
 
-1. **The world pass** draws the world layer, the cladding of the player's own models
-   with it, into a linear half-float target with the canvas's four samples. Nothing in it is tone-mapped, so its light stays
+1. **The hold pass** draws, in plan over the map, the level ground each own entity's
+   ground shadow carries: a disc a shadow, into a small mask the lit ground reads. It
+   draws only where a shadow stands, and reads no camera.
+2. **The world pass** draws the world layer, the cladding of the player's own models
+   with it, into a linear half-float target with the canvas's four samples. Nothing in
+   it is tone-mapped, so its light stays
    scene-referred. A fragment there only loses light to the water.
-2. **The scatter pass** draws what the world's own sources scatter in the water, against
+3. **The scatter pass** draws what the world's own sources scatter in the water, against
    the world's depth, at half the frame's size.
-3. **The chain** runs at half the frame's size and smaller: ambient occlusion off the
+4. **The chain** runs at half the frame's size and smaller: ambient occlusion off the
    world's depth, then the frame's light over a soft threshold, spread down four levels
    and back as bloom.
-4. **The plate pass** draws where the marks stand into a mask of the frame's size: a
+5. **The plate pass** draws where the marks stand into a mask of the frame's size: a
    band along every line traced on the ground and along every stroke of survey ink, and a
    disc under every agent's mark at a depth. It then marks in the mask wherever an own
    model's cladding is what the world pass showed.
-5. **The composite** is one full-screen draw to the canvas. It sums the world's light,
+6. **The composite** is one full-screen draw to the canvas. It sums the world's light,
    occluded, the water's own light by how much of each pixel the water took, the sources'
    volumes and the bloom. It grades the sum and runs the tone curve, holds the result
    under the plates, and lays the world's depth so the next pass is hidden by the world
    as it is at Low. Where a model stands in front of a plate it holds the water's part of
    the sum before the curve, and not the model's.
-6. **The tactical pass** draws everything else on the canvas as Low draws it: the same
+7. **The tactical pass** draws everything else on the canvas as Low draws it: the same
    materials, the same per-material curve, the same fog. Every lamp is drawn here, and
    so is a contact's model, whole. The survey ink is drawn here,
    as a layer of its own over the lit ground. The lamp halo and the chromatic split
@@ -167,7 +171,37 @@ Built so far:
   no sun below the Lid (limit 1), and the water above the ground takes it with depth, so
   depth still darkens. The albedo is each biome's fill and the stone, lifted by one gain
   so their hues and their order hold. The slope and the darkening at a cliff's rim, its
-  lee and a stone's scour come from the seabed bake.
+  lee and a stone's scour come from the seabed bake. The glow's level stands at its
+  bounds: the palest ground it lights is within a tenth of the palest ground the ladder
+  weighs, so a plate still changes nothing the Lid alone lights, and just under the
+  bloom's knee, so it spreads nothing.
+- **The silt is relief, not paint.** Low paints its dunes, ripples and scours as a
+  hillshade from the bake's key light
+  ([Silt detail and seated stones — SPEC](#silt-detail-and-seated-stones--spec)). The lit
+  ground takes the same three as hollows instead: a dune's trough and the foot of its
+  lee, a ripple's lee and a scour each lose a share of the water above them, by their
+  biome's own strength, and the ground in them takes that much less of the Lid's glow
+  and of a pool. Nothing reads a heading, since the glow has none (limit 1), and nothing
+  lifts: a crest takes what level ground takes. The grain stays the silt's own colour.
+  The free-water study's ground carries the relief too, where its Low ground is a smooth
+  bake and stays one: Low is High's control and does not move.
+- **A ground shadow carries a hold.** *Decided by the owner in session on 13 November
+  2026 ([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)).* A
+  hull's height above its own shadow is its depth ("Depth is drawn, not implied", below),
+  and a dune's trough stood as dark as a shadow, so a shadow lying across one could not
+  be told from it. Three options were written. **Bound the relief** above a shadow's
+  level leaves the rim, by estimate, about 6 of 255 of spread for the relief's 9.7.
+  **Keep both** leaves the depth cue to chance. **Hold the relief out from under the shadow** is the one the owner
+  took. Under an own entity's ground shadow, and out to 1.3 of its radius, the lit ground
+  carries no relief: it takes the light level ground takes. The relief is all back by
+  2.2 radii. Like a plate, the hold is the mark's and not the map's. It stands where the
+  view draws an own shadow and nowhere else, it only ever returns ground to level, and a
+  contact has no shadow to carry one (limit 2). It places and moves no light, so limit 4
+  does not reach it: it is part of the own shadow limit 2 licenses, and differs between
+  clients only as their own forces do. The bake's own rim, lee and scour are not held:
+  they stood under the shadows before the relief did. Open for the named GPU's frames:
+  the held ground is a crest's level, a little paler than the troughed ground round it,
+  and whether that patch reads as a hull's own light is limit 5's question.
 - **The water is a medium.** It keeps the depth ramp's brightness
   ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
   of the biome under the water its light comes from, in that biome's water token. A pixel
