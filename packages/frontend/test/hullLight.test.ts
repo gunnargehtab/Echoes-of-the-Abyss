@@ -152,6 +152,9 @@ describe('a model’s cladding in the world pass (#1814)', () => {
     batches.dispose();
 
     // Low's template, and so a contact's at High: the canvas draws it whole.
+    // That a track asks for this template is `highVariant`'s `own`
+    // (test/navySurface.test.ts); no model decodes on the smoke runner, so
+    // the view's own call is not exercised there.
     const low = new RosterBatches();
     low.attach(instantiate(template(false)));
     assert.equal(drawn(low, WORLD_LAYER).length, 0);

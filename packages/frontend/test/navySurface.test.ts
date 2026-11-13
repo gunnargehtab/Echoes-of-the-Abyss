@@ -91,11 +91,11 @@ describe("a navy's surface on a roster model", () => {
   it('asks for a template of its own wherever High draws, whatever the navy', () => {
     // Since #1814 the High template is also what the world pass lights, so a
     // navy with no surface drawn takes one too (test/hullLight.test.ts).
-    assert.equal(highVariant('standard', true), true);
-    assert.equal(highVariant('free-water', true), true);
-    assert.equal(highVariant('standard', false), false);
+    assert.equal(highVariant('standard', true, true), true);
+    assert.equal(highVariant('free-water', true, true), true);
+    assert.equal(highVariant('standard', false, true), false);
     // Sorrowgate keeps its laminate, and High does not reach it.
-    assert.equal(highVariant('sorrowgate', true), false);
+    assert.equal(highVariant('sorrowgate', true, true), false);
     // A contact's model keeps Low's template at High: it casts no shadow
     // and no light (art-direction.md, limit 2; #1814).
     assert.equal(highVariant('standard', true, false), false);

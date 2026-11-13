@@ -752,7 +752,9 @@ An own model's cladding in the world pass
 target. The plate pass draws that cladding a second time into its mask, one call a clad
 material: ten calls and 7,608 triangles for the crater's three hulls
 ([issue-1814](screenshots/issue-1814/README.md)). The world's light is two taps a clad
-fragment. Both are read against the 8 ms on the named GPU.
+fragment. Both are read against the 8 ms on the named GPU. A model draws from a High
+template of its own for every navy, so a hull drawn at both qualities on one page holds
+its vertices twice.
 
 **Lamp halo** ([art-direction.md](art-direction.md#lamp-halo--spec), on by default:
 the Lamp halos toggle in Settings turns it off, and a development switch drives captures). With Lamp halos off it spends no pass, call, triangle or target. The one cost it

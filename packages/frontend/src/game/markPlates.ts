@@ -490,8 +490,8 @@ export class PlatePass {
    * Red still says a plate stands there, for the water in front of the model
    * (`PLATE_MEDIUM_GLSL`).
    *
-   * The renderer's target and clear state, the camera's layers and the
-   * scene's override are the caller's to restore.
+   * The renderer's target and clear state, and the camera's layers, are the
+   * caller's to restore.
    */
   render(
     renderer: WebGLRenderer,

@@ -617,9 +617,10 @@ function loadTemplate(
  * Sorrowgate keeps its own laminate and High does not reach it
  * (graphicsQuality.ts `highRefusal`). At Low the template is the one every
  * build before High drew, so nothing a Low frame draws is built, patched or
- * keyed differently for High existing.
+ * keyed differently for High existing. `own` has no default: a caller that
+ * forgot it would put a contact in the world pass.
  */
-export function highVariant(look: WorldLook, high: boolean, own = true): boolean {
+export function highVariant(look: WorldLook, high: boolean, own: boolean): boolean {
   return high && own && look !== 'sorrowgate';
 }
 
@@ -627,8 +628,8 @@ export function highVariant(look: WorldLook, high: boolean, own = true): boolean
  * A per-entity instance of the approved model, or null while it loads (or
  * when none exists — a kind whose navy has no variant, a failed decode).
  * Callers fall back to the Phase-1 sprite until this returns something, so a
- * null is never a hole on screen. `high` asks for the High quality's template
- * (`highVariant`).
+ * null is never a hole on screen. `high` asks for the High quality's template,
+ * which the caller has already decided this model takes (`highVariant`).
  */
 export function rosterModelInstance(
   key: RosterModelKey,
@@ -638,7 +639,8 @@ export function rosterModelInstance(
   const slug = slugFor(key);
   const load = MODEL_BY_FILE.get(`${slug}.glb`);
   if (load === undefined) return null;
-  const lit = highVariant(look, high);
+  // The caller's `high` has weighed whose model this is; only the look is left.
+  const lit = highVariant(look, high, true);
   const templateKey = `${slug}:${ACTIVE_PALETTE.name}:${look}${lit ? ':high' : ''}`;
   const template = templates.get(templateKey);
   if (template === undefined) {
