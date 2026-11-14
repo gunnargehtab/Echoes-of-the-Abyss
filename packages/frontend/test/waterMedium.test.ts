@@ -180,9 +180,12 @@ describe('the water’s brightness at High (#1801)', () => {
     assert.ok(Math.max(...POWER) > 1 && highShownGrey(0.18) < 0.2131, String(highShownGrey(0.18)));
     // Both copies and three's own chunk, which is what the GPU runs, carry
     // one set of constants: the exposure's divisor, the fit and the two
-    // matrices. Read as numbers from each source's text, since three pads
-    // its literals and the copies do not.
-    const numbers = (text: string) => new Set((text.match(/\d+\.\d+/g) ?? []).map(Number));
+    // matrices. Read as numbers from each source's code, its comments
+    // stripped, since three pads its literals and the copies do not. Their
+    // sizes only: a sign or a constant's place in a matrix is not read here,
+    // and the loop above holds the two copies to one output.
+    const numbers = (text: string) =>
+      new Set((text.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').match(/\d+\.\d+/g) ?? []).map(Number));
     const sources = {
       'three’s ACES chunk': numbers(ShaderChunk.tonemapping_pars_fragment),
       'waterMedium.ts': numbers(

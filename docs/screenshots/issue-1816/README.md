@@ -55,9 +55,9 @@ the plate holds that to Low's. Read two ways, like with like:
 | The step with plates, water above to water inside | 3.6 | 2.1 |
 | What the plate takes inside, bare less plated | 2.5 | 1.7 |
 
-Low's own step there is 0.9, and the bare High water's is 0.4. The hold now runs over
-all of the disc's water above about 290 m, not the cap alone, which is why the count of
-held pixels rose. That is the cost the owner chose with the level
+Low's own step there is 0.9, and the bare High water's is 0.4, where it was 1.1. The
+hold now runs over all of the disc's water above about 290 m, not the cap alone, which
+is why the count of held pixels rose. That is the cost the owner chose with the level
 ([art-direction.md](../../art-direction.md#the-plate-under-a-mark)): the level that
 held no hue left no disc and broke tritanopia's rung order deeper than Low does.
 
