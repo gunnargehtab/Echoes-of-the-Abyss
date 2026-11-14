@@ -447,7 +447,7 @@ Tactical layer · World layer
 
 Mark plate
 
-- The ground a mark carries at the High graphics quality: under it the world layer is drawn no brighter than Low could draw it, the palest ground the loudness ladder weighs or the depth ramp's water where that is paler, so the mark reads over a lit world as it does at Low (art-direction.md, "The plate under a mark"). A ceiling on the world's light under a mark, never a paint, and never over a model, a lamp or another mark.
+- The ground a mark carries at the High graphics quality: under it the world layer is drawn no brighter than Low could draw it, the palest ground the loudness ladder weighs or Low's own water where that is paler, so the mark reads over a lit world as it does at Low (art-direction.md, "The plate under a mark"). A ceiling on the world's light under a mark, never a paint, and never over a model, a lamp or another mark.
 - Not Plate, one of the five fleet-wide upgrades (systems-progression.md §2).
 
 Graphics quality

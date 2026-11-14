@@ -8,9 +8,8 @@
  * plate the world layer is shown no brighter than Low could draw it, hue
  * kept, and a pixel already under that level is left as it is. For ground
  * that level is the palest ground the ladder weighs; for water it is the
- * depth ramp's own brightness, which stands at High and is paler than that
- * ground in the shallows (#1816). A plate is a ceiling on the world's light,
- * never a paint.
+ * water Low draws at that depth, which is paler than that ground in the
+ * shallows (#1816). A plate is a ceiling on the world's light, never a paint.
  *
  * Three parts:
  *
@@ -62,7 +61,7 @@ import { HIGH_GRAPHICS, TERRAIN_LIFT } from '@echoes/shared';
 import { encodedLuminance } from './ladder.ts';
 import { BIOME_COLOR, scaleRgb } from './palette.ts';
 import type { SurveyInkPlateUniforms } from './surveyInk.ts';
-import { waterLuminanceAt } from './water.ts';
+import { waterColorAt } from './water.ts';
 import { highShown, waterLightAt } from './waterMedium.ts';
 
 const glsl = (value: number): string => {
@@ -93,17 +92,21 @@ const encode = (linear: number): number =>
   linear <= 0.0031308 ? linear * 12.92 : Math.pow(linear, 0.41666) * 1.055 - 0.055;
 
 /**
- * The encoded luminance water is held to under a plate: the depth ramp's own
- * brightness at `depthM` (water.ts `waterLuminanceAt`), shown as a grey.
- * Derived too. The ramp's brightness stands at High
- * (docs/art-direction.md, "Reading the Water"), so a plate takes none of it;
- * and a grey, because High releases the water's hue, and of one luminance a
- * grey is the palest in the measure the ladder reads: the encode is concave,
- * so the weighted sum of a hue's encoded channels is under the encode of its
- * luminance. Low's own blue is two points under it at the surface.
+ * The encoded luminance water is held to under a plate: that of the water
+ * Low draws at `depthM` (water.ts `waterColorAt`), encoded as the canvas
+ * holds it and weighed as the ladder weighs a ground. Derived too: Low is the
+ * standard limit 6 names, so a mark stands over no water paler than Low's.
+ *
+ * Not the ramp's luminance shown as a grey, which no hue would reach: that
+ * level stands two points over Low's blue at the surface, and under it
+ * tritanopia's rung order broke 56 m deeper than it does at Low. The cost is
+ * the owner's choice (#1816): High's water wears its biome's hue, a greyer
+ * hue reads up to 1.7 of 255 paler than Low's blue at one luminance, and a
+ * plate holds that much of it.
  */
 export function plateWaterLevelAt(depthM: number): number {
-  return encode(waterLuminanceAt(depthM));
+  const { r, g, b } = waterColorAt(depthM);
+  return 0.2126 * encode(r) + 0.7152 * encode(g) + 0.0722 * encode(b);
 }
 
 /**
@@ -124,8 +127,8 @@ export function plateLevelAt(share: number, depthM: number): number {
  */
 export const PLATE_LEVEL_GLSL = [
   'float echoesPlateLevel( const in float share, const in float depthM ) {',
-  '  float ramp = dot( echoesWaterColor( depthM ), vec3( 0.2126, 0.7152, 0.0722 ) );',
-  '  float water = sRGBTransferOETF( vec4( vec3( ramp ), 1.0 ) ).r;',
+  '  vec3 low = sRGBTransferOETF( vec4( echoesWaterColor( depthM ), 1.0 ) ).rgb;',
+  '  float water = dot( low, vec3( 0.2126, 0.7152, 0.0722 ) );',
   `  return ${glsl(PLATE_LEVEL)} + share * max( 0.0, water - ${glsl(PLATE_LEVEL)} );`,
   '}',
 ].join('\n');
@@ -177,7 +180,7 @@ export const PLATE_SCENE_LEVEL = (() => {
  * The scene-referred level the water's light is held to in front of a model
  * under a plate: the plate's, or the depth ramp's own light at the pixel
  * where that is more (waterMedium.ts `waterLightAt`, by the water's share).
- * The ramp's light is never taken, there as anywhere under a plate.
+ * The ramp's light is never taken there.
  */
 export function plateSceneLevelAt(share: number, depthM: number): number {
   return Math.max(PLATE_SCENE_LEVEL, share * waterLightAt(depthM));

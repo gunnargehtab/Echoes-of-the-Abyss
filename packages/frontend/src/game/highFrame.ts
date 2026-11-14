@@ -30,7 +30,8 @@
  *    sum, runs the curve, holds the result under the plates, and writes the
  *    world's depth, so the pass after it is hidden by the world as it is at
  *    Low. In front of a model a plate holds the water's part of the sum
- *    alone, before the curve. Neither hold takes the depth ramp's own light.
+ *    alone, before the curve. The first takes nothing Low could draw, and
+ *    the second none of the depth ramp's own light.
  * 6. **The tactical pass.** Everything else in the scene, drawn to the canvas
  *    exactly as the Low quality draws it: the same materials, the same
  *    per-material tone curve, the same fog. That is the law's "unchanged at
@@ -195,7 +196,7 @@ const COMPOSITE_FRAGMENT = [
   '    #include <colorspace_fragment>',
   // A mark's plate, on the colour the canvas is about to take: the world is
   // shown no brighter under it than Low could draw it, the palest ground the
-  // ladder weighs or the ramp's own water.
+  // ladder weighs or Low's own water.
   PLATE_HOLD_GLSL,
   '    gl_FragDepth = depth;',
   '  #endif',
