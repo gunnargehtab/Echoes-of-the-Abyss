@@ -10,6 +10,17 @@ cloud container that built the step. They guide a round and are not offered for
 acceptance. The frames the owner accepts against are taken on the named GPU, with the
 command under "Who captures" in [the target's README](../issue-1799/README.md).
 
+**The set was retaken at `main` 305bd196 (#1820)**, after
+[#1815](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/1815) put a navy's
+surface on the hulls and
+[#1819](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/1819) moved their
+cladding into the world pass. Every frame under `software/` but two, the clip, and every
+figure read off them are that run's, but #1816's step at Close, dated to its base.
+[ink-survey.png](software/ink-survey.png) and
+[shadow-hold.png](software/shadow-hold.png) are composites of earlier commits, as their
+sections say, and `low-control/` is the control taken at 9945c1fb. Of the figures, only
+the cost, the plates' counts and medians, and the Home patch's median moved.
+
 ## Reproduce
 
 ```bash
@@ -88,13 +99,16 @@ Counted, not timed: a software rasteriser's milliseconds measure the rasteriser.
 
 | Camera | Low: calls, triangles | High: calls, triangles | High's passes |
 | --- | --- | --- | --- |
-| Home | 44, 593,684 | 57, 660,452 | `high-hold`, `high-world`, `high-scatter`, `high-occlusion`, `high-bloom`, `high-plates`, `high-composite`, `high-tactical`, then the halo's and the split's |
-| Close | 44, 593,684 | 57, 660,452 | The same |
-| Survey | 45, 594,970 | 58, 661,732 | The same |
+| Home | 44, 593,684 | 67, 668,060 | `high-hold`, `high-world`, `high-scatter`, `high-occlusion`, `high-bloom`, `high-plates`, `high-composite`, `high-tactical`, then the halo's and the split's |
+| Close | 44, 593,684 | 67, 668,060 | The same |
+| Survey | 45, 594,970 | 68, 669,340 | The same |
 
-High draws thirteen calls more: twelve as it did before the relief, which is the lit
-ground's own fragment shader, and one for the holds the ground shadows carry, an
-instanced quad a shadow, three here. On a standard map it fetches no more than Low's painted detail does. In
+High draws twenty-three calls more: twelve as it did before the relief, which is the lit
+ground's own fragment shader, one for the holds the ground shadows carry, an
+instanced quad a shadow, three here, and ten that
+[#1819](../issue-1814/README.md#what-the-frame-costs) added: the plate pass draws the
+three hulls' cladding a second time, into its mask, one call a clad material. Those ten
+are the 7,608 triangles High drew more than the set this one replaced. On a standard map it fetches no more than Low's painted detail does. In
 the crater Low paints none, so the relief is new work there: its fetches on every
 fragment of the lit ground, which gate 6's reading on the named GPU has to cover, a
 texture of the cells' strengths, 1,024 bytes for this map, and the detail's noise
@@ -139,6 +153,11 @@ lower ([main against main](low-control/diff-close-main-vs-main.png),
 [main against the branch](low-control/diff-close-main-vs-branch.png)). No ground, hull,
 ring, lamp or ink pixel moved, and the survey frame matches to the pixel.
 
+The retake's Low frames at 305bd196, read against `low-control/` the same way, give
+0.26, 0.43 and 0.00, in the same calls and triangles. That is past the runs above, and
+its map at Close is again marine snow and nothing else. The match clocks read T+01:08 in
+the retake and T+01:21 in the control, so the motes had thirteen seconds to sink.
+
 In counted work, `packages/frontend/test/rendererSmoke.test.ts` holds the rest: at Low the
 frame is the canvas pass it was, and at High every draw of the tactical pass is one Low
 makes, in a material of the kind Low makes it in. The same file holds the relief off Low:
@@ -171,15 +190,17 @@ Read by `read.py` over the world area:
 
 | Camera | Pixels held | Brighter with plates | Held pixels' median, bare | With plates |
 | --- | --- | --- | --- | --- |
-| Over the garden | 17,692, 1.13% | none | 39.8 of 255 | 29.6 |
-| Survey | 3,658, 0.23% | none | 47.7 | 29.9 |
+| Over the garden | 17,615, 1.12% | none | 39.9 of 255 | 29.6 |
+| Survey | 3,626, 0.23% | none | 47.9 | 29.9 |
 
 The difference map over the garden is two things: a disc under each hull that stands in
 the glow, and the band along the detection ring where it crosses the glow. At Survey it
 is the discs and the garden's north rim, where the ink's plate crosses the brightest
 stands. A plate changes no pixel that was under the level, so the rest of each pair is
-the same to the byte: 21,297 of the world area's 1,570,560 pixels differ at all over the
-garden, and 4,220 at Survey.
+the same to the byte: 21,191 of the world area's 1,570,560 pixels differ at all over the
+garden, and 4,169 at Survey. The lowest hull in the garden pair shows in the map only as
+faint specks: since [#1819](../issue-1814/README.md#the-decisions) no plate holds a
+model, and the composite holds only the water in front of one.
 
 The held pixels that still stand over the level are, by this session's reading of the
 pair, a plate's soft edge and what the tactical pass blends over the world after the
@@ -222,7 +243,7 @@ there, the third with a section of its own below. A disc holds a hull's collar a
 bar's slot, so it is a little wider than the collar, and three hulls close together make
 one dark patch. At Close each hull's disc
 stands over water Low draws paler than the plate's level, and its upper edge shows: the
-luma steps 3.5 of 255 across it where Low's own gradient is 2.2
+luma stepped 3.5 of 255 across it at 9945c1fb, where Low's own gradient is 2.2
 ([#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816)). And the rim's
 relief runs under the hulls at Home and Close, where it stands against the one dark mark
 the study draws: a hull's ground shadow, which is its depth
@@ -247,7 +268,8 @@ shadows ([art-direction.md](../../art-direction.md#what-is-built-at-high)).
 ![The shadows at Home and Close, the relief with no hold and with it, brightened four times](software/shadow-hold.png)
 
 The sheet is the same crops of the Home and Close frames before the hold, at 68bbff24,
-and now, each multiplied by four so the ground can be seen. With the hold each shadow is
+and with it, as first committed at 1abd14df before the hulls wore their navy's surface,
+each multiplied by four so the ground can be seen. With the hold each shadow is
 an ellipse on even ground, and the dune bands stop a little short of it.
 
 Read on the row through each shadow's middle: the shadow's median luma, the ground's just
@@ -278,8 +300,9 @@ running into it. Whether that is enough at a glance is for the named GPU's frame
 One more thing to look for there. The held ground stands at a crest's level, and the
 relief only darkens, so each own hull now carries a patch paler than the troughed rim
 round it, and the patch moves with the hull. Over 560, 745 to 740, 800 at Home, shadow
-and all, the median went from 12.6 to 17.7, where the rim away from the hulls, 100, 700
-to 450, 780, stayed at 14.4. Over 780, 680 to 960, 720 at Close it went from 16.1 to 18.9,
+and all, the median went from 12.6 to 17.7, and reads 17.2 in the retake, whose hulls in
+that box wear their navy's surface. The rim away from the hulls, 100, 700 to 450, 780,
+stayed at 14.4. Over 780, 680 to 960, 720 at Close it went from 16.1 to 18.9,
 against 16.5 away from them, 100, 780 to 500, 850. The hold places no light and lifts
 nothing past level ground, so it is no light a hull throws. But a paler disc under every
 own hull, there at any loudness, is what limit 5 exists to keep honest: whether it reads
