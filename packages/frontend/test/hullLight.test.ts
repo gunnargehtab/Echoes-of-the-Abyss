@@ -49,13 +49,16 @@ import {
   PLATE_MEDIUM_GLSL,
   PLATE_SCENE_LEVEL,
   PlatePass,
-  shownGrey,
+  plateSceneLevelAt,
+  shownLevel,
 } from '../src/game/markPlates.ts';
 import { ACTIVE_PALETTE } from '../src/game/palette.ts';
 import { RosterBatches } from '../src/game/rosterBatches.ts';
 import { buildTemplate, instantiate, type Template } from '../src/game/rosterModels.ts';
+import { waterLightAt } from '../src/game/waterMedium.ts';
 import { poolTexture, worldLightsOf } from '../src/game/worldLights.ts';
 import { HeadlessWebGLRenderer } from './support/headless.ts';
+import { highDisplayLinear } from './support/highDisplay.ts';
 
 /** A hull of two clad materials, a lamp, and a blended haze. */
 function hull(): Group {
@@ -301,20 +304,43 @@ describe('a model’s cladding in the world pass (#1814)', () => {
   });
 
   it('holds the water in front of a model under a plate, and never the model', () => {
-    // The plate's level before the curve is the level after it, walked back.
-    assert.ok(Math.abs(shownGrey(PLATE_SCENE_LEVEL) - PLATE_LEVEL) < 1e-9);
+    // The plate's level before the grade and the curve is the level after
+    // them, walked back: held to what the GPU runs (support/highDisplay.ts).
+    assert.ok(Math.abs(shownLevel(PLATE_SCENE_LEVEL) - PLATE_LEVEL) < 1e-9);
+    const sRGB = (l: number) => (l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055);
+    const [r, g, b] = highDisplayLinear(Array(3).fill(PLATE_SCENE_LEVEL)).map(sRGB);
+    assert.ok(Math.abs(0.2126 * r! + 0.7152 * g! + 0.0722 * b! - PLATE_LEVEL) < 1e-5);
     assert.ok(PLATE_SCENE_LEVEL > 0 && PLATE_SCENE_LEVEL < PLATE_LEVEL);
     // The hold after the curve reads the plates less the models, so a
     // model's pixel is not scaled; the water's light is held before the
     // curve where the two differ, and `light` is not in that line.
     assert.ok(PLATE_HOLD_GLSL.includes('texture2D( tPlates, vUv ).g'));
     assert.ok(PLATE_MEDIUM_GLSL.includes('max( 0.0, plates.r - plates.g )'));
-    assert.ok(PLATE_MEDIUM_GLSL.includes(`${PLATE_SCENE_LEVEL.toFixed(6)} / max( swum, 1e-6 )`));
-    assert.doesNotMatch(PLATE_MEDIUM_GLSL, /light/);
-    const hold = (medium: number, over: number) =>
-      medium * (1 + (Math.min(1, PLATE_SCENE_LEVEL / Math.max(medium, 1e-6)) - 1) * over);
+    assert.ok(
+      PLATE_MEDIUM_GLSL.includes(
+        `float held = max( ${PLATE_SCENE_LEVEL.toFixed(6)}, swim.x * echoesWaterLight( swim.y ) );`
+      )
+    );
+    assert.ok(PLATE_MEDIUM_GLSL.includes('min( 1.0, held / max( swum, 1e-6 ) )'));
+    assert.doesNotMatch(PLATE_MEDIUM_GLSL, /\blight\b/);
+    const hold = (medium: number, over: number, level = PLATE_SCENE_LEVEL) =>
+      medium * (1 + (Math.min(1, level / Math.max(medium, 1e-6)) - 1) * over);
     assert.equal(hold(0.5, 0), 0.5, 'no plate under a model, nothing held');
     assert.ok(Math.abs(hold(0.5, 1) - PLATE_SCENE_LEVEL) < 1e-12, 'a glow is held to the level');
     assert.equal(hold(PLATE_SCENE_LEVEL / 2, 1), PLATE_SCENE_LEVEL / 2, 'a ceiling, never a paint');
+    // The depth ramp's own light is never taken (art-direction.md, "A model
+    // in the world's light"): where a far model stands in shallow water, the
+    // water's share of the pixel can carry more than the plate's level, and
+    // the level there is the ramp's (#1816).
+    assert.equal(plateSceneLevelAt(0, 0), PLATE_SCENE_LEVEL);
+    assert.equal(plateSceneLevelAt(0.5, 3000), PLATE_SCENE_LEVEL);
+    assert.ok(waterLightAt(0) > PLATE_SCENE_LEVEL, 'the surface’s own light is over the level');
+    assert.equal(plateSceneLevelAt(1, 0), waterLightAt(0));
+    const ramp = waterLightAt(0);
+    assert.equal(hold(ramp, 1, plateSceneLevelAt(1, 0)), ramp, 'the ramp alone is not held');
+    assert.ok(
+      Math.abs(hold(ramp + 0.5, 1, plateSceneLevelAt(1, 0)) - ramp) < 1e-12,
+      'and a glow over it is held to the ramp'
+    );
   });
 });

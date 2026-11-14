@@ -8,7 +8,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { HIGH_GRAPHICS, TERRAIN_LIFT } from '@echoes/shared';
+import { Biome, DEPTH, HIGH_GRAPHICS, TERRAIN_LIFT } from '@echoes/shared';
 import {
   agentFloorLift,
   encodedLuminance,
@@ -22,7 +22,10 @@ import {
   PLATE_GROUND,
   PLATE_HOLD_GLSL,
   PLATE_LEVEL,
+  PLATE_LEVEL_GLSL,
   PLATE_STRIDE,
+  plateLevelAt,
+  plateWaterLevelAt,
 } from '../src/game/markPlates.ts';
 import {
   BIOME_COLOR,
@@ -31,8 +34,12 @@ import {
   type Palette,
   type PaletteName,
   scaleRgb,
+  WATER_HUE,
 } from '../src/game/palette.ts';
 import { SURVEY_ALPHA, SURVEY_INK_COLOR } from '../src/game/surveyInk.ts';
+import { WATER_RAMP_GLSL, waterColorAt, waterLuminanceAt } from '../src/game/water.ts';
+import { waterLightAt } from '../src/game/waterMedium.ts';
+import { highDisplayLinear } from './support/highDisplay.ts';
 
 /**
  * The ladder's own comparisons for rungs 4 to 7 over one ground
@@ -70,13 +77,14 @@ describe('a mark’s plate', () => {
     assert.equal((PLATE_LEVEL * 100).toFixed(1), '11.6');
   });
 
-  it('keeps the ladder’s order over everything it leaves under a mark, in all four palettes (limit 6)', () => {
+  it('keeps the ladder’s order over all the ground it leaves under a mark, in all four palettes (limit 6)', () => {
     // art-direction.md limit 6: under a plate "each tactical rung's floor
     // reads over the lit world as it reads at Low, in all four palettes".
     // The hold scales a pixel to the level by luminance, and a lift is linear
     // in the ground's luminance (ladder.ts `strokeLift`), so a grey at each
     // level from black to the plate's stands for every hue it can leave. One
     // byte past the level too: the canvas rounds what the hold hands it.
+    // Ground: the water's share of a pixel is held to the ramp, below.
     const most = Math.ceil(PLATE_LEVEL * 255);
     for (const name of PALETTE_NAMES) {
       for (let byte = 0; byte <= most; byte++) {
@@ -109,10 +117,17 @@ describe('a mark’s plate', () => {
 
   it('is a ceiling, never a paint: a pixel under the level is not changed', () => {
     // The hold as the composite runs it (highFrame.ts), on an encoded colour
-    // and a plate's coverage.
+    // and a plate's coverage, here over ground, where the level is the
+    // ladder's at any depth.
     assert.ok(
-      PLATE_HOLD_GLSL.includes(`min( 1.0, ${PLATE_LEVEL.toFixed(6)} / max( shown, 1e-5 ) )`),
-      'scaled to the level, and never up'
+      PLATE_HOLD_GLSL.includes(
+        'min( 1.0, echoesPlateLevel( swim.x, swim.y ) / max( shown, 1e-5 ) )'
+      ),
+      'scaled to the pixel’s level, and never up'
+    );
+    assert.ok(
+      PLATE_LEVEL_GLSL.includes(`return ${PLATE_LEVEL.toFixed(6)} + share * max( 0.0, water - `),
+      'which is the ground’s where the swim gave the water no share'
     );
     assert.ok(PLATE_HOLD_GLSL.includes('mix( 1.0, min('), 'by the plate’s coverage');
     assert.ok(PLATE_HOLD_GLSL.includes('texture2D( tPlates, vUv ).g'));
@@ -205,5 +220,171 @@ describe('a mark’s plate', () => {
     assert.ok(INK_PX > 0 && INK_PX <= LINE_PX, 'the ink is thinner, and everywhere');
     assert.ok(AGENT_PX > 0);
     assert.ok(FEATHER_PX >= 1);
+  });
+});
+
+describe('a mark’s plate over water (#1816)', () => {
+  const luminance = (rgb: readonly number[]) =>
+    0.2126 * rgb[0]! + 0.7152 * rgb[1]! + 0.0722 * rgb[2]!;
+  const decode = (byte: number): number => {
+    const c = byte / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  const encode = (l: number): number =>
+    l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055;
+  const channels = (hex: number): number[] => [(hex >> 16) & 0xff, (hex >> 8) & 0xff, hex & 0xff];
+  /** Low's water at a depth as the canvas holds it: the ramp, encoded. */
+  const lowWater = (depthM: number): number[] => {
+    const { r, g, b } = waterColorAt(depthM);
+    return [r, g, b].map(encode);
+  };
+  const DEPTHS = Array.from({ length: DEPTH.MAX_M / 25 + 1 }, (_, i) => i * 25);
+  const SHARES = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1];
+
+  it('holds the water’s share to the water Low draws there, and the ground’s to the ladder’s', () => {
+    // art-direction.md, "The plate under a mark": "For water it is the water
+    // Low draws at the pixel's depth, wherever that is the paler: above about
+    // 290 m, and 14.3% at the surface. A pixel is held to the two by its
+    // shares".
+    for (const depthM of DEPTHS) {
+      const low = luminance(lowWater(depthM));
+      assert.ok(Math.abs(plateWaterLevelAt(depthM) - low) < 1e-4, `${depthM} m is Low’s water`);
+      assert.equal(plateLevelAt(0, depthM), PLATE_LEVEL, `ground at ${depthM} m keeps its level`);
+      assert.equal(plateLevelAt(1, depthM), Math.max(PLATE_LEVEL, plateWaterLevelAt(depthM)));
+      let last = PLATE_LEVEL;
+      for (const share of SHARES) {
+        const level = plateLevelAt(share, depthM);
+        assert.ok(level >= last, 'no level falls as the water’s share grows');
+        last = level;
+      }
+    }
+    assert.equal((plateWaterLevelAt(0) * 100).toFixed(1), '14.3');
+    assert.ok(plateLevelAt(1, 285) > PLATE_LEVEL && plateLevelAt(1, 295) === PLATE_LEVEL);
+    // The composite runs the same level from the ramp's own GLSL, and three's
+    // encode, whose constants the source's copy carries.
+    assert.ok(WATER_RAMP_GLSL.includes('vec3 echoesWaterColor( const in float depthM )'));
+    assert.ok(
+      PLATE_LEVEL_GLSL.includes(
+        'vec3 low = sRGBTransferOETF( vec4( echoesWaterColor( depthM ), 1.0 ) ).rgb;'
+      )
+    );
+    assert.ok(
+      PLATE_LEVEL_GLSL.includes('float water = dot( low, vec3( 0.2126, 0.7152, 0.0722 ) );')
+    );
+  });
+
+  it('takes nothing from a pixel Low could draw, at any depth and any share', () => {
+    // "Under one, the world layer is drawn no brighter than Low could draw it
+    // there." Low's fog mixes the ground with the water it stands in after
+    // both are encoded (water.ts `installWaterFog`), so the pixel is that mix
+    // of bytes. The palest ground Low draws, and the blackest, under every
+    // share of Low's water at every depth, stand at or under the level.
+    for (const ground of [channels(PLATE_GROUND).map((c) => c / 255), [0, 0, 0]]) {
+      for (const depthM of DEPTHS) {
+        const water = lowWater(depthM);
+        for (const share of SHARES) {
+          const pixel = luminance(ground.map((c, k) => c + (water[k]! - c) * share));
+          assert.ok(
+            pixel <= plateLevelAt(share, depthM) + 1e-9,
+            `${depthM} m, share ${share}: Low draws ${(pixel * 255).toFixed(2)}`
+          );
+        }
+      }
+    }
+    // The fault: one level for every pixel. Low's own water is paler than
+    // the ground's level above about 290 m, so a disc showed over it.
+    assert.ok(luminance(lowWater(280)) > PLATE_LEVEL && luminance(lowWater(290)) < PLATE_LEVEL);
+    assert.ok(
+      (luminance(lowWater(0)) - PLATE_LEVEL) * 255 > 6,
+      'by over six points at the surface'
+    );
+  });
+
+  /**
+   * The most a plate takes, of 255, from a biome's water as the composite
+   * adds it (waterMedium.ts): the biome's hue at unit luminance, times the
+   * ramp's light, by the pixel's share; shown through the grade and the curve
+   * as the GPU runs them (support/highDisplay.ts). 0 where it takes nothing.
+   */
+  const mostTaken = (token: number): number => {
+    const hue = channels(token).map(decode);
+    const unit = luminance(hue);
+    let most = 0;
+    for (const depthM of DEPTHS) {
+      for (const share of SHARES) {
+        const light = hue.map((c) => (c / unit) * waterLightAt(depthM) * share);
+        const shown = luminance(highDisplayLinear(light).map(encode));
+        most = Math.max(most, (shown - plateLevelAt(share, depthM)) * 255);
+      }
+    }
+    return most;
+  };
+
+  it('takes nothing from open water’s own hue, and under two points from any biome’s', () => {
+    // "High's water keeps the ramp's luminance and wears its biome's hue, and
+    // in that measure a greyer hue reads paler than Low's blue at one
+    // luminance: by up to 1.7 of 255 at the surface for the Abyssal Trench,
+    // the Coral Ruins and the Resonance Field. A plate holds that to Low's".
+    const taken = Object.fromEntries(
+      Object.entries(WATER_HUE).map(([biome, token]) => [biome, mostTaken(token)])
+    ) as Record<Biome, number>;
+    for (const biome of [Biome.OpenWater, Biome.ThermalVein, Biome.KelpForest]) {
+      assert.equal(taken[biome], 0, `${Biome[biome]}: ${taken[biome].toFixed(2)}`);
+    }
+    for (const biome of [Biome.AbyssalTrench, Biome.CoralRuins, Biome.ResonanceField]) {
+      assert.ok(
+        taken[biome] > 0.5 && taken[biome] < 2,
+        `${Biome[biome]}: ${taken[biome].toFixed(2)}`
+      );
+    }
+    assert.equal(Math.max(...Object.values(taken)).toFixed(1), '1.7');
+    // And the ground's level alone would take far more: open water at the
+    // surface shows six points over it.
+    const open = channels(WATER_HUE[Biome.OpenWater]).map(decode);
+    const surface = luminance(
+      highDisplayLinear(open.map((c) => (c / luminance(open)) * waterLightAt(0))).map(encode)
+    );
+    assert.ok((surface - PLATE_LEVEL) * 255 > 6, `${(surface * 255).toFixed(1)} of 255`);
+  });
+
+  it('leaves a mark over water what Low leaves it, in every palette, tritanopia’s break and all', () => {
+    // "A mark then stands over nothing paler than it stands over at Low, in
+    // every palette. In tritanopia rung 6 does not clear rung 5 over Low's
+    // water above 270 m, and a plate neither mends that nor deepens it." A
+    // lift is linear in the ground's luminance, so a grey at the level stands
+    // for every hue a plate can leave over water at that depth. The level is
+    // the luminance of Low's own water (the first test), and the canvas
+    // rounds each channel, so the grey a byte either side of the level is
+    // asked: in each palette, at each depth, Low's water breaks the ladder's
+    // order as one of the two does.
+    const packed = (depthM: number): number => {
+      const [r, g, b] = lowWater(depthM).map((c) => Math.round(c * 255));
+      return (r! << 16) | (g! << 8) | b!;
+    };
+    for (const name of PALETTE_NAMES) {
+      for (const depthM of DEPTHS) {
+        const level = plateLevelAt(1, depthM) * 255;
+        const either = [Math.floor(level), Math.ceil(level)].map((byte) =>
+          rungOrderBreak(PALETTES[name], grey(byte))
+        );
+        const low = rungOrderBreak(PALETTES[name], packed(depthM));
+        assert.ok(either.includes(low), `${name} at ${depthM} m: ${low} for ${either}`);
+      }
+      const breaks = DEPTHS.filter((depthM) => rungOrderBreak(PALETTES[name], packed(depthM)));
+      if (name !== 'tritanopia') {
+        assert.deepEqual(breaks, [], name);
+        continue;
+      }
+      assert.equal(Math.max(...breaks), 250, 'the last 25 m step above 270 m');
+      for (const depthM of breaks) {
+        assert.equal(rungOrderBreak(PALETTES[name], packed(depthM)), 'rung 6 clears rung 5');
+      }
+    }
+    // The level that held no hue, the ramp's luminance as a grey, broke
+    // tritanopia's order where Low's water does not: the cost the owner
+    // weighed against the faint disc above.
+    const asGrey = grey(Math.round(encode(waterLuminanceAt(300)) * 255));
+    assert.equal(rungOrderBreak(PALETTES.tritanopia, asGrey), 'rung 6 clears rung 5');
+    assert.equal(rungOrderBreak(PALETTES.tritanopia, packed(300)), null);
   });
 });

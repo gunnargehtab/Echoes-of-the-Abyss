@@ -21,6 +21,11 @@ figure read off them are that run's, but #1816's step at Close, dated to its bas
 sections say, and `low-control/` is the control taken at 9945c1fb. Of the figures, only
 the cost, the plates' counts and medians, and the Home patch's median moved.
 
+**The set predates #1816's fix.** Since it, High's water is solved through the grade and
+shows about a tenth brighter, and a plate holds water to Low's own and not to the
+ground's level. [The Close camera before and after](../issue-1816/README.md) has those
+frames and their readings.
+
 ## Reproduce
 
 ```bash
@@ -242,9 +247,11 @@ The frames taken on the named GPU are where this is judged. Three things to look
 there, the third with a section of its own below. A disc holds a hull's collar and its
 bar's slot, so it is a little wider than the collar, and three hulls close together make
 one dark patch. At Close each hull's disc
-stands over water Low draws paler than the plate's level, and its upper edge shows: the
-luma stepped 3.5 of 255 across it at 9945c1fb, where Low's own gradient is 2.2
-([#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816)). And the rim's
+stands over open water, and it showed there: the luma stepped 3.5 of 255 across its upper
+edge at 9945c1fb. Since
+[#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816) the plate holds
+that water to Low's own, and the disc shows fainter and wider, by the bowl's hue
+([the readings](../issue-1816/README.md)). And the rim's
 relief runs under the hulls at Home and Close, where it stands against the one dark mark
 the study draws: a hull's ground shadow, which is its depth
 ([art-direction.md](../../art-direction.md), "Depth is drawn, not implied").
