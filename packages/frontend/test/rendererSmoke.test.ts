@@ -136,7 +136,7 @@ import { buildTemplate, instantiate } from '../src/game/rosterModels.ts';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { graphicsQualityStatus } from '../src/game/graphicsQuality.ts';
-import { PLATE_HOLD_GLSL, PLATE_STRIDE } from '../src/game/markPlates.ts';
+import { PLATE_HOLD_GLSL, PLATE_LEVEL_GLSL, PLATE_STRIDE } from '../src/game/markPlates.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
 import { FACTION_PALETTE, FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
@@ -2460,6 +2460,14 @@ describe('renderer smoke test: the conn view', () => {
       assert.ok(sum.includes(PLATE_HOLD_GLSL));
       assert.ok(sum.indexOf('#include <colorspace_fragment>') < sum.indexOf(PLATE_HOLD_GLSL));
       assert.ok(sum.indexOf(PLATE_HOLD_GLSL) < sum.indexOf('gl_FragDepth = depth;'));
+      // Its level is the pixel's own (#1816): the water's share of the pixel
+      // and the depth its water is read at, as the sum itself reads them.
+      assert.ok(
+        sum.indexOf(PLATE_LEVEL_GLSL) > 0 &&
+          sum.indexOf(PLATE_LEVEL_GLSL) < sum.indexOf('void main()')
+      );
+      assert.ok(sum.includes('swim = vec2( 1.0 - clamp( world.a, 0.0, 1.0 ), depthM );'));
+      assert.ok(sum.includes('medium = swim.x * water + texture2D( tScatter, vUv ).rgb;'));
       // What stands in the mask: the chart's marks, a group to each layer it
       // caches, and the lines this view draws. Every own hull and structure
       // carries a disc; a resource field's rim is traced, and its plate is

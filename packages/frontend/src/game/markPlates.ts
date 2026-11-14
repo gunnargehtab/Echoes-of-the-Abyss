@@ -5,9 +5,12 @@
  * The lit world may stand a pool, a volume or the bloom under a mark, and the
  * loudness ladder's order holds only over ground about as dark as Low draws
  * it (docs/map-visuals.md §5). So a mark carries its own ground: under its
- * plate the world layer is shown no brighter than the palest ground the
- * ladder weighs, hue kept, and a pixel already under that level is left as
- * it is. A plate is a ceiling on the world's light, never a paint.
+ * plate the world layer is shown no brighter than Low could draw it, hue
+ * kept, and a pixel already under that level is left as it is. For ground
+ * that level is the palest ground the ladder weighs; for water it is the
+ * depth ramp's own brightness, which stands at High and is paler than that
+ * ground in the shallows (#1816). A plate is a ceiling on the world's light,
+ * never a paint.
  *
  * Three parts:
  *
@@ -26,7 +29,7 @@
  *   a lamp, its halo or a mark. A model's cladding is in the world pass
  *   since #1814, and the pass marks it in the mask, so a plate takes nothing
  *   from a model either: only from the water in front of it
- *   (`PLATE_MEDIUM_GLSL`).
+ *   (`PLATE_MEDIUM_GLSL`). `PLATE_LEVEL_GLSL` is the level both hold to.
  */
 
 import {
@@ -55,10 +58,12 @@ import {
   type Texture,
   type WebGLRenderer,
 } from 'three';
-import { HIGH_GRAPHICS, MODEL_LIGHTING, TERRAIN_LIFT } from '@echoes/shared';
+import { HIGH_GRAPHICS, TERRAIN_LIFT } from '@echoes/shared';
 import { encodedLuminance } from './ladder.ts';
 import { BIOME_COLOR, scaleRgb } from './palette.ts';
 import type { SurveyInkPlateUniforms } from './surveyInk.ts';
+import { waterLuminanceAt } from './water.ts';
+import { highShown, waterLightAt } from './waterMedium.ts';
 
 const glsl = (value: number): string => {
   const text = value.toFixed(6);
@@ -77,61 +82,111 @@ export const PLATE_GROUND = scaleRgb(
 );
 
 /**
- * The encoded luminance the world layer is held to under a plate. Derived,
- * not chosen: it is that ground's, so under a plate a mark stands over
- * nothing paler than Low could have drawn there.
+ * The encoded luminance the ground is held to under a plate. Derived, not
+ * chosen: it is that ground's, so under a plate a mark stands over no ground
+ * paler than Low could have drawn there.
  */
 export const PLATE_LEVEL = encodedLuminance(PLATE_GROUND);
-
-/**
- * The composite's hold, on the encoded colour it is about to hand the canvas
- * (highFrame.ts): scaled down to the level by luminance where a plate stands,
- * so the hue is kept, and by the plate's coverage at its soft edge.
- */
-export const PLATE_HOLD_GLSL = [
-  // Green: the plates, less where a model stands in front (`PlatePass`).
-  '    float plate = texture2D( tPlates, vUv ).g;',
-  '    float shown = dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );',
-  `    gl_FragColor.rgb *= mix( 1.0, min( 1.0, ${glsl(PLATE_LEVEL)} / max( shown, 1e-5 ) ), plate );`,
-].join('\n');
 
 /** three's sRGB encode, constants as the fragment writes them. */
 const encode = (linear: number): number =>
   linear <= 0.0031308 ? linear * 12.92 : Math.pow(linear, 0.41666) * 1.055 - 0.055;
 
 /**
- * What the composite's curve makes of a grey, encoded: three's ACES fit
- * (`ACESFilmicToneMapping`, r187), whose two matrices keep a grey a grey, at
- * the exposure the composite draws at.
+ * The encoded luminance water is held to under a plate: the depth ramp's own
+ * brightness at `depthM` (water.ts `waterLuminanceAt`), shown as a grey.
+ * Derived too. The ramp's brightness stands at High
+ * (docs/art-direction.md, "Reading the Water"), so a plate takes none of it;
+ * and a grey, because High releases the water's hue, and of one luminance a
+ * grey is the palest in the measure the ladder reads: the encode is concave,
+ * so the weighted sum of a hue's encoded channels is under the encode of its
+ * luminance. Low's own blue is two points under it at the surface.
  */
-export function shownGrey(scene: number): number {
-  const v = (scene * HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE) / 0.6;
-  const fit = (v * (v + 0.0245786) - 0.000090537) / (v * (0.983729 * v + 0.432951) + 0.238081);
-  return encode(Math.min(1, Math.max(0, fit)));
+export function plateWaterLevelAt(depthM: number): number {
+  return encode(waterLuminanceAt(depthM));
+}
+
+/**
+ * The level a pixel is held to under a plate, by its two shares as Low's fog
+ * mixes them (water.ts `installWaterFog`): the ground's at the ground's
+ * level and `share`, the part of the pixel the swim gave to the water, at
+ * the water's wherever that is the paler. Open water is all share. So near
+ * ground keeps the ladder's level at any depth, and a pool on a shallow
+ * shelf is still held to it.
+ */
+export function plateLevelAt(share: number, depthM: number): number {
+  return PLATE_LEVEL + share * Math.max(0, plateWaterLevelAt(depthM) - PLATE_LEVEL);
+}
+
+/**
+ * `plateLevelAt` as the composite runs it (highFrame.ts), after the ramp's
+ * own GLSL (water.ts `WATER_RAMP_GLSL`) and three's encode.
+ */
+export const PLATE_LEVEL_GLSL = [
+  'float echoesPlateLevel( const in float share, const in float depthM ) {',
+  '  float ramp = dot( echoesWaterColor( depthM ), vec3( 0.2126, 0.7152, 0.0722 ) );',
+  '  float water = sRGBTransferOETF( vec4( vec3( ramp ), 1.0 ) ).r;',
+  `  return ${glsl(PLATE_LEVEL)} + share * max( 0.0, water - ${glsl(PLATE_LEVEL)} );`,
+  '}',
+].join('\n');
+
+/**
+ * The composite's hold, on the encoded colour it is about to hand the canvas
+ * (highFrame.ts): scaled down to the pixel's level by luminance where a plate
+ * stands, so the hue is kept, and by the plate's coverage at its soft edge.
+ * `swim` is the composite's: the water's share of the pixel, and the depth
+ * in metres its water is read at.
+ */
+export const PLATE_HOLD_GLSL = [
+  // Green: the plates, less where a model stands in front (`PlatePass`).
+  '    float plate = texture2D( tPlates, vUv ).g;',
+  '    float shown = dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );',
+  '    gl_FragColor.rgb *= mix( 1.0, min( 1.0, echoesPlateLevel( swim.x, swim.y ) / max( shown, 1e-5 ) ), plate );',
+].join('\n');
+
+/**
+ * What the composite shows of a scene-referred grey, in the measure the
+ * ladder reads: the encoded luminance of what its grade and curve make of it
+ * (waterMedium.ts `highShown`). The grade is in it, and takes the grey a
+ * little off grey: against the curve alone the plate's level showed a tenth
+ * dark, as the water's did (#1816).
+ */
+export function shownLevel(scene: number): number {
+  const [r, g, b] = highShown([scene, scene, scene]);
+  return 0.2126 * encode(r) + 0.7152 * encode(g) + 0.0722 * encode(b);
 }
 
 /**
  * The scene-referred light that is shown at `PLATE_LEVEL`: the plate's level
- * before the curve, where the composite still holds the water's light apart
- * from a model's. Derived from the level by walking the curve back, which
- * rises all the way. The grade is left out: it moves a grey this dark by
- * under a hundredth of the level.
+ * before the grade and the curve, where the composite still holds the
+ * water's light apart from a model's. Derived from the level by walking the
+ * two back, which rise all the way.
  */
 export const PLATE_SCENE_LEVEL = (() => {
   let low = 0;
   let high = 1;
   for (let i = 0; i < 60; i++) {
     const mid = (low + high) / 2;
-    if (shownGrey(mid) < PLATE_LEVEL) low = mid;
+    if (shownLevel(mid) < PLATE_LEVEL) low = mid;
     else high = mid;
   }
   return (low + high) / 2;
 })();
 
 /**
+ * The scene-referred level the water's light is held to in front of a model
+ * under a plate: the plate's, or the depth ramp's own light at the pixel
+ * where that is more (waterMedium.ts `waterLightAt`, by the water's share).
+ * The ramp's light is never taken, there as anywhere under a plate.
+ */
+export function plateSceneLevelAt(share: number, depthM: number): number {
+  return Math.max(PLATE_SCENE_LEVEL, share * waterLightAt(depthM));
+}
+
+/**
  * What a plate does where a model stands in front of it, on the light the
  * composite is about to sum (highFrame.ts): `medium`, the water's own light,
- * the sources' volumes and the bloom, is scaled down to the plate's level,
+ * the sources' volumes and the bloom, is scaled down to `plateSceneLevelAt`,
  * hue kept, and the model's own light is left as the world lit it. No plate
  * holds a model (docs/art-direction.md, "A model in the world's light"), and
  * the water in front of one is still the world's light under a mark. Red is
@@ -141,7 +196,8 @@ export const PLATE_SCENE_LEVEL = (() => {
 export const PLATE_MEDIUM_GLSL = [
   '    vec2 plates = texture2D( tPlates, vUv ).rg;',
   '    float swum = dot( medium, vec3( 0.2126, 0.7152, 0.0722 ) );',
-  `    medium *= mix( 1.0, min( 1.0, ${glsl(PLATE_SCENE_LEVEL)} / max( swum, 1e-6 ) ), max( 0.0, plates.r - plates.g ) );`,
+  `    float held = max( ${glsl(PLATE_SCENE_LEVEL)}, swim.x * echoesWaterLight( swim.y ) );`,
+  '    medium *= mix( 1.0, min( 1.0, held / max( swum, 1e-6 ) ), max( 0.0, plates.r - plates.g ) );',
 ].join('\n');
 
 /**

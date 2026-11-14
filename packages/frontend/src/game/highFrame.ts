@@ -30,7 +30,7 @@
  *    sum, runs the curve, holds the result under the plates, and writes the
  *    world's depth, so the pass after it is hidden by the world as it is at
  *    Low. In front of a model a plate holds the water's part of the sum
- *    alone, before the curve.
+ *    alone, before the curve. Neither hold takes the depth ramp's own light.
  * 6. **The tactical pass.** Everything else in the scene, drawn to the canvas
  *    exactly as the Low quality draws it: the same materials, the same
  *    per-material tone curve, the same fog. That is the law's "unchanged at
@@ -74,7 +74,7 @@ import {
 import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
 import { BLOOM_THRESHOLD_GLSL, LightChain } from './highChain.ts';
 import { LightVolumes } from './lightVolumes.ts';
-import { PLATE_HOLD_GLSL, PLATE_MEDIUM_GLSL, PlatePass } from './markPlates.ts';
+import { PLATE_HOLD_GLSL, PLATE_LEVEL_GLSL, PLATE_MEDIUM_GLSL, PlatePass } from './markPlates.ts';
 import { ShadowHold } from './shadowHold.ts';
 import { WATER_HUE } from './palette.ts';
 import type { SurveyInkPlateUniforms } from './surveyInk.ts';
@@ -130,12 +130,15 @@ const COMPOSITE_FRAGMENT = [
   'varying vec4 vFarPoint;',
   WATER_RAMP_GLSL,
   WATER_MEDIUM_GLSL,
+  PLATE_LEVEL_GLSL,
   BLOOM_THRESHOLD_GLSL,
   // The frame's light at this pixel, scene-referred, before the bloom, in two
   // parts: what the world's surfaces send, returned, and `medium`, what the
   // water adds between them and the eye. The prefilter cuts their sum and
   // the composite grades it; a plate under a model holds the second alone.
-  'vec3 echoesHighLight( out float depth, out vec3 medium ) {',
+  // `swim` is what a plate's level reads (markPlates.ts): the share of the
+  // pixel the swim gave to the water, and the depth its water is read at.
+  'vec3 echoesHighLight( out float depth, out vec3 medium, out vec2 swim ) {',
   '  vec4 world = texture2D( tWorld, vUv );',
   '  depth = texture2D( tDepth, vUv ).r;',
   // The water a pixel looks into: where there is ground, the water the ground
@@ -164,19 +167,22 @@ const COMPOSITE_FRAGMENT = [
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, 0.5 ) ).r +',
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( 0.5, - 0.5 ) ).r +',
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, - 0.5 ) ).r );',
-  '  medium = ( 1.0 - clamp( world.a, 0.0, 1.0 ) ) * water + texture2D( tScatter, vUv ).rgb;',
+  '  swim = vec2( 1.0 - clamp( world.a, 0.0, 1.0 ), depthM );',
+  '  medium = swim.x * water + texture2D( tScatter, vUv ).rgb;',
   `  return world.rgb * mix( 1.0, open, ${glsl(HIGH_GRAPHICS.AO.STRENGTH)} );`,
   '}',
   'void main() {',
   '  float depth;',
   '  vec3 medium;',
-  '  vec3 light = echoesHighLight( depth, medium );',
+  '  vec2 swim;',
+  '  vec3 light = echoesHighLight( depth, medium, swim );',
   '  #ifdef BLOOM_PREFILTER',
   '    gl_FragColor = vec4( echoesBloomCut( light + medium ), 1.0 );',
   '  #else',
   `    medium += texture2D( tBloom, vUv ).rgb * ${glsl(HIGH_GRAPHICS.BLOOM.INTENSITY)};`,
   // Where a model stands in front of a mark's plate, the water's light is
-  // held and the model's is not (markPlates.ts).
+  // held, down to the ramp's own and no further, and the model's is not
+  // (markPlates.ts).
   PLATE_MEDIUM_GLSL,
   '    light += medium;',
   // The grade, before the curve: slope, offset and power a channel, then
@@ -188,7 +194,8 @@ const COMPOSITE_FRAGMENT = [
   '    #include <tonemapping_fragment>',
   '    #include <colorspace_fragment>',
   // A mark's plate, on the colour the canvas is about to take: the world is
-  // shown no brighter under it than the palest ground the ladder weighs.
+  // shown no brighter under it than Low could draw it, the palest ground the
+  // ladder weighs or the ramp's own water.
   PLATE_HOLD_GLSL,
   '    gl_FragDepth = depth;',
   '  #endif',

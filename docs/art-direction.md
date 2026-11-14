@@ -25,7 +25,9 @@ the owner confirmed both on the same day
 re-read by the owner the same day: a mark carries a plate
 ([The plate under a mark](#the-plate-under-a-mark)). On 13 November 2026 the owner read
 limits 2 and 6 for a model in the world pass
-([A model in the world's light](#a-model-in-the-worlds-light)).*
+([A model in the world's light](#a-model-in-the-worlds-light)), and on 14 November 2026
+set what a plate holds water to
+([#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816)).*
 
 The owner turned the look down three times in two weeks. Three proposed designs "seem
 lifeless" (26 October, #1637). The free-water slice was "a map editor, not an ocean" on
@@ -89,10 +91,11 @@ The picture is two layers, and each now has its own law.
 5. **Own light never contradicts gate 3.** Light an own hull throws on the world reads no
    louder than its lamps say. A hull on Silent Running does not floodlight the seabed.
 6. **The tactical layer reads over the lit world.** A mark carries a plate: under it the
-   world layer is drawn no brighter than the palest ground the ladder weighs, so each
-   tactical rung's floor reads over the lit world as it reads at Low, in all four
-   palettes ([The plate under a mark](#the-plate-under-a-mark)). A model is not ground,
-   and no plate holds one. Gate 7's questions are asked of the lit frame.
+   world layer is drawn no brighter than Low could draw it, the palest ground the ladder
+   weighs or the depth ramp's water where that is paler, so each tactical rung's floor
+   reads over the lit world as it reads at Low, in all four palettes
+   ([The plate under a mark](#the-plate-under-a-mark)). A model is not ground, and no
+   plate holds one. Gate 7's questions are asked of the lit frame.
 7. **No blur over play.** Depth of field and motion blur stay off the playfield while the
    player commands. Reduced motion and the colour-vision palettes bind High as they bind
    Low.
@@ -203,9 +206,9 @@ Built so far:
   the held ground is a crest's level, a little paler than the troughed ground round it,
   and whether that patch reads as a hull's own light is limit 5's question.
 - **The water is a medium.** It keeps the depth ramp's brightness
-  ([Reading the Water](#reading-the-water)), carried through the curve, and wears the hue
-  of the biome under the water its light comes from, in that biome's water token. A pixel
-  takes that light by what the swim cost its own.
+  ([Reading the Water](#reading-the-water)), carried through the grade and the curve, and
+  wears the hue of the biome under the water its light comes from, in that biome's water
+  token. A pixel takes that light by what the swim cost its own.
 - **The world's own sources light the world.** The vent embers, the civic lamps and each
   prop that carries a licensed family stand as lights in their family's token. Each pools
   on the ground and scatters in the water as a volume that stops at the ground. They are
@@ -278,7 +281,8 @@ the occlusion, the bloom and the grade reach it.
   not there. That glow is the world's light under a mark. So under a plate the
   composite holds the water's own light, the sources' volumes and the bloom in front of
   a model to the plate's level, before the curve, and leaves the light the model's own
-  surface sends.
+  surface sends. The depth ramp's own light is never taken, there as anywhere under a
+  plate.
 - **A contact's model is not in this pass.** A live Tier-4 track stands as its model
   ([map-visuals.md](map-visuals.md) §5), and it keeps the template Low draws, whole in
   the tactical pass. In the world pass its body would hide the Lid's glow from the
@@ -384,13 +388,18 @@ lifts the ground. So a pool that reads as light, as the target frame's do, canno
 under a mark as the marks are.
 
 A **mark plate** is the ground a mark carries at High. Under one, the world layer is
-drawn no brighter than the palest ground the ladder weighs at Low: the palest biome fill
-lifted by the terrain cap, 11.6% encoded luminance. Four things follow from how it is
-drawn.
+drawn no brighter than Low could draw it there. For ground that is the palest ground the
+ladder weighs at Low: the palest biome fill lifted by the terrain cap, 11.6% encoded
+luminance. For water it is the depth ramp's own brightness at the pixel's depth
+([Reading the Water](#reading-the-water)), wherever that is the paler: above 355 m, and
+15.1% at the surface. A pixel is held to the two by its shares, as Low's fog mixes them:
+what the swim left of its ground at the ground's level, and the rest at the water's.
+Four things follow from how it is drawn.
 
-- **It is a ceiling, never a paint.** A pixel brighter than that level is scaled down to
-  it, hue kept. A pixel under it is not changed, so a plate over ground the Lid alone
-  lights changes nothing, and a mark in dark water looks as it does at Low.
+- **It is a ceiling, never a paint.** A pixel brighter than its level is scaled down to
+  it, hue kept. A pixel under it is not changed. So a plate changes nothing over ground
+  the Lid alone lights, nor over water the ramp alone lights, whatever its biome's hue,
+  and a mark in dark water looks as it does at Low.
 - **It holds the world layer only.** The composite applies it before the tactical pass
   draws, so a plate takes nothing from a lamp, its halo or another mark.
 - **It holds no model.** An own model's cladding is the world layer's, and under a plate
@@ -443,6 +452,20 @@ ladder's comparisons are linear in the ground's luminance, and
 `packages/frontend/test/ladder.test.ts` holds them from black to that palest ground in
 all four palettes. `packages/frontend/test/markPlates.test.ts` holds the plate's level to
 that ground and runs the same comparisons at it.
+
+**The water's level is the ramp's.** *Decided by the owner in session on 14 November 2026
+([#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816)).* The first
+plates held every pixel to the ground's level. Low's water is paler than that above
+about 290 m, so a mark's disc showed over open water, darker than the water round it. The
+ramp's brightness stands at High, so a plate holds the water's share of a pixel to the
+ramp and takes none of it. The level is the ramp's luminance shown as a grey. High
+releases the water's hue, and of one luminance a grey shows the palest, so no biome's
+water is held. Low is the standard limit 6 names, and Low's own water is what a mark
+stands over there. In tritanopia rung 6 does not clear rung 5 over Low's water above
+270 m ([map-visuals.md](map-visuals.md) §10 records the shallowest stop), and a plate
+does not mend at High what Low draws. The same test file holds the water's level to the
+ramp, and shows that a plate takes nothing from a pixel Low could draw or from any
+biome's water.
 
 Still open, for the frames taken on the named GPU: gate 7's glance at an own hull over a
 pool, and the four palettes, which are read at promotion.
