@@ -15,10 +15,11 @@ command under "Who captures" in [the target's README](../issue-1799/README.md).
 surface on the hulls and
 [#1819](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/1819) moved their
 cladding into the world pass. Every frame under `software/` but two, the clip, and every
-figure read off them are that run's. [ink-survey.png](software/ink-survey.png) and
+figure read off them are that run's, but #1816's step at Close, dated to its base.
+[ink-survey.png](software/ink-survey.png) and
 [shadow-hold.png](software/shadow-hold.png) are composites of earlier commits, as their
 sections say, and `low-control/` is the control taken at 9945c1fb. Of the figures, only
-the cost and a few of the plates' counts moved.
+the cost, the plates' counts and medians, and the Home patch's median moved.
 
 ## Reproduce
 
@@ -267,7 +268,8 @@ shadows ([art-direction.md](../../art-direction.md#what-is-built-at-high)).
 ![The shadows at Home and Close, the relief with no hold and with it, brightened four times](software/shadow-hold.png)
 
 The sheet is the same crops of the Home and Close frames before the hold, at 68bbff24,
-and now, each multiplied by four so the ground can be seen. With the hold each shadow is
+and with it, as first committed at 1abd14df before the hulls wore their navy's surface,
+each multiplied by four so the ground can be seen. With the hold each shadow is
 an ellipse on even ground, and the dune bands stop a little short of it.
 
 Read on the row through each shadow's middle: the shadow's median luma, the ground's just
