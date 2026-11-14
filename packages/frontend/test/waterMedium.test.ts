@@ -6,14 +6,16 @@
  */
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
+import { ShaderChunk } from 'three';
 import { Biome, DEPTH, HIGH_GRAPHICS, MODEL_LIGHTING } from '@echoes/shared';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 import { BIOME_COLOR, FACTION_PALETTE, UI, WATER_HUE } from '../src/game/palette.ts';
 import { WATER_RAMP_DEPTHS_M, waterLuminanceAt } from '../src/game/water.ts';
 import {
-  acesGrey,
-  acesGreyInverse,
+  highShownGrey,
+  highShownGreyInverse,
   repaintWaterHue,
   WATER_CURVE_EXPOSURE,
   WATER_LIGHT_STOPS,
@@ -21,6 +23,7 @@ import {
   waterHueTexture,
   waterLightAt,
 } from '../src/game/waterMedium.ts';
+import { highDisplayLinear } from './support/highDisplay.ts';
 
 const decode = (byte: number): number => {
   const c = byte / 255;
@@ -107,22 +110,46 @@ describe('the water’s hue at High (#1801)', () => {
 });
 
 describe('the water’s brightness at High (#1801)', () => {
-  it('stands: through the curve, each stop shows the Low ramp’s own luminance', () => {
+  it('stands: through the grade and the curve, each stop shows the Low ramp’s own luminance', () => {
     // art-direction.md "Reading the Water": "At the High graphics quality the
     // ramp's brightness stands". The composite adds the water's light before
-    // the tone curve, so each stop is the level the curve brings back to it.
+    // its grade and the tone curve, so each stop is the level the two bring
+    // back to it: held to what the GPU runs (support/highDisplay.ts), on a
+    // grey. The hues are the next test's.
     assert.equal(WATER_CURVE_EXPOSURE, HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE);
     assert.deepEqual(
       WATER_LIGHT_STOPS.map((stop) => stop.depthM),
       [...WATER_RAMP_DEPTHS_M]
     );
     for (const { depthM, light } of WATER_LIGHT_STOPS) {
-      const shown = acesGrey(light, WATER_CURVE_EXPOSURE);
+      const [r, g, b] = highDisplayLinear([light, light, light]);
+      const shown = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const ramp = waterLuminanceAt(depthM);
       assert.ok(
-        Math.abs(shown - waterLuminanceAt(depthM)) < 1e-6,
-        `${depthM} m shows ${shown} for ${waterLuminanceAt(depthM)}`
+        Math.abs(shown - ramp) < 1e-6,
+        `${depthM} m shows ${shown.toFixed(5)} for ${ramp.toFixed(5)}`
       );
       assert.ok(Math.abs(waterLightAt(depthM) - light) < 1e-9);
+    }
+  });
+
+  it('shows each biome’s water within two points of the ramp, whatever its hue', () => {
+    // The hue is drawn at unit luminance, and the grade and the curve are not
+    // linear, so a hue lands a little off the grey: under two points of 255.
+    const encode = (l: number) =>
+      l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055;
+    for (const token of Object.values(WATER_HUE)) {
+      const hue = linear(token);
+      const unit = 0.2126 * hue[0] + 0.7152 * hue[1] + 0.0722 * hue[2];
+      for (const { depthM, light } of WATER_LIGHT_STOPS) {
+        const [r, g, b] = highDisplayLinear(hue.map((c) => (c / unit) * light));
+        const shown = encode(0.2126 * r + 0.7152 * g + 0.0722 * b);
+        const ramp = encode(waterLuminanceAt(depthM));
+        assert.ok(
+          Math.abs(shown - ramp) * 255 < 2,
+          `${token.toString(16)} at ${depthM} m: ${(shown * 255).toFixed(1)} for ${(ramp * 255).toFixed(1)}`
+        );
+      }
     }
   });
 
@@ -136,13 +163,46 @@ describe('the water’s brightness at High (#1801)', () => {
     assert.ok(waterLightAt(0) > waterLightAt(DEPTH.MAX_M) * 2, 'the Lid is the bright end');
   });
 
-  it('inverts the curve three runs on a grey', () => {
+  it('inverts the grade and the curve the composite runs on a grey', () => {
     for (const display of [0.001, 0.01, 0.1, 0.5]) {
-      assert.ok(Math.abs(acesGrey(acesGreyInverse(display, 1), 1) - display) < 1e-9);
+      assert.ok(Math.abs(highShownGrey(highShownGreyInverse(display)) - display) < 1e-9);
+    }
+    // The source's own copy of the chain against the one written out for the
+    // tests (support/highDisplay.ts): one luminance, at every level.
+    for (const light of [0.002, 0.02, 0.18, 1, 4]) {
+      const [r, g, b] = highDisplayLinear([light, light, light]);
+      assert.ok(Math.abs(highShownGrey(light) - (0.2126 * r + 0.7152 * g + 0.0722 * b)) < 1e-12);
     }
     // three's ACESFilmicToneMapping at exposure 1 scales by 1 / 0.6 first, so
-    // a mid grey of 0.18 goes through the fit at 0.3 and lands at 0.2131.
-    assert.ok(Math.abs(acesGrey(0.18, 1) - 0.2131) < 0.0005, String(acesGrey(0.18, 1)));
+    // with no grade a mid grey of 0.18 lands at 0.2131. The grade's powers
+    // take it under that.
+    const { POWER } = HIGH_GRAPHICS.GRADE;
+    assert.ok(Math.max(...POWER) > 1 && highShownGrey(0.18) < 0.2131, String(highShownGrey(0.18)));
+    // Both copies and three's own chunk, which is what the GPU runs, carry
+    // one set of constants: the exposure's divisor, the fit and the two
+    // matrices. Read as numbers from each source's code, its comments
+    // stripped, since three pads its literals and the copies do not. Their
+    // sizes only: a sign or a constant's place in a matrix is not read here,
+    // and the loop above holds the two copies to one output.
+    const numbers = (text: string) =>
+      new Set((text.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').match(/\d+\.\d+/g) ?? []).map(Number));
+    const sources = {
+      'three’s ACES chunk': numbers(ShaderChunk.tonemapping_pars_fragment),
+      'waterMedium.ts': numbers(
+        readFileSync(new URL('../src/game/waterMedium.ts', import.meta.url), 'utf8')
+      ),
+      'support/highDisplay.ts': numbers(
+        readFileSync(new URL('./support/highDisplay.ts', import.meta.url), 'utf8')
+      ),
+    };
+    const ACES = [
+      0.6, 0.0245786, 0.000090537, 0.983729, 0.432951, 0.238081, 0.59719, 0.35458, 0.04823, 0.076,
+      0.90834, 0.01566, 0.0284, 0.13383, 0.83777, 1.60475, 0.53108, 0.07367, 0.10208, 1.10813,
+      0.00605, 0.00327, 0.07276, 1.07602,
+    ];
+    for (const [name, has] of Object.entries(sources)) {
+      for (const constant of ACES) assert.ok(has.has(constant), `${name} has no ${constant}`);
+    }
   });
 
   it('hands the composite those levels and the hue at unit luminance', () => {
