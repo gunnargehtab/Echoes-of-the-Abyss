@@ -6,6 +6,7 @@
  */
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { ShaderChunk } from 'three';
 import { Biome, DEPTH, HIGH_GRAPHICS, MODEL_LIGHTING } from '@echoes/shared';
@@ -177,21 +178,27 @@ describe('the water’s brightness at High (#1801)', () => {
     // take it under that.
     const { POWER } = HIGH_GRAPHICS.GRADE;
     assert.ok(Math.max(...POWER) > 1 && highShownGrey(0.18) < 0.2131, String(highShownGrey(0.18)));
-    // Both copies are held to three's own chunk, which is what the GPU runs:
-    // the exposure's divisor, the fit and the two matrices, as it writes them.
-    const aces = ShaderChunk.tonemapping_pars_fragment.replace(/\s+/g, ' ');
-    for (const literal of [
-      'color *= toneMappingExposure / 0.6;',
-      'vec3 a = v * ( v + 0.0245786 ) - 0.000090537;',
-      'vec3 b = v * ( 0.983729 * v + 0.4329510 ) + 0.238081;',
-      'vec3( 0.59719, 0.07600, 0.02840 )',
-      'vec3( 0.35458, 0.90834, 0.13383 )',
-      'vec3( 0.04823, 0.01566, 0.83777 )',
-      'vec3( 1.60475, -0.10208, -0.00327 )',
-      'vec3( -0.53108, 1.10813, -0.07276 )',
-      'vec3( -0.07367, -0.00605, 1.07602 )',
-    ]) {
-      assert.ok(aces.includes(literal), `three’s ACES chunk no longer has ${literal}`);
+    // Both copies and three's own chunk, which is what the GPU runs, carry
+    // one set of constants: the exposure's divisor, the fit and the two
+    // matrices. Read as numbers from each source's text, since three pads
+    // its literals and the copies do not.
+    const numbers = (text: string) => new Set((text.match(/\d+\.\d+/g) ?? []).map(Number));
+    const sources = {
+      'three’s ACES chunk': numbers(ShaderChunk.tonemapping_pars_fragment),
+      'waterMedium.ts': numbers(
+        readFileSync(new URL('../src/game/waterMedium.ts', import.meta.url), 'utf8')
+      ),
+      'support/highDisplay.ts': numbers(
+        readFileSync(new URL('./support/highDisplay.ts', import.meta.url), 'utf8')
+      ),
+    };
+    const ACES = [
+      0.6, 0.0245786, 0.000090537, 0.983729, 0.432951, 0.238081, 0.59719, 0.35458, 0.04823, 0.076,
+      0.90834, 0.01566, 0.0284, 0.13383, 0.83777, 1.60475, 0.53108, 0.07367, 0.10208, 1.10813,
+      0.00605, 0.00327, 0.07276, 1.07602,
+    ];
+    for (const [name, has] of Object.entries(sources)) {
+      for (const constant of ACES) assert.ok(has.has(constant), `${name} has no ${constant}`);
     }
   });
 
