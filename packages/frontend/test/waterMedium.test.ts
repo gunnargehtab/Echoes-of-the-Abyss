@@ -7,6 +7,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { ShaderChunk } from 'three';
 import { Biome, DEPTH, HIGH_GRAPHICS, MODEL_LIGHTING } from '@echoes/shared';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 import { BIOME_COLOR, FACTION_PALETTE, UI, WATER_HUE } from '../src/game/palette.ts';
@@ -113,7 +114,7 @@ describe('the water’s brightness at High (#1801)', () => {
     // ramp's brightness stands". The composite adds the water's light before
     // its grade and the tone curve, so each stop is the level the two bring
     // back to it: held to what the GPU runs (support/highDisplay.ts), on a
-    // grey, since the hue is the biome's and each moves it a point or so.
+    // grey. The hues are the next test's.
     assert.equal(WATER_CURVE_EXPOSURE, HIGH_GRAPHICS.EXPOSURE * MODEL_LIGHTING.EXPOSURE);
     assert.deepEqual(
       WATER_LIGHT_STOPS.map((stop) => stop.depthM),
@@ -124,7 +125,7 @@ describe('the water’s brightness at High (#1801)', () => {
       const shown = 0.2126 * r + 0.7152 * g + 0.0722 * b;
       const ramp = waterLuminanceAt(depthM);
       assert.ok(
-        Math.abs(shown - ramp) < 0.01 * ramp,
+        Math.abs(shown - ramp) < 1e-6,
         `${depthM} m shows ${shown.toFixed(5)} for ${ramp.toFixed(5)}`
       );
       assert.ok(Math.abs(waterLightAt(depthM) - light) < 1e-9);
@@ -176,6 +177,22 @@ describe('the water’s brightness at High (#1801)', () => {
     // take it under that.
     const { POWER } = HIGH_GRAPHICS.GRADE;
     assert.ok(Math.max(...POWER) > 1 && highShownGrey(0.18) < 0.2131, String(highShownGrey(0.18)));
+    // Both copies are held to three's own chunk, which is what the GPU runs:
+    // the exposure's divisor, the fit and the two matrices, as it writes them.
+    const aces = ShaderChunk.tonemapping_pars_fragment.replace(/\s+/g, ' ');
+    for (const literal of [
+      'color *= toneMappingExposure / 0.6;',
+      'vec3 a = v * ( v + 0.0245786 ) - 0.000090537;',
+      'vec3 b = v * ( 0.983729 * v + 0.4329510 ) + 0.238081;',
+      'vec3( 0.59719, 0.07600, 0.02840 )',
+      'vec3( 0.35458, 0.90834, 0.13383 )',
+      'vec3( 0.04823, 0.01566, 0.83777 )',
+      'vec3( 1.60475, -0.10208, -0.00327 )',
+      'vec3( -0.53108, 1.10813, -0.07276 )',
+      'vec3( -0.07367, -0.00605, 1.07602 )',
+    ]) {
+      assert.ok(aces.includes(literal), `three’s ACES chunk no longer has ${literal}`);
+    }
   });
 
   it('hands the composite those levels and the hue at unit luminance', () => {
