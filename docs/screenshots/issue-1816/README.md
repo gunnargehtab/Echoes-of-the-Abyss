@@ -47,10 +47,17 @@ After, it holds the disc's water to Low's own: 32.0 for Low's 32.1. A mark over 
 water stands over what it stands over at Low.
 
 The disc still shows, fainter and wider. The bowl's water wears the Coral Ruins' hue,
-which reads 1.6 over Low's blue in luma at one luminance, and the plate holds that to
-Low's. So the step at the disc's edge is 1.7 where it was 3.6, and it now runs over all
-of the disc's water above about 290 m, not the cap alone. That is the cost the owner
-chose with the level
+which reads paler than Low's blue in luma at one luminance, by 1.5 at the surface, and
+the plate holds that to Low's. Read two ways, like with like:
+
+| At the left disc's upper edge | Before | After |
+| --- | --- | --- |
+| The step with plates, water above to water inside | 3.6 | 2.1 |
+| What the plate takes inside, bare less plated | 2.5 | 1.7 |
+
+Low's own step there is 0.9, and the bare High water's is 0.4. The hold now runs over
+all of the disc's water above about 290 m, not the cap alone, which is why the count of
+held pixels rose. That is the cost the owner chose with the level
 ([art-direction.md](../../art-direction.md#the-plate-under-a-mark)): the level that
 held no hue left no disc and broke tritanopia's rung order deeper than Low does.
 
