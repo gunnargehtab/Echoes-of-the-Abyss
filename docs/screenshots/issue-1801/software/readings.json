@@ -176,8 +176,8 @@
       },
       "distance": 1200,
       "waterReachM": 1805,
-      "calls": 57,
-      "triangles": 660452,
+      "calls": 67,
+      "triangles": 668060,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
@@ -228,8 +228,8 @@
       },
       "distance": 420,
       "waterReachM": 630,
-      "calls": 57,
-      "triangles": 660452,
+      "calls": 67,
+      "triangles": 668060,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
@@ -280,8 +280,8 @@
       },
       "distance": 10000,
       "waterReachM": 32000,
-      "calls": 58,
-      "triangles": 661732,
+      "calls": 68,
+      "triangles": 669340,
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
