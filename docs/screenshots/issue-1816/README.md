@@ -35,22 +35,29 @@ Read off them, in luma out of 255:
 
 | Reading | Before | After |
 | --- | --- | --- |
-| Open-water pixels a plate held by over 1 | 9,201 | 12 |
-| The left disc's upper edge, with plates | 31.2 to 27.6 | 34.1 to 33.7 |
+| The left disc's upper edge, with plates | 31.2 to 27.6 | 34.1 to 32.0 |
 | The same water, bare | 31.2 to 30.1 | 34.1 to 33.7 |
 | The same water at Low | 33.0 to 32.1 | 33.0 to 32.1 |
+| Open-water pixels a plate held by over 1 | 9,201 | 110,173 |
 | Open water at the frame's centre, High | 34.0 | 37.6 |
 | The same at Low | 36.3 | 36.3 |
 
-Before, each disc's cap stands in the map as a darker shape over the water: the plate
-held water Low draws paler than the ground's level. After, the map shows no cap. The 12
-pixels left are at the left hull's outline, where the before set differs too.
+Before, the plate held each disc's cap to the ground's level: 27.6 where Low draws 32.1.
+After, it holds the disc's water to Low's own: 32.0 for Low's 32.1. A mark over open
+water stands over what it stands over at Low.
 
-The water at High went from 2.3 under Low's to 1.3 over it. The bowl's water wears the
-Coral Ruins' hue, and of one luminance that hue reads a point and a half over Low's blue
-in luma. `packages/frontend/test/waterMedium.test.ts` holds each stop's luminance to the
-ramp's. The disc's edge is read near the frame's left side, under the view's vignette,
-so its levels are lower than the centre's.
+The disc still shows, fainter and wider. The bowl's water wears the Coral Ruins' hue,
+which reads 1.6 over Low's blue in luma at one luminance, and the plate holds that to
+Low's. So the step at the disc's edge is 1.7 where it was 3.6, and it now runs over all
+of the disc's water above about 290 m, not the cap alone. That is the cost the owner
+chose with the level
+([art-direction.md](../../art-direction.md#the-plate-under-a-mark)): the level that
+held no hue left no disc and broke tritanopia's rung order deeper than Low does.
+
+The water at High went from 2.3 under Low's to 1.3 over it, the same hue's offset.
+`packages/frontend/test/waterMedium.test.ts` holds each stop's luminance to the ramp's.
+The disc's edge is read near the frame's left side, under the view's vignette, so its
+levels are lower than the centre's.
 
 Low's source is not touched: the fix is in `markPlates.ts`, `waterMedium.ts` and
 `highFrame.ts`, which only the High frame runs. Its two frames differ by the marine snow
