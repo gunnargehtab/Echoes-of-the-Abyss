@@ -128,8 +128,34 @@ occlusion, the bloom's seven and the composite. At 1920 × 1080 its targets hold
 each, the half-size and smaller targets of the scatter, the occlusion and the bloom, the
 plates' mask at the frame's size, and the holds' plan mask, 512 × 512 at a byte a texel
 for this map. The lit ground's two textures hold 2,796,203. Gate 6 bounds
-High by GPU time, at most 8 ms read queued and unpaced on the named GPU. That reading is
-owed: the capture takes it on a GPU and records `insideBudget` beside it.
+High by GPU time, at most 8 ms read queued and unpaced on the named GPU: read below, and
+inside it.
+
+## On the named GPU
+
+[gpu/](gpu/readings.json) is the capture from the target's "Who captures": a GTX 1070
+through Edge/ANGLE D3D11, headed, unpaced, at 1920 × 1080 and pixel ratio 1, on three r187,
+taken at 046dbaef, `main` at de28ad97 with gate 6's low camera added to `frames.mjs`. It
+holds #1814's hull and #1816's plate fix, so one reading answers gate 6 for #1801, #1814
+and #1811. It ran twice, behind a 24,000-step queue load of 7.4–7.8 ms; the table is
+the mean of the two queued readings, in ms, and `readings-run2.json` is the second run.
+
+| Camera | Low | High | High's worst frame | High's calls / triangles |
+| --- | --- | --- | --- | --- |
+| Home | 1.72 | 2.78 | 4.14 | 67 / 668,060 |
+| Close | 1.68 | 2.67 | 4.22 | 67 / 668,060 |
+| Low | 1.34 | 2.33 | 3.37 | 39 / 653,769 |
+| Survey | 1.29 | 2.11 | 3.36 | 68 / 669,340 |
+
+High costs 0.8–1.1 ms over Low and reads at most 2.8 ms, about a third of the 8 ms; every
+High reading records `insideBudget: true`. The two runs agree to 0.05 ms. The frames are
+[05-high-home](gpu/05-high-home.png), [06-high-close](gpu/06-high-close.png),
+[07-high-low](gpu/07-high-low.png) and [08-high-survey](gpu/08-high-survey.png), beside
+their Low controls, and [the clip](gpu/clip-home-to-close.mp4) moves from Home to Close at
+High. Gate 7's glance is [plates/](gpu/plates/standard-garden-plates.png): the garden
+pair in the standard palette, with the plates and bare, and the plated frame in each of
+the other three palettes. In the standard and tritanopia palettes the hulls' green ink
+stands near the garden's green glow. The verdict on the look is the owner's.
 
 ## Low does not move
 

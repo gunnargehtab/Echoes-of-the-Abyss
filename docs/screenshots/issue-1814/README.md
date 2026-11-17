@@ -153,9 +153,9 @@ names nothing for the world pass and carries no hook on its cladding.
 
 ## What it does not prove
 
-- **A frame on the named GPU.** Every frame here is a software rasteriser's.
-- **Gate 6's 8 ms.** The second draw of the cladding and the light's two taps a clad
-  fragment are unread.
+- **A frame on the named GPU.** Every frame above is a software rasteriser's. The GTX
+  1070's are under "On the named GPU" below.
+- **Gate 6's 8 ms**, which the named GPU now reads; below.
 - **A mark over a pool-lit hull.** No plate holds a model, so a mark that crosses a
   hull's body reads over what the world lit. Few do, and none is weighed here.
 - **Whether a hull's glint reads as loudness.** Cladding now feeds the bloom. No hull
@@ -167,6 +167,17 @@ names nothing for the world pass and carries no hook on its cladding.
 - **A contact.** The crater seats no enemy, so no Tier-4 model stands beside an own one.
 - **The surface's lean.** `HULL_SURFACE.RELIEF` was set under Low's rig (#1811) and is
   not moved here.
+
+## On the named GPU
+
+Taken by the commands below at 046dbaef, on a GTX 1070 through Edge/ANGLE D3D11 at
+1920 × 1080 and three r187. The three cameras and gate 6's reading are one capture shared
+with #1801 and #1811, in [issue-1801's gpu/](../issue-1801/README.md#on-the-named-gpu):
+High reads 2.11–2.78 ms queued at its four cameras, inside the 8 ms, with the second draw
+of the cladding and its two taps in it. The hull near is [gpu/rim](gpu/rim/01-near-port.png)
+and [gpu/garden](gpu/garden/01-garden.png), the garden set over the world's own sources.
+The black mass at the top left of the rim's port frame is in the software frame too. The
+verdict on the look, and whether a mark crossing a pool-lit hull reads, are the owner's.
 
 ## Who captures
 

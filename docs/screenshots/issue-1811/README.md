@@ -189,7 +189,10 @@ and 0.04867 and 0.04869 off the bow.
 ## What it does not prove
 
 - **A frame on the named GPU.** Every game frame here is a software rasteriser's.
-- **Gate 6's 8 ms.** Three taps a fragment over every Commune hull on screen is unread.
+- **Gate 6's 8 ms** is no longer open: the GTX 1070 reads High at 2.11–2.78 ms queued at
+  its four cameras, with the three taps in it, at 046dbaef
+  ([issue-1801](../issue-1801/README.md#on-the-named-gpu)). The side-by-side frames
+  below are still to take.
 - **That it reads once High lights a hull.** The lean of 2.5 was set under Low's rig.
   It is TUNABLE, and #1814 will want it set again.
 - **Whether Blender still clearly wins on a hero hull.** The issue keeps Blender for a
