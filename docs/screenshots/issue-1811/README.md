@@ -188,19 +188,45 @@ and 0.04867 and 0.04869 off the bow.
 
 ## What it does not prove
 
-- **A frame on the named GPU.** Every game frame here is a software rasteriser's.
+- **A frame on the named GPU.** Every game frame above is a software rasteriser's. The
+  GTX 1070's are under "On the named GPU" below.
 - **Gate 6's 8 ms** is no longer open: the GTX 1070 reads High at 2.11–2.78 ms queued at
   its four cameras, with the three taps in it, at 046dbaef
-  ([issue-1801](../issue-1801/README.md#on-the-named-gpu)). The side-by-side frames
-  below are still to take.
+  ([issue-1801](../issue-1801/README.md#on-the-named-gpu)).
 - **That it reads once High lights a hull.** The lean of 2.5 was set under Low's rig.
-  It is TUNABLE, and #1814 will want it set again.
+  It is TUNABLE; the owner kept it under #1814's light on 17 November 2026.
 - **Whether Blender still clearly wins on a hero hull.** The issue keeps Blender for a
   short list only if it does. That is the owner's reading of the named GPU's frames.
 - **A second navy.** A plated hull wants seams that follow a part, which a tile read by
   place cannot give. The trim sheets already draw those.
 - **That nothing shimmers.** The relief is fixed to the model and fades by mip, which is
-  the reason to expect none. The clip here is too compressed to show it either way.
+  the reason to expect none. The clip here is too compressed to show it either way; the
+  named GPU's below is not.
+
+## On the named GPU
+
+Taken at a0e847eb by the commands below, on a GTX 1070 through Edge/ANGLE D3D11 at
+1920 × 1080, three r187 and High: [gpu/surfaced](gpu/surfaced/readings.json), the tree
+as it stands, and [gpu/blender](gpu/blender/readings.json), the spike swapped in for its
+run and restored after.
+
+| Camera | Surfaced | Blender | Calls |
+| --- | --- | --- | --- |
+| [Close](gpu/surfaced/02-close.png) | 668,060 | 751,320 | 67 |
+| [Near port](gpu/surfaced/04-near-port.png) | 658,950 | 742,210 | 56 |
+| [Near bow](gpu/surfaced/05-near-bow.png) | 657,658 | 740,918 | 53 |
+
+The table is the frame's triangles. The Blender hull adds 83,260 at every camera, about
+twice its own excess over the kit hull, since a hull's cladding has had a world draw as
+well since #1814; it takes the frame over the study's 720,000. Calls are the same. At the near cameras the two read
+close: the spike's tail cone and stern run rounder, and the surfaces and lamps match.
+
+[swing-surfaced.mp4](gpu/swing-surfaced.mp4) is the swing round the kit hull, 120
+lossless steps of half a degree, encoded at CRF 14, and
+[swing-side-by-side.mp4](gpu/swing-side-by-side.mp4) runs the two hulls' swings beside
+each other, cropped to the hull. Whether either shimmers, and whether Blender clearly
+wins, are the owner's readings. A flat black prop stands near the eye in both swings, as
+in the software frames: not this issue's.
 
 ## Who captures
 
@@ -223,7 +249,10 @@ git checkout docs/concept-art/models/corvette-pelagia.glb
 
 `02-close.png`, `04-near-port.png` and `05-near-bow.png` of each set are the frames the
 issue asks to be judged side by side. `CLIP=1` with `RECORD_VIDEO=<dir>` on the first
-command records the swing round the hull instead. Gate 6's time is read by
+command records the swing round the hull instead; `CLIP=1 CLIP_STEPS=120 CLIP_STEP_MS=80
+CLIP_FRAMES=<dir>` writes its steps as PNGs, which
+`ffmpeg -framerate 30 -i <dir>/f%04d.png -c:v libx264 -crf 14 -pix_fmt yuv420p` assembles,
+as the swings above were, from a scratch copy of the same steps. Gate 6's time is read by
 [issue-1799](../issue-1799/README.md)'s unpaced command, on this tree.
 
 ## Related

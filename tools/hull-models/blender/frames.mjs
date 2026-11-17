@@ -30,7 +30,8 @@
  * yaw in CLIP_STEPS steps (60) of CLIP_STEP_MS each (50; a software
  * rasteriser wants 1,200), for the clip a look is shown with (#1811): a
  * surface read by a fragment's place on the model has to hold still on the
- * hull while the camera moves.
+ * hull while the camera moves. CLIP_FRAMES=<dir> writes each step as a PNG
+ * too, for a clip that can show shimmer (#1811 took 120 steps of 80 ms).
  *
  * QUALITY=low or QUALITY=high sets the Graphics quality by its development
  * switch (docs/screenshots/issue-1801/frames.mjs). Unset, the view draws what
@@ -41,7 +42,7 @@
  * one drew guides a round and is never offered for acceptance (the dev-loop
  * skill, "Look work").
  */
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 export default async ({ page, shot }) => {
@@ -85,10 +86,18 @@ export default async ({ page, shot }) => {
       );
     await aim(-150);
     await page.waitForTimeout(software ? 9000 : 2500);
+    // CLIP_FRAMES=<dir> also writes each step as a lossless PNG: the page's
+    // VP8 recording was too compressed to show shimmer either way (#1811), so
+    // ffmpeg assembles these instead.
+    const frames = process.env.CLIP_FRAMES;
+    if (frames) mkdirSync(frames, { recursive: true });
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
       await aim(-150 + 60 * t * t * (3 - 2 * t));
       await page.waitForTimeout(Number(process.env.CLIP_STEP_MS ?? 50));
+      if (frames) {
+        await page.screenshot({ path: join(frames, `f${String(i).padStart(4, '0')}.png`) });
+      }
     }
     await page.waitForTimeout(software ? 4000 : 1500);
     await shot('clip-end');
