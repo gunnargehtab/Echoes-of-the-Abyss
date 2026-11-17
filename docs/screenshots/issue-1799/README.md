@@ -46,8 +46,9 @@ A round built in the cloud container shows a software rasteriser's frames, label
 and never offers them for acceptance.
 
 The capture is [issue-1801/frames.mjs](../issue-1801/frames.mjs), a run-game steps module
-that holds the three cameras above at Low and at High and writes each frame's reading
-beside it. With the dev servers running (`npm run dev`):
+that holds the three cameras above at Low and at High, with gate 6's fourth, the low
+camera of [free-water-slice.md](../../free-water-slice.md) §9, and writes each frame's
+reading beside it. With the dev servers running (`npm run dev`):
 
 ```bash
 UNPACED=1 VIEW_W=1920 VIEW_H=1080 node .claude/skills/run-game/scripts/drive.mjs \
@@ -59,7 +60,8 @@ CLIP=1 RECORD_VIDEO=docs/screenshots/issue-1801/gpu VIEW_W=1920 VIEW_H=1080 \
   --out docs/screenshots/issue-1801/gpu --steps docs/screenshots/issue-1801/frames.mjs
 ```
 
-The first writes `high-home`, `high-close` and `high-survey` beside their Low controls and
+The first writes `high-home`, `high-close`, `high-low` and `high-survey` beside their Low
+controls and
 `readings.json`, whose `queued` GPU time is gate 6's reading. The second records the clip,
 the camera moving from Home to Close at High. Unpaced, a run's frame times are no budget.
 

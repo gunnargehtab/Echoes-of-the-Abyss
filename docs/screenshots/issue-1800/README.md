@@ -32,4 +32,25 @@ moves it without any upgrade. Close's pair is committed: `diff-close-main-vs-bra
 and `diff-close-main-vs-main.png`. Side by side, the Bastion, the
 hulls, their glow, the ground and the water read the same.
 
-The GPU reading gate 6 asks for, on the named GPU before and after, is still owed.
+## Gate 6 on the named GPU
+
+The upgrade costs no GPU time the GTX 1070 can read. `tools/render-stack/capture.mjs` ran
+at its four cameras on `ventfront-divide`, unpaced, through Edge/ANGLE D3D11, at
+1440 × 900. `before` is the base, db8f045f, serving three r169; `after` is the merge,
+96180933, serving r187. Each served revision was checked in Vite's dependency cache.
+Each revision was read twice at each pixel ratio, interleaved, behind a 24,000-step queue
+load of about 7.3 ms: the 12,000-step default ran out before the survey's unqueued frame.
+The table gives the mean of the two queued readings, in ms.
+
+| Camera | Ratio 1, before → after | Ratio 1.5, before → after |
+| --- | --- | --- |
+| Home | 0.83 → 0.81 | 1.53 → 1.50 |
+| Close | 0.95 → 0.95 | 1.83 → 1.83 |
+| Low | 0.80 → 0.82 | 1.52 → 1.51 |
+| Survey | 0.78 → 0.78 | 1.39 → 1.39 |
+
+Every step lies within 0.04 ms, as two runs of one revision do. Triangles are the same at every camera, 166,978 to
+168,094, and calls differ by at most two, within a revision's own spread. A first pass is
+left out: its `before` page met a stale server from an earlier run and drew no hull. The
+raw runs are `gpu/{before-r169,after-r187}/dpr-{1,1.5}/run-{1,2}.json`, for example
+[gpu/after-r187/dpr-1/run-1.json](gpu/after-r187/dpr-1/run-1.json).
