@@ -1,7 +1,7 @@
 // The High slice's frames (#1801), as a run-game steps module: the three cameras
-// docs/screenshots/issue-1799/README.md judges a look at, in the free-water
-// crater with the HUD on, at the Low graphics quality and at High, and the
-// probe's reading of each beside them.
+// docs/screenshots/issue-1799/README.md judges a look at, and gate 6's fourth,
+// low, in the free-water crater with the HUD on, at the Low graphics quality
+// and at High, and the probe's reading of each beside them.
 //
 //   node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
 //     --out docs/screenshots/issue-1801/software --steps docs/screenshots/issue-1801/frames.mjs
@@ -25,13 +25,17 @@ import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 // name, plan x, plan z, dolly, yaw, pitch, focus depth: the poses of
-// docs/screenshots/issue-1799/README.md's Cameras table.
+// docs/screenshots/issue-1799/README.md's Cameras table, and gate 6's low.
 const POSES = [
   // The study's opening pose (FREE_WATER_OPENING), set explicitly.
   ['home', 709, 1710, 1200, -34, 15, 300],
   // A low eye over the west rim, composed like the target: the rim in the
   // foreground, the three hulls across the frame, the bowl's open water behind.
   ['close', 542, 1958, 420, -60, 2, 300],
+  // Gate 6 reads High at four cameras, and the look is judged at the other
+  // three: this is free-water-slice.md §9's Low row, the same pose as
+  // issue-1713/gpu.mjs's low station, so High's time covers the bowl's water.
+  ['low', 2000, 2000, 1600, 0, 12, 850],
   // The study's survey dolly: north up, the whole bowl in frame.
   ['survey', 2000, 2000, 10000, 0, 88, null],
 ];
