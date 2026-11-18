@@ -36,8 +36,13 @@ import {
   AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
+  ConstantAlphaFactor,
+  CustomBlending,
   Matrix4,
   Mesh,
+  NormalBlending,
+  OneFactor,
+  OneMinusConstantAlphaFactor,
   PerspectiveCamera,
   PlaneGeometry,
   Points,
@@ -46,6 +51,7 @@ import {
   Vector2,
   Vector3,
   Vector4,
+  type Material,
 } from 'three';
 import { DEPTH, LID, THERMOCLINE } from '@echoes/shared';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
@@ -289,6 +295,9 @@ export function waterTransmittance(distanceM: number, reachM: number): number {
 
 let fogInstalled = false;
 
+/** What `blendSwimByCoverage` tells the fog chunk: this draw's alpha is its own. */
+export const SWIM_COVERAGE_DEFINE = 'ECHOES_SWIM_COVERAGE';
+
 /**
  * Teach three.js's fog that water has a depth.
  *
@@ -366,11 +375,15 @@ export function installWaterFog(): void {
     // negative red as its sign. There the fragment only loses light to the
     // swim, and an opaque one writes what survives into alpha, so the pass
     // that follows adds the water's own light by how much of each pixel the
-    // water took, per sample. A blended fragment leaves alpha to its blend.
+    // water took, per sample. A blended fragment leaves alpha to its blend,
+    // unless it blends by a constant (`blendSwimByCoverage`): then its alpha
+    // is free to carry its own coverage's survivors.
     '  if ( fogColor.r < 0.0 ) {',
     '    gl_FragColor.rgb *= 1.0 - fogFactor;',
     '    #ifdef OPAQUE',
     '      gl_FragColor.a = 1.0 - fogFactor;',
+    `    #elif defined( ${SWIM_COVERAGE_DEFINE} )`,
+    '      gl_FragColor.a *= 1.0 - fogFactor;',
     '    #endif',
     '  } else {',
     '    vec3 waterAtFragment = echoesWaterColor( echoesWaterDepthM( vWaterWorldY ) );',
@@ -379,6 +392,40 @@ export function installWaterFog(): void {
     '  }',
     '#endif',
   ].join('\n');
+}
+
+/**
+ * Blend a world-pass draw by its coverage as a constant, so the water still
+ * reaches what it covers (#1832). Under High the composite adds the water by
+ * what alpha lost (highFrame.ts), and a draw blended the usual way writes its
+ * coverage there, never what of it survived the swim: the water took a glass
+ * roof's share of the pixel and the composite gave none of it back.
+ *
+ * Blended by the constant instead, the colour still covers by `coverage`,
+ * while alpha takes what the fog chunk leaves it, `coverage` times what
+ * survived, over what was behind by the same `1 - coverage`. So the pixel's
+ * alpha is the sum of what each layer kept, and the composite returns each
+ * layer's swim to the water. Exact only while the draw's coverage is the one
+ * number, as a roof's opacity is: no texture or vertex alpha. `null` puts
+ * the draw back on three's usual blend, for an opaque program.
+ */
+export function blendSwimByCoverage(material: Material, coverage: number | null): void {
+  const defines: Record<string, unknown> = { ...(material.defines ?? {}) };
+  const was = SWIM_COVERAGE_DEFINE in defines;
+  if (coverage === null) {
+    material.blending = NormalBlending;
+    delete defines[SWIM_COVERAGE_DEFINE];
+  } else {
+    material.blending = CustomBlending;
+    material.blendSrc = ConstantAlphaFactor;
+    material.blendDst = OneMinusConstantAlphaFactor;
+    material.blendSrcAlpha = OneFactor;
+    material.blendDstAlpha = OneMinusConstantAlphaFactor;
+    material.blendAlpha = coverage;
+    defines[SWIM_COVERAGE_DEFINE] = '';
+  }
+  material.defines = defines;
+  if (was !== (coverage !== null)) material.needsUpdate = true;
 }
 
 /**
