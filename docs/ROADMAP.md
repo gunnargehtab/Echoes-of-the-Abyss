@@ -903,6 +903,7 @@ and no row below is open.
 | The free-water rim ray reading as a body in the opening frame | [#1780](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1780) |
 | Mirrored hull parts drawing near-black in the conn view | [#1812](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1812) |
 | Screenshots of the water look predating the hulls' navy surface | [#1820](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1820) |
+| A flat black shape at the Corvette's near-port camera | [#1829](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1829) |
 
 **How the project runs**
 
@@ -916,6 +917,7 @@ and no row below is open.
 | The loop map's misdated severity change | [#1728](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1728) |
 | Confirming the five-round cap exception for the free-water slice | [#1756](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1756) |
 | Re-syncing the vendored three.js skills to the r187 client | [#1804](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1804) |
+| Preflight passing a dependency that resolves outside its range | [#1828](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1828) |
 
 **Store art**
 
