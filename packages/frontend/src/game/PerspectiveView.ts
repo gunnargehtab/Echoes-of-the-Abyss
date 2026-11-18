@@ -1100,7 +1100,10 @@ export class PerspectiveView {
   private linking: { materials: Set<Material>; until: number } | null = null;
   /** Frames the canvas held for linking programs, for the probe. */
   private heldFrames = 0;
-  /** Whether the scene gained a mesh since the last `precompile`: a ground, a handle, a model. */
+  /**
+   * Whether the scene needs a program since the last `precompile`: a ground, a
+   * handle or a model it gained, or a roof turned to glass or back.
+   */
   private sceneGrew = false;
   private lastFrameAt = 0;
   /**
@@ -3799,8 +3802,8 @@ export class PerspectiveView {
   private buildTerrainDressing(terrain: TerrainPayload, grid: HeightGrid): void {
     // The roofs (#1105): stone over each passage, risen clear of its ceiling,
     // a lintel over every mouth (passages.ts). Unlit like the ground they
-    // stand in, and translucent-capable, because a roof over one of your own
-    // hulls turns to glass (`openRoofs`). Rung 2, the stone.
+    // stand in, and opaque until a roof over one of your own hulls turns to
+    // glass (`openRoofs`). Rung 2, the stone.
     for (const roof of this.roofs) {
       roof.mesh.geometry.dispose();
       roof.material.dispose();
@@ -3834,12 +3837,14 @@ export class PerspectiveView {
       );
       geometry.setIndex(new BufferAttribute(shape.indices, 1));
       // Double-sided: the underside is seen from inside a mouth, and the
-      // sides from either hand.
+      // sides from either hand. Opaque, not a blend held at full opacity:
+      // High's world pass writes what survived the swim into alpha only for
+      // an opaque program (water.ts `installWaterFog`), and a blended stone
+      // there took no water at all and drew flat black at range (#1829).
       const material = new MeshBasicMaterial({
         vertexColors: true,
         toneMapped: false,
         side: DoubleSide,
-        transparent: true,
       });
       installDisplayVeil(material);
       const mesh = new Mesh(geometry, material);
@@ -4162,6 +4167,12 @@ export class PerspectiveView {
       material.opacity = opacity;
       // Glass writes no depth, so what is under it draws as well as shows.
       material.depthWrite = opacity === 1;
+      // Only glass blends: stone stays opaque for High's fog (#1829). The
+      // switch is a program change, so the next `precompile` links it off the
+      // frame, as a new hull's kind is.
+      material.transparent = opacity < 1;
+      material.needsUpdate = true;
+      this.sceneGrew = true;
     }
   }
 

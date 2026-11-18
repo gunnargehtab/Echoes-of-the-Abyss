@@ -2000,6 +2000,9 @@ describe('renderer smoke test: the conn view', () => {
       assert.ok(roofs()[0]!.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) !== undefined);
       assert.ok(readsDisplayVeil(material()), 'the roof takes the veil after the output transform');
       assert.equal(opacity(), 1, 'closed while no own hull is under it');
+      // Stone is opaque, so High's world pass can write the water's share of
+      // it into alpha (#1829); only glass blends.
+      assert.equal(material().transparent, false, 'and closed stone is opaque');
 
       // The same passage is on the scope, as a route stroked in rung 5's ink.
       const scope = (world.chart as unknown as { minimapTerrainG: Graphics }).minimapTerrainG;
@@ -2019,9 +2022,11 @@ describe('renderer smoke test: the conn view', () => {
       at(3250, 1500, 2000);
       assert.equal(opacity(), ROOF_OPEN_OPACITY, 'glass with a hull inside');
       assert.equal(material().depthWrite, false, 'and glass writes no depth');
+      assert.equal(material().transparent, true, 'and glass blends');
       at(2250, 1500, 2000);
       assert.equal(opacity(), 1, 'stone again once it leaves');
       assert.equal(material().depthWrite, true, 'and stone writes it again');
+      assert.equal(material().transparent, false, 'and is opaque again');
     } finally {
       world.teardown();
     }
@@ -2423,6 +2428,21 @@ describe('renderer smoke test: the conn view', () => {
       assert.equal(composite.length, 1, 'the composite is one full-screen draw');
       // Two layers, one draw each: nothing is lit and then drawn again.
       for (const object of worldPass) assert.ok(!tactical.includes(object), 'drawn once');
+      // The world pass's fog writes what survived the swim into alpha only for
+      // an opaque program (water.ts `installWaterFog`), and the composite adds
+      // the water by what alpha lost. A blended draw there keeps its alpha, so
+      // the water never reaches it: a closed roof 2 km off drew flat black
+      // (#1829). Every draw the world pass makes with no own hull near is opaque.
+      for (const object of worldPass) {
+        const materials = [(object as Mesh).material].flat() as Material[];
+        for (const material of materials) {
+          assert.equal(
+            material.transparent,
+            false,
+            `the world pass draws ${kind(object)} opaque, so its alpha holds the swim`
+          );
+        }
+      }
       // The lit ground is the world's, and its survey ink the tactical layer's,
       // on the one geometry.
       const ground = worldPass.find((o) =>
