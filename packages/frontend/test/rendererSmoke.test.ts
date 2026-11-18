@@ -2034,8 +2034,10 @@ describe('renderer smoke test: the conn view', () => {
       // program, which the material's version asks for.
       // A quality change rebuilds the roofs, and High's scene graph is not the
       // one the finder above walks: read the view's own roof.
-      const probes = (globalThis as unknown as { window: Probes }).window;
-      assert.equal(probes.__perspectiveQuality!('high'), 'high');
+      const probes = (
+        globalThis as unknown as { window: { __perspectiveQuality: (q: 'high') => string } }
+      ).window;
+      assert.equal(probes.__perspectiveQuality('high'), 'high');
       world.frame(2);
       const view = world.conn as unknown as { roofs: { material: MeshBasicMaterial }[] };
       assert.equal(view.roofs.length, 1, 'High rebuilt the one roof');
