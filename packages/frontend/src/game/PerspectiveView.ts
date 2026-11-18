@@ -3606,10 +3606,10 @@ export class PerspectiveView {
    *
    * Mid-match too, the owner's call on #1495: the first hull or structure of
    * a kind not yet drawn holds the canvas the same way, and under High a roof
-   * turning to glass or back, which changes its program (`openRoofs`, #1829). The HUD keeps drawing through
-   * the camera meanwhile, so its symbols slide over a still world during a
-   * pan, and a resize leaves the canvas cleared until the hold ends; before,
-   * the whole page hitched instead.
+   * turning to glass or back, which changes its program (`openRoofs`, #1829).
+   * The HUD keeps drawing through the camera meanwhile, so its symbols slide
+   * over a still world during a pan, and a resize leaves the canvas cleared
+   * until the hold ends; before, the whole page hitched instead.
    *
    * Not `compileAsync`: its poll reads the program of every material it
    * compiled, and a material disposed meanwhile has none, so the poll throws

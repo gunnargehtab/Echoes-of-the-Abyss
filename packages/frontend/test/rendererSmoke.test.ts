@@ -2544,11 +2544,12 @@ describe('renderer smoke test: the conn view', () => {
       // the stone over a passage, and the skirt the world ends at.
       const roofs = worldPass.filter((o) => kind(o).includes(':lit-roof-1'));
       assert.equal(roofs.length, 1, 'the canned ground has one roofed passage');
-      // Low's roof, lit, and opaque where Low blends it (#1829): the last flag.
+      // Low's roof, lit: the same draw, but blended, where High's is opaque
+      // (#1829). The transparent flag is the kind's last field.
       const lowRoof = kind(roofs[0]!)
         .replace(':lit-roof-1', '')
         .replace(/\|false$/, '|true');
-      assert.ok(lowKinds.has(lowRoof), 'Low’s roof, lit and opaque');
+      assert.ok(lowKinds.has(lowRoof), 'Low’s roof, lit, the same but blended');
       const skirt = worldPass.filter((o) => o !== ground && !roofs.includes(o));
       assert.equal(skirt.length, 1, 'and the skirt');
       assert.ok(lowKinds.has(kind(skirt[0]!)), 'which Low draws in the same material');
