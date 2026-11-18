@@ -54,9 +54,28 @@ describe('the interior veil, in display space (#1536)', () => {
     assert.ok(drain < fragmentShader.indexOf('#include <fog_fragment>'), 'before the fog');
     // Encoded, multiplied, decoded: never a linear multiply by a display figure.
     assert.ok(fragmentShader.includes(DISPLAY_VEIL_GLSL), 'the transfer is declared');
-    assert.match(DISPLAY_VEIL_GLSL, /pow\( c, vec3\( 1\.0 \/ 2\.4 \) \)[^;]*\* shade;/);
+    assert.match(
+      DISPLAY_VEIL_GLSL,
+      /pow\( c, vec3\( 1\.0 \/ 2\.4 \) \)[^;]*\* max\( shade, 0\.0 \);/
+    );
     assert.match(DISPLAY_VEIL_GLSL, /vec3\( 2\.4 \)/);
     material.dispose();
+  });
+
+  it('hands pow no negative, so a multisampled edge cannot write NaN (#1829)', () => {
+    // `mix` runs both branches, and pow of a negative is NaN, which a weight
+    // of 0 does not cancel. An edge sample reads a varying past its triangle,
+    // so the colour and the shade are held at 0 before the first pow.
+    const body = DISPLAY_VEIL_GLSL.slice(DISPLAY_VEIL_GLSL.indexOf('{') + 1);
+    const firstPow = body.indexOf('pow(');
+    const clamp = body.indexOf('c = max( c, 0.0 );');
+    assert.ok(clamp >= 0 && clamp < firstPow, 'the colour is held before the first pow');
+    const shades = body.match(/\bshade\b/g) ?? [];
+    const held = body.match(/max\( shade, 0\.0 \)/g) ?? [];
+    assert.ok(shades.length > 0 && shades.length === held.length, 'every shade read is held');
+    // The second pow reads `e`: the held colour, encoded by whichever branch
+    // `mix` keeps, times the held shade, so never under 0.
+    assert.match(body, /pow\( \( e \+ 0\.055 \) \/ 1\.055, vec3\( 2\.4 \) \)/);
   });
 
   it('chains onto an earlier patch and keys its own program', () => {
