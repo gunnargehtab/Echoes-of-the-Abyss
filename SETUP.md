@@ -62,7 +62,8 @@ Preflight failed — the workspace is not ready to run.
   → Run `npm install` from the repository root, then try again.
 ```
 
-The same check catches too old a Node. Run it on its own with `npm run preflight`.
+The same check catches too old a Node, and a package whose installed copy is outside its
+declared range. Run it on its own with `npm run preflight`.
 
 ## Development
 

@@ -184,10 +184,10 @@ tools/lib          spawn.mjs, the one way a gate or a hull tool's npm install is
                    batch files there, and since the CVE-2024-27980 fix spawning
                    one without a shell returns status: null with error set rather
                    than throwing, which made every gate FAIL in 0.0s printing
-                   nothing. Extracted when claude-docs became its second caller.
+                   nothing. preflight.mjs is preflight-deps' dependency check (#1828).
 tools/*.mjs        The two scripts that sit at the top of the tree.
                    gates.mjs is every blocking gate in one pass — see the root
-                   CLAUDE.md's Commands section. preflight-deps.mjs is the presence
+                   CLAUDE.md's Commands section. preflight-deps.mjs is the install
                    check that dev, build and test run first, so a stale node_modules
                    fails at the front door instead of ten seconds into Vite (#301).
                    Both are plain Node with no dependencies — preflight-deps
