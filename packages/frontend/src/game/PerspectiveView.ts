@@ -1102,7 +1102,7 @@ export class PerspectiveView {
   private heldFrames = 0;
   /**
    * Whether the scene needs a program since the last `precompile`: a ground, a
-   * handle or a model it gained, or a roof turned to glass or back.
+   * handle or a model it gained, or under High a roof turned to glass or back.
    */
   private sceneGrew = false;
   private lastFrameAt = 0;
@@ -3605,7 +3605,8 @@ export class PerspectiveView {
    * hold, since `compile` hands back every material in the scene.
    *
    * Mid-match too, the owner's call on #1495: the first hull or structure of
-   * a kind not yet drawn holds the canvas the same way. The HUD keeps drawing through
+   * a kind not yet drawn holds the canvas the same way, and under High a roof
+   * turning to glass or back, which changes its program (`openRoofs`, #1829). The HUD keeps drawing through
    * the camera meanwhile, so its symbols slide over a still world during a
    * pan, and a resize leaves the canvas cleared until the hold ends; before,
    * the whole page hitched instead.
@@ -3802,8 +3803,8 @@ export class PerspectiveView {
   private buildTerrainDressing(terrain: TerrainPayload, grid: HeightGrid): void {
     // The roofs (#1105): stone over each passage, risen clear of its ceiling,
     // a lintel over every mouth (passages.ts). Unlit like the ground they
-    // stand in, and opaque until a roof over one of your own hulls turns to
-    // glass (`openRoofs`). Rung 2, the stone.
+    // stand in, and translucent-capable, because a roof over one of your own
+    // hulls turns to glass (`openRoofs`). Rung 2, the stone.
     for (const roof of this.roofs) {
       roof.mesh.geometry.dispose();
       roof.material.dispose();
@@ -3837,14 +3838,16 @@ export class PerspectiveView {
       );
       geometry.setIndex(new BufferAttribute(shape.indices, 1));
       // Double-sided: the underside is seen from inside a mouth, and the
-      // sides from either hand. Opaque, not a blend held at full opacity:
-      // High's world pass writes what survived the swim into alpha only for
-      // an opaque program (water.ts `installWaterFog`), and a blended stone
-      // there took no water at all and drew flat black at range (#1829).
+      // sides from either hand. Under High, opaque until it turns to glass:
+      // the world pass writes what survived the swim into alpha only for an
+      // opaque program (water.ts `installWaterFog`), and a blended stone there
+      // took no water at all and drew flat black at range (#1829). Low blends
+      // it always, as it did, so opening a roof never changes its program.
       const material = new MeshBasicMaterial({
         vertexColors: true,
         toneMapped: false,
         side: DoubleSide,
+        transparent: !this.high.on,
       });
       installDisplayVeil(material);
       const mesh = new Mesh(geometry, material);
@@ -4167,12 +4170,15 @@ export class PerspectiveView {
       material.opacity = opacity;
       // Glass writes no depth, so what is under it draws as well as shows.
       material.depthWrite = opacity === 1;
-      // Only glass blends: stone stays opaque for High's fog (#1829). The
-      // switch is a program change, so the next `precompile` links it off the
-      // frame, as a new hull's kind is.
-      material.transparent = opacity < 1;
-      material.needsUpdate = true;
-      this.sceneGrew = true;
+      // Under High only glass blends, and stone stays opaque for the world
+      // pass's fog (#1829). The switch is a program change, so the next
+      // `precompile` links it off the frame, as a new hull's kind is.
+      const glass = !this.high.on || opacity < 1;
+      if (material.transparent !== glass) {
+        material.transparent = glass;
+        material.needsUpdate = true;
+        this.sceneGrew = true;
+      }
     }
   }
 

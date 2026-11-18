@@ -2000,9 +2000,10 @@ describe('renderer smoke test: the conn view', () => {
       assert.ok(roofs()[0]!.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) !== undefined);
       assert.ok(readsDisplayVeil(material()), 'the roof takes the veil after the output transform');
       assert.equal(opacity(), 1, 'closed while no own hull is under it');
-      // Stone is opaque, so High's world pass can write the water's share of
-      // it into alpha (#1829); only glass blends.
-      assert.equal(material().transparent, false, 'and closed stone is opaque');
+      // Low blends its stone whether it is open or not, so a roof turning to
+      // glass never changes its program there (#1829).
+      assert.equal(material().transparent, true, 'Low blends closed stone, as it always has');
+      const lowVersion = material().version;
 
       // The same passage is on the scope, as a route stroked in rung 5's ink.
       const scope = (world.chart as unknown as { minimapTerrainG: Graphics }).minimapTerrainG;
@@ -2022,11 +2023,33 @@ describe('renderer smoke test: the conn view', () => {
       at(3250, 1500, 2000);
       assert.equal(opacity(), ROOF_OPEN_OPACITY, 'glass with a hull inside');
       assert.equal(material().depthWrite, false, 'and glass writes no depth');
-      assert.equal(material().transparent, true, 'and glass blends');
       at(2250, 1500, 2000);
       assert.equal(opacity(), 1, 'stone again once it leaves');
       assert.equal(material().depthWrite, true, 'and stone writes it again');
-      assert.equal(material().transparent, false, 'and is opaque again');
+      assert.equal(material().transparent, true, 'Low still blends it');
+      assert.equal(material().version, lowVersion, 'and never asked for another program');
+
+      // Under High stone is opaque, so the world pass writes the water's share
+      // of it into alpha (#1829), and only glass blends: each switch is a new
+      // program, which the material's version asks for.
+      // A quality change rebuilds the roofs, and High's scene graph is not the
+      // one the finder above walks: read the view's own roof.
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      assert.equal(probes.__perspectiveQuality!('high'), 'high');
+      world.frame(2);
+      const view = world.conn as unknown as { roofs: { material: MeshBasicMaterial }[] };
+      assert.equal(view.roofs.length, 1, 'High rebuilt the one roof');
+      const stone = () => view.roofs[0]!.material;
+      assert.equal(stone().transparent, false, 'High draws closed stone opaque');
+      const highVersion = stone().version;
+      at(3250, 1500, 2000);
+      assert.equal(stone().opacity, ROOF_OPEN_OPACITY, 'glass under High too');
+      assert.equal(stone().transparent, true, 'and glass blends');
+      assert.ok(stone().version > highVersion, 'a program change, asked for');
+      const glassVersion = stone().version;
+      at(2250, 1500, 2000);
+      assert.equal(stone().transparent, false, 'opaque stone again once it leaves');
+      assert.ok(stone().version > glassVersion, 'and asked for again');
     } finally {
       world.teardown();
     }
@@ -2519,7 +2542,11 @@ describe('renderer smoke test: the conn view', () => {
       // the stone over a passage, and the skirt the world ends at.
       const roofs = worldPass.filter((o) => kind(o).includes(':lit-roof-1'));
       assert.equal(roofs.length, 1, 'the canned ground has one roofed passage');
-      assert.ok(lowKinds.has(kind(roofs[0]!).replace(':lit-roof-1', '')), 'Low’s roof, lit');
+      // Low's roof, lit, and opaque where Low blends it (#1829): the last flag.
+      const lowRoof = kind(roofs[0]!)
+        .replace(':lit-roof-1', '')
+        .replace(/\|false$/, '|true');
+      assert.ok(lowKinds.has(lowRoof), 'Low’s roof, lit and opaque');
       const skirt = worldPass.filter((o) => o !== ground && !roofs.includes(o));
       assert.equal(skirt.length, 1, 'and the skirt');
       assert.ok(lowKinds.has(kind(skirt[0]!)), 'which Low draws in the same material');
