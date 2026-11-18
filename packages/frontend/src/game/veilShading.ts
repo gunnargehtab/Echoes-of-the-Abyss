@@ -37,9 +37,16 @@ const PROP_VEIL_KEY = ':prop-veil-1';
  * both ways, and the multiply between them. Written out because r169 shipped
  * only the encoding half; r187's pair works on vec4, and moving to it would be
  * a shader edit in an upgrade that changes no look (#1800).
+ *
+ * Both sides are held at 0 first. `mix` runs both branches, and `pow` of a
+ * negative is NaN, which a weight of 0 does not cancel. A colour or a shade
+ * goes negative where a multisampled edge reads a varying past its triangle:
+ * at High that NaN lands in the world target, and the bloom spread it into a
+ * black octagon (#1829). Only a channel that was below 0 moves, and to 0.
  */
 export const DISPLAY_VEIL_GLSL = `vec3 echoesDisplayVeil( vec3 c, vec3 shade ) {
-  vec3 e = mix( c * 12.92, 1.055 * pow( c, vec3( 1.0 / 2.4 ) ) - 0.055, step( 0.0031308, c ) ) * shade;
+  c = max( c, 0.0 );
+  vec3 e = mix( c * 12.92, 1.055 * pow( c, vec3( 1.0 / 2.4 ) ) - 0.055, step( 0.0031308, c ) ) * max( shade, 0.0 );
   return mix( e / 12.92, pow( ( e + 0.055 ) / 1.055, vec3( 2.4 ) ), step( 0.04045, e ) );
 }`;
 

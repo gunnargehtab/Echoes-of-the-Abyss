@@ -1,0 +1,160 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "quality": "high",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "readings": [
+    {
+      "name": "home",
+      "pose": "the opening pose",
+      "drawCalls": 67,
+      "triangles": 668060,
+      "lampAreaPx": [
+        12
+      ],
+      "lampSitesPx": [
+        [
+          1.51,
+          1.21,
+          1.23,
+          1.24,
+          1.23,
+          1.24,
+          1.18
+        ]
+      ]
+    },
+    {
+      "name": "close",
+      "pose": {
+        "xM": 542,
+        "zM": 1958,
+        "distance": 420,
+        "yawDeg": -60,
+        "pitchDeg": 2,
+        "focusDepthM": 300
+      },
+      "drawCalls": 67,
+      "triangles": 668060,
+      "lampAreaPx": [
+        51.2
+      ],
+      "lampSitesPx": [
+        [
+          2.88,
+          2.36,
+          2.43,
+          2.52,
+          2.4,
+          2.49,
+          2.49
+        ]
+      ]
+    },
+    {
+      "name": "station",
+      "pose": {
+        "distance": 1800,
+        "yawDeg": 0,
+        "pitchDeg": 55,
+        "focusDepthM": null
+      },
+      "drawCalls": 66,
+      "triangles": 668044,
+      "lampAreaPx": [
+        2.7
+      ],
+      "lampSitesPx": [
+        [
+          0.73,
+          0.58,
+          0.58,
+          0.58,
+          0.58,
+          0.58,
+          0.55
+        ]
+      ]
+    },
+    {
+      "name": "near-port",
+      "pose": {
+        "distance": 190,
+        "yawDeg": -150,
+        "pitchDeg": 16,
+        "focusDepthM": 300
+      },
+      "drawCalls": 55,
+      "triangles": 658302,
+      "lampAreaPx": [
+        123.6
+      ],
+      "lampSitesPx": [
+        [
+          4.69,
+          3.91,
+          4.05,
+          4.15,
+          3.82,
+          3.97,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "near-bow",
+      "pose": {
+        "distance": 240,
+        "yawDeg": 125,
+        "pitchDeg": 22,
+        "focusDepthM": 300
+      },
+      "drawCalls": 53,
+      "triangles": 657658,
+      "lampAreaPx": [
+        135.6
+      ],
+      "lampSitesPx": [
+        [
+          5.71,
+          4.41,
+          4.21,
+          4,
+          4.27,
+          4.06,
+          3.48
+        ]
+      ]
+    },
+    {
+      "name": "survey",
+      "pose": {
+        "xM": 2000,
+        "zM": 2000,
+        "distance": 10000,
+        "yawDeg": 0,
+        "pitchDeg": 88,
+        "focusDepthM": null
+      },
+      "drawCalls": 67,
+      "triangles": 668692,
+      "lampAreaPx": [
+        0.9
+      ],
+      "lampSitesPx": [
+        [
+          0.47,
+          0.37,
+          0.37,
+          0.37,
+          0.37,
+          0.37,
+          0.35
+        ]
+      ]
+    }
+  ]
+}
