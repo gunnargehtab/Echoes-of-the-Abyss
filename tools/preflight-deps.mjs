@@ -9,16 +9,19 @@
  *
  * Plain Node, no dependencies, no npm subprocess: this has to run before anyone
  * has a working install, and `npm ls` is both slow and noisy about unrelated
- * things. Presence is all we check — a package declared but absent is the
- * failure that actually happens after a pull; version drift inside a satisfied
- * range is npm's business.
+ * things. Two faults fail it: a package declared but absent, the one that
+ * happens after a pull, and a package whose resolved copy is outside its
+ * declared range, which a root copy pinned for the tools can hide (#1828).
+ * Drift inside a satisfied range is npm's business. tools/lib/preflight.mjs
+ * holds both checks and says why the range reader is a subset of semver.
  *
  *   node tools/preflight-deps.mjs
  */
 
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { checkDependencies } from './lib/preflight.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -27,26 +30,6 @@ const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // the frontend test shim lists asset globs through `process.getBuiltinModule`
 // (packages/frontend/test/support/viteAssetHooks.mjs), which 22.3 added.
 const MIN_NODE = [22, 3];
-
-function readJson(path) {
-  return JSON.parse(readFileSync(path, 'utf8'));
-}
-
-/**
- * Resolve like Node does — walk `node_modules` from the package outward — rather
- * than with `import.meta.resolve`. npm hoists workspace dependencies to the root,
- * and many packages do not export `./package.json`, so a real resolve would throw
- * on packages that are in fact installed.
- */
-function isInstalled(name, fromDir) {
-  let dir = fromDir;
-  for (;;) {
-    if (existsSync(join(dir, 'node_modules', name, 'package.json'))) return true;
-    const parent = dirname(dir);
-    if (parent === dir || dir === repo) return false;
-    dir = parent;
-  }
-}
 
 const problems = [];
 
@@ -59,27 +42,21 @@ if (nodeMajor < MIN_NODE[0] || (nodeMajor === MIN_NODE[0] && nodeMinor < MIN_NOD
   });
 }
 
-const root = readJson(join(repo, 'package.json'));
-const missing = [];
-
-for (const workspace of ['.', ...(root.workspaces ?? [])]) {
-  const dir = join(repo, workspace);
-  const manifest = join(dir, 'package.json');
-  if (!existsSync(manifest)) continue;
-
-  const pkg = readJson(manifest);
-  const declared = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
-
-  for (const name of Object.keys(declared)) {
-    if (!isInstalled(name, dir)) missing.push(`${name}  (${pkg.name})`);
-  }
-}
+const { missing, outOfRange } = checkDependencies(repo);
 
 if (missing.length > 0) {
   problems.push({
     headline: `${missing.length} declared ${missing.length === 1 ? 'dependency is' : 'dependencies are'} not installed:`,
     detail: missing,
     fix: 'Run `npm install` from the repository root, then try again.',
+  });
+}
+
+if (outOfRange.length > 0) {
+  problems.push({
+    headline: `${outOfRange.length} declared ${outOfRange.length === 1 ? 'dependency resolves' : 'dependencies resolve'} outside the declared range:`,
+    detail: outOfRange,
+    fix: 'Run `npm ci` from the repository root, then try again.',
   });
 }
 
