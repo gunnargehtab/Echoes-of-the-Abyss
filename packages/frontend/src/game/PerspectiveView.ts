@@ -214,6 +214,7 @@ import {
   fogDensityFor,
   waterReachM,
   waterTransmittance,
+  blendSwimByCoverage,
 } from './water.ts';
 import { FrameCost, ms } from './frameCost.ts';
 import { GpuTimer } from './gpuTimer.ts';
@@ -4179,6 +4180,10 @@ export class PerspectiveView {
         material.needsUpdate = true;
         this.sceneGrew = true;
       }
+      // And High's glass blends by its opacity as a constant, so its alpha
+      // carries what of it survived the swim and the composite gives the
+      // water back what it took of the glass (#1832). Low's blend is Low's.
+      if (this.high.on) blendSwimByCoverage(material, opacity < 1 ? opacity : null);
     }
   }
 

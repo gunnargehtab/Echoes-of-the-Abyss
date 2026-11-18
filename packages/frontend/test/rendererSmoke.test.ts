@@ -61,7 +61,7 @@ import {
 import { swayAt } from '../src/game/cameraSway.ts';
 import type { MovePreviewReading } from '../src/game/movePreview.ts';
 import type { WorldLook } from '../src/game/tutorialLook.ts';
-import { STUDY_SNOW_NEAR_COUNT, waterReachM } from '../src/game/water.ts';
+import { STUDY_SNOW_NEAR_COUNT, SWIM_COVERAGE_DEFINE, waterReachM } from '../src/game/water.ts';
 import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
 import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
@@ -97,6 +97,7 @@ import {
   ROWS,
 } from './support/cannedMatch.ts';
 import { farthestInk } from './support/inkReach.ts';
+import { blendOverOpaque } from './support/worldBlend.ts';
 import {
   collarRadius,
   EchoRenderer,
@@ -146,6 +147,7 @@ import {
   MaxEquation,
   Mesh,
   MeshBasicMaterial,
+  NormalBlending,
   Points,
   ShaderMaterial,
   type Material,
@@ -2028,6 +2030,7 @@ describe('renderer smoke test: the conn view', () => {
       assert.equal(material().depthWrite, true, 'and stone writes it again');
       assert.equal(material().transparent, true, 'Low still blends it');
       assert.equal(material().version, lowVersion, 'and never asked for another program');
+      assert.equal(material().blending, NormalBlending, 'on the blend Low always drew it with');
 
       // Under High stone is opaque, so the world pass writes the water's share
       // of it into alpha (#1829), and only glass blends: each switch is a new
@@ -2048,10 +2051,37 @@ describe('renderer smoke test: the conn view', () => {
       assert.equal(stone().opacity, ROOF_OPEN_OPACITY, 'glass under High too');
       assert.equal(stone().transparent, true, 'and glass blends');
       assert.ok(stone().version > highVersion, 'a program change, asked for');
+      // And the water still reaches what the glass covers (#1832). The
+      // composite adds the water by what alpha lost, so a pixel of glass over
+      // a hull gives the water each layer's swim by its coverage: the glass's
+      // own share as well as the hull's behind it. Three's usual blend writes
+      // the glass's coverage into alpha, never what of it survived, and its
+      // share drew black. The fog chunk leaves a constant-blended fragment's
+      // alpha as its coverage times what survived (water.ts).
+      const swim = 0.5;
+      const behind = 0.8;
+      const glassAlpha = (material: MeshBasicMaterial) =>
+        SWIM_COVERAGE_DEFINE in (material.defines ?? {})
+          ? material.opacity * (1 - swim)
+          : material.opacity;
+      const pixel = blendOverOpaque(stone(), glassAlpha(stone()), 1 - behind);
+      assert.ok(
+        Math.abs(pixel.cover - ROOF_OPEN_OPACITY) < 1e-9,
+        `the glass still covers by its opacity: ${pixel.cover}`
+      );
+      const owed = ROOF_OPEN_OPACITY * swim + (1 - ROOF_OPEN_OPACITY) * behind;
+      assert.ok(
+        Math.abs(pixel.water - owed) < 1e-9,
+        `the water takes ${pixel.water} of the pixel, owed ${owed}`
+      );
       const glassVersion = stone().version;
       at(2250, 1500, 2000);
       assert.equal(stone().transparent, false, 'opaque stone again once it leaves');
       assert.ok(stone().version > glassVersion, 'and asked for again');
+      // Opaque only on three's usual blend: a custom one drops `OPAQUE`, and
+      // with it the stone's alpha write (#1829).
+      assert.equal(stone().blending, NormalBlending, 'stone takes the usual blend back');
+      assert.ok(!(SWIM_COVERAGE_DEFINE in (stone().defines ?? {})), 'and its alpha is the fog’s');
     } finally {
       world.teardown();
     }

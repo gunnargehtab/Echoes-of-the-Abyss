@@ -15,8 +15,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { DEPTH, LID, THERMOCLINE } from '@echoes/shared';
-import { ShaderMaterial, Vector3 } from 'three';
+import { CustomBlending, MeshBasicMaterial, NormalBlending, ShaderMaterial, Vector3 } from 'three';
 import {
+  blendSwimByCoverage,
   fogDensityFor,
   HIGH_WORLD_FOG_SIGN,
   installWaterFog,
@@ -27,6 +28,7 @@ import {
   STUDY_REACH_NEAR_DOLLIES,
   STUDY_SNOW_NEAR,
   STUDY_SNOW_NEAR_COUNT,
+  SWIM_COVERAGE_DEFINE,
   WATER_RAMP_GLSL,
   WATER_REACH_DOLLIES,
   WATER_REACH_MIN_M,
@@ -36,6 +38,7 @@ import {
   waterTransmittance,
 } from '../src/game/water.ts';
 import { ACTIVE_PALETTE } from '../src/game/palette.ts';
+import { blendOverOpaque } from './support/worldBlend.ts';
 
 describe('marine snow profile isolation', () => {
   it('keeps the original size and fade separate from the opt-in study', () => {
@@ -217,6 +220,40 @@ describe('the fog patch', () => {
     );
   });
 
+  it('blends a world-pass draw by its coverage so the water reaches what it covers (#1832)', () => {
+    // highFrame.ts gives the water `1 - alpha` of a pixel. Glass over an
+    // opaque draw owes it each layer's swim by its coverage.
+    const coverage = 0.3;
+    const material = new MeshBasicMaterial({ transparent: true, opacity: coverage });
+    const before = material.version;
+    blendSwimByCoverage(material, coverage);
+    assert.equal(material.blending, CustomBlending);
+    assert.ok(SWIM_COVERAGE_DEFINE in (material.defines ?? {}), 'the fog chunk is told');
+    assert.ok(material.version > before, 'a define is a program change, asked for');
+    for (const [swim, behind] of [
+      [0, 0],
+      [0.5, 0.8],
+      [0.9, 0.2],
+      [1, 1],
+    ] as const) {
+      // The fog chunk's alpha for this draw: its coverage times what survived.
+      const pixel = blendOverOpaque(material, coverage * (1 - swim), 1 - behind);
+      assert.ok(Math.abs(pixel.cover - coverage) < 1e-9, 'the colour covers as it did');
+      const owed = coverage * swim + (1 - coverage) * behind;
+      assert.ok(Math.abs(pixel.water - owed) < 1e-9, `${pixel.water} of the pixel, owed ${owed}`);
+    }
+    // Three's usual blend, the control: the glass's own swim never comes back.
+    const usual = new MeshBasicMaterial({ transparent: true, opacity: coverage });
+    const lost = blendOverOpaque(usual, coverage, 1 - 0.8);
+    assert.ok(Math.abs(lost.water - (1 - coverage) * 0.8) < 1e-9, 'only the swim behind');
+
+    const once = material.version;
+    blendSwimByCoverage(material, null);
+    assert.equal(material.blending, NormalBlending, 'opaque again only on the usual blend');
+    assert.ok(!(SWIM_COVERAGE_DEFINE in (material.defines ?? {})));
+    assert.ok(material.version > once, 'and asked for again');
+  });
+
   it("gives the High world pass the fog's other half, behind a sign Low never sets", async () => {
     // highFrame.ts: in the world pass a fragment only loses light to the
     // water, and an opaque one writes what survived into alpha, so the
@@ -234,6 +271,11 @@ describe('the fog patch', () => {
     assert.ok(high.includes('gl_FragColor.rgb *= 1.0 - fogFactor;'));
     assert.ok(high.includes('#ifdef OPAQUE'), 'a blended fragment leaves alpha to its blend');
     assert.ok(high.includes('gl_FragColor.a = 1.0 - fogFactor;'));
+    // Unless it blends by its coverage as a constant: then alpha carries what
+    // of that coverage survived (#1832).
+    const own = high.indexOf(`#elif defined( ${SWIM_COVERAGE_DEFINE} )`);
+    assert.ok(own > high.indexOf('#ifdef OPAQUE'), 'a constant-blended fragment, apart');
+    assert.ok(high.slice(own).includes('gl_FragColor.a *= 1.0 - fogFactor;'));
     assert.ok(!high.includes('echoesWaterColor'), 'it adds none of the water’s colour');
     const low = fog.slice(otherwise);
     assert.ok(
