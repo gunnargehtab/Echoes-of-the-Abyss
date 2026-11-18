@@ -105,6 +105,20 @@ describe('checkDependencies', () => {
     }
   });
 
+  it('reports a manifest that does not parse as not installed, not as a throw', () => {
+    const dir = fixture({ appDeps: { react: '^18.3.1' } });
+    try {
+      const manifest = join(dir, 'node_modules/react/package.json');
+      mkdirSync(dirname(manifest), { recursive: true });
+      writeFileSync(manifest, '{"version": "18.3');
+      assert.deepEqual(checkDependencies(dir).missing, [
+        'react  (@x/app; its package.json does not parse)',
+      ]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('reads every range this repository declares', () => {
     // An unreadable range is checked for presence alone, so a new form landing
     // here would quietly drop out of the range check: extend `satisfies` instead.

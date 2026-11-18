@@ -111,7 +111,15 @@ export function checkDependencies(repo) {
         missing.push(`${name}  (${pkg.name})`);
         continue;
       }
-      const { version } = readJson(found);
+      // An interrupted install can leave a manifest half-written. Report it as
+      // not installed, so the runner prints its message rather than a stack.
+      let version;
+      try {
+        ({ version } = readJson(found));
+      } catch {
+        missing.push(`${name}  (${pkg.name}; its package.json does not parse)`);
+        continue;
+      }
       const ok = satisfies(String(version), range);
       if (ok === null) unreadable.push(`${name} ${range}  (${pkg.name})`);
       else if (!ok) outOfRange.push(`${name} ${version}, wants ${range}  (${pkg.name})`);
