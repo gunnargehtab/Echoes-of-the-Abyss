@@ -56,7 +56,9 @@ What the target shows and these do not: beams from more than one lamp a hull, wh
 light where these are the navy's green, a rock's shadow across a pool, and life in the
 water. No frame here puts rock in a beam: the crater's rim is level where the fleet
 opens. So the ground's shadow is held by `packages/frontend/test/searchlights.test.ts`
-and not yet by a picture, and the hull's by the frame above.
+and not yet by a picture, and the hull's by the frame above. That frame has no control:
+a pool's own edge and a shadow's look alike at this angle. The GPU's take wants the same
+pose again with the Harvester moved off, and the difference between the two.
 
 The shadow frame also shows a fault of the client's that is older than this step. A hull
 passing near another nudges it a metre or two, and the conn view turns a hull to where

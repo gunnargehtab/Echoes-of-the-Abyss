@@ -152,8 +152,8 @@ export default async ({ page, shot }) => {
     }, name);
   // A hull in a beam: the Harvester, sent alone into the Corvette's pool. A
   // move order takes it down to the floor there, so its shadow lies on the
-  // lit ground beside it. It rests at SIG 18, where its own beam is a
-  // twentieth of the Corvette's. The Light Scout would not do: it holds its
+  // lit ground beside it. It rests at SIG 18, where its own beam is about a
+  // ninth of the Corvette's. The Light Scout would not do: it holds its
   // depth on a move, over the beam. A hull passing near another nudges it,
   // and a hull's heading is where it last moved, so the Corvette's beam may
   // swing as the Harvester arrives: the park is tried until the Harvester
