@@ -18,10 +18,10 @@ Close camera will look. The script is `tools/hull-models/blender/corvette_pelagi
 The owner decided in session on 12 November 2026: **the roster is not rebuilt in
 Blender.** The reasons are the costs under "What it costs" and the control below: on the
 lit table, most of what this hull gained is its surface and not its modelling. In the game
-the modelling still shows where the surface does not, so the question is not closed. The
-follow-up is filed as #1811: a navy's surface drawn once and worn by the kit hulls, judged
-beside this hull on the named GPU once High lights a hull. Blender stayed a candidate for
-a short list of hero hulls only, if it still clearly won there.
+the modelling still showed where the surface did not, so the question was left open. The
+follow-up was filed as #1811: a navy's surface drawn once and worn by the kit hulls, judged
+beside this hull on the named GPU once High lit a hull. Blender stayed a candidate for a
+short list of hero hulls only, if it still clearly won there.
 
 On 19 November 2026 the owner judged the two side by side and **dropped Blender for hero
 hulls too** ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811),

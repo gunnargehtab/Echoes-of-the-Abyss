@@ -212,9 +212,9 @@ and 0.04867 and 0.04869 off the bow.
   its four cameras, with the three taps in it, at 046dbaef
   ([issue-1801](../issue-1801/README.md#on-the-named-gpu)).
 - **That it reads once High lights a hull.** The lean of 2.5 was set under Low's rig.
-  It is TUNABLE; the owner kept it under #1814's light on 17 November 2026.
-- **Whether Blender still clearly wins on a hero hull.** The issue keeps Blender for a
-  short list only if it does. That is the owner's reading of the named GPU's frames.
+  It was TUNABLE; the owner kept it under #1814's light on 17 November 2026.
+- **Whether Blender still clearly wins on a hero hull.** The issue kept Blender for a
+  short list only if it did. That was the owner's reading of the named GPU's frames.
 - **A second navy.** A plated hull wants seams that follow a part, which a tile read by
   place cannot give. The trim sheets already draw those.
 - **That nothing shimmers.** The relief is fixed to the model and fades by mip, which is
