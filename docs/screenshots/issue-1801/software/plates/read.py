@@ -1,6 +1,6 @@
-"""Read a plates pair (docs/screenshots/issue-1801/plates.mjs): where the High
-frame with its marks' plates differs from the same frame without them, over
-the world area, and what the held pixels fall to. Writes the pair's centre
+"""Read a plates pair: where the High frame with its marks' plates differs from
+the same frame without them, over the world area, and what the held pixels
+fall to. Writes the pair's centre
 side by side and a map of the difference, twelve times amplified.
 
   python3 read.py 01-garden-plates.png 02-garden-bare.png garden 820,380,1240,700
@@ -9,7 +9,8 @@ import sys
 from PIL import Image
 import numpy as np
 
-# markPlates.ts PLATE_LEVEL, in bytes: the palest ground the ladder weighs.
+# The plates' level, in bytes: the palest ground the ladder weighs (ladder.ts
+# `LADDER_GROUND_LEVEL` since the plates went with #1801's D2).
 LEVEL = 0.11609725490196078 * 255
 
 

@@ -613,7 +613,8 @@ biome under it ([art-direction.md](art-direction.md#reading-the-water)). Six tok
 biome: the biome fill's own hue at one luminance, linear 0.05, with a fifth of its chroma
 eased out. Only a token's chromaticity is drawn, since the water's brightness is the depth
 ramp's. Rule 5 holds them as it holds the families: each is its fill's hue, which no
-faction and no interface token wears. They are TUNABLE until a High frame is accepted, and
+faction and no interface token wears. The owner accepted them with High's first step on
+19 November 2026 ([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)), and
 `WATER_HUE` in `packages/frontend/src/game/palette.ts` transcribes them.
 
 | Token | Hex | Biome |

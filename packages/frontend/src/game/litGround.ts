@@ -17,8 +17,9 @@
  * (highFrame.ts). The survey ink is not here. It is the tactical layer's, and
  * is drawn over this ground by a pass of its own (surveyInk.ts, `overlay`).
  *
- * Every number is TUNABLE until the owner accepts a High frame
- * (`HIGH_GRAPHICS`, packages/shared/src/constants.ts).
+ * Every number is SPEC since the owner accepted step 1 (#1801;
+ * docs/art-direction.md, "Step 1's numbers — SPEC"), and `HIGH_GRAPHICS` in
+ * packages/shared/src/constants.ts holds each.
  */
 
 import {
@@ -113,7 +114,6 @@ export const LIT_IRRADIANCE_GLSL = [
 export const LIT_GROUND_GLSL = [
   'uniform sampler2D uLitRelief;',
   'uniform sampler2D uLitPools;',
-  'uniform sampler2D uLitHold;',
   'varying float vLitWorldY;',
   // How much of the water above the ground's fine relief leaves a pixel: 1 on
   // a crest and on ground with no silt detail, less in a dune's trough, a
@@ -129,17 +129,16 @@ export const LIT_GROUND_GLSL = [
   '  vec3 normal = vec3( slope.x, sqrt( max( 0.0, 1.0 - dot( slope, slope ) ) ), slope.y );',
   // The world's own sources pool on it (worldLights.ts): light from beside
   // the ground, which the water above it does not take. Nothing holds the sum
-  // down here: a mark carries its own ground (markPlates.ts; limit 6).
+  // down, here or after: a mark stands bare on the lit world (#1801, D2).
   '  vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;',
   // A hollow hides both from the ground in it, as the bake's occlusion does,
-  // but for under an own entity's ground shadow, which carries level ground
-  // of its own so that it reads apart from a trough (shadowHold.ts).
-  '  float sky = mix( echoesLitSky, 1.0, texture2D( uLitHold, uv ).r );',
-  '  return albedo * irradiance * relief.g * sky * 0.3183098861837907;',
+  // and under an own entity's ground shadow as anywhere else: the relief
+  // runs under each shadow (#1801, D3).
+  '  return albedo * irradiance * relief.g * echoesLitSky * 0.3183098861837907;',
   '}',
 ].join('\n');
 
-const LIT_GROUND_KEY = ':lit-ground-6';
+const LIT_GROUND_KEY = ':lit-ground-7';
 const LIT_ROOF_KEY = ':lit-roof-1';
 
 /** The unlit sum the patch replaces: three's basic material, r187. */
@@ -152,18 +151,16 @@ const UNLIT_SUM = 'vec3 outgoingLight = reflectedLight.indirectDiffuse;';
  * lights; it chains their hooks and suffixes their key. `pools` is the light
  * the world's own sources put on the ground (worldLights.ts `poolTexture`),
  * as a uniform the caller keeps, so the dressing can hand over a new texture
- * without a new program. `hold` is the plan texture of the ground shadows'
- * holds (shadowHold.ts), kept by the frame that draws it, the same way.
+ * without a new program.
  */
 export function installLitGround(
   material: MeshBasicMaterial,
   relief: DataTexture,
-  pools: { value: Texture },
-  hold: { value: Texture }
+  pools: { value: Texture }
 ): void {
   const before = material.onBeforeCompile;
   const key = material.customProgramCacheKey();
-  const uniforms = { uLitRelief: { value: relief }, uLitPools: pools, uLitHold: hold };
+  const uniforms = { uLitRelief: { value: relief }, uLitPools: pools };
   material.onBeforeCompile = (shader, renderer) => {
     before.call(material, shader, renderer);
     if (!shader.fragmentShader.includes(UNLIT_SUM)) {

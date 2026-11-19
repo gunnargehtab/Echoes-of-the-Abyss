@@ -105,12 +105,17 @@ export const FREE_WATER_OPENING = {
  * layers, two laws"; docs/graphics-standards.md gate 6, "Two graphics
  * qualities"). Presentation only; never read by the simulation.
  *
- * TUNABLE, every number, until the first High frame the owner accepts: the
- * look is in development (#1801), and its numbers are written into `docs/`
- * from that frame, not before it (the `dev-loop` skill, "Look work").
+ * SPEC, step 1's numbers: the owner accepted its look on 19 November 2026
+ * (#1801), and docs/art-direction.md, "Step 1's numbers — SPEC", prints each
+ * (test/highSpec.test.ts in the frontend holds the two together). Change the
+ * doc first, then the constant. That is every block here but the two hull
+ * blocks at the foot, which are TUNABLE until a frame of theirs is accepted:
+ * a look's numbers are written into `docs/` from the frame, not before it
+ * (the `dev-loop` skill, "Look work").
  */
 export const HIGH_GRAPHICS = {
   /**
+   * SPEC — docs/graphics-standards.md gate 6, "Two graphics qualities".
    * Gate 6's High budget, as its table tags it: GPU milliseconds over every
    * pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU,
    * read queued and unpaced. The probe reports it beside the reading.
@@ -126,11 +131,12 @@ export const HIGH_GRAPHICS = {
    * and no shadow (docs/art-direction.md, limit 1). `IRRADIANCE` is what level
    * ground takes at the Lid, in the renderer's linear units; it is held where
    * the palest ground it lights is no paler than the palest ground the
-   * loudness ladder weighs, so a mark's plate changes nothing the Lid alone
-   * lights (test/litGround.test.ts), and where no ground it lights reaches
-   * the bloom's knee, so only a source blooms (test/highChain.test.ts). The
+   * loudness ladder weighs, so a mark, which stands bare on the lit world,
+   * reads over ground the Lid alone lights as the ladder holds it
+   * (test/litGround.test.ts), and where no ground it lights reaches the
+   * bloom's knee, so only a source blooms (test/highChain.test.ts). The
    * second binds first: at 3.3 the palest ground stands within a tenth of the
-   * plate's, and little of what the bounds leave is given away. `FALLOFF_M` is
+   * ladder's, and little of what the bounds leave is given away. `FALLOFF_M` is
    * the depth over which the water above takes it to 1/e, so depth still
    * darkens. `HORIZON` is what a vertical face keeps of it.
    */
@@ -145,18 +151,9 @@ export const HIGH_GRAPHICS = {
    * from straight above shades a true slope by a hundredth. `HOLLOW` is how
    * fast the silt detail's hollows lose the water above them: a hollow of
    * strength s keeps exp(-HOLLOW × s) of its light, so a Coral Ruins dune's
-   * trough, 0.1, keeps half. `SHADOW_HOLD` is the level ground an own
-   * entity's ground shadow carries, in shadow radii: no relief out to `FULL`,
-   * all of it back by `REACH`, so the shadow's edge stands on ground as even
-   * as Low's and a trough beside it reads apart from it.
+   * trough, 0.1, keeps half.
    */
-  GROUND: {
-    ALBEDO_LUMINANCE: 0.2,
-    ALBEDO_SATURATION: 0.6,
-    RELIEF_GAIN: 8,
-    HOLLOW: 7,
-    SHADOW_HOLD: { FULL: 1.3, REACH: 2.2 },
-  },
+  GROUND: { ALBEDO_LUMINANCE: 0.2, ALBEDO_SATURATION: 0.6, RELIEF_GAIN: 8, HOLLOW: 7 },
   /**
    * The water. `HUE_REACH` is how far along a sight line, in reaches, the
    * water whose hue a pixel wears stands: most of the light the water adds
@@ -194,20 +191,6 @@ export const HIGH_GRAPHICS = {
     SATURATION: 1.12,
   },
   /**
-   * A mark's plate (docs/art-direction.md, "The plate under a mark"): where
-   * the world layer is held under a mark, in CSS pixels at the UI's scale.
-   * The level it is held to is not here: it is derived from the ground the
-   * ladder weighs (markPlates.ts `PLATE_LEVEL`). `LINE_PX` is how far the
-   * plate stands whole either side of a traced line's centre: the widest
-   * stroke is four pixels, an active hazard's rim, and a line reads against
-   * what stands beside it.
-   * `INK_PX` is the same for a stroke of survey ink, which is thinner and
-   * everywhere. `AGENT_PX` is how far past an agent's farthest steady mark
-   * its disc stands whole, and `FEATHER_PX` the soft edge every plate ends
-   * in.
-   */
-  PLATE: { LINE_PX: 4, INK_PX: 2, AGENT_PX: 4, FEATHER_PX: 3 },
-  /**
    * The world's own sources (docs/style-neon-noir.md "World light"), a family
    * a row: `POWER` is the light level ground takes directly under one source,
    * in the renderer's linear units, as the rig's key gives 1.8 face on;
@@ -233,7 +216,7 @@ export const HIGH_GRAPHICS = {
     EMBER_SHARE: 0.2,
   },
   /**
-   * A navy material's surface on a hull's cladding (#1811;
+   * TUNABLE: a navy material's surface on a hull's cladding (#1811;
    * tools/hull-models/surface.mjs draws it, navySurface.ts reads it). `RELIEF`
    * scales the drawn slopes, 1 being the relief as its table gives it in
    * metres: a vein 8 cm proud is under a pixel at every conn camera, so the
@@ -244,13 +227,12 @@ export const HIGH_GRAPHICS = {
    */
   HULL_SURFACE: { RELIEF: 2.5, CAVITY: 0.5, ANISOTROPY: 4 },
   /**
-   * The world's light on a model's cladding (#1814; hullLight.ts), added to
+   * TUNABLE: the world's light on a model's cladding (#1814; hullLight.ts), added to
    * the rig's. `LID` is how much of the Lid's glow a face takes of what level
    * ground takes at its depth. `POOL` is how much of a pool's light a face
    * looking straight down takes, on a hull resting on the ground, of what
-   * that ground takes: well short of it, since a hull stands inside its own
-   * mark's plate, where the ground beside it is held down, and a hull that
-   * outshone that ground would read as loud (gate 3). `POOL_REACH_M` is the
+   * that ground takes: well short of it, since a hull that outshone the
+   * ground beside it would read as loud (gate 3). `POOL_REACH_M` is the
    * height over the ground, in the world's drawn metres, at which that has
    * halved: the sources stand tens of metres up, and a hull at 300 m hangs
    * 66 drawn metres over a 600 m floor.

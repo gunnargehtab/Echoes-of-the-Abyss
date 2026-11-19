@@ -56,7 +56,7 @@ ARG ECHOES_BUILD=
 ENV VITE_ECHOES_BUILD=$ECHOES_BUILD
 
 # `1` for the hosted playtest build (deploy/compose.playtest.yml), which hides
-# the Graphics quality control until a High frame is accepted
+# the Graphics quality control until the High slice is accepted whole
 # (docs/graphics-standards.md gate 6; game/graphicsQuality.ts). Baked, like
 # the two above. Unset, the control is offered.
 ARG ECHOES_HOSTED=

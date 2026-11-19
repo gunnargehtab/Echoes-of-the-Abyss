@@ -13,16 +13,16 @@
 // `near-port` and `near-bow`: a low eye 190 m and 240 m off the hull at its
 // own depth, tools/hull-models/blender/frames.mjs's two.
 //
-// GARDEN=1 first sends the three hulls into the garden, as
-// docs/screenshots/issue-1801/plates.mjs does, and takes `garden` over them
-// before the near cameras: the world's own sources stand there, and none
-// stands on the rim the hulls open on. TRAVEL_S is how long they are given.
+// GARDEN=1 first sends the three hulls into the garden and takes `garden`
+// over them before the near cameras: the world's own sources stand there,
+// and none stands on the rim the hulls open on. TRAVEL_S is how long they
+// are given.
 //
-// QUALITY=low takes the same cameras at Low. PLATES=bare takes each High
-// frame a second time with the plates off (`__perspectivePlates`), the
-// development switch a player has no setting for. A software rasteriser's
-// frames guide a round and are never offered for acceptance (the dev-loop
-// skill, "Look work").
+// QUALITY=low takes the same cameras at Low. The committed `-bare` frames
+// were a second take with the marks' plates off, by a development switch
+// that went with the plates (#1801, D2): every High frame is bare now. A
+// software rasteriser's frames guide a round and are never offered for
+// acceptance (the dev-loop skill, "Look work").
 import assert from 'node:assert/strict';
 
 const aim = (page, x, z, distance, yawDeg, pitchDeg, focusDepthM) =>
@@ -65,16 +65,11 @@ export default async ({ page, shot }) => {
   const take = async (name) => {
     await page.waitForTimeout(software && quality === 'high' ? 8000 : 2500);
     await shot(name);
-    if (quality !== 'high' || process.env.PLATES !== 'bare') return;
-    await page.evaluate(() => window.__perspectivePlates(false));
-    await page.waitForTimeout(software ? 4000 : 1500);
-    await shot(`${name}-bare`);
-    await page.evaluate(() => window.__perspectivePlates(true));
   };
 
   if (process.env.GARDEN === '1') {
     // At the survey dolly the map is square to the screen, north up, so a
-    // plan point is a pixel (issue-1801/plates.mjs).
+    // plan point is a pixel.
     await aim(page, 2000, 2000, 10000, 0, 88, null);
     await page.waitForTimeout(software ? 5000 : 2000);
     const view = page.viewportSize();
