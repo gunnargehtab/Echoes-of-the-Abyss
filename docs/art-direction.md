@@ -477,8 +477,9 @@ SPEC, below. Three calls were taken in the open with the first frames: its stren
 shadow, and how many beams a hull throws. **The owner kept all three** the same day: the
 lamp halo's gain, the read shadow, and one beam a hull. The readings not taken stay
 written under each. High at rest reads 2.05 to 2.72 ms queued on those frames, inside
-gate 6's 8 ms. Still open: gate 7's glance at a ring over its own pool in all four
-palettes, since the accepted frames show the standard palette alone.*
+gate 6's 8 ms. **Gate 7 reads in the standard palette:** the owner read the Corvette's
+ring over its own pool on those frames the same day. The other three palettes are not
+taken yet.*
 
 Each of the player's own hulls throws one beam from its bow, along its heading, in its
 navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
@@ -541,7 +542,8 @@ first light with a direction, so it is the first to cast a shadow.
   a hull's cladding has.
 - **No mark, lamp or halo is touched.** The lamp a beam leaves is the tactical pass's,
   at the strength its SIG set (gate 3). A mark over a pool stands bare (limit 6), and
-  gate 7's glance at one is still open in three palettes (above).
+  gate 7's glance at one reads in the standard palette and is owed in the other three
+  (above).
 
 `packages/frontend/test/searchlights.test.ts` holds the gain to the halo's, the silent
 hull dark, the aim and the shadow's two readers, and
@@ -621,10 +623,10 @@ changed for it. What that leaves standing, and what it does not:
 - **No lamp, halo or mark is touched.** The chain runs before the tactical pass, so the
   world's bloom spreads nothing of theirs, and gate 3 reads as it does at Low.
 
-Still open: gate 7's glance at an own hull's ring over its own searchlight's pool
+Gate 7's glance at an own hull's ring over its own searchlight's pool
 ([An own hull's searchlight](#an-own-hulls-searchlight)), the brightest light a mark
-stands over, in all four palettes. The frames that step was accepted on show the standard
-palette alone.
+stands over, reads in the standard palette: the owner read it on 19 November 2026, on the
+named GPU's frames. Still open: the other three palettes, which no frame shows yet.
 
 ## World Aesthetic
 

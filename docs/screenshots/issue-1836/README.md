@@ -209,8 +209,9 @@ Under way the Corvette and the Harvester each throw a beam, and on Silent Runnin
 is thrown, as `readings.json` counts. [The clip](gpu/clip-home-to-close.mp4) is the
 second command's recording without the match's load: 16 s at 1920 × 1080, in real time.
 
-Gate 7's glance is still open in three palettes: every frame here is in the standard
-one.
+Gate 7 reads in the standard palette: the owner read the Corvette's ring over its own
+pool on these frames the same day. Every frame here is in that palette, so the other
+three are not read.
 
 ## Who captures
 
