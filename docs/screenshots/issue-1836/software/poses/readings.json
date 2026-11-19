@@ -32,6 +32,7 @@
         15,
         300
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -121,6 +122,7 @@
         2,
         300
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -206,6 +208,7 @@
         12,
         850
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -295,6 +298,7 @@
         88,
         null
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -389,6 +393,7 @@
         15,
         300
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -462,7 +467,7 @@
       "avgGpuMs": null,
       "queued": null,
       "insideBudget": null,
-      "stationFrames": 6
+      "stationFrames": 7
     },
     {
       "name": "close",
@@ -493,6 +498,7 @@
         2,
         300
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -593,6 +599,7 @@
         12,
         850
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -697,6 +704,7 @@
         88,
         null
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -794,13 +802,14 @@
       "triangles": 625362,
       "searchlights": 2,
       "camera": [
-        571.4134097025672,
-        2301.3166619440335,
+        565.9093963156938,
+        2299.363061407413,
         360,
-        253.073633791865,
+        251.20402878824723,
         35,
         570
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -811,10 +820,10 @@
           "zM": 1875,
           "depthM": 300,
           "screen": {
-            "x0": -1726,
-            "y0": 375,
-            "x1": -1137,
-            "y1": 647
+            "x0": -1779,
+            "y0": 395,
+            "x1": -1176,
+            "y1": 679
           },
           "beam": null
         },
@@ -827,15 +836,15 @@
           "zM": 2130.1,
           "depthM": 300,
           "screen": {
-            "x0": -115,
-            "y0": 198,
-            "x1": 354,
-            "y1": 447
+            "x0": -113,
+            "y0": 194,
+            "x1": 351,
+            "y1": 453
           },
           "beam": {
-            "xM": 611.2,
-            "zM": 2170.4,
-            "bearingDeg": -163.1,
+            "xM": 609.9,
+            "zM": 2170,
+            "bearingDeg": -161.2,
             "depressionDeg": 23.4
           }
         },
@@ -844,19 +853,19 @@
           "sig": 18,
           "restSig": 18,
           "silentRunning": false,
-          "xM": 572.3,
-          "zM": 2326.4,
+          "xM": 566.6,
+          "zM": 2324.7,
           "depthM": 570,
           "screen": {
-            "x0": 841,
-            "y0": 354,
-            "x1": 1272,
-            "y1": 711
+            "x0": 838,
+            "y0": 351,
+            "x1": 1274,
+            "y1": 712
           },
           "beam": {
-            "xM": 541.7,
-            "zM": 2351.9,
-            "bearingDeg": -129.8,
+            "xM": 535.6,
+            "zM": 2349.6,
+            "bearingDeg": -128.8,
             "depressionDeg": 8
           }
         }
@@ -898,13 +907,14 @@
       "triangles": 621956,
       "searchlights": 2,
       "camera": [
-        571.4134097025672,
-        2301.3166619440335,
+        565.9093963156938,
+        2299.363061407413,
         360,
-        253.073633791865,
+        251.20402878824723,
         35,
         570
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
@@ -915,10 +925,10 @@
           "zM": 1875,
           "depthM": 300,
           "screen": {
-            "x0": -1726,
-            "y0": 375,
-            "x1": -1137,
-            "y1": 647
+            "x0": -1779,
+            "y0": 395,
+            "x1": -1176,
+            "y1": 679
           },
           "beam": null
         },
@@ -931,15 +941,15 @@
           "zM": 2130.1,
           "depthM": 300,
           "screen": {
-            "x0": -115,
-            "y0": 198,
-            "x1": 354,
-            "y1": 447
+            "x0": -113,
+            "y0": 194,
+            "x1": 351,
+            "y1": 453
           },
           "beam": {
-            "xM": 611.2,
-            "zM": 2170.4,
-            "bearingDeg": -163.1,
+            "xM": 609.9,
+            "zM": 2170,
+            "bearingDeg": -161.2,
             "depressionDeg": 23.4
           }
         },
@@ -948,19 +958,19 @@
           "sig": 18,
           "restSig": 18,
           "silentRunning": false,
-          "xM": 323.6,
-          "zM": 2255,
+          "xM": 320.5,
+          "zM": 2245.1,
           "depthM": 570,
           "screen": {
-            "x0": 856,
-            "y0": 1334,
-            "x1": 1860,
-            "y1": 2721
+            "x0": 836,
+            "y0": 1317,
+            "x1": 1867,
+            "y1": 2727
           },
           "beam": {
-            "xM": 285.4,
-            "zM": 2244,
-            "bearingDeg": -74,
+            "xM": 282.6,
+            "zM": 2232.8,
+            "bearingDeg": -72.1,
             "depressionDeg": 8
           }
         }
@@ -978,12 +988,13 @@
       "avgGpuMs": null,
       "queued": null,
       "insideBudget": null,
-      "stationFrames": 6,
+      "stationFrames": 7,
       "control": {
         "against": "pool",
         "lampMovedM": 0,
         "beamTurnedDeg": 0,
-        "harvesterInFrame": false
+        "harvesterInFrame": false,
+        "sway": "held"
       }
     },
     {
@@ -1008,27 +1019,28 @@
       "triangles": 626614,
       "searchlights": 2,
       "camera": [
-        646.1230773925781,
-        2335.7141520182286,
+        644.9125366210938,
+        2138.9512125651045,
         1200,
         -34,
         15,
         480
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
           "sig": 6,
           "restSig": 6,
           "silentRunning": false,
-          "xM": 491.7,
-          "zM": 3821.4,
+          "xM": 499.5,
+          "zM": 3787.9,
           "depthM": 300,
           "screen": {
-            "x0": -24616,
-            "y0": -10305,
-            "x1": -7783,
-            "y1": -3262
+            "x0": -5789,
+            "y0": -2302,
+            "x1": -3972,
+            "y1": -1521
           },
           "beam": null
         },
@@ -1037,19 +1049,19 @@
           "sig": 28,
           "restSig": 28,
           "silentRunning": false,
-          "xM": 530,
-          "zM": 3763.2,
+          "xM": 505,
+          "zM": 3718.1,
           "depthM": 570,
           "screen": {
-            "x0": -124095,
-            "y0": -59846,
-            "x1": 122587,
-            "y1": 61337
+            "x0": -11265,
+            "y0": -5602,
+            "x1": -5509,
+            "y1": -2569
           },
           "beam": {
-            "xM": 519.6,
-            "zM": 3765.2,
-            "bearingDeg": 162.4,
+            "xM": 502.1,
+            "zM": 3760.2,
+            "bearingDeg": -176,
             "depressionDeg": 8
           }
         },
@@ -1058,19 +1070,19 @@
           "sig": 40,
           "restSig": 18,
           "silentRunning": false,
-          "xM": 497.4,
-          "zM": 3693.8,
+          "xM": 463.9,
+          "zM": 3174.1,
           "depthM": 570,
           "screen": {
-            "x0": -115064,
-            "y0": -59248,
-            "x1": 1103173,
-            "y1": 626657
+            "x0": 2809,
+            "y0": 1623,
+            "x1": 3641,
+            "y1": 2346
           },
           "beam": {
-            "xM": 499.7,
-            "zM": 3688.8,
-            "bearingDeg": 179.1,
+            "xM": 459.2,
+            "zM": 3110.3,
+            "bearingDeg": 175.8,
             "depressionDeg": 8
           }
         }
@@ -1108,26 +1120,27 @@
       "triangles": 627227,
       "searchlights": 0,
       "camera": [
-        679.3495992024741,
-        3527.44873046875,
+        679.2354838053384,
+        3527.2060546875,
         1200,
         -34,
         15,
         480
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
           "sig": 3.5,
           "restSig": 6,
           "silentRunning": true,
-          "xM": 489.3,
-          "zM": 3824.3,
+          "xM": 488.8,
+          "zM": 3823.5,
           "depthM": 300,
           "screen": {
             "x0": 910,
             "y0": 598,
-            "x1": 1041,
+            "x1": 1040,
             "y1": 667
           },
           "beam": null
@@ -1137,11 +1150,11 @@
           "sig": 5.333333492279053,
           "restSig": 28,
           "silentRunning": true,
-          "xM": 545.8,
+          "xM": 545.9,
           "zM": 3783,
           "depthM": 570,
           "screen": {
-            "x0": 933,
+            "x0": 934,
             "y0": 639,
             "x1": 1084,
             "y1": 738
@@ -1159,8 +1172,8 @@
           "screen": {
             "x0": 814,
             "y0": 621,
-            "x1": 972,
-            "y1": 730
+            "x1": 973,
+            "y1": 731
           },
           "beam": null
         }
@@ -1178,7 +1191,7 @@
       "avgGpuMs": null,
       "queued": null,
       "insideBudget": null,
-      "stationFrames": 82
+      "stationFrames": 79
     },
     {
       "name": "close",
@@ -1198,26 +1211,27 @@
       "triangles": 627227,
       "searchlights": 0,
       "camera": [
-        545.8147583007812,
-        3782.992431640625,
+        545.9006958007812,
+        3782.98583984375,
         420,
         -60,
         2,
         480
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
           "sig": 3.5,
           "restSig": 6,
           "silentRunning": true,
-          "xM": 489.3,
-          "zM": 3824.3,
+          "xM": 488.8,
+          "zM": 3823.5,
           "depthM": 300,
           "screen": {
-            "x0": 824,
-            "y0": 332,
-            "x1": 1143,
+            "x0": 822,
+            "y0": 333,
+            "x1": 1141,
             "y1": 423
           },
           "beam": null
@@ -1227,14 +1241,14 @@
           "sig": 5.333333492279053,
           "restSig": 28,
           "silentRunning": true,
-          "xM": 545.8,
+          "xM": 545.9,
           "zM": 3783,
           "depthM": 570,
           "screen": {
             "x0": 780,
             "y0": 545,
             "x1": 1120,
-            "y1": 674
+            "y1": 673
           },
           "beam": null
         },
@@ -1247,7 +1261,7 @@
           "zM": 3719.1,
           "depthM": 570,
           "screen": {
-            "x0": 471,
+            "x0": 468,
             "y0": 540,
             "x1": 866,
             "y1": 697
@@ -1268,7 +1282,7 @@
       "avgGpuMs": null,
       "queued": null,
       "insideBudget": null,
-      "stationFrames": 98
+      "stationFrames": 96
     },
     {
       "name": "foot",
@@ -1292,27 +1306,28 @@
       "triangles": 621308,
       "searchlights": 2,
       "camera": [
-        1059.5878499300984,
-        2164.871669875641,
+        1059.6678364568807,
+        2164.9861149080834,
         360,
-        34.900000000000006,
+        35,
         35,
         1470
       ],
+      "sway": "held",
       "hulls": [
         {
           "name": "Light Scout",
           "sig": 6,
           "restSig": 6,
           "silentRunning": false,
-          "xM": 489.3,
-          "zM": 3824.3,
+          "xM": 488.8,
+          "zM": 3823.5,
           "depthM": 300,
           "screen": {
-            "x0": 4081,
+            "x0": 4101,
             "y0": -381,
-            "x1": 4477,
-            "y1": -323
+            "x1": 4493,
+            "y1": -322
           },
           "beam": null
         },
@@ -1322,18 +1337,18 @@
           "restSig": 28,
           "silentRunning": false,
           "xM": 1159.8,
-          "zM": 2095,
+          "zM": 2094.9,
           "depthM": 1470,
           "screen": {
             "x0": 1269,
             "y0": 379,
-            "x1": 1684,
+            "x1": 1685,
             "y1": 695
           },
           "beam": {
             "xM": 1125.2,
             "zM": 2119.1,
-            "bearingDeg": -124.9,
+            "bearingDeg": -125,
             "depressionDeg": 8
           }
         },
@@ -1346,15 +1361,15 @@
           "zM": 3714.8,
           "depthM": 570,
           "screen": {
-            "x0": 4314,
-            "y0": -597,
-            "x1": 5179,
+            "x0": 4335,
+            "y0": -598,
+            "x1": 5199,
             "y1": -466
           },
           "beam": {
-            "xM": 467.4,
-            "zM": 3688.5,
-            "bearingDeg": -48.8,
+            "xM": 463.3,
+            "zM": 3694.4,
+            "bearingDeg": -59.1,
             "depressionDeg": 8
           }
         }
@@ -1372,7 +1387,7 @@
       "avgGpuMs": null,
       "queued": null,
       "insideBudget": null,
-      "stationFrames": 7
+      "stationFrames": 6
     }
   ]
 }

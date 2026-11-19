@@ -8,7 +8,7 @@
 //
 //   SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
 //     node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
-//     --out docs/screenshots/issue-1836/software --steps docs/screenshots/issue-1836/frames.mjs
+//     --out docs/screenshots/issue-1836/software/poses --steps docs/screenshots/issue-1836/frames.mjs
 //
 // On the named GPU, headed and unpaced, which is the run whose frames are
 // offered for acceptance and whose GPU time is gate 6's:
@@ -506,6 +506,9 @@ export default async ({ page, shot }) => {
         triangles: probe.triangles,
         searchlights: probe.graphicsQuality?.searchlights ?? null,
         camera: pose.slice(1),
+        // Whether the camera's sway was held (reduced motion) or on: a pair
+        // of frames lies pixel on pixel only where it was held.
+        sway: probe.sway ?? null,
         hulls: await hulls(),
         graphicsQuality: probe.graphicsQuality ?? null,
         gpuTimer: probe.gpuTimer,
@@ -543,13 +546,14 @@ export default async ({ page, shot }) => {
       const [a, b] = [beam(lit), beam(empty)];
       assert.ok(a !== null && b !== null, 'the Corvette threw no beam in the pair');
       const box = empty.find((hull) => hull.name === 'Harvester').screen;
-      readings.at(-1).control = {
+      // A bearing is read between -180 and 180, and a beam that #1840 has
+      // swung south lies at the seam.
+      const turned = Math.abs(((a.bearingDeg - b.bearingDeg + 540) % 360) - 180);
+      const control = {
         against: 'pool',
         // What must not have moved between the two: the beam they share.
         lampMovedM: Number(Math.hypot(a.xM - b.xM, a.zM - b.zM).toFixed(1)),
-        beamTurnedDeg: Number(
-          Math.hypot(a.bearingDeg - b.bearingDeg, a.depressionDeg - b.depressionDeg).toFixed(1)
-        ),
+        beamTurnedDeg: Number(Math.hypot(turned, a.depressionDeg - b.depressionDeg).toFixed(1)),
         // And what must have left: the Harvester's model, off the viewport.
         harvesterInFrame:
           box !== null &&
@@ -557,8 +561,20 @@ export default async ({ page, shot }) => {
           box.x0 < viewport.width &&
           box.y1 > 0 &&
           box.y0 < viewport.height,
+        // With the sway on the two frames stand some pixels apart, and their
+        // difference draws every edge: said, and not a failure.
+        sway: readings.at(-1).sway,
       };
+      readings.at(-1).control = control;
       write();
+      const said =
+        `lamp moved ${control.lampMovedM} m · beam turned ${control.beamTurnedDeg}° · ` +
+        `Harvester ${control.harvesterInFrame ? 'in' : 'off'} the frame · sway ${control.sway}`;
+      assert.ok(
+        control.lampMovedM <= 1 && control.beamTurnedDeg <= 0.5 && !control.harvesterInFrame,
+        `the shadow frame and its control are not a pair: ${said}`
+      );
+      console.log(`shadow control: ${said}`);
     });
     // Under way: a hull under way is louder, and its beam brighter.
     // The near camera is a GPU's alone: a software rasteriser's frame is
@@ -580,16 +596,6 @@ export default async ({ page, shot }) => {
     await take('high', 'silent', POSES.slice(0, 2), true);
     // Rock in a beam: the Corvette at the foot of the rim, at rest.
     await staged('rim frame', async () => take('high', 'rim', [await parkAtRimFoot()]));
-  }
-  const control = readings.find((r) => r.control !== undefined)?.control;
-  if (control !== undefined) {
-    const held =
-      control.lampMovedM <= 1 && control.beamTurnedDeg <= 0.5 && !control.harvesterInFrame;
-    console.log(
-      `${held ? 'shadow control' : 'WARNING: the shadow frame and its control are not a pair'}: ` +
-        `lamp moved ${control.lampMovedM} m · beam turned ${control.beamTurnedDeg}° · ` +
-        `Harvester ${control.harvesterInFrame ? 'in' : 'off'} the frame`
-    );
   }
   for (const r of readings) {
     console.log(

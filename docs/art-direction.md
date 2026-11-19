@@ -404,8 +404,9 @@ world lit a hull (#1814), and is read again on those frames.
 accepted. Three calls were taken in the open with the first frames: its strength, its
 shadow, and how many beams a hull throws. **The owner kept all three**, in session on
 19 November 2026: the lamp halo's gain, the read shadow, and one beam a hull. The
-readings not taken stay written under each. Keeping a call accepts no frame: the look,
-gate 6's 8 ms and gate 7's glance still wait on the named GPU's frames.*
+readings not taken stay written under each. Keeping a call accepts no frame. Still open,
+for the named GPU's take: the look's acceptance, gate 6's 8 ms, and gate 7's glance at a
+ring over its own pool, which reads on the software frames.*
 
 Each of the player's own hulls throws one beam from its bow, along its heading, in its
 navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
