@@ -401,10 +401,12 @@ browser's compositor and a weaker card.
 
 - **High is a player's choice.** A Graphics quality control joins
   [ui-ux.md](ui-ux.md)'s Settings with High's first increment, since that list holds only
-  what is wired. The default stays Low until the owner accepts a High frame and says the
-  default moves. A player can therefore choose High before it is accepted, and until then
-  the control names it as in development. The hosted playtest build hides the control
-  until then.
+  what is wired. The default stays Low until the owner accepts the High slice whole
+  ([#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637)) and says the
+  default moves. A step's frame accepted on the way, as step 1's was on 19 November 2026,
+  does not move it: the steps after it are not accepted. A player can therefore choose
+  High before it is accepted, and until then the control names it as in development. The
+  hosted playtest build hides the control until then.
 - **High reaches a match drawn alone, on the standard surface.** That is every skirmish
   and solo map, and the free-water crater the slice is judged in. A mission placed in the
   continuous world and Sorrowgate's own surface draw Low, and Settings says so, until a

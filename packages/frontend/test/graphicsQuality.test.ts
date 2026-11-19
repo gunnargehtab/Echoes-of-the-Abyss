@@ -24,8 +24,8 @@ describe('the Graphics quality', () => {
   afterEach(() => publishGraphicsQualityStatus('low'));
 
   it('defaults to Low, and reads anything it does not know as Low', () => {
-    // Gate 6: "The default stays Low until the owner accepts a High frame and
-    // says the default moves."
+    // Gate 6: "The default stays Low until the owner accepts the High slice
+    // whole (#1637) and says the default moves."
     assert.equal(GRAPHICS_QUALITY_DEFAULT, 'low');
     assert.equal(graphicsQualityOf('high'), 'high');
     assert.equal(graphicsQualityOf('low'), 'low');
@@ -85,7 +85,7 @@ describe('the Graphics quality', () => {
 
   it("holds gate 6's frame time as the constant its table tags", () => {
     // graphics-standards.md gate 6: "At most 8 ms of GPU time over every pass
-    // of the frame", TUNABLE until the first frame the owner accepts.
+    // of the frame", SPEC since step 1's frame was accepted on 19 November 2026.
     assert.equal(HIGH_GRAPHICS.FRAME_GPU_MS, 8);
   });
 });
