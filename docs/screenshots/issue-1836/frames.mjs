@@ -1,8 +1,9 @@
 // The own hulls' searchlights (#1836), as a run-game steps module: the three
 // cameras docs/screenshots/issue-1799/README.md judges a look at, and gate 6's
 // fourth, in the free-water crater with the HUD on. Low first, as the control,
-// then High three times over: the fleet at rest, under way, and on Silent
-// Running, since a beam's strength is its hull's loudness (limit 5).
+// then High four times over: the fleet at rest, a hull parked in another's
+// beam for its shadow, the fleet under way, and on Silent Running, since a
+// beam's strength is its hull's loudness (limit 5).
 //
 //   SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
 //     node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
@@ -40,6 +41,11 @@ const GOALS = [
   [500, 300],
   [500, 3700],
 ];
+
+// The shadow frame's camera, about the Corvette's pool once the Harvester is
+// parked in it: a dolly and a pitch, looking square across the beam, so a
+// shadow thrown down the beam lies to one side of what throws it.
+const SHADOW = { distance: 360, pitchDeg: 35 };
 
 /** halo-cost.mjs's load: about 3.6 ms on the named GPU (gpuQueueLoad.ts). */
 const QUEUE_STEPS = Number(process.env.QUEUE_STEPS ?? 12000);
@@ -128,6 +134,62 @@ export default async ({ page, shot }) => {
     await page.mouse.up({ button: 'left' });
     await page.waitForTimeout(1500);
   };
+  // Where a hull's beam meets the ground, in plan, and its bearing: read
+  // off the view's own beams (`__perspectiveSearchlights`).
+  const poolOf = (name) =>
+    page.evaluate((name) => {
+      const id = window.__perspectiveLamps().units.find((unit) => unit.name === name).id;
+      const beam = window.__perspectiveSearchlights().lights.find((light) => light.hull === id);
+      if (beam === undefined) return null;
+      // The drawn column is 0.22 of its depth (perspectiveTerrain.ts).
+      const groundY = -0.22 * window.__perspectiveSeabedM(beam.x, beam.z);
+      const t = (beam.y - groundY) / -beam.dy;
+      return {
+        x: beam.x + beam.dx * t,
+        z: beam.z + beam.dz * t,
+        bearingDeg: (Math.atan2(beam.dx, -beam.dz) * 180) / Math.PI,
+      };
+    }, name);
+  // A hull in a beam: the Harvester, sent alone into the Corvette's pool. A
+  // move order takes it down to the floor there, so its shadow lies on the
+  // lit ground beside it. It rests at SIG 18, where its own beam is a
+  // twentieth of the Corvette's. The Light Scout would not do: it holds its
+  // depth on a move, over the beam. A hull passing near another nudges it,
+  // and a hull's heading is where it last moved, so the Corvette's beam may
+  // swing as the Harvester arrives: the park is tried until the Harvester
+  // stands in the pool as it then lies.
+  const parkInBeam = async () => {
+    await aim(page, POSES[3]);
+    await page.waitForTimeout(software ? 4000 : 1500);
+    const [sx, sy] = px(375, 1875);
+    await page.mouse.click(sx, sy);
+    await page.waitForTimeout(1000);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const pool = await poolOf('Corvette');
+      assert.ok(pool !== null, 'the Corvette throws no beam to park a hull in');
+      const [gx, gy] = px(pool.x, pool.z);
+      await page.mouse.click(gx, gy, { button: 'right' });
+      await page.waitForFunction(
+        ([x, z]) => {
+          const hull = window.__perspectiveLamps().units.find((unit) => unit.name === 'Harvester');
+          return Math.hypot(hull.xM - x, hull.zM - z) < 40 && hull.sig <= 18;
+        },
+        [pool.x, pool.z],
+        { timeout: 180000 }
+      );
+      await page.waitForTimeout(3000);
+      const now = await poolOf('Corvette');
+      const at = await page.evaluate(() => {
+        const hull = window.__perspectiveLamps().units.find((unit) => unit.name === 'Harvester');
+        return { x: hull.xM, z: hull.zM, depthM: hull.depthM };
+      });
+      if (now !== null && Math.hypot(now.x - at.x, now.z - at.z) < 45) {
+        // Square across the beam: the camera's yaw is its bearing, negated.
+        return ['pool', now.x, now.z, SHADOW.distance, -(now.bearingDeg - 90), SHADOW.pitchDeg, at.depthM];
+      }
+    }
+    assert.fail('the Harvester never stood in the Corvette\'s pool');
+  };
   // The selection is made once: a second drag, over water the fleet has
   // left, would drop it.
   let legs = 0;
@@ -199,7 +261,7 @@ export default async ({ page, shot }) => {
   const take = async (quality, state, poses, moving = false) => {
     for (const still of poses) {
       const name = still[0];
-      if (only && !only.includes(name)) continue;
+      if (only && !only.includes(name) && name !== 'pool') continue;
       const pose = moving ? await follow(still) : still;
       await aim(page, pose);
       const label = state === null ? `${quality}-${name}` : `${quality}-${state}-${name}`;
@@ -260,9 +322,14 @@ export default async ({ page, shot }) => {
     await setQuality('high');
     // At rest, each hull at its idle SIG.
     await take('high', 'rest', POSES);
+    // A hull in a beam, for the shadow it throws on the lit ground.
+    await take('high', 'shadow', [await parkInBeam()]);
     // Under way: a hull under way is louder, and its beam brighter.
+    // The near camera is a GPU's alone: a software rasteriser's frame is
+    // seconds old when it is taken, and a hull under way has left a 420 m
+    // dolly's frame by then. The wide one holds it either way.
     await orderUnderWay();
-    await take('high', 'underway', [POSES[1]], true);
+    if (!software) await take('high', 'underway', [POSES[1]], true);
     await orderUnderWay();
     await take('high', 'underway', [POSES[0]], true);
     // On Silent Running the server holds each hull to SIG 3 to 8, under the

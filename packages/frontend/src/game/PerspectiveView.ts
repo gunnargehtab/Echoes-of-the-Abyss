@@ -1208,6 +1208,8 @@ export class PerspectiveView {
   private searchGround: DataTexture | null = null;
   /** The own hulls a frame's searchlights are thrown by, kept so a frame allocates one array. */
   private readonly searchHulls: SearchlightHull[] = [];
+  /** The last frame's beams and occluders, for the development readout. */
+  private searchReading: ReturnType<typeof searchlightsOf> = { lights: [], occluders: [] };
   /** Stencil bits the canvas got, read once at mount (the halo needs 8). */
   private canvasStencilBits = 0;
   /** The renders that made the last frame, in order (gate 6's pass list). */
@@ -2012,6 +2014,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveStation?: unknown }).__perspectiveStation;
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
+    delete (window as unknown as { __perspectiveSearchlights?: unknown }).__perspectiveSearchlights;
     delete (window as unknown as { __freeWaterDecoration?: unknown }).__freeWaterDecoration;
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
     delete (window as unknown as { __perspectiveSplit?: unknown }).__perspectiveSplit;
@@ -5275,6 +5278,7 @@ export class PerspectiveView {
     const hulls = this.searchHulls;
     hulls.length = 0;
     if (terrain === null || this.searchGround === null) {
+      this.searchReading = { lights: [], occluders: [] };
       setSearchlights([], [], null);
       return;
     }
@@ -5301,6 +5305,7 @@ export class PerspectiveView {
       { x: this.target.x, z: this.target.z },
       (x, z) => this.groundYAt(x, z)
     );
+    this.searchReading = { lights, occluders };
     setSearchlights(
       lights,
       occluders,
@@ -6296,6 +6301,11 @@ export class PerspectiveView {
       }
       (window as unknown as { __perspectiveLamps?: () => unknown }).__perspectiveLamps = () =>
         this.lampReading();
+      // The beams and the hulls that shadow them, as the last High frame set
+      // them (docs/screenshots/issue-1836): what a capture reads a shadow by.
+      (
+        window as unknown as { __perspectiveSearchlights?: () => unknown }
+      ).__perspectiveSearchlights = () => this.searchReading;
       // The capture switch (tools/render-stack/capture.mjs, HALO=on): an
       // on/off pair on one page, beside the setting a player uses.
       (window as unknown as { __perspectiveHalo?: (on: boolean) => unknown }).__perspectiveHalo = (

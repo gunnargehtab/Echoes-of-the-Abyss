@@ -219,8 +219,8 @@ Built so far:
 - **An own hull throws a searchlight, and it casts a shadow**
   ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836)). Below.
 
-Not built yet: a searchlight on a prop, a prop's shadow, and the work lights and
-floodlights of the player's own structures.
+Not built yet: a searchlight on a prop, a prop's shadow, a hull's shadow on another
+hull, and the work lights and floodlights of the player's own structures.
 
 #### Step 1's numbers — SPEC
 
@@ -401,9 +401,8 @@ world lit a hull (#1814), and is read again on those frames.
 ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836);
 [issue-1836](screenshots/issue-1836/README.md)). Every number is TUNABLE in
 `HIGH_GRAPHICS.SEARCHLIGHT` (`packages/shared/src/constants.ts`) until a frame of it is
-accepted. Two calls were taken in the open with the first frames, its strength and its
-shadow, and each is the
-owner's to overturn.*
+accepted. Three calls were taken in the open with the first frames: its strength, its
+shadow, and how many beams a hull throws. Each is the owner's to overturn.*
 
 Each of the player's own hulls throws one beam from its bow, along its heading, in its
 navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
@@ -445,8 +444,18 @@ first light with a direction, so it is the first to cast a shadow.
 - **The cone is cut by the same shadow.** A beam's light in the water is summed along
   each sight line through the cone, into the scatter pass's target, and a rock or a hull
   in the beam leaves a dark shaft behind it. No pass is added.
-- **Six beams a frame.** The hulls nearest the camera's focus throw theirs, and the
-  rest throw none, as the work lights choose (`workLight.ts`). Eight hulls may shadow.
+- **One beam a hull, and six a frame.** The target frame shows several lamps a hull,
+  each with a beam. Three readings were written. **One beam, off the bow**, is taken:
+  six beams light six hulls, and a beam costs every lit fragment in its cone the same
+  whichever hull throws it. **A beam from each lamp the model carries** is the closest
+  to the target, and a beam would leave a lamp the tactical pass draws. Six beams would
+  then light fewer hulls. It is the next look step if the owner wants the
+  target's count. **A count a hull class**, written in
+  [asset-prompts-3d.md](asset-prompts-3d.md), needs that doc's blocks first. Past six,
+  the hulls nearest the camera's focus throw theirs and the rest throw none: a beam off
+  the frame lights nothing a player sees. The work lights keep the loudest instead
+  (`workLight.ts`), which here would spend a beam on a loud hull across the map. Eight
+  hulls may shadow.
 - **The ground reads it by its relief.** A beam has a direction, so the bake's slope
   shades it as it cannot shade the Lid's glow: a dune's lit face and its lee. The
   hollows take a share of it as they take a share of a pool.
@@ -458,7 +467,10 @@ first light with a direction, so it is the first to cast a shadow.
   gate 7's glance at one is this step's open question.
 
 `packages/frontend/test/searchlights.test.ts` holds the gain to the halo's, the silent
-hull dark, the list to own hulls and the shadow's two readers.
+hull dark, the aim and the shadow's two readers, and
+`packages/frontend/test/rendererSmoke.test.ts` counts the beams a frame draws. Limit 2
+is held by what the view hands over: its own units, which the wire types as the
+player's (`OwnUnit`), and never a track.
 
 #### A mark on the lit world
 

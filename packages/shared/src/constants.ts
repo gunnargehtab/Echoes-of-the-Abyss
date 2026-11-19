@@ -258,15 +258,17 @@ export const HIGH_GRAPHICS = {
    * rakes it, and one high over the bowl does not look straight down.
    * `CLEAR_M` is how far off the bow the lamp hangs, `KEEL` how far under
    * the keel line, in beams, and `LAMP_CLEAR_M` the least it stands over the
-   * ground, since a hull is drawn larger than life at the far dollies. `HULL` is how much of a beam another own hull's
-   * cladding takes of what ground would. `VOLUME` is the share of a beam's
+   * ground, since a hull is drawn larger than life at the far dollies. `HULL`
+   * is how much of a beam another own hull's cladding takes of what ground
+   * would. `VOLUME` is the share of a beam's
    * light a metre of water scatters to the eye, and `VOLUME_STEPS` the steps
    * a sight line takes through the cone. `SHADOW`: `STEPS` and `VOLUME_STEPS`
    * are the reads of the ground's heights between a point and the lamp, on a
    * surface and in the water; `LIFT_M` carries the line that far over the
    * ground, so level ground never shadows itself; `SOFT_M` is the half-width
-   * of a shadow's soft edge, in metres of clearance; and `HULL_EDGE` is where a hull's shadow is
-   * whole and where it is gone, in half-beams from its keel line.
+   * of a shadow's soft edge, in metres of clearance; and `HULL_EDGE` is where
+   * a hull's shadow is whole and where it is gone, in half-beams from its
+   * keel line.
    */
   SEARCHLIGHT: {
     MAX: 6,

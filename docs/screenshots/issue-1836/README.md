@@ -21,11 +21,13 @@ SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VI
   --out docs/screenshots/issue-1836/software --steps docs/screenshots/issue-1836/frames.mjs
 ```
 
-[frames.mjs](frames.mjs) takes Low at the four cameras, then High three times: the fleet
-at rest, under way and on Silent Running. It writes
-[readings.json](software/readings.json): each frame's passes, calls, triangles, beams and
-every hull's live SIG. An under-way frame follows the fleet, so its camera is the Home or
-the Close eye carried to where the hulls are.
+[frames.mjs](frames.mjs) takes Low at the four cameras, then High four times: the fleet
+at rest, the Harvester parked in the Corvette's beam, the fleet under way, and on Silent
+Running. It writes [readings.json](software/readings.json): each frame's passes, calls,
+triangles, beams and every hull's live SIG. An under-way frame follows the fleet, so its
+camera is the Home eye carried to where the hulls are. The Close eye under way is taken
+on a GPU alone: this rasteriser's frame is seconds old when it is taken, and a hull
+under way has left a 420 m dolly's frame by then.
 
 ## The frames beside the target
 
@@ -40,19 +42,26 @@ rests at SIG 6, the Corvette at 28 and the Harvester at 18.
 | Close | [low](software/02-low-close.png) | [high](software/06-high-rest-close.png) | The Corvette's cone from its bow to its pool, 66 drawn metres under it. The Harvester's pool is a dim ellipse on the rim. The Light Scout is dark |
 | Survey | [low](software/04-low-survey.png) | [high](software/08-high-rest-survey.png) | The Corvette's beam is a wedge a few pixels long east of its ring. Nothing else moved |
 
-| State | Close | Home | What it shows |
-| --- | --- | --- | --- |
-| Under way | [close](software/09-high-underway-close.png) | [home](software/10-high-underway-home.png) | The fleet ordered north along the rim, which takes it down to the floor. The Harvester runs at SIG 40 and its beam rakes the ground ahead of it, white at the lamp; the Corvette's, at 28, is dim; the Light Scout, at 6 to 12, throws none |
-| Silent Running | [close](software/12-high-silent-close.png) | [home](software/11-high-silent-home.png) | The same fleet at SIG 3.5 to 5.3: no beam and no pool, and `readings.json` counts none |
+| State | Frames | What it shows |
+| --- | --- | --- |
+| A hull in a beam | [across the beam](software/09-high-shadow-pool.png) | The Harvester sent into the Corvette's pool, seen square across the beam. The beam comes in from the left and pools on the dunes, and the pool stops at the Harvester: the ground under and behind it is dark, out to about its ring. That is the hull's shadow, read from its keel line and half its beam, and it is a blob and not a silhouette |
+| Under way | [home](software/10-high-underway-home.png), and [close](software/09-high-underway-close.png) from an earlier take of this tree, at 87a29736 | The fleet ordered along the rim, which takes it down to the floor. The Harvester runs at SIG 40 and its beam rakes the ground ahead of it, white at the lamp; the Corvette's, at 28, is dim; the Light Scout, at 6 to 12, throws none |
+| Silent Running | [home](software/11-high-silent-home.png), [close](software/12-high-silent-close.png) | The same fleet at SIG 3.5 to 5.3: no beam and no pool, and `readings.json` counts none |
 
 The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camera moved
 from Home to Close at High over the fleet at rest, at 1280 × 720 and six times the speed
 the rasteriser drew it.
 
-What the target shows and these do not: beams from more than one lamp a hull, a lit
-hull standing in another's beam, a rock's shadow across a pool, and life in the water.
-No frame here puts a rock or a second hull in a beam, so the shadow is held by
-`packages/frontend/test/searchlights.test.ts` and not yet by a picture.
+What the target shows and these do not: beams from more than one lamp a hull, white
+light where these are the navy's green, a rock's shadow across a pool, and life in the
+water. No frame here puts rock in a beam: the crater's rim is level where the fleet
+opens. So the ground's shadow is held by `packages/frontend/test/searchlights.test.ts`
+and not yet by a picture, and the hull's by the frame above.
+
+The shadow frame also shows a fault of the client's that is older than this step. A hull
+passing near another nudges it a metre or two, and the conn view turns a hull to where
+it last moved, so the Corvette's beam swung when the Harvester arrived. `frames.mjs`
+parks the Harvester in the pool as it then lies.
 
 ## What the frame costs
 
@@ -83,9 +92,13 @@ world area, of each pixel's largest channel difference, out of 255.
 
 | Camera | `main` against `main` | `main` against the branch | Calls and triangles |
 | --- | --- | --- | --- |
-| Home | 0.01 | 0.01 | 44 and 593,684, both |
-| Close | 0.01 | 0.02 | 44 and 593,684, both |
+| Home | 0.01 | 0.03 | 44 and 593,684, both |
+| Close | 0.01 | 0.06 | 44 and 593,684, both |
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
+
+The branch's figures are inside what [issue-1801](../issue-1801/README.md#low-does-not-move)
+records for two takes of one tree, 0.02 to 0.43: the motes sink, and a frame taken later
+in a match finds them lower.
 
 [The Close map](software/low-control/diff-close-main-vs-branch.png) is marine snow and
 nothing else. In counted work `packages/frontend/test/rendererSmoke.test.ts` holds the
@@ -98,7 +111,7 @@ ahead of its ring and its cone crosses the ring's lower arc
 ([Close](software/06-high-rest-close.png)). Under way the Harvester's selection ring
 and collar stand over the brightest light in the set, the lamp's own glare
 ([Home](software/10-high-underway-home.png)). The 99.9th percentile of the world area's
-luma, out of 255, is 169 at Home at rest and 215 under way, where step 1's frame read
+luma, out of 255, is 169 at Home at rest and 227 under way, where step 1's frame read
 159. Whether a ring reads there in under a second is the owner's glance, on the named
 GPU, in the four palettes.
 

@@ -2,8 +2,9 @@
  * An own hull's searchlight at the High graphics quality (docs/art-direction.md,
  * "An own hull's searchlight"; #1836): what throws one, how bright, and what
  * shadows it. The frames are docs/screenshots/issue-1836/; these hold what a
- * frame cannot, which is the limits: a silent hull throws nothing (limit 5),
- * and only an own hull throws or shadows (limit 2).
+ * frame cannot, which is limit 5: a silent hull throws nothing. Limit 2, that
+ * only an own hull throws or shadows, is held by what the view hands
+ * `searchlightsOf`: its own units, typed `OwnUnit`, and never a track.
  */
 
 import assert from 'node:assert/strict';
@@ -142,15 +143,6 @@ describe("an own hull's searchlight", () => {
     assert.equal(third.lights.length, SPEC.MAX);
     assert.equal(third.occluders[0]!.hull, 10);
     assert.equal(third.occluders.length, SPEC.OCCLUDERS);
-  });
-
-  it('is handed own hulls and nothing else', () => {
-    // Limit 2: a contact throws no light and casts no shadow. The list is
-    // built from what it is handed, and the view hands it `units`, which
-    // holds no contact (PerspectiveView `aimSearchlights`).
-    const { lights, occluders } = searchlightsOf([], GLOW, { x: 0, z: 0 }, FLOOR);
-    assert.deepEqual(lights, []);
-    assert.deepEqual(occluders, []);
   });
 
   it('writes one set of uniforms for the page, and none without a ground', () => {
