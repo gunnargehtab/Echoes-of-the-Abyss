@@ -35,8 +35,10 @@
  * so the texture is not the material's: every patched material reads the one
  * pair of uniforms here, which a view sets before its world pass draws.
  *
- * Every number is TUNABLE until the owner accepts a frame of this step
- * (`HIGH_GRAPHICS.HULL_LIGHT`, packages/shared/src/constants.ts).
+ * How much of the glow and of a pool a face takes is SPEC since the owner
+ * accepted this step's frames on 19 November 2026 (`HIGH_GRAPHICS.HULL_LIGHT`,
+ * packages/shared/src/constants.ts; docs/art-direction.md, "A model in the
+ * world's light"). A beam's share is the searchlight's, and TUNABLE with it.
  */
 import { DataTexture, Vector2, type MeshStandardMaterial, type Texture } from 'three';
 import { HIGH_GRAPHICS } from '@echoes/shared';
