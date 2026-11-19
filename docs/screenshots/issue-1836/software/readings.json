@@ -1,0 +1,612 @@
+{
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "software": true,
+  "unpaced": false,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "readings": [
+    {
+      "name": "home",
+      "quality": "low",
+      "state": null,
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 44,
+      "triangles": 593684,
+      "searchlights": 0,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "searchlights": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "close",
+      "quality": "low",
+      "state": null,
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 44,
+      "triangles": 593684,
+      "searchlights": 0,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "searchlights": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "low",
+      "quality": "low",
+      "state": null,
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "calls": 26,
+      "triangles": 587001,
+      "searchlights": 0,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "searchlights": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "survey",
+      "quality": "low",
+      "state": null,
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 45,
+      "triangles": 594970,
+      "searchlights": 0,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "searchlights": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "home",
+      "quality": "high",
+      "state": "rest",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 55,
+      "triangles": 626614,
+      "searchlights": 2,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "searchlights": 2,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "close",
+      "quality": "high",
+      "state": "rest",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 55,
+      "triangles": 626614,
+      "searchlights": 2,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "searchlights": 2,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "low",
+      "quality": "high",
+      "state": "rest",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "split-copy",
+        "split"
+      ],
+      "calls": 36,
+      "triangles": 619283,
+      "searchlights": 2,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "searchlights": 2,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "survey",
+      "quality": "high",
+      "state": "rest",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 55,
+      "triangles": 627252,
+      "searchlights": 2,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "searchlights": 2,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "pool",
+      "quality": "high",
+      "state": "shadow",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 50,
+      "triangles": 623948,
+      "searchlights": 2,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 18,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "searchlights": 2,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 6
+    },
+    {
+      "name": "home",
+      "quality": "high",
+      "state": "underway",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 56,
+      "triangles": 626614,
+      "searchlights": 2,
+      "hulls": [
+        {
+          "sig": 6,
+          "restSig": 6,
+          "silentRunning": false
+        },
+        {
+          "sig": 28,
+          "restSig": 28,
+          "silentRunning": false
+        },
+        {
+          "sig": 40,
+          "restSig": 18,
+          "silentRunning": false
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "searchlights": 2,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 55
+    },
+    {
+      "name": "home",
+      "quality": "high",
+      "state": "silent",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "split-copy",
+        "split"
+      ],
+      "calls": 49,
+      "triangles": 627227,
+      "searchlights": 0,
+      "hulls": [
+        {
+          "sig": 3.5,
+          "restSig": 6,
+          "silentRunning": true
+        },
+        {
+          "sig": 5.333333492279053,
+          "restSig": 28,
+          "silentRunning": true
+        },
+        {
+          "sig": 4.5,
+          "restSig": 18,
+          "silentRunning": true
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "searchlights": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 74
+    },
+    {
+      "name": "close",
+      "quality": "high",
+      "state": "silent",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "split-copy",
+        "split"
+      ],
+      "calls": 48,
+      "triangles": 627227,
+      "searchlights": 0,
+      "hulls": [
+        {
+          "sig": 3.5,
+          "restSig": 6,
+          "silentRunning": true
+        },
+        {
+          "sig": 5.333333492279053,
+          "restSig": 28,
+          "silentRunning": true
+        },
+        {
+          "sig": 4.5,
+          "restSig": 18,
+          "silentRunning": true
+        }
+      ],
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 71,
+        "searchlights": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null,
+      "stationFrames": 88
+    }
+  ]
+}

@@ -224,7 +224,7 @@ describe('the lit ground’s material (#1801)', () => {
     assert.ok(shader.fragmentShader.includes(LIT_GROUND_GLSL));
     assert.ok(
       shader.fragmentShader.includes(
-        'vec3 outgoingLight = echoesLitGround( diffuseColor.rgb, vMapUv, vLitWorldY );'
+        'vec3 outgoingLight = echoesLitGround( diffuseColor.rgb, vMapUv, vLitWorld );'
       ),
       'the unlit sum is replaced'
     );
@@ -237,10 +237,10 @@ describe('the lit ground’s material (#1801)', () => {
       shader.fragmentShader.indexOf('echoesDisplayVeil( diffuseColor.rgb') <
         shader.fragmentShader.indexOf('echoesLitGround( diffuseColor.rgb')
     );
-    assert.ok(shader.vertexShader.includes('vLitWorldY = ( modelMatrix'));
+    assert.ok(shader.vertexShader.includes('vLitWorld = ( modelMatrix'));
     const key = material.customProgramCacheKey();
     assert.ok(key.startsWith('survey-ink-carrier'), key);
-    assert.ok(key.endsWith(':lit-ground-7'), key);
+    assert.ok(key.endsWith(':lit-ground-8'), key);
   });
 
   it('lights the ground from the Lid’s glow: from above, from no quarter, dimmed by depth', () => {
@@ -260,7 +260,7 @@ describe('the lit ground’s material (#1801)', () => {
     // under the same occlusion: light from beside, which depth does not take.
     assert.ok(
       LIT_GROUND_GLSL.includes(
-        'echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb'
+        'echoesLitIrradiance( normal, world.y ) + texture2D( uLitPools, uv ).rgb'
       )
     );
   });
@@ -314,16 +314,19 @@ describe('the lit ground’s material (#1801)', () => {
     // under the marks is gone, and nothing replaced it: a mark stands bare
     // on the lit world (#1801, D2).
     const sum = LIT_GROUND_GLSL.indexOf(
-      'vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;'
+      'vec3 irradiance = echoesLitIrradiance( normal, world.y ) + texture2D( uLitPools, uv ).rgb;'
     );
     const out = LIT_GROUND_GLSL.indexOf('return albedo * irradiance * relief.g');
     assert.ok(sum > 0 && out > sum);
-    assert.equal(
+    // An own hull's searchlight is the one thing added after it (#1836), and
+    // it is added, never a ceiling.
+    assert.deepEqual(
       LIT_GROUND_GLSL.slice(sum, out)
         .split('\n')
-        .filter((line) => line.includes('irradiance')).length,
-      1,
-      'the sum is what the albedo takes'
+        .filter((line) => line.includes('irradiance'))
+        .slice(1),
+      ['  irradiance += echoesSearchlight( world, normal );'],
+      'the sum, and the beams, are what the albedo takes'
     );
   });
 

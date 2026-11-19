@@ -163,6 +163,14 @@ export class LightVolumes {
     this.geometry.instanceCount = this.count;
   }
 
+  /**
+   * The target the last `render` drew into, for the pass's other light: an
+   * own hull's searchlight adds its cone over these (searchlightVolumes.ts).
+   */
+  get surface(): WebGLRenderTarget | null {
+    return this.target;
+  }
+
   /** Bytes the target holds: half-float colour at half the frame's size each way. */
   get bytes(): number {
     return this.target === null ? 0 : this.target.width * this.target.height * 8;
@@ -190,8 +198,10 @@ export class LightVolumes {
 
   /**
    * Draw the sources' light for a frame whose world is `width` × `height`
-   * pixels with `depth`, and hand back the texture the composite adds. The
-   * renderer's target and clear state are the caller's to restore.
+   * pixels with `depth`, and hand back the texture the composite adds. With
+   * no source it clears the target and draws nothing, for a frame whose only
+   * light in the water is a searchlight's. The renderer's target and clear
+   * state are the caller's to restore.
    */
   render(
     renderer: WebGLRenderer,
@@ -209,6 +219,7 @@ export class LightVolumes {
     this.uniforms.uEye.value.copy(camera.position);
     this.uniforms.uTexel.value.set(1 / target.width, 1 / target.height);
     this.uniforms.uReachM.value = reachM;
+    this.mesh.visible = this.count > 0;
     renderer.setRenderTarget(target);
     renderer.setClearColor(0x000000, 0);
     renderer.autoClear = true;

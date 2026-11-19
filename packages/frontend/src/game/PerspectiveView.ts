@@ -186,6 +186,13 @@ import {
 } from './graphicsQuality.ts';
 import { repaintWaterHue, waterHueTexture } from './waterMedium.ts';
 import { poolTexture, volumeInstances, worldLightsOf, type WorldLightSite } from './worldLights.ts';
+import {
+  groundHeightTexture,
+  searchlightCount,
+  searchlightsOf,
+  setSearchlights,
+  type SearchlightHull,
+} from './searchlights.ts';
 import { GLOW_FACTOR_MAX, GLOW_FACTOR_MIN, SIG_GLOW_EFOLD } from './glow.ts';
 import { VeilField, VEIL_FLOOR_RGB, veilShade, type VeilListener } from './acousticVeil.ts';
 import {
@@ -1193,6 +1200,16 @@ export class PerspectiveView {
   private pools: DataTexture | null = null;
   private readonly litPools: { value: Texture } = { value: NO_POOLS };
   private worldLightCount = 0;
+  /**
+   * The drawn ground's heights under High, which an own hull's searchlight
+   * reads for what stands between a point and its lamp (searchlights.ts):
+   * the ground's, so made and dropped with the pools.
+   */
+  private searchGround: DataTexture | null = null;
+  /** The own hulls a frame's searchlights are thrown by, kept so a frame allocates one array. */
+  private readonly searchHulls: SearchlightHull[] = [];
+  /** The last frame's beams and occluders, for the development readout. */
+  private searchReading: ReturnType<typeof searchlightsOf> = { lights: [], occluders: [] };
   /** Stencil bits the canvas got, read once at mount (the halo needs 8). */
   private canvasStencilBits = 0;
   /** The renders that made the last frame, in order (gate 6's pass list). */
@@ -1997,6 +2014,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveStation?: unknown }).__perspectiveStation;
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
+    delete (window as unknown as { __perspectiveSearchlights?: unknown }).__perspectiveSearchlights;
     delete (window as unknown as { __freeWaterDecoration?: unknown }).__freeWaterDecoration;
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
     delete (window as unknown as { __perspectiveSplit?: unknown }).__perspectiveSplit;
@@ -3271,6 +3289,8 @@ export class PerspectiveView {
       this.pools?.dispose();
       this.pools = null;
       this.litPools.value = NO_POOLS;
+      this.searchGround?.dispose();
+      this.searchGround = null;
       this.terrainMesh = null;
       this.surveyCells?.dispose();
       this.surveyFloor?.dispose();
@@ -3629,10 +3649,14 @@ export class PerspectiveView {
     this.pools = null;
     this.litPools.value = NO_POOLS;
     this.worldLightCount = 0;
+    this.searchGround?.dispose();
+    this.searchGround = null;
     if (!this.high.on) {
       this.high.setLights(new Float32Array(0));
       return;
     }
+    // Whether or not the map stands a source: a searchlight is a hull's.
+    this.searchGround = groundHeightTexture(terrain, (xM, yM) => this.groundYAt(xM, yM));
     const sites: WorldLightSite[] = [
       ...ventEmbers(terrain, this.groundSeed).map((ember) => ({
         family: 'vent' as const,
@@ -5242,6 +5266,55 @@ export class PerspectiveView {
     return { x: site.xM, z: site.yM, depthM: -site.y / DEPTH_VISUAL_M_PER_M };
   }
 
+  /**
+   * This frame's searchlights, from the player's own hulls as they are drawn
+   * (searchlights.ts): each model-backed hull's place, heading and live SIG,
+   * which is all a beam is made of. Own hulls only: `units` holds no contact,
+   * and a track's model is never read here (docs/art-direction.md, limit 2).
+   * Per frame, before the world pass, since a hull glides between snapshots.
+   */
+  private aimSearchlights(): void {
+    const terrain = this.terrain;
+    const hulls = this.searchHulls;
+    hulls.length = 0;
+    if (terrain === null || this.searchGround === null) {
+      this.searchReading = { lights: [], occluders: [] };
+      setSearchlights([], [], null);
+      return;
+    }
+    const draw = this.drawScale;
+    for (const unit of this.units) {
+      const handle = this.unitHandles.get(unit.id);
+      const model = handle?.model ?? null;
+      // A hull still drawn as its sprite has no bow to hang a lamp off yet.
+      if (handle === undefined || model === null || handle.mesh.visible) continue;
+      hulls.push({
+        id: unit.id,
+        x: model.root.position.x,
+        y: model.root.position.y,
+        z: model.root.position.z,
+        heading: this.headings.get(unit.id) ?? 0,
+        lengthM: model.lengthM * draw,
+        beamM: model.beamM * draw,
+        sig: unit.sig,
+      });
+    }
+    const { lights, occluders } = searchlightsOf(
+      hulls,
+      FACTION_PALETTE[this.faction].glow,
+      { x: this.target.x, z: this.target.z },
+      (x, z) => this.groundYAt(x, z)
+    );
+    this.searchReading = { lights, occluders };
+    setSearchlights(
+      lights,
+      occluders,
+      this.searchGround,
+      terrain.cols * terrain.cellM,
+      terrain.rows * terrain.cellM
+    );
+  }
+
   /** The first dredging harvester's position, world metres, or null: the probe's. */
   private plumeAt(): { x: number; z: number; depthM: number } | null {
     for (const id of this.dredging.keys()) {
@@ -6066,6 +6139,7 @@ export class PerspectiveView {
         const terrain = this.terrain;
         if (this.pools === null || terrain === null) setHullPools(null);
         else setHullPools(this.pools, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
+        this.aimSearchlights();
         passes.push(
           ...this.high.render(renderer, this.scene, this.camera, {
             focusDepthM: this.focusDepthNowM,
@@ -6227,6 +6301,11 @@ export class PerspectiveView {
       }
       (window as unknown as { __perspectiveLamps?: () => unknown }).__perspectiveLamps = () =>
         this.lampReading();
+      // The beams and the hulls that shadow them, as the last High frame set
+      // them (docs/screenshots/issue-1836): what a capture reads a shadow by.
+      (
+        window as unknown as { __perspectiveSearchlights?: () => unknown }
+      ).__perspectiveSearchlights = () => this.searchReading;
       // The capture switch (tools/render-stack/capture.mjs, HALO=on): an
       // on/off pair on one page, beside the setting a player uses.
       (window as unknown as { __perspectiveHalo?: (on: boolean) => unknown }).__perspectiveHalo = (
@@ -6454,6 +6533,8 @@ export class PerspectiveView {
         groundBytes: this.litSurface === null ? 0 : litGroundBytes(this.litSurface),
         // The world's own sources lighting this ground and its water.
         worldLights: this.worldLightCount,
+        // Own hulls throwing a searchlight this frame (searchlights.ts).
+        searchlights: this.high.on ? searchlightCount() : 0,
         frameGpuBudgetMs: HIGH_GRAPHICS.FRAME_GPU_MS,
       },
       textures: info?.memory.textures ?? 0,

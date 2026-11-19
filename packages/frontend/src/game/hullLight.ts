@@ -19,6 +19,12 @@
  *
  * Both are added to the rig's indirect light, where three sums an ambient,
  * and again as what a face mirrors, so a metalled plate answers them too.
+ *
+ * - **Another own hull's searchlight** (searchlights.ts), where a beam
+ *   crosses the hull: a light with a direction, so it goes through three's
+ *   own direct term and a face takes it by where the beam comes from, glint
+ *   and all. The ground's shadow falls on it; a hull's own does not, since a
+ *   point on a hull is inside the capsule that stands for one.
  * Neither is colour of the hull's: `diffuseColor` is never written, so hue
  * stays the faction's ink and the register stays `CLADDING_CEILING`'s
  * (gate 4). A lamp is refused outright and stays on the canvas, so its light
@@ -35,6 +41,7 @@
 import { DataTexture, Vector2, type MeshStandardMaterial, type Texture } from 'three';
 import { HIGH_GRAPHICS } from '@echoes/shared';
 import { LIT_IRRADIANCE_GLSL } from './litGround.ts';
+import { SEARCHLIGHT_GLSL, SEARCHLIGHT_UNIFORMS } from './searchlights.ts';
 
 const glsl = (value: number): string => {
   const text = value.toFixed(6);
@@ -80,12 +87,14 @@ const VERTEX_BODY = `
 }`;
 
 const { LID, POOL, POOL_REACH_M } = HIGH_GRAPHICS.HULL_LIGHT;
+const BEAM = HIGH_GRAPHICS.SEARCHLIGHT.HULL;
 
 const FRAGMENT_HEAD = `
 uniform sampler2D uHullPools;
 uniform vec2 uHullPoolMap;
 varying vec3 vHullWorld;
 ${LIT_IRRADIANCE_GLSL}
+${SEARCHLIGHT_GLSL}
 // The world's light a face looking along \`facing\` takes at \`at\`, both in
 // the world's frame.
 vec3 echoesHullLight( vec3 facing, vec3 at ) {
@@ -110,6 +119,19 @@ const FRAGMENT_LIGHT = `
     reflect( - geometryViewDir, geometryNormal ), viewMatrix );
   // A sky of one radiance lights a face by pi times it.
   radiance += echoesHullLight( hullMirror, vHullWorld ) * RECIPROCAL_PI;
+  // The beams that cross this hull, each as three lights a face directly:
+  // the surface's own response to a light from one quarter.
+  for ( int i = 0; i < ECHOES_SEARCHLIGHTS; i ++ ) {
+    if ( i >= uSearchCount ) break;
+    vec3 toLamp;
+    vec3 beam = echoesSearchBeam( i, vHullWorld, toLamp );
+    if ( beam.r + beam.g + beam.b <= 0.0 ) continue;
+    IncidentLight searchLight;
+    searchLight.color = beam * ( ${glsl(BEAM)} * echoesSearchGround( vHullWorld, uSearchAt[ i ].xyz ) );
+    searchLight.direction = normalize( ( viewMatrix * vec4( toLamp, 0.0 ) ).xyz );
+    searchLight.visible = true;
+    RE_Direct( searchLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
+  }
 }`;
 
 /** The anchors the patch needs of three's standard program, vertex then fragment. */
@@ -136,7 +158,7 @@ export function patchHullLight(shader: { vertexShader: string; fragmentShader: s
   );
 }
 
-const HULL_LIGHT_KEY = ':hull-light-1';
+const HULL_LIGHT_KEY = ':hull-light-2';
 
 /**
  * Light one cladding material by the world. A lamp is left as it is. Chained
@@ -151,7 +173,7 @@ export function installHullLight(material: MeshStandardMaterial): boolean {
   const key = material.customProgramCacheKey();
   material.onBeforeCompile = (shader, renderer) => {
     before.call(material, shader, renderer);
-    Object.assign(shader.uniforms, UNIFORMS);
+    Object.assign(shader.uniforms, UNIFORMS, SEARCHLIGHT_UNIFORMS);
     patchHullLight(shader);
   };
   material.customProgramCacheKey = () => `${key}${HULL_LIGHT_KEY}`;

@@ -6,11 +6,13 @@
  * shaded in (seabed.ts). At High the same mesh takes light instead: the bake
  * hands over each pixel's albedo, slope and occlusion beside the skin
  * (`BakeOptions.lit`), and this patch lights them with the Lid's glow, light
- * from the whole water above, and with what the world's own sources pool on
- * the ground (worldLights.ts). There is no sun below the Lid
- * (docs/art-direction.md, limit 1), so nothing here has a direction: ground
- * takes the glow by how far it faces up, and the water above it takes the
- * glow with depth, so depth still darkens.
+ * from the whole water above, with what the world's own sources pool on the
+ * ground (worldLights.ts), and with the searchlights of the player's own
+ * hulls (searchlights.ts). There is no sun below the Lid
+ * (docs/art-direction.md, limit 1), so the glow has no direction: ground
+ * takes it by how far it faces up, and the water above it takes the glow
+ * with depth, so depth still darkens. A searchlight is the one light here
+ * that has a direction, so the one the slope shades by where it comes from.
  *
  * The result is scene-referred: the material draws only in the High world
  * pass, into a linear target, and that pass's composite owns the tone curve
@@ -39,6 +41,7 @@ import type { TerrainPayload } from '../net/GameClient.ts';
 import { LID_GLOW } from './palette.ts';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
 import { SEABED_PX_PER_CELL, type LitBake } from './seabed.ts';
+import { SEARCHLIGHT_GLSL, SEARCHLIGHT_UNIFORMS } from './searchlights.ts';
 
 /** The lit ground's two textures, and the arrays a bake writes them through. */
 export interface LitGroundSurface {
@@ -114,23 +117,27 @@ export const LIT_IRRADIANCE_GLSL = [
 export const LIT_GROUND_GLSL = [
   'uniform sampler2D uLitRelief;',
   'uniform sampler2D uLitPools;',
-  'varying float vLitWorldY;',
+  'varying vec3 vLitWorld;',
   // How much of the water above the ground's fine relief leaves a pixel: 1 on
   // a crest and on ground with no silt detail, less in a dune's trough, a
   // ripple's lee and a scour (seabedDetail.ts, its `relief` mode, which
   // writes it before the sum below reads it).
   'float echoesLitSky = 1.0;',
   LIT_IRRADIANCE_GLSL,
+  SEARCHLIGHT_GLSL,
   // The slope is the bake's, steepened there; the occlusion is the rim, the
   // lee and the scour the Low bake darkens, which no light here casts.
-  'vec3 echoesLitGround( vec3 albedo, vec2 uv, float worldY ) {',
+  'vec3 echoesLitGround( vec3 albedo, vec2 uv, vec3 world ) {',
   '  vec4 relief = texture2D( uLitRelief, uv );',
   '  vec2 slope = relief.rb * 2.0 - 1.0;',
   '  vec3 normal = vec3( slope.x, sqrt( max( 0.0, 1.0 - dot( slope, slope ) ) ), slope.y );',
   // The world's own sources pool on it (worldLights.ts): light from beside
   // the ground, which the water above it does not take. Nothing holds the sum
   // down, here or after: a mark stands bare on the lit world (#1801, D2).
-  '  vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;',
+  '  vec3 irradiance = echoesLitIrradiance( normal, world.y ) + texture2D( uLitPools, uv ).rgb;',
+  // And an own hull's searchlight, which the same slope shades by where the
+  // beam comes from: a dune's lit face and its lee (searchlights.ts).
+  '  irradiance += echoesSearchlight( world, normal );',
   // A hollow hides both from the ground in it, as the bake's occlusion does,
   // and under an own entity's ground shadow as anywhere else: the relief
   // runs under each shadow (#1801, D3).
@@ -138,7 +145,7 @@ export const LIT_GROUND_GLSL = [
   '}',
 ].join('\n');
 
-const LIT_GROUND_KEY = ':lit-ground-7';
+const LIT_GROUND_KEY = ':lit-ground-8';
 const LIT_ROOF_KEY = ':lit-roof-1';
 
 /** The unlit sum the patch replaces: three's basic material, r187. */
@@ -151,7 +158,8 @@ const UNLIT_SUM = 'vec3 outgoingLight = reflectedLight.indirectDiffuse;';
  * lights; it chains their hooks and suffixes their key. `pools` is the light
  * the world's own sources put on the ground (worldLights.ts `poolTexture`),
  * as a uniform the caller keeps, so the dressing can hand over a new texture
- * without a new program.
+ * without a new program. The searchlights are the page's one set
+ * (searchlights.ts), which a view writes before its world pass draws.
  */
 export function installLitGround(
   material: MeshBasicMaterial,
@@ -166,18 +174,18 @@ export function installLitGround(
     if (!shader.fragmentShader.includes(UNLIT_SUM)) {
       throw new Error('three moved the basic material’s unlit sum: installLitGround replaces it');
     }
-    Object.assign(shader.uniforms, uniforms);
+    Object.assign(shader.uniforms, uniforms, SEARCHLIGHT_UNIFORMS);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying float vLitWorldY;')
+      .replace('#include <common>', '#include <common>\nvarying vec3 vLitWorld;')
       .replace(
         '#include <begin_vertex>',
-        '#include <begin_vertex>\nvLitWorldY = ( modelMatrix * vec4( transformed, 1.0 ) ).y;'
+        '#include <begin_vertex>\nvLitWorld = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;'
       );
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\n${LIT_GROUND_GLSL}`)
       .replace(
         UNLIT_SUM,
-        'vec3 outgoingLight = echoesLitGround( diffuseColor.rgb, vMapUv, vLitWorldY );'
+        'vec3 outgoingLight = echoesLitGround( diffuseColor.rgb, vMapUv, vLitWorld );'
       );
   };
   material.customProgramCacheKey = () => `${key}${LIT_GROUND_KEY}`;

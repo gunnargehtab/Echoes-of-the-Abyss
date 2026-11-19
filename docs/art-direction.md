@@ -136,7 +136,8 @@ session on 19 November 2026, on the named GPU's frames
 [issue-1801](screenshots/issue-1801/README.md)). That is the lit ground and stone, the
 water as a medium, the world's own sources and the chain, and its numbers are SPEC
 ([Step 1's numbers](#step-1s-numbers--spec)). A navy's surface, an own model in the
-world's light and every later step are not accepted, and their numbers stay TUNABLE in
+world's light, an own hull's searchlight and every later step are not accepted, and
+their numbers stay TUNABLE in
 `HIGH_GRAPHICS` (`packages/shared/src/constants.ts`) until a frame of theirs is.*
 
 High draws the one scene as two layers
@@ -146,8 +147,9 @@ High draws the one scene as two layers
    with it, into a linear half-float target with the canvas's four samples. Nothing in
    it is tone-mapped, so its light stays
    scene-referred. A fragment there only loses light to the water.
-2. **The scatter pass** draws what the world's own sources scatter in the water, against
-   the world's depth, at half the frame's size.
+2. **The scatter pass** draws what the world's own sources and the own hulls'
+   searchlights scatter in the water, against the world's depth, at half the frame's
+   size.
 3. **The chain** runs at half the frame's size and smaller: ambient occlusion off the
    world's depth, then the frame's light over a soft threshold, spread down four levels
    and back as bloom.
@@ -214,9 +216,11 @@ Built so far:
   Commune's four materials first. Below.
 - **An own model's cladding is lit by the world**
   ([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)). Below.
+- **An own hull throws a searchlight, and it casts a shadow**
+  ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836)). Below.
 
-Not built yet: shadow cast by a light with a direction, which arrives with the own
-searchlights ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836)).
+Not built yet: a searchlight on a prop, a prop's shadow, a hull's shadow on another
+hull, and the work lights and floodlights of the player's own structures.
 
 #### Step 1's numbers — SPEC
 
@@ -268,8 +272,8 @@ one, how far its pool and its volume reach, and how high over the ground it stan
 | `civic` | 6 | 140 | 15 |
 
 `FRAME_GPU_MS`, gate 6's 8 ms, is [graphics-standards.md](graphics-standards.md)'s. The
-two hull blocks, `HULL_SURFACE` and `HULL_LIGHT`, are TUNABLE with the sections below
-that own them.
+blocks after it, `HULL_SURFACE`, `HULL_LIGHT` and `SEARCHLIGHT`, are TUNABLE with the
+sections below that own them.
 
 #### A model in the world's light
 
@@ -391,6 +395,83 @@ reads beside the Blender one at the Close and nearest cameras, and what three ta
 clad fragment cost against gate 6's 8 ms. The lean was set under Low's rig, before the
 world lit a hull (#1814), and is read again on those frames.
 
+#### An own hull's searchlight
+
+*In development with the rest of High, and not accepted
+([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836);
+[issue-1836](screenshots/issue-1836/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.SEARCHLIGHT` (`packages/shared/src/constants.ts`) until a frame of it is
+accepted. Three calls were taken in the open with the first frames: its strength, its
+shadow, and how many beams a hull throws. Each is the owner's to overturn.*
+
+Each of the player's own hulls throws one beam from its bow, along its heading, in its
+navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
+It is agent light, the first at High: it pools on the ground and the stone, lights the
+cladding of another own hull it crosses, and scatters in the water as a cone. It is the
+first light with a direction, so it is the first to cast a shadow.
+
+- **Its strength is the lamp halo's.** Limit 5 says a beam reads no louder than the
+  hull's lamps, and gate 3 at High lets a lamp's light spread "only as far as its SIG
+  says, as the halo does". So a beam takes the halo's own gain
+  ([Lamp halo — SPEC](#lamp-halo--spec)): nothing through SIG 15, climbing to 1 at
+  SIG 35 along gate 3's curve, and on to SIG 45, where it stops. The halo climbs to 80,
+  and a beam does not follow it there because a pool is ground a mark stands on
+  (limit 6). The server holds a hull on Silent Running to SIG 3 to 8, so it throws no
+  beam and no pool, by construction. Two other readings were written. **The lamp's own
+  factor**, which is its live SIG against its resting SIG, lights every hull at rest and
+  leaves a silent hull a twentieth of a beam: a Light Scout resting at SIG 6 would
+  floodlight the seabed. **The 61+ band alone**, where the prompt table says
+  "floodlit", keeps the target frame's brightest light off almost every frame.
+- **It looks at the ground a throw ahead.** A move order takes a hull down to the floor
+  it is sent over, and a hull at rest in the crater hangs 66 drawn metres over it. A
+  beam at one angle under the level put the first one's pool under its own keel. So a
+  beam looks at the ground 130 m ahead of its lamp, between 8 and 50 degrees under the
+  level: a hull skimming the floor rakes it, and one over the bowl does not look
+  straight down. The lamp stands at least 4 m over the ground, since a hull is drawn
+  larger than life at the far dollies and its keel line with it.
+- **Own hulls only.** A contact throws no beam and shadows none (limit 2): the list is
+  built from the player's own hulls, and a contact's model is not in it. A structure
+  throws none yet.
+- **The shadow is read, not rendered.** The ground is a height field, so a lit point asks
+  the ground's own heights whether the line to the lamp clears them, and asks each own
+  hull the same, as its keel line and half its beam. Rock is ground here, so rock
+  shadows ground, hull and water, and a hull shadows ground and water. A shadow's edge
+  is 2 m of clearance either way, soft and of one width. The other reading
+  was a shadow map a beam: a second camera and a pass a beam, which gate 8 refuses a
+  lighting change, for the silhouette of a hull where this has its length and beam. It
+  is the cheaper to reverse. What it does not draw: a hull's shadow on another hull, a
+  prop's shadow on anything, and a roof over a passage.
+- **The cone is cut by the same shadow.** A beam's light in the water is summed along
+  each sight line through the cone, into the scatter pass's target, and a rock or a hull
+  in the beam leaves a dark shaft behind it. No pass is added.
+- **One beam a hull, and six a frame.** The target frame shows several lamps a hull,
+  each with a beam. Three readings were written. **One beam, off the bow**, is taken:
+  six beams light six hulls, and a beam costs every lit fragment in its cone the same
+  whichever hull throws it. **A beam from each lamp the model carries** is the closest
+  to the target, and a beam would leave a lamp the tactical pass draws. Six beams would
+  then light fewer hulls. It is the next look step if the owner wants the
+  target's count. **A count a hull class**, written in
+  [asset-prompts-3d.md](asset-prompts-3d.md), needs that doc's blocks first. Past six,
+  the hulls nearest the camera's focus throw theirs and the rest throw none: a beam off
+  the frame lights nothing a player sees. The work lights keep the loudest instead
+  (`workLight.ts`), which here would spend a beam on a loud hull across the map. Eight
+  hulls may shadow.
+- **The ground reads it by its relief.** A beam has a direction, so the bake's slope
+  shades it as it cannot shade the Lid's glow: a dune's lit face and its lee. The
+  hollows take a share of it as they take a share of a pool.
+- **A prop takes none yet.** A stand in a beam is lit by the rig as it was. Props are
+  one material at both qualities, and a High prop needs a template of its own first, as
+  a hull's cladding has.
+- **No mark, lamp or halo is touched.** The lamp a beam leaves is the tactical pass's,
+  at the strength its SIG set (gate 3). A mark over a pool stands bare (limit 6), and
+  gate 7's glance at one is this step's open question.
+
+`packages/frontend/test/searchlights.test.ts` holds the gain to the halo's, the silent
+hull dark, the aim and the shadow's two readers, and
+`packages/frontend/test/rendererSmoke.test.ts` counts the beams a frame draws. Limit 2
+is held by what the view hands over: its own units, which the wire types as the
+player's (`OwnUnit`), and never a track.
+
 #### A mark on the lit world
 
 *Decided by the owner twice
@@ -431,10 +512,9 @@ changed for it. What that leaves standing, and what it does not:
 - **No lamp, halo or mark is touched.** The chain runs before the tactical pass, so the
   world's bloom spreads nothing of theirs, and gate 3 reads as it does at Low.
 
-Still open: gate 7's glance at an own hull over its own searchlights' pool, which is the
-brightest light a mark will stand over and arrives with
-[#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836), and the four
-palettes, which are read at promotion.
+Still open: gate 7's glance at an own hull over its own searchlight's pool
+([An own hull's searchlight](#an-own-hulls-searchlight)), which is the brightest light a
+mark stands over, and the four palettes, which are read at promotion.
 
 ## World Aesthetic
 

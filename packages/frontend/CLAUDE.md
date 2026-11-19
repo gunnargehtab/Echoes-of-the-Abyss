@@ -39,6 +39,9 @@ An own model's cladding is the world pass's at High (#1814), on a template of it
 (`rosterModels.ts` `highVariant`), so Low's is never patched. It takes the Lid's glow and
 the pools beside the rig (`hullLight.ts`) and wears its navy's surface (#1811,
 `navySurface.ts`). Its lamps, and a contact's whole model, stay in the tactical pass.
+Each loud own hull throws a searchlight (#1836, `searchlights.ts`): one set of uniforms
+for the page, read by the lit ground, the cladding and the scatter pass's cones, with its
+shadow read from the ground's heights rather than rendered.
 
 ## Tests run under a Vite shim
 
