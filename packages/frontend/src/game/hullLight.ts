@@ -29,7 +29,7 @@
  * so the texture is not the material's: every patched material reads the one
  * pair of uniforms here, which a view sets before its world pass draws.
  *
- * Every number is TUNABLE until the owner accepts a High frame
+ * Every number is TUNABLE until the owner accepts a frame of this step
  * (`HIGH_GRAPHICS.HULL_LIGHT`, packages/shared/src/constants.ts).
  */
 import { DataTexture, Vector2, type MeshStandardMaterial, type Texture } from 'three';

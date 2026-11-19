@@ -105,12 +105,17 @@ export const FREE_WATER_OPENING = {
  * layers, two laws"; docs/graphics-standards.md gate 6, "Two graphics
  * qualities"). Presentation only; never read by the simulation.
  *
- * TUNABLE, every number, until the first High frame the owner accepts: the
- * look is in development (#1801), and its numbers are written into `docs/`
- * from that frame, not before it (the `dev-loop` skill, "Look work").
+ * SPEC, step 1's numbers: the owner accepted its look on 19 November 2026
+ * (#1801), and docs/art-direction.md, "Step 1's numbers — SPEC", prints each
+ * (test/highSpec.test.ts in the frontend holds the two together). Change the
+ * doc first, then the constant. That is every block here but the two hull
+ * blocks at the foot, which are TUNABLE until a frame of theirs is accepted:
+ * a look's numbers are written into `docs/` from the frame, not before it
+ * (the `dev-loop` skill, "Look work").
  */
 export const HIGH_GRAPHICS = {
   /**
+   * SPEC — docs/graphics-standards.md gate 6, "Two graphics qualities".
    * Gate 6's High budget, as its table tags it: GPU milliseconds over every
    * pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU,
    * read queued and unpaced. The probe reports it beside the reading.
@@ -211,7 +216,7 @@ export const HIGH_GRAPHICS = {
     EMBER_SHARE: 0.2,
   },
   /**
-   * A navy material's surface on a hull's cladding (#1811;
+   * TUNABLE: a navy material's surface on a hull's cladding (#1811;
    * tools/hull-models/surface.mjs draws it, navySurface.ts reads it). `RELIEF`
    * scales the drawn slopes, 1 being the relief as its table gives it in
    * metres: a vein 8 cm proud is under a pixel at every conn camera, so the
@@ -222,7 +227,7 @@ export const HIGH_GRAPHICS = {
    */
   HULL_SURFACE: { RELIEF: 2.5, CAVITY: 0.5, ANISOTROPY: 4 },
   /**
-   * The world's light on a model's cladding (#1814; hullLight.ts), added to
+   * TUNABLE: the world's light on a model's cladding (#1814; hullLight.ts), added to
    * the rig's. `LID` is how much of the Lid's glow a face takes of what level
    * ground takes at its depth. `POOL` is how much of a pool's light a face
    * looking straight down takes, on a hull resting on the ground, of what

@@ -21,7 +21,8 @@
  *
  * Neither reads the camera beyond the projection the depth was drawn
  * through, so nothing turns with the screen (docs/graphics-standards.md
- * gate 8). Every number is TUNABLE (`HIGH_GRAPHICS.AO`, `HIGH_GRAPHICS.BLOOM`).
+ * gate 8). Every number is SPEC (`HIGH_GRAPHICS.AO`, `HIGH_GRAPHICS.BLOOM`;
+ * docs/art-direction.md, "Step 1's numbers — SPEC").
  */
 
 import {

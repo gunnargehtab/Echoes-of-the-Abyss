@@ -39,7 +39,8 @@ frames](#on-the-named-gpu)
 - **No hold.** The shadow hold went, so the relief runs under each own shadow.
 
 Everything below "Reproduce" but the last section was captured before that, with the
-plates and the hold drawn, and is kept as what was judged.
+plates and the hold drawn, and is kept as what was judged: its pass lists carry
+`high-hold` and `high-plates`, which no frame draws now.
 [After the decision](#after-the-decision) has the frames of the tree as it stands.
 
 ## Reproduce
@@ -212,8 +213,9 @@ standard map's Low ground paints the detail in the program it always had.
 
 ## The plate under a mark
 
-*The plates went on 19 November 2026 ("Decided", above). This section is the record of
-what was judged.*
+*The plates went on 19 November 2026 ("Decided", above), and `markPlates.test.ts`, the
+structure half of `silhouetteReach.test.ts` and the pass this section names went with
+them. It is the record of what was judged.*
 
 The owner took the third reading of limit 6 on 11 November 2026: a mark carries its own
 ground. Under a

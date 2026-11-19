@@ -632,7 +632,7 @@ export const WORLD_LIGHT: Record<WorldLightFamily, number> = {
 /**
  * The water's hue over each biome at the High graphics quality,
  * docs/style-neon-noir.md "World light", the water hues (SPEC by token,
- * TUNABLE until a High frame is accepted): the biome fill's own hue at one
+ * accepted with High's first step, #1801): the biome fill's own hue at one
  * luminance, its chroma eased, so water tells what the ground under it does
  * (docs/art-direction.md "Reading the Water"). The brightness is not these:
  * it is the ramp's (water.ts), and only their chromaticity is drawn

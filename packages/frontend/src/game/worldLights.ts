@@ -18,8 +18,9 @@
  * (limit 4); nothing of a contact or an enemy is in it (limit 2); and every
  * colour is its family's own token, away from the neons (limit 3).
  *
- * Every number is TUNABLE until the owner accepts a High frame
- * (`HIGH_GRAPHICS.WORLD_LIGHT`, packages/shared/src/constants.ts).
+ * Every number is SPEC since the owner accepted step 1 (#1801;
+ * docs/art-direction.md, "Step 1's numbers — SPEC"), and
+ * `HIGH_GRAPHICS.WORLD_LIGHT` in packages/shared/src/constants.ts holds each.
  */
 
 import {

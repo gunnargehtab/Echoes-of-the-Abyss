@@ -17,8 +17,9 @@
  * (highFrame.ts). The survey ink is not here. It is the tactical layer's, and
  * is drawn over this ground by a pass of its own (surveyInk.ts, `overlay`).
  *
- * Every number is TUNABLE until the owner accepts a High frame
- * (`HIGH_GRAPHICS`, packages/shared/src/constants.ts).
+ * Every number is SPEC since the owner accepted step 1 (#1801;
+ * docs/art-direction.md, "Step 1's numbers — SPEC"), and `HIGH_GRAPHICS` in
+ * packages/shared/src/constants.ts holds each.
  */
 
 import {
