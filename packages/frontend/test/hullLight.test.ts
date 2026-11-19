@@ -155,7 +155,7 @@ describe('a model’s cladding in the world pass (#1814)', () => {
     };
     skin.customProgramCacheKey = () => 'earlier';
     assert.equal(installHullLight(skin), true);
-    assert.equal(skin.customProgramCacheKey(), 'earlier:hull-light-1');
+    assert.equal(skin.customProgramCacheKey(), 'earlier:hull-light-2');
     const shader = {
       uniforms: {} as Record<string, { value: unknown }>,
       vertexShader: ShaderLib.physical.vertexShader,

@@ -12,9 +12,10 @@
  *    target, so light stays scene-referred. The fog chunk is asked for its
  *    other half there (water.ts `installWaterFog`): a fragment only loses
  *    light to the water, and alpha holds what survived.
- * 2. **The scatter pass**, where the ground stands a source of its own: the
- *    light those sources scatter in the water, summed against the world's
- *    depth into a half-resolution target (lightVolumes.ts).
+ * 2. **The scatter pass**, where the ground stands a source of its own or an
+ *    own hull throws a searchlight: the light those scatter in the water,
+ *    summed against the world's depth into a half-resolution target
+ *    (lightVolumes.ts, searchlightVolumes.ts).
  * 3. **The occlusion pass and the bloom passes** (highChain.ts): how much of
  *    the water above each point the ground round it hides, and the light
  *    over a soft threshold spread down four levels and back.
@@ -68,6 +69,7 @@ import {
 import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
 import { BLOOM_THRESHOLD_GLSL, LightChain } from './highChain.ts';
 import { LightVolumes } from './lightVolumes.ts';
+import { SearchlightVolumes } from './searchlightVolumes.ts';
 import { WATER_HUE } from './palette.ts';
 import { BACKDROP_SPAN_M, HIGH_WORLD_FOG_SIGN, WATER_RAMP_GLSL } from './water.ts';
 import { WATER_MEDIUM_GLSL } from './waterMedium.ts';
@@ -214,6 +216,12 @@ export class HighFrame {
   };
   /** The light the world's own sources scatter in the water (lightVolumes.ts). */
   private readonly volumes = new LightVolumes();
+  /**
+   * The cones the own hulls' searchlights scatter there too, over the
+   * sources' (searchlightVolumes.ts). The beams are the view's to set, each
+   * frame, before it draws (searchlights.ts `setSearchlights`).
+   */
+  private readonly beams = new SearchlightVolumes();
   private readonly material = new ShaderMaterial({
     uniforms: this.uniforms,
     vertexShader: COMPOSITE_VERTEX,
@@ -316,6 +324,7 @@ export class HighFrame {
   dispose(): void {
     this.disable();
     this.volumes.dispose();
+    this.beams.dispose();
     this.chain.dispose();
     this.dark.dispose();
     this.open.dispose();
@@ -410,7 +419,8 @@ export class HighFrame {
 
       // 2. What the world's own sources scatter in the water, against the
       // depth the world pass just resolved.
-      const scattered = this.volumes.count > 0;
+      const beams = this.beams.count > 0;
+      const scattered = this.volumes.count > 0 || beams;
       if (scattered) {
         this.marker?.('high-scatter');
         this.uniforms.tScatter.value = this.volumes.render(
@@ -421,6 +431,16 @@ export class HighFrame {
           target.height,
           view.reachM
         );
+        if (beams) {
+          this.beams.render(
+            renderer,
+            camera,
+            target.depthTexture!,
+            this.volumes.surface!,
+            view.reachM
+          );
+          renderer.autoClear = true;
+        }
       } else {
         this.uniforms.tScatter.value = this.dark;
       }

@@ -108,8 +108,9 @@ export const FREE_WATER_OPENING = {
  * SPEC, step 1's numbers: the owner accepted its look on 19 November 2026
  * (#1801), and docs/art-direction.md, "Step 1's numbers — SPEC", prints each
  * (test/highSpec.test.ts in the frontend holds the two together). Change the
- * doc first, then the constant. That is every block here but the two hull
- * blocks at the foot, which are TUNABLE until a frame of theirs is accepted:
+ * doc first, then the constant. That is every block here but the three at
+ * the foot, the two hull blocks and the searchlight, which are TUNABLE until
+ * a frame of theirs is accepted:
  * a look's numbers are written into `docs/` from the frame, not before it
  * (the `dev-loop` skill, "Look work").
  */
@@ -238,6 +239,49 @@ export const HIGH_GRAPHICS = {
    * 66 drawn metres over a 600 m floor.
    */
   HULL_LIGHT: { LID: 1, POOL: 0.3, POOL_REACH_M: 80 },
+  /**
+   * TUNABLE: an own hull's searchlight (docs/art-direction.md, "An own hull's
+   * searchlight"; #1836; searchlights.ts), in development and not accepted.
+   * `MAX` is how many beams a frame draws, nearest the camera's focus first,
+   * and `OCCLUDERS` how many own hulls may shadow them. `POWER` is the light
+   * a face square to the beam takes at `REF_M` along it, at the halo's gain
+   * of 1, which is SIG 35, before the two terms after this soften it: in the
+   * renderer's linear units, as the rig's key gives 1.8. It falls by the
+   * square of the distance, softened inside `CORE_M` so the lamp itself is
+   * finite, and is cut off by a window that closes at `REACH_M`.
+   * `GAIN_SIG_CAP` is the live SIG past which a beam no longer brightens: the
+   * halo climbs to 80, but a pool is ground a mark stands on (limit 6).
+   * `INNER_DEG` and `OUTER_DEG` are the half-angles the cone is whole inside
+   * and gone outside, and `DEPRESSION_DEG` how far under the level it looks.
+   * `CLEAR_M` is how far off the bow the lamp hangs and `KEEL` how far under
+   * the keel line, in beams. `HULL` is how much of a beam another own hull's
+   * cladding takes of what ground would. `VOLUME` is the share of a beam's
+   * light a metre of water scatters to the eye, and `VOLUME_STEPS` the steps
+   * a sight line takes through the cone. `SHADOW`: `STEPS` and `VOLUME_STEPS`
+   * are the reads of the ground's heights between a point and the lamp, on a
+   * surface and in the water; `LIFT_M` starts the line that far over the
+   * ground it leaves; `SHARPNESS` is how fast a shadow's edge closes, as
+   * clearance over distance; and `HULL_EDGE` is where a hull's shadow is
+   * whole and where it is gone, in half-beams from its keel line.
+   */
+  SEARCHLIGHT: {
+    MAX: 6,
+    OCCLUDERS: 8,
+    POWER: 40,
+    REF_M: 100,
+    CORE_M: 30,
+    REACH_M: 520,
+    GAIN_SIG_CAP: 45,
+    INNER_DEG: 10,
+    OUTER_DEG: 17,
+    DEPRESSION_DEG: 28,
+    CLEAR_M: 3,
+    KEEL: 0.25,
+    HULL: 0.5,
+    VOLUME: 0.0001,
+    VOLUME_STEPS: 16,
+    SHADOW: { STEPS: 12, VOLUME_STEPS: 4, LIFT_M: 1.5, SHARPNESS: 8, HULL_EDGE: [0.7, 1.4] },
+  },
 } as const;
 
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
