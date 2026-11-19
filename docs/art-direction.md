@@ -414,7 +414,7 @@ this step's frames are accepted.
 
 Two things a tile cannot do, which the Blender hull does. It cannot find a hull's own
 back, so the midrib follows the model's frame and a wide deck takes another every
-16 m. And it cannot find a fin's outline: a blade's rays run straight along it and off
+16 m. And it cannot find a fin's outline: a blade's rays run parallel along it and off
 its edge, where the Blender hull's close on its tip.
 
 Still open, for the frames taken on the named GPU

@@ -21,11 +21,11 @@ recommendation taken. Each is the owner's to overturn.
   High template is built, a thin, long part of the membrane gets the principal axes of
   its own surface as a quaternion on its vertices, and the vertex stage turns the
   fragment's place and normal into them. No GLB changed and the fragment pays nothing.
-  Its rays run straight along the blade and off its edge; they do not close on the tip.
+  Its rays run parallel along the blade and off its edge; they do not close on the tip.
 - **A fin's chart in the file.** The kit writes each fin's place on itself as a UV, as the
   Blender spike did, and the rays close on the tip. Every Commune model with a fin is
   re-exported, and it is a layout, which the owner declined on 13 November 2026. This is
-  the bigger call, and it is where to go if straight rays are refused.
+  the bigger call, and it is where to go if parallel rays are refused.
 - **A pattern with no direction.** The fins lose their rays. That changes the navy's shape
   language, which is the owner's.
 
@@ -88,10 +88,11 @@ node tools/hull-renders/inspect.mjs corvette-pelagia --surface pelagia \
 
 The rays run root to tip on the dorsal blade, the pectorals and the flukes. Bow on, no
 ray ticks the blade's leading edge: only the web's fine lines cross it. The rays are
-straight and parallel, and they wander a quarter
-metre, as the table always had them: the Blender hull's are evenly spaced and close on
-the tip. On the flank the line along the axis is gone, and the laterals sweep aft down
-from the shoulder. The back's midrib is where it was.
+parallel, one every 1.33 m, so three or four cross the dorsal blade's 4.8 m, and each
+wanders a quarter metre, as the table always had them. The Blender hull's are eight to a
+fin, fine and straight, and close on the tip. On the flank the line along the axis is
+gone, and the laterals sweep aft down from the shoulder. The back's midrib is where it
+was.
 
 The two readings of the flank, side on and from above the shoulder. Left is the second
 image as built, drawn from the leaf's margin. Right is the first image's layout without
@@ -186,7 +187,7 @@ The two runs are not pixel for pixel, since the marine snow drifts between them.
 - **Gate 6's 8 ms.** The change adds no tap, pass, call or triangle, so it is expected to
   read as 046dbaef's did ([issue-1801](../issue-1801/README.md#on-the-named-gpu)). A
   software rasteriser's milliseconds measure the rasteriser, so it is not read here.
-- **That straight rays read as a fin's.** They run along the blade and off its edge. If
+- **That parallel rays read as a fin's.** They run along the blade and off its edge. If
   that is refused, the fin's chart in the file is the route left.
 - **The other nine models with blades.** Only the Corvette was looked at closely. The
   rule is their shape's, and the nearest misses are named above.
