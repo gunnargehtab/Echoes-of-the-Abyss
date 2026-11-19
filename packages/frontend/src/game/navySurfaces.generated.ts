@@ -36,7 +36,7 @@ export const NAVY_SURFACE_SCALES: Readonly<
       slope: 1,
       reliefM: 0.0755,
       mean: 0.1902,
-      blade: { thick: 0.25, long: 2.5 },
+      blade: { thick: 0.25, long: 2.35 },
     },
   },
 };

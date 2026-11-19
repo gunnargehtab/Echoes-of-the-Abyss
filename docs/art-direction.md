@@ -357,6 +357,23 @@ tiles.
   along a flank. A material is found by its navy and its own name. No GLB changed, and
   every model of the navy that carries the material wears its surface: twenty-seven of
   the Commune's twenty-eight carry at least one of the four.
+- **A flank reads a second image.** *In development and not accepted
+  ([#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844);
+  [issue-1844](screenshots/issue-1844/README.md)).* Whatever a pattern draws along `v` 0
+  came out along each flank at the hull's axis, where a hull has neither a back nor a
+  keel. A pattern that draws there draws a second image without it, on the first one's
+  scale, and the plane seen from the side reads that one. It costs no tap, and a pattern
+  that draws nothing along `v` 0 has no second image.
+- **A blade reads in a frame of its own.** *In development and not accepted (#1844).* The
+  model's frame stands a line at constant `u` square to the keel, which is root to tip
+  only on a fin that stands square off it. A material's row in the navy's table may name
+  a **blade**: a part at most `thick` of its depth through and at least `long` depths
+  long, measured along the principal axes of its own surface. A blade's place and normal
+  are turned into those axes before the three reads, its length where a hull's beam is
+  and its normal where a hull's height is, so a line at constant `u` runs along it. The
+  frame is found from the part's shape when the High template is built and rides on its
+  vertices, so no GLB changed and the fragment pays nothing. A part that is no blade
+  keeps the model's frame.
 - **It leans the normal and shades the indirect light, and nothing else.** The slope
   tilts the shading normal. The height lifts and lowers the rig's ambient and environment
   light, and the world's with them
@@ -375,10 +392,19 @@ tiles.
 The Commune's four are the fields #1802 baked, said as tiles. `chitin_hull` is a leaf's
 venation over growth lines: a midrib, laterals trailing aft from it, and a net of
 veinlets between. The midrib is drawn where the image's `v` is 0, so it runs down the
-back and the keel, down the bow and the stern at the centreline, and as a line along each
-flank at the hull's axis. The owner took the bow and the stern in session on 13 November
-2026: the first cut drew it across them as a band. `growth_ridge` is a grain of rings square to the
-keel, `spore_pod` a pored skin, and `algae_membrane` a fin's rays. The navy's block asks
+back and the keel, and down the bow and the stern at the centreline. The owner took the
+bow and the stern in session on 13 November 2026: the first cut drew it across them as a
+band. A flank reads the skin's second image, which has no midrib. Its `v` 0 is the leaf's
+margin, half a tile from the midrib: the laterals that came down off the back meet the
+ones that came up off the keel there, each at its thinnest, and both trail aft as the
+back's do. `growth_ridge` is a grain of rings square to the
+keel, `spore_pod` a pored skin, and `algae_membrane` a fin's rays. Its blade is at most a
+quarter as thick as it is deep and at least 2.35 times as long: 32 of the navy's 175
+membrane parts, the Corvette's six fins among them. A part's length is root to tip when it
+is rooted at one end, and 2.35 stands in the widest gap the roster leaves, between the
+Spinner's flukes at 2.24 and the Chorister's at 2.49. A trim vane rooted along its length,
+a fluke as wide as it is long, a pod and a ring are not blades, and square to the keel is
+already root to tip on each. The navy's block asks
 for "growth rings and living bioluminescent veins"
 ([asset-prompts-3d.md](asset-prompts-3d.md)); these veins are relief and emit nothing.
 Their heights are in the table, in metres. `HIGH_GRAPHICS.HULL_SURFACE` in
@@ -387,7 +413,8 @@ this step's frames are accepted.
 
 Two things a tile cannot do, which the Blender hull does. It cannot find a hull's own
 back, so the midrib follows the model's frame and a wide deck takes another every
-16 m. And it cannot follow a fin, so every ray stands square to the keel.
+16 m. And it cannot find a fin's outline: a blade's rays run straight along it and off
+its edge, where the Blender hull's close on its tip.
 
 Still open, for the frames taken on the named GPU
 ([issue-1811](screenshots/issue-1811/README.md)): whether the kit Corvette wearing this

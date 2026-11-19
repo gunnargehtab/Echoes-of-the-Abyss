@@ -182,11 +182,11 @@ test("a table's blade rule is carried across and never drawn", async () => {
   // What the navy calls a blade is read by the client, off a part's shape
   // (packages/frontend/src/game/navySurface.ts `bladeFrame`). It moves no texel.
   const table = (await navySurfaces()).get('pelagia').materials.algae_membrane;
-  assert.deepEqual(table.blade, { thick: 0.25, long: 2.5 });
+  assert.deepEqual(table.blade, { thick: 0.25, long: 2.35 });
   const { blade, ...bare } = table;
   assert.deepEqual(drawSurface(bare).pixels, drawSurface(table).pixels);
   const source = await renderSource(await drawAll());
-  assert.match(source, /blade: \{ thick: 0\.25, long: 2\.5 \}/);
+  assert.match(source, /blade: \{ thick: 0\.25, long: 2\.35 \}/);
   assert.match(source, /chitin_hull: \{[^}]*abeamMean: 0\.\d{4}/);
 });
 

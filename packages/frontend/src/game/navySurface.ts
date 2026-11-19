@@ -31,9 +31,10 @@
  * Two things read it, and neither is colour:
  *
  * - **The normal leans by the slope.** The three planes' slopes are summed as
- *   one rise in the model's frame, its part along the face's own normal is
- *   dropped, and the rest tilts the shading normal. Slopes average down a mip
- *   chain to level, so the relief fades with range and does not shimmer.
+ *   one rise in the frame they were read in, its part along the face's own
+ *   normal is dropped, and the rest tilts the shading normal. Slopes average
+ *   down a mip chain to level, so the relief fades with range and does not
+ *   shimmer.
  * - **Indirect light follows the height**, about the surface's mean, as an
  *   occlusion map touches only the ambient and the environment
  *   (docs/art-direction.md "Bevels and baked occlusion"). A hollow darkens, a
@@ -243,16 +244,19 @@ const NO_TURN = [0, 0, 0, 1] as const;
  * finely an outline was cut moves them. Its extents along them are its
  * length, its depth and its thickness. A **blade** is at most `rule.thick` of
  * its depth through and at least `rule.long` depths long: a fin, a fluke, a
- * leaf. Anything rounder or squatter keeps the model's frame, where a ray
- * square to the keel is already root to tip: a trim vane rooted along its
- * length, a fluke as wide as it is long, a pod, a ring.
+ * leaf. A part that long is rooted at one end, so its length is root to
+ * tip. Anything rounder or squatter keeps the model's frame: a trim vane
+ * rooted along its length, where square to the keel is root to tip already,
+ * a fluke as wide as it is long, a pod, a ring. The navy's table says where
+ * its own roster draws that line (tools/hull-models/factions/).
  *
  * In the blade's frame its length is the axis the model's frame calls the
  * beam, and its normal the one the model calls up. So the blade is read as a
  * back is, on the plane seen from above, with the image's `u` across it and
  * `v` along it: a line the pattern draws at constant `u`, which is square to
- * the keel on a hull, runs root to tip on the blade. Its edges read the
- * other two planes the same way round, so nothing crosses a rim.
+ * the keel on a hull, runs root to tip on the blade. Its rim reads the other
+ * two planes the same way round, so such a line shows as its own end on the
+ * tip and does not tick the leading edge.
  *
  * The geometry is in the model's frame, as a merge bakes it. Each axis is
  * signed so its largest part is positive, which makes the frame the same

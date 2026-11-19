@@ -386,6 +386,18 @@ describe("a navy's surface on a roster model", () => {
       true
     ).root;
     assert.deepEqual([...framesOf(drifter, 'algae_membrane')!], ['0.0000 0.0000 0.0000 1.0000']);
+    // The rule's two neighbours, so a table that moves it says what moved:
+    // the Chorister's flukes are 2.49 depths long and blades, the Spinner's
+    // 2.24 and not. Each hull's other membranes are squatter still.
+    const blades = async (unit: UnitKind) => {
+      const key = { unit, faction: Faction.Pelagia };
+      const root = buildTemplate(await committed(unit), key, 'standard', ACTIVE_PALETTE, true).root;
+      const frames = framesOf(root, 'algae_membrane')!;
+      frames.delete('0.0000 0.0000 0.0000 1.0000');
+      return frames.size;
+    };
+    assert.equal(await blades(UnitKind.Chorister), 2);
+    assert.equal(await blades(UnitKind.Spinner), 0);
   });
 
   it('reads an image by the scale its draw wrote', () => {

@@ -215,8 +215,11 @@ const PATTERNS = {
 
   /**
    * A fin's rays and the web between them. `rays` a tile at constant `u`,
-   * which is root to tip on a fin that stands off the keel, each wandering
-   * `wanderM`; the web is `webs` fine lines a tile crossing them.
+   * which is root to tip on a fin that stands square off the keel, each
+   * wandering `wanderM`; the web is `webs` fine lines a tile crossing them.
+   * A blade reads the tile in its own frame, `u` across it, so the same
+   * lines run along a raked one (the table's `blade`, which nothing here
+   * draws).
    */
   rayed(t) {
     const pitch = t.tileM / t.rays;
