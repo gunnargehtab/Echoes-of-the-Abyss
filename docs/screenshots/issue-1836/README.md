@@ -97,8 +97,8 @@ world area, of each pixel's largest channel difference, out of 255.
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
 
 The branch's figures are inside what [issue-1801](../issue-1801/README.md#low-does-not-move)
-records for two takes of one tree, 0.02 to 0.43: the motes sink, and a frame taken later
-in a match finds them lower.
+records for Low across its own takes, 0.02 to 0.43: the motes sink, and a frame taken
+later in a match finds them lower.
 
 [The Close map](software/low-control/diff-close-main-vs-branch.png) is marine snow and
 nothing else. In counted work `packages/frontend/test/rendererSmoke.test.ts` holds the
