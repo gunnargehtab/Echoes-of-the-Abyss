@@ -7,7 +7,7 @@ with the HUD on.
 
 **A software rasteriser drew every frame here**: SwiftShader, in headless Chromium, in the
 cloud container that built the step. They guide a round and are not offered for
-acceptance. **Nothing here is accepted.** The frames the owner judges are under
+acceptance. The owner accepted the step on 19 November 2026 on the frames under
 [On the named GPU](#on-the-named-gpu).
 
 The set was taken on `claude/issue-1836-yiljpg`, over
@@ -168,8 +168,8 @@ frames are dark by construction and the loud hull is the bright one.
 
 Taken on 19 November 2026 on the GTX 1070 of
 [graphics-standards.md](../../graphics-standards.md) gate 6, in Edge, on `main` at
-`a636f25d`, by the first command under [Who captures](#who-captures). **Nothing here is
-accepted yet.** The run's [readings.json](gpu/readings.json) lies beside its fifteen
+`a636f25d`, by the first command under [Who captures](#who-captures). **The owner
+accepted these frames in session the same day.** The run's [readings.json](gpu/readings.json) lies beside its fifteen
 frames. The camera swayed (`sway: on`), so the same command was run once more with the
 software run's `SETTINGS_JSON` into `gpu/held`, which keeps the pair, its difference, the
 rim frame and [its readings](gpu/held/readings.json).
@@ -208,6 +208,9 @@ run's did at −125, and the frame matches that one's. In the swaying run it res
 Under way the Corvette and the Harvester each throw a beam, and on Silent Running none
 is thrown, as `readings.json` counts. [The clip](gpu/clip-home-to-close.mp4) is the
 second command's recording without the match's load: 16 s at 1920 × 1080, in real time.
+
+Gate 7's glance is still open in three palettes: every frame here is in the standard
+one.
 
 ## Who captures
 

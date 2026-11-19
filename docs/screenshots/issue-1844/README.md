@@ -6,9 +6,9 @@ filed. A fin's rays stood square to the keel, so they crossed the Corvette's rak
 blade. And the hull skin's midrib ran as a line along each flank, where the Blender hull
 has none.
 
-It is look work in development. **Nothing here is accepted, and a software rasteriser drew
-every game frame below** (SwiftShader, the container's only one), except those under
-[On the named GPU](#on-the-named-gpu). Those are the frames to judge.
+**A software rasteriser drew every game frame below** (SwiftShader, the container's only
+one), except those under [On the named GPU](#on-the-named-gpu). The owner accepted those
+on 19 November 2026 and kept [the decisions](#the-decisions) as taken.
 
 ## The decisions
 
@@ -173,7 +173,8 @@ The two runs are not pixel for pixel, since the marine snow drifts between them.
 Taken on 19 November 2026 on the GTX 1070 of
 [graphics-standards.md](../../graphics-standards.md) gate 6, in Edge, on `main` at
 `a636f25d`, the merge of this change, by the command under
-[Who captures](#who-captures). **Not accepted yet.**
+[Who captures](#who-captures). **The owner accepted these frames in session the same
+day.**
 
 ![The Corvette at the nearest camera at High, on the named GPU](gpu/04-near-port.png)
 
@@ -212,12 +213,9 @@ rest at 2.05 to 2.72 ms queued.
 
 ## What it does not prove
 
-- **The owner's acceptance.** The named GPU's frames are taken and not yet judged.
 - **Gate 6's 8 ms.** The change adds no tap, pass, call or triangle, so it is expected to
   read as 046dbaef's did ([issue-1801](../issue-1801/README.md#on-the-named-gpu)). A
   software rasteriser's milliseconds measure the rasteriser, so it is not read here.
-- **That parallel rays read as a fin's.** They run along the blade and off its edge. If
-  that is refused, the fin's chart in the file is the route left.
 - **The other nine models with blades.** Only the Corvette was looked at closely. The
   rule is their shape's, and the nearest misses are named above.
 - **A tall hull's flank.** The second image tiles every 16 m. Its laterals meet at their

@@ -130,18 +130,20 @@ builds toward that frame. The slice, its renderer work and its assets are tracke
 
 ### What is built at High
 
-*In development, a step at a time. **Three steps are accepted**, each by the owner in
+*In development, a step at a time. **Four steps are accepted**, each by the owner in
 session on 19 November 2026, on the named GPU's frames. **Step 1**
 ([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801);
 [issue-1801](screenshots/issue-1801/README.md)) is the lit ground and stone, the water as
 a medium, the world's own sources and the chain
 ([Step 1's numbers](#step-1s-numbers--spec)). **An own model in the world's light**
-([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)) and **a navy's
-surface** ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811)) are
-the other two. The numbers of all three are SPEC, each printed by the section that owns
-it. An own hull's searchlight and every later step are not accepted, and their numbers
-stay TUNABLE in `HIGH_GRAPHICS` (`packages/shared/src/constants.ts`) until a frame of
-theirs is.*
+([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)), **a navy's
+surface** ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811), its
+two faults mended by
+[#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844)) and **an own
+hull's searchlight** ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836))
+are the other three. The numbers of all four are SPEC, each printed by the section that
+owns it. Every later step is not accepted, and its numbers stay TUNABLE in
+`HIGH_GRAPHICS` (`packages/shared/src/constants.ts`) until a frame of it is.*
 
 High draws the one scene as two layers
 (`packages/frontend/src/game/highFrame.ts`):
@@ -275,9 +277,8 @@ one, how far its pool and its volume reach, and how high over the ground it stan
 | `civic` | 6 | 140 | 15 |
 
 `FRAME_GPU_MS`, gate 6's 8 ms, is [graphics-standards.md](graphics-standards.md)'s. Of
-the three blocks after step 1's, `HULL_LIGHT` and `HULL_SURFACE` are SPEC too, each
-printed by the section below that owns it and held by the same test. `SEARCHLIGHT` is
-TUNABLE with its own.
+the three blocks after step 1's, `HULL_LIGHT`, `HULL_SURFACE` and `SEARCHLIGHT` are SPEC
+too, each printed by the section below that owns it and held by the same test.
 
 #### A model in the world's light
 
@@ -375,14 +376,14 @@ tiles.
   along a flank. A material is found by its navy and its own name. No GLB changed, and
   every model of the navy that carries the material wears its surface: twenty-seven of
   the Commune's twenty-eight carry at least one of the four.
-- **A flank reads a second image.** *In development and not accepted
-  ([#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844);
-  [issue-1844](screenshots/issue-1844/README.md)).* Whatever a pattern draws along `v` 0
+- **A flank reads a second image.** *Accepted on 19 November 2026, on the named GPU's
+  frames ([#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844);
+  [issue-1844](screenshots/issue-1844/README.md#on-the-named-gpu)).* Whatever a pattern draws along `v` 0
   came out along each flank at the hull's axis, where a hull has neither a back nor a
   keel. A pattern that draws there draws a second image without it, on the first one's
   scale, and the plane seen from the side reads that one. It costs no tap, and a pattern
   that draws nothing along `v` 0 has no second image.
-- **A blade reads in a frame of its own.** *In development and not accepted (#1844).* The
+- **A blade reads in a frame of its own.** *Accepted with the flank (#1844).* The
   model's frame stands a line at constant `u` square to the keel, which is root to tip
   only on a fin that stands square off it. A material's row in the navy's table may name
   a **blade**: a part at most `thick` of its depth through and at least `long` depths
@@ -423,7 +424,7 @@ is rooted at one end, and 2.35 stands in the widest gap the roster leaves, betwe
 Spinner's flukes at 2.24 and the Chorister's at 2.49. A trim vane rooted along its length,
 a fluke as wide as it is long, a pod and a ring are not blades, and square to the keel is
 already root to tip on each. Both numbers are the table's own, as the heights are, and
-move freely until #1844's frames are accepted. The navy's block asks
+the frames the owner accepted for #1844 were taken with them. The navy's block asks
 for "growth rings and living bioluminescent veins"
 ([asset-prompts-3d.md](asset-prompts-3d.md)); these veins are relief and emit nothing.
 Their heights are in the table, in metres.
@@ -460,21 +461,24 @@ closed (#1811):
   ([issue-1801](screenshots/issue-1801/README.md#on-the-named-gpu)).
 
 The tile's two faults, a fin's rays crossing a raked blade and the midrib's line along
-each flank, are filed as
-[#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844) (D3).
+each flank, were filed as
+[#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844) (D3) and mended
+there. The owner accepted its frames on 19 November 2026 and kept its three calls: a
+blade's rays run parallel in its own frame, a face seen abeam reads a second image, and
+the flank's laterals meet at the leaf's margin.
 
 #### An own hull's searchlight
 
-*In development with the rest of High, and not accepted
+*Accepted. The owner accepted this step's look in session on 19 November 2026, on the
+named GPU's frames
 ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836);
-[issue-1836](screenshots/issue-1836/README.md)). Every number is TUNABLE in
-`HIGH_GRAPHICS.SEARCHLIGHT` (`packages/shared/src/constants.ts`) until a frame of it is
-accepted. Three calls were taken in the open with the first frames: its strength, its
-shadow, and how many beams a hull throws. **The owner kept all three**, in session on
-19 November 2026: the lamp halo's gain, the read shadow, and one beam a hull. The
-readings not taken stay written under each. Keeping a call accepts no frame. Still open,
-for the named GPU's take: the look's acceptance, gate 6's 8 ms, and gate 7's glance at a
-ring over its own pool, which reads on the software frames.*
+[issue-1836](screenshots/issue-1836/README.md#on-the-named-gpu)), and its numbers are
+SPEC, below. Three calls were taken in the open with the first frames: its strength, its
+shadow, and how many beams a hull throws. **The owner kept all three** the same day: the
+lamp halo's gain, the read shadow, and one beam a hull. The readings not taken stay
+written under each. High at rest reads 2.05 to 2.72 ms queued on those frames, inside
+gate 6's 8 ms. Still open: gate 7's glance at a ring over its own pool in all four
+palettes, since the accepted frames show the standard palette alone.*
 
 Each of the player's own hulls throws one beam from its bow, along its heading, in its
 navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
@@ -522,8 +526,8 @@ first light with a direction, so it is the first to cast a shadow.
   whichever hull throws it. **A beam from each lamp the model carries** is the closest
   to the target, and a beam would leave a lamp the tactical pass draws. Six beams would
   then light fewer hulls. The owner kept one beam, and a beam from each lamp is a look
-  step of its own ([#1845](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1845)),
-  blocked by this step's acceptance. **A count a hull class**, written in
+  step of its own ([#1845](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1845)).
+  **A count a hull class**, written in
   [asset-prompts-3d.md](asset-prompts-3d.md), needs that doc's blocks first. Past six,
   the hulls nearest the camera's focus throw theirs and the rest throw none: a beam off
   the frame lights nothing a player sees. The work lights keep the loudest instead
@@ -537,13 +541,45 @@ first light with a direction, so it is the first to cast a shadow.
   a hull's cladding has.
 - **No mark, lamp or halo is touched.** The lamp a beam leaves is the tactical pass's,
   at the strength its SIG set (gate 3). A mark over a pool stands bare (limit 6), and
-  gate 7's glance at one is this step's open question.
+  gate 7's glance at one is still open in three palettes (above).
 
 `packages/frontend/test/searchlights.test.ts` holds the gain to the halo's, the silent
 hull dark, the aim and the shadow's two readers, and
 `packages/frontend/test/rendererSmoke.test.ts` counts the beams a frame draws. Limit 2
 is held by what the view hands over: its own units, which the wire types as the
 player's (`OwnUnit`), and never a track.
+
+How strong a beam is, where it looks and how its shadow is read are SPEC, promoted on
+19 November 2026 with the owner's acceptance, at the values the accepted frames were
+taken with. `HIGH_GRAPHICS.SEARCHLIGHT` in `packages/shared/src/constants.ts` holds each,
+and `packages/frontend/test/highSpec.test.ts` holds this table to it. A number moves here
+first, then there. Light is in the renderer's linear units, where the shared rig's key
+gives 1.8 face on.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Beams a frame draws, nearest the camera's focus first | `SEARCHLIGHT.MAX` | 6 |
+| Own hulls that may shadow them | `SEARCHLIGHT.OCCLUDERS` | 8 |
+| Light a face square to the beam takes at the reference distance, at the halo's gain of 1 | `SEARCHLIGHT.POWER` | 40 |
+| That reference distance along the beam, metres | `SEARCHLIGHT.REF_M` | 100 |
+| Distance inside which the fall by the square is softened, so the lamp is finite, metres | `SEARCHLIGHT.CORE_M` | 45 |
+| Distance at which the beam's window closes, metres | `SEARCHLIGHT.REACH_M` | 520 |
+| Live SIG past which a beam no longer brightens | `SEARCHLIGHT.GAIN_SIG_CAP` | 45 |
+| Half-angle the cone is whole inside, degrees | `SEARCHLIGHT.INNER_DEG` | 10 |
+| Half-angle the cone is gone outside, degrees | `SEARCHLIGHT.OUTER_DEG` | 17 |
+| How far ahead of its lamp a beam looks at the ground, metres | `SEARCHLIGHT.THROW_M` | 130 |
+| The least and the most a beam looks under the level, degrees | `SEARCHLIGHT.DEPRESSION_DEG` | 8, 50 |
+| How far off the bow the lamp hangs, metres | `SEARCHLIGHT.CLEAR_M` | 3 |
+| How far under the keel line the lamp hangs, in beams | `SEARCHLIGHT.KEEL` | 0.25 |
+| The least the lamp stands over the ground, metres | `SEARCHLIGHT.LAMP_CLEAR_M` | 4 |
+| Share of a beam another own hull's cladding takes, of what ground would | `SEARCHLIGHT.HULL` | 0.5 |
+| Share of a beam's light a metre of water scatters to the eye | `SEARCHLIGHT.VOLUME` | 0.0001 |
+| Steps a sight line takes through the cone | `SEARCHLIGHT.VOLUME_STEPS` | 16 |
+| Reads of the ground's heights between a lit surface and the lamp | `SEARCHLIGHT.SHADOW.STEPS` | 12 |
+| The same, from a point in the water | `SEARCHLIGHT.SHADOW.VOLUME_STEPS` | 4 |
+| Height the shadow's line is carried over the ground, so level ground never shadows itself, metres | `SEARCHLIGHT.SHADOW.LIFT_M` | 1.5 |
+| Half-width of a shadow's soft edge, in metres of clearance | `SEARCHLIGHT.SHADOW.SOFT_M` | 2 |
+| Where a hull's shadow is whole and where it is gone, in half-beams from its keel line | `SEARCHLIGHT.SHADOW.HULL_EDGE` | 0.7, 1.4 |
 
 #### A mark on the lit world
 
@@ -585,9 +621,10 @@ changed for it. What that leaves standing, and what it does not:
 - **No lamp, halo or mark is touched.** The chain runs before the tactical pass, so the
   world's bloom spreads nothing of theirs, and gate 3 reads as it does at Low.
 
-Still open: gate 7's glance at an own hull over its own searchlight's pool
-([An own hull's searchlight](#an-own-hulls-searchlight)), which is the brightest light a
-mark stands over, and the four palettes, which are read at promotion.
+Still open: gate 7's glance at an own hull's ring over its own searchlight's pool
+([An own hull's searchlight](#an-own-hulls-searchlight)), the brightest light a mark
+stands over, in all four palettes. The frames that step was accepted on show the standard
+palette alone.
 
 ## World Aesthetic
 

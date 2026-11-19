@@ -31,8 +31,9 @@
  * material reads the one set here, which a view writes before its world pass
  * draws (hullLight.ts does the same with the pools).
  *
- * Every number is TUNABLE until the owner accepts a frame of it
- * (`HIGH_GRAPHICS.SEARCHLIGHT`, packages/shared/src/constants.ts).
+ * Every number is SPEC since the owner accepted this step's frames on
+ * 19 November 2026 (`HIGH_GRAPHICS.SEARCHLIGHT`, packages/shared/src/constants.ts;
+ * docs/art-direction.md, "An own hull's searchlight", prints each).
  */
 
 import {
