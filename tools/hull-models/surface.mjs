@@ -16,9 +16,12 @@
  * two planes that hold it, so a line drawn at constant `u` here is a ring
  * square to the keel on a hull's back and on its flank alike. `v` 0 is the
  * model's own centreline from above and from ahead, and its axis from the
- * side. A pattern may lean on both, and whatever it draws along `v` 0 is
- * drawn in all three places: the veined skin's midrib runs down a back, down
- * a bow and a stern at the centreline, and along each flank at the axis.
+ * side. A pattern may lean on both, and whatever it draws along `v` 0 would
+ * be drawn in all three places: the veined skin's midrib down a back, down a
+ * bow and a stern at the centreline, and along each flank at the axis, where
+ * a hull has none (#1844). So a pattern that draws along `v` 0 draws a
+ * second image for a face that looks abeam (`ABEAM`), and the client reads
+ * that one on the plane seen from the side.
  *
  * The image is three bytes a texel. Red and green are the relief's slope
  * along `u` and `v`, in units of the table's `slope`, 128 for level ground;
@@ -154,19 +157,28 @@ const PATTERNS = {
    * `wanderM` off its line. Between them a net of veinlets on `net` cells,
    * growth lines square to the keel, `growthLines` a tile, drifting
    * `driftRad` out of phase, and pits.
+   *
+   * Abeam it is the same leaf seen from its margin (#1844). A flank's `v` is
+   * the height, so its `v` 0 is the hull's axis, and a midrib there is a
+   * line along each flank that no back or keel put there. So the flank's
+   * image has no midrib, and its `v` 0 is the leaf's edge: half a tile from
+   * the midrib, where the laterals that came down off the back meet the ones
+   * that came up off the keel, each at its thinnest. They trail aft down a
+   * shoulder on both sides of it, as they do on the plane seen from above.
    */
-  veined(t) {
+  veined(t, abeam) {
     const net = cells(t.tileM, t.net[0], t.net[1], t.netJitter, 11);
     const pitch = t.tileM / t.laterals;
     const across = Math.sqrt(1 + t.rake * t.rake);
+    const from = abeam ? t.tileM / 2 : 0;
     return (u, v) => {
-      const out = Math.abs(v - t.tileM * Math.round(v / t.tileM));
+      const out = Math.abs(v + from - t.tileM * Math.round((v + from) / t.tileM));
       const wander = t.wanderM * noise(u, v, t.tileM, t.wanderCells, t.wanderCells, 12);
       const station = (u + t.rake * out + wander) / pitch;
       const off = (Math.abs(station - Math.round(station)) * pitch) / across;
       const thin = 1 - t.taper * (out / (t.tileM / 2));
       const lateral = t.lateralM * thin * ridge(off, t.lateralHalfM * thin);
-      const midrib = t.midribM * ridge(out, t.midribHalfM);
+      const midrib = abeam ? 0 : t.midribM * ridge(out, t.midribHalfM);
       const veinlet = t.netM * ridge(net(u, v).edge, t.netHalfM);
       const drift = t.driftRad * noise(u, v, t.tileM, t.driftCells, t.driftCells, 13);
       const growth = t.growthM * Math.sin((TAU * t.growthLines * u) / t.tileM + drift);
@@ -218,60 +230,87 @@ const PATTERNS = {
   },
 };
 
-/** A table's relief as a function: metres high at a place on the tile, in metres. */
-export function surfaceHeight(table) {
-  const height = PATTERNS[table.pattern]?.(table);
+/**
+ * The patterns that draw along `v` 0, which a flank would show along its
+ * axis. Each draws a second image, for a face that looks abeam.
+ */
+const ABEAM = new Set(['veined']);
+
+/** Whether a table's pattern draws a second image for a face that looks abeam. */
+export const drawsAbeam = (table) => ABEAM.has(table.pattern);
+
+/**
+ * A table's relief as a function: metres high at a place on the tile, in
+ * metres. `abeam` asks for the field a face that looks abeam reads, which is
+ * the one field for a pattern that draws nothing along `v` 0.
+ */
+export function surfaceHeight(table, abeam = false) {
+  const height = PATTERNS[table.pattern]?.(table, abeam && drawsAbeam(table));
   if (height === undefined) throw new Error(`no surface pattern named ${table.pattern}`);
   return height;
 }
 
 /**
  * Draw one material's surface from its table. `{ size, tileM, slope, pixels,
- * png, reliefM, mean, clipped }`: `pixels` RGB bytes, row 0 at `v` 0;
+ * png, reliefM, mean, clipped, abeam }`: `pixels` RGB bytes, row 0 at `v` 0;
  * `reliefM` the height blue's whole range spans; `mean` blue's mean, 0 to 1,
  * which the client shades about so a surface darkens a hollow and lifts a
  * crest without moving the material's own brightness; `clipped` how many
  * slopes passed the table's `slope` and were held to it.
+ *
+ * `abeam` is null, or the second image of a pattern that draws one
+ * (`drawsAbeam`): `{ pixels, png, mean, clipped }`, on the first image's own
+ * scale, so a byte of blue is the same height in both and the client shades
+ * each about its own mean. Its `clipped` counts a height outside the first
+ * image's range as well as a slope past the table's.
  */
 export function drawSurface(table) {
   const { size, tileM, slope } = table;
-  const height = surfaceHeight(table);
   const texelM = tileM / size;
-  const h = new Float64Array(size * size);
+  const sample = (height) => {
+    const h = new Float64Array(size * size);
+    for (let y = 0; y < size; y++)
+      for (let x = 0; x < size; x++)
+        h[y * size + x] = height((x + 0.5) * texelM, (y + 0.5) * texelM);
+    return h;
+  };
+  const h = sample(surfaceHeight(table));
   let lo = Infinity;
   let hi = -Infinity;
-  for (let y = 0; y < size; y++)
-    for (let x = 0; x < size; x++) {
-      const at = height((x + 0.5) * texelM, (y + 0.5) * texelM);
-      h[y * size + x] = at;
-      if (at < lo) lo = at;
-      if (at > hi) hi = at;
-    }
+  for (const at of h) {
+    if (at < lo) lo = at;
+    if (at > hi) hi = at;
+  }
   const reliefM = hi - lo;
-  const pixels = new Uint8Array(size * size * 3);
-  let clipped = 0;
-  let sum = 0;
-  const slopeByte = (rise) => {
-    const s = rise / (2 * texelM) / slope;
-    if (Math.abs(s) > 1) clipped++;
-    return LEVEL + Math.round(127 * Math.min(1, Math.max(-1, s)));
+  const encode = (h) => {
+    const pixels = new Uint8Array(size * size * 3);
+    let clipped = 0;
+    let sum = 0;
+    const slopeByte = (rise) => {
+      const s = rise / (2 * texelM) / slope;
+      if (Math.abs(s) > 1) clipped++;
+      return LEVEL + Math.round(127 * Math.min(1, Math.max(-1, s)));
+    };
+    for (let y = 0; y < size; y++)
+      for (let x = 0; x < size; x++) {
+        const i = (y * size + x) * 3;
+        pixels[i] = slopeByte(h[y * size + wrap(x + 1, size)] - h[y * size + wrap(x - 1, size)]);
+        pixels[i + 1] = slopeByte(
+          h[wrap(y + 1, size) * size + x] - h[wrap(y - 1, size) * size + x]
+        );
+        const blue = reliefM > 0 ? Math.round((255 * (h[y * size + x] - lo)) / reliefM) : 0;
+        if (blue < 0 || blue > 255) clipped++;
+        pixels[i + 2] = Math.min(255, Math.max(0, blue));
+        sum += pixels[i + 2];
+      }
+    return { pixels, png: encodeRgb(size, size, pixels), mean: sum / (size * size * 255), clipped };
   };
-  for (let y = 0; y < size; y++)
-    for (let x = 0; x < size; x++) {
-      const i = (y * size + x) * 3;
-      pixels[i] = slopeByte(h[y * size + wrap(x + 1, size)] - h[y * size + wrap(x - 1, size)]);
-      pixels[i + 1] = slopeByte(h[wrap(y + 1, size) * size + x] - h[wrap(y - 1, size) * size + x]);
-      pixels[i + 2] = reliefM > 0 ? Math.round((255 * (h[y * size + x] - lo)) / reliefM) : 0;
-      sum += pixels[i + 2];
-    }
   return {
     size,
     tileM,
     slope,
-    pixels,
-    png: encodeRgb(size, size, pixels),
+    ...encode(h),
     reliefM,
-    mean: sum / (size * size * 255),
-    clipped,
+    abeam: drawsAbeam(table) ? encode(sample(surfaceHeight(table, true))) : null,
   };
 }

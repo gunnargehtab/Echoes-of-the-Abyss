@@ -17,6 +17,12 @@
  * height's mean lies, and those are the draw's own, so they are written
  * beside the images as a generated module rather than typed a second time.
  * check.mjs redraws every surface and holds both to the draw.
+ *
+ * A pattern that draws along `v` 0 has a second image, `<navy>-<material>-abeam.png`,
+ * for a face that looks abeam (surface.mjs `ABEAM`, #1844), and its mean is
+ * written with the first's. A row's `blade` is not drawn at all: it is what
+ * the navy calls a blade of that material, and it is carried across so the
+ * client can find one by its shape (navySurface.ts `bladeFrame`).
  */
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -44,28 +50,51 @@ export async function navySurfaces() {
 /** The image a navy's material is committed as, by both names. */
 export const surfaceName = (navy, material) => `${navy}-${material}`;
 
+/** The second image of a surface, which a face that looks abeam reads. */
+export const abeamName = (name) => `${name}-abeam`;
+
 /** The committed path of a surface by its name. */
 export const surfacePath = (name) => join(repo, SURFACE_DIR, `${name}.png`);
 
-/** Every surface drawn: `[name, navy, material, drawn]` rows, in table order. */
+/**
+ * Every image drawn: `{ name, navy, material, drawn }` rows, in table order.
+ * A surface's second image follows it as a row of its own, `abeamOf` naming
+ * the first, so whatever holds an image to its draw holds both alike.
+ */
 export async function drawAll() {
   const rows = [];
   for (const [navy, surface] of await navySurfaces())
-    for (const [material, table] of Object.entries(surface.materials))
-      rows.push({ name: surfaceName(navy, material), navy, material, drawn: drawSurface(table) });
+    for (const [material, table] of Object.entries(surface.materials)) {
+      const name = surfaceName(navy, material);
+      const { abeam, ...drawn } = drawSurface(table);
+      rows.push({ name, navy, material, drawn, blade: table.blade ?? null });
+      if (abeam !== null)
+        rows.push({
+          name: abeamName(name),
+          navy,
+          material,
+          abeamOf: name,
+          drawn: { ...drawn, ...abeam },
+        });
+    }
   return rows;
 }
 
 /** The generated module's text for the rows `drawAll` returns. */
 export async function renderSource(rows) {
   const navies = new Map();
-  for (const { navy, material, drawn } of rows) {
+  for (const { name, navy, material, drawn, blade, abeamOf } of rows) {
+    if (abeamOf !== undefined) continue;
     if (!navies.has(navy)) navies.set(navy, []);
+    const abeam = rows.find((row) => row.abeamOf === name);
     navies
       .get(navy)
       .push(
         `${material}: { tileM: ${drawn.tileM}, slope: ${drawn.slope}, ` +
-          `reliefM: ${drawn.reliefM.toFixed(4)}, mean: ${drawn.mean.toFixed(4)} }`
+          `reliefM: ${drawn.reliefM.toFixed(4)}, mean: ${drawn.mean.toFixed(4)}` +
+          (abeam ? `, abeamMean: ${abeam.drawn.mean.toFixed(4)}` : '') +
+          (blade ? `, blade: { thick: ${blade.thick}, long: ${blade.long} }` : '') +
+          ' }'
       );
   }
   const src = `/**
@@ -77,12 +106,20 @@ export async function renderSource(rows) {
  * (navySurface.ts): \`tileM\` the metres one image spans, \`slope\` the rise
  * a full byte of its red and green stands for, \`reliefM\` the height its
  * blue spans and \`mean\` where that blue's mean lies, 0 to 1.
+ *
+ * \`abeamMean\` is there when the pattern drew a second image for a face
+ * that looks abeam, \`<navy>-<material>-abeam.png\`, and is that image's
+ * mean on the first one's scale (#1844). \`blade\` is there when a blade of
+ * the material reads its image in a frame of its own: a part at most
+ * \`thick\` of its depth through and at least \`long\` depths long.
  */
 export interface NavySurfaceScale {
   readonly tileM: number;
   readonly slope: number;
   readonly reliefM: number;
   readonly mean: number;
+  readonly abeamMean?: number;
+  readonly blade?: { readonly thick: number; readonly long: number };
 }
 
 /** Each navy's surfaces by sheet name, then by the material's own name. */

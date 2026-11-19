@@ -426,6 +426,7 @@ export const SURFACE = {
       wanderCells: [3, 4],
       webs: 32,
       webM: 0.003,
+      blade: { thick: 0.25, long: 2.5 },
     },
   },
 };

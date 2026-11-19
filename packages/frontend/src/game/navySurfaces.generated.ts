@@ -7,12 +7,20 @@
  * (navySurface.ts): `tileM` the metres one image spans, `slope` the rise
  * a full byte of its red and green stands for, `reliefM` the height its
  * blue spans and `mean` where that blue's mean lies, 0 to 1.
+ *
+ * `abeamMean` is there when the pattern drew a second image for a face
+ * that looks abeam, `<navy>-<material>-abeam.png`, and is that image's
+ * mean on the first one's scale (#1844). `blade` is there when a blade of
+ * the material reads its image in a frame of its own: a part at most
+ * `thick` of its depth through and at least `long` depths long.
  */
 export interface NavySurfaceScale {
   readonly tileM: number;
   readonly slope: number;
   readonly reliefM: number;
   readonly mean: number;
+  readonly abeamMean?: number;
+  readonly blade?: { readonly thick: number; readonly long: number };
 }
 
 /** Each navy's surfaces by sheet name, then by the material's own name. */
@@ -20,9 +28,15 @@ export const NAVY_SURFACE_SCALES: Readonly<
   Record<string, Readonly<Record<string, NavySurfaceScale>>>
 > = {
   pelagia: {
-    chitin_hull: { tileM: 16, slope: 1.2, reliefM: 0.1409, mean: 0.1619 },
+    chitin_hull: { tileM: 16, slope: 1.2, reliefM: 0.1409, mean: 0.1619, abeamMean: 0.1457 },
     growth_ridge: { tileM: 8, slope: 1.6, reliefM: 0.1109, mean: 0.4982 },
     spore_pod: { tileM: 8, slope: 0.8, reliefM: 0.0415, mean: 0.6336 },
-    algae_membrane: { tileM: 8, slope: 1, reliefM: 0.0755, mean: 0.1902 },
+    algae_membrane: {
+      tileM: 8,
+      slope: 1,
+      reliefM: 0.0755,
+      mean: 0.1902,
+      blade: { thick: 0.25, long: 2.5 },
+    },
   },
 };

@@ -39,6 +39,7 @@
 
 import {
   Box3,
+  BufferAttribute,
   BufferGeometry,
   Color,
   Group,
@@ -60,7 +61,13 @@ import { DREAM_LOOP, installDreamLamp, installDreamSteel } from './dreamLoop.ts'
 import { installHullSurface, type WorldLook } from './tutorialLook.ts';
 import { installInstanceGlow, keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { trimSheet } from './trimSheets.ts';
-import { installNavySurface } from './navySurface.ts';
+import {
+  NAVY_BLADE_ATTRIBUTE,
+  bladeFrames,
+  installNavySurface,
+  type BladeRule,
+  type NavySurface,
+} from './navySurface.ts';
 import { navySurface } from './navySurfaces.ts';
 import { installHullLight } from './hullLight.ts';
 import { bakeTransform } from './bakeTransform.ts';
@@ -395,8 +402,15 @@ function recolor(root: Group, faction: Faction, look: WorldLook, palette: Palett
  * whose geometries refuse to merge (mismatched attributes) keeps its parts —
  * correctness over the draw count. Exported for environmentModels.ts, whose
  * props obey the same law before they are instanced.
+ *
+ * `eachPart` sees every part's own geometry once its transform is baked and
+ * before it is merged away, which is the last moment a part can be told from
+ * its neighbours: the High template marks its blades there (#1844).
  */
-export function mergeByMaterial(root: Group): Group {
+export function mergeByMaterial(
+  root: Group,
+  eachPart?: (geometry: BufferGeometry, material: Material) => void
+): Group {
   root.updateMatrixWorld(true);
   const buckets = new Map<Material, BufferGeometry[]>();
   const unmergeable: Mesh[] = [];
@@ -409,6 +423,7 @@ export function mergeByMaterial(root: Group): Group {
     }
     const geometry = (child.geometry as BufferGeometry).clone();
     bakeTransform(geometry, child.matrixWorld);
+    eachPart?.(geometry, child.material);
     const bucket = buckets.get(child.material);
     if (bucket === undefined) buckets.set(child.material, [geometry]);
     else bucket.push(geometry);
@@ -466,7 +481,11 @@ function designLengthM(key: RosterModelKey): number {
  * draws. `groundM` is where the file's own y 0 lands after the same yaw, scale
  * and centring; a yaw is about Y, so it leaves the ground where it was.
  */
-function normalise(scene: Group, key: RosterModelKey): Omit<Template, 'emissives' | 'world'> {
+function normalise(
+  scene: Group,
+  key: RosterModelKey,
+  eachPart?: (geometry: BufferGeometry, material: Material) => void
+): Omit<Template, 'emissives' | 'world'> {
   const raw = new Box3().setFromObject(scene).getSize(new Vector3());
   if (raw.z > raw.x) scene.rotation.y = Math.PI / 2;
 
@@ -476,7 +495,7 @@ function normalise(scene: Group, key: RosterModelKey): Omit<Template, 'emissives
   const partsSize = parts.getSize(new Vector3());
   const scale = partsSize.x > 0 ? designLengthM(key) / partsSize.x : 1;
 
-  const merged = mergeByMaterial(yawed);
+  const merged = mergeByMaterial(yawed, eachPart);
   const drawn = new Box3().setFromObject(merged, true).getSize(new Vector3());
   const centre = parts.getCenter(new Vector3());
   merged.position.sub(centre);
@@ -529,7 +548,33 @@ export function buildTemplate(
     }
   });
   recolor(copy, key.faction, look, palette);
-  const template = normalise(copy, key);
+  // The High quality's template alone: which cladding wears which surface,
+  // found before the parts are merged, since a surface that names a blade
+  // has each part say whether it is one while it is still a part (#1844).
+  // Low passes nothing, and its geometry is what it always was.
+  const surfaces = new Map<Material, NavySurface>();
+  const blades = new Map<Material, BladeRule>();
+  if (high) {
+    for (const material of materialClones.values()) {
+      if (!isCladding(material) || material.normalMap !== null) continue;
+      const surface = navySurface(FACTION_SLUG[key.faction], material.name);
+      if (surface === null) continue;
+      surfaces.set(material, surface);
+      if (surface.scale.blade !== undefined) blades.set(material, surface.scale.blade);
+    }
+  }
+  const template = normalise(
+    copy,
+    key,
+    blades.size === 0
+      ? undefined
+      : (geometry, material) => {
+          const rule = blades.get(material);
+          if (rule === undefined) return;
+          const frames = new BufferAttribute(bladeFrames(geometry, rule), 4);
+          geometry.setAttribute(NAVY_BLADE_ATTRIBUTE, frames);
+        }
+  );
   if (look === 'sorrowgate') {
     for (const material of materialClones.values()) {
       installHullSurface(material, key.faction, template.baseScale);
@@ -547,14 +592,9 @@ export function buildTemplate(
   const world = new Set<Material>();
   if (high) {
     for (const material of materialClones.values()) {
-      if (!(material instanceof MeshStandardMaterial)) continue;
-      // A lamp, as `isLamp` tells one.
-      if (material.emissive.getHex() !== 0) continue;
-      if (material.transparent || material.blending !== NormalBlending) continue;
-      if (material.normalMap === null) {
-        const surface = navySurface(FACTION_SLUG[key.faction], material.name);
-        if (surface !== null) installNavySurface(material, surface, template.baseScale);
-      }
+      if (!isCladding(material)) continue;
+      const surface = surfaces.get(material);
+      if (surface !== undefined) installNavySurface(material, surface, template.baseScale);
       installHullLight(material);
       world.add(material);
     }
@@ -574,6 +614,17 @@ export function buildTemplate(
 /** A lamp, as gate 3 dims one: a standard material whose emission has a colour. */
 function isLamp(material: Material): material is MeshStandardMaterial {
   return material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0;
+}
+
+/** Cladding, as the High template takes it: opaque, standard, and no lamp. */
+function isCladding(material: Material): material is MeshStandardMaterial {
+  return (
+    material instanceof MeshStandardMaterial &&
+    // No lamp, as `isLamp` tells one: its guard would narrow this to nothing.
+    material.emissive.getHex() === 0 &&
+    !material.transparent &&
+    material.blending === NormalBlending
+  );
 }
 
 function loadTemplate(
