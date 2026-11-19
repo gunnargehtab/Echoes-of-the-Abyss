@@ -61,8 +61,8 @@ a pool's own edge and a shadow's look alike at this angle. The GPU's take wants 
 pose again with the Harvester moved off, and the difference between the two.
 
 The shadow frame also shows a fault of the client's that is older than this step. A hull
-passing near another nudges it a metre or two, and the conn view turns a hull to where
-it last moved, so the Corvette's beam swung when the Harvester arrived
+passing near another nudges it a metre or two, and until #1840 the conn view turned a hull
+to where it last moved, so the Corvette's beam swung when the Harvester arrived
 ([#1840](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1840)). `frames.mjs`
 parks the Harvester in the pool as it then lies.
 

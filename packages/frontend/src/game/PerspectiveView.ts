@@ -1046,7 +1046,6 @@ export class PerspectiveView {
   private units: OwnUnit[] = [];
   private structures: OwnStructure[] = [];
   private readonly headings = new Map<number, number>();
-  private readonly lastPositions = new Map<number, { x: number; y: number }>();
   /**
    * Where own hulls are drawn between Echo ticks (#429; docs/ui-ux.md §12).
    * Public so the chart's ink about a hull — its ring, its bar, its route —
@@ -1767,21 +1766,14 @@ export class PerspectiveView {
     this.decorationArrivedMs = arrivedAt;
     this.motion.record(snapshot.units, arrivedAt);
     this.ordnanceMotion.record(snapshot.ordnance, arrivedAt);
-    // Headings from motion, exactly as the chart derived them. Since #839 the
-    // snapshot carries each own hull's ordered bow (`OwnUnit.heading`), but
-    // this view keeps deriving its own from where the hull actually went.
-    for (const unit of snapshot.units) {
-      const prev = this.lastPositions.get(unit.id);
-      if (prev !== undefined) {
-        const dx = unit.x - prev.x;
-        const dy = unit.y - prev.y;
-        if (Math.hypot(dx, dy) > 1) this.headings.set(unit.id, Math.atan2(dy, dx));
-        prev.x = unit.x;
-        prev.y = unit.y;
-      } else {
-        this.lastPositions.set(unit.id, { x: unit.x, y: unit.y });
-      }
-    }
+    // The bow the server holds (`OwnUnit.heading`, #839), never one read off
+    // the last metre moved (#1840). Separation shoves a resting hull a few
+    // metres when another passes, and the water carries an engine-off one; a
+    // heading taken from motion swung the hull, and at High its searchlight,
+    // to face the shove. A stopped hull holds the last course it had
+    // (docs/systems-echo.md §8), so the drawn bow does too.
+    this.headings.clear();
+    for (const unit of snapshot.units) this.headings.set(unit.id, unit.heading);
     if (this.renderer !== null) this.syncEntities();
     if (struck !== null) this.throwHits(struck);
     this.fireGuns(snapshot);
@@ -1799,7 +1791,6 @@ export class PerspectiveView {
     this.tracks = [];
     this.life.setLife([], []);
     this.headings.clear();
-    this.lastPositions.clear();
     this.motion.reset();
     this.ordnanceMotion.reset();
     this.ordnanceLayer.reset();
