@@ -16,8 +16,14 @@
  * their nodes here, so `wearNavySurface` bakes them the same way first, with
  * the client's own `bakeTransform`, which keeps a mirrored part's faces
  * towards the eye (#1812). Each part keeps its name for a `--view` to frame.
+ *
+ * Two things follow the client since #1844. A surface whose pattern drew a
+ * second image for a face that looks abeam has it loaded beside the first,
+ * and a material whose surface names a blade has each part say whether it is
+ * one, by the client's own `bladeFrames`, once it is baked.
  */
 import {
+  BufferAttribute,
   LinearFilter,
   LinearMipmapLinearFilter,
   NoColorSpace,
@@ -25,7 +31,11 @@ import {
   TextureLoader,
 } from 'three';
 import { bakeTransform } from '../../packages/frontend/src/game/bakeTransform.ts';
-import { installNavySurface } from '../../packages/frontend/src/game/navySurface.ts';
+import {
+  NAVY_BLADE_ATTRIBUTE,
+  bladeFrames,
+  installNavySurface,
+} from '../../packages/frontend/src/game/navySurface.ts';
 import { NAVY_SURFACE_SCALES } from '../../packages/frontend/src/game/navySurfaces.generated.ts';
 
 /**
@@ -61,18 +71,9 @@ export async function wearNavySurface(root, navy, urlOf, { anisotropy = 1 } = {}
   const materials = new Set(
     flat.flatMap((m) => (Array.isArray(m.material) ? m.material : [m.material]))
   );
-  const worn = [];
-  const missing = [];
-  for (const material of materials) {
-    const scale = scales[material.name];
-    // A material that brings a normal map of its own keeps it, as in the game.
-    if (scale === undefined || !material.isMeshStandardMaterial || material.normalMap) continue;
-    const name = `${navy}-${material.name}`;
+  const load = async (name) => {
     const texture = await new TextureLoader().loadAsync(urlOf(name)).catch(() => null);
-    if (texture === null) {
-      missing.push(name);
-      continue;
-    }
+    if (texture === null) return null;
     texture.name = `navy-surface-${name}`;
     texture.colorSpace = NoColorSpace;
     texture.wrapS = texture.wrapT = RepeatWrapping;
@@ -80,7 +81,32 @@ export async function wearNavySurface(root, navy, urlOf, { anisotropy = 1 } = {}
     texture.minFilter = LinearMipmapLinearFilter;
     texture.anisotropy = anisotropy;
     texture.flipY = false;
-    if (installNavySurface(material, { name, texture, scale }, 1)) worn.push(material.name);
+    return texture;
+  };
+  const worn = [];
+  const missing = [];
+  const blades = [];
+  for (const material of materials) {
+    const scale = scales[material.name];
+    // A material that brings a normal map of its own keeps it, as in the game.
+    if (scale === undefined || !material.isMeshStandardMaterial || material.normalMap) continue;
+    const name = `${navy}-${material.name}`;
+    const texture = await load(name);
+    const abeam = scale.abeamMean === undefined ? null : await load(`${name}-abeam`);
+    if (texture === null || (abeam === null && scale.abeamMean !== undefined)) {
+      missing.push(texture === null ? name : `${name}-abeam`);
+      continue;
+    }
+    if (!installNavySurface(material, { name, texture, abeam, scale }, 1)) continue;
+    worn.push(material.name);
+    if (scale.blade === undefined) continue;
+    for (const mesh of flat) {
+      if (mesh.material !== material) continue;
+      const frames = bladeFrames(mesh.geometry, scale.blade);
+      mesh.geometry.setAttribute(NAVY_BLADE_ATTRIBUTE, new BufferAttribute(frames, 4));
+      // The turn that changes nothing ends in a 1 and starts with three 0s.
+      if (frames[3] !== 1) blades.push(mesh.name);
+    }
   }
-  return { worn, missing };
+  return { worn, missing, blades };
 }

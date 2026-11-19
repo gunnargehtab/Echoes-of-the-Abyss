@@ -8,25 +8,37 @@
  * what the recolour wrote (gate 4); and a navy's surface is one texture for
  * the page, read as data. The loader cannot decode an image here, so what is
  * held is ownership, not pixels; a frame through run-game holds the program.
+ *
+ * And what the section says of a flank and a fin (#1844): a face that looks
+ * abeam reads the second image of a pattern that drew one, and a blade reads
+ * in a frame of its own, found from its shape on the High template alone.
  */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import {
   BoxGeometry,
+  BufferGeometry,
   Group,
   Material,
   Mesh,
   MeshStandardMaterial,
   NoColorSpace,
   RepeatWrapping,
+  Quaternion,
   ShaderLib,
   Texture,
+  Vector3,
 } from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Faction, HIGH_GRAPHICS, UnitKind } from '@echoes/shared';
-import { buildTemplate, highVariant } from '../src/game/rosterModels.ts';
+import { buildTemplate, highVariant, slugFor } from '../src/game/rosterModels.ts';
 import { ACTIVE_PALETTE } from '../src/game/palette.ts';
 import {
+  NAVY_BLADE_ATTRIBUTE,
   NAVY_SURFACE_ANCHORS,
+  bladeFrame,
+  bladeFrames,
   installNavySurface,
   navySurfaceUniform,
   patchNavySurface,
@@ -66,6 +78,34 @@ const KEY = { unit: UnitKind.Corvette, faction: Faction.Pelagia };
 const build = (high: boolean, raw = hull()) =>
   materialsOf(buildTemplate(raw, KEY, 'standard', ACTIVE_PALETTE, high).root);
 
+/** The Commune's rule for a blade of its membrane, as the draw wrote it. */
+const BLADE = NAVY_SURFACE_SCALES.pelagia!.algae_membrane!.blade!;
+
+/** The distinct frames a template's geometry of one material carries, as "x y z w". */
+function framesOf(root: Group, material: string): Set<string> | null {
+  let frames: Set<string> | null = null;
+  root.traverse((o) => {
+    if (!(o instanceof Mesh) || (o.material as Material).name !== material) return;
+    const attribute = (o.geometry as BufferGeometry).getAttribute(NAVY_BLADE_ATTRIBUTE);
+    if (attribute === undefined) return;
+    frames ??= new Set();
+    for (let i = 0; i < attribute.count; i++)
+      frames.add(
+        [attribute.getX(i), attribute.getY(i), attribute.getZ(i), attribute.getW(i)]
+          .map((n) => n.toFixed(4))
+          .join(' ')
+      );
+  });
+  return frames;
+}
+
+const MODELS = new URL('../../../docs/concept-art/models/', import.meta.url);
+async function committed(unit: UnitKind): Promise<Group> {
+  const bytes = readFileSync(new URL(`${slugFor({ unit, faction: Faction.Pelagia })}.glb`, MODELS));
+  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  return (await new GLTFLoader().parseAsync(buffer, '')).scene;
+}
+
 describe("a navy's surface on a roster model", () => {
   it('ships the Commune four, each once, as repeating data', () => {
     assert.deepEqual(Object.keys(NAVY_SURFACE_SCALES.pelagia!).sort(), [...COMMUNE].sort());
@@ -81,6 +121,18 @@ describe("a navy's surface on a roster model", () => {
       // v 0 is the image's first row, as the draw has it.
       assert.equal(surface.texture.flipY, false);
       assert.equal(surface.texture.anisotropy, HIGH_GRAPHICS.HULL_SURFACE.ANISOTROPY);
+      // Only the veined skin draws along v 0, so only it has a second image
+      // for a face that looks abeam, read as the first is (#1844).
+      const second = material === 'chitin_hull';
+      assert.equal(NAVY_SURFACE_NAMES.includes(`pelagia-${material}-abeam`), second, material);
+      assert.equal(surface.abeam !== null, second, material);
+      assert.equal(surface.scale.abeamMean !== undefined, second, material);
+      if (surface.abeam !== null) {
+        assert.notEqual(surface.abeam, surface.texture);
+        assert.equal(surface.abeam.colorSpace, NoColorSpace);
+        assert.equal(surface.abeam.wrapT, RepeatWrapping);
+        assert.equal(surface.abeam.flipY, false);
+      }
     }
     assert.equal(navySurface('pelagia', 'grown_steel'), null);
     assert.equal(navySurface('bathyarch', 'hull_black'), null);
@@ -128,8 +180,14 @@ describe("a navy's surface on a roster model", () => {
         material.name
       );
       assert.equal(
-        material.customProgramCacheKey().includes(':navy-surface-1'),
+        material.customProgramCacheKey().includes(':navy-surface-2'),
         worn,
+        material.name
+      );
+      // Only the membrane has blades, so only its program reads a part's frame.
+      assert.equal(
+        material.customProgramCacheKey().includes(':navy-surface-2-blades'),
+        material.name === 'algae_membrane',
         material.name
       );
       // Gate 4: the ink is the recolour's. Gate 3: so is the light.
@@ -169,7 +227,7 @@ describe("a navy's surface on a roster model", () => {
     };
     skin.customProgramCacheKey = () => 'earlier';
     assert.equal(installNavySurface(skin, surface, 2), true);
-    assert.equal(skin.customProgramCacheKey(), 'earlier:navy-surface-1');
+    assert.equal(skin.customProgramCacheKey(), 'earlier:navy-surface-2');
     const shader = {
       uniforms: {} as Record<string, { value: unknown }>,
       vertexShader: ShaderLib.physical.vertexShader,
@@ -180,6 +238,23 @@ describe("a navy's surface on a roster model", () => {
     assert.equal(shader.uniforms.uNavySurface!.value, surface.texture);
     assert.equal(shader.uniforms.uNavyMetres!.value, 2);
     assert.deepEqual(shader.uniforms.uNavyScale!.value, navySurfaceUniform(surface.scale));
+    // The skin's flank reads its second image, about that image's own mean.
+    assert.equal(shader.uniforms.uNavyAbeam!.value, surface.abeam);
+    assert.equal(shader.uniforms.uNavyAbeamMean!.value, surface.scale.abeamMean);
+    assert.doesNotMatch(shader.vertexShader, /navyBlade/);
+
+    // A surface with one image reads it on all three planes, about one mean.
+    const ridge = navySurface('pelagia', 'growth_ridge')!;
+    const ring = new MeshStandardMaterial();
+    installNavySurface(ring, ridge, 1);
+    const ringed = {
+      uniforms: {} as Record<string, { value: unknown }>,
+      vertexShader: ShaderLib.physical.vertexShader,
+      fragmentShader: ShaderLib.physical.fragmentShader,
+    };
+    ring.onBeforeCompile(ringed as never, null as never);
+    assert.equal(ringed.uniforms.uNavyAbeam!.value, ridge.texture);
+    assert.equal(ringed.uniforms.uNavyAbeamMean!.value, ridge.scale.mean);
   });
 
   it("finds every anchor it patches in three's own standard program", () => {
@@ -204,9 +279,125 @@ describe("a navy's surface on a roster model", () => {
     // the beam from above and from ahead, the height from the side.
     assert.match(shader.fragmentShader, /navyAcross = texture2D\( uNavySurface, navyAt\.yz \)/);
     assert.match(shader.fragmentShader, /navyAbove = texture2D\( uNavySurface, navyAt\.xz \)/);
-    assert.match(shader.fragmentShader, /navyAbeam = texture2D\( uNavySurface, navyAt\.xy \)/);
+    // The plane seen from the side is the one whose v 0 is a flank's axis,
+    // so it alone reads the image drawn without what runs along v 0 (#1844).
+    assert.match(shader.fragmentShader, /navyAbeam = texture2D\( uNavyAbeam, navyAt\.xy \)/);
+    assert.equal(shader.fragmentShader.match(/texture2D\( uNavy/g)?.length, 3, 'a fourth tap');
+    // No part's frame is read unless the material has blades.
+    assert.doesNotMatch(shader.vertexShader, /navyBlade/);
+    const bladed = {
+      vertexShader: ShaderLib.physical.vertexShader,
+      fragmentShader: ShaderLib.physical.fragmentShader,
+    };
+    patchNavySurface(bladed, true);
+    assert.match(bladed.vertexShader, /attribute vec4 navyBlade;/);
+    assert.match(bladed.vertexShader, /vNavyAt = navyTurn\( navyBlade, vNavyAt \);/);
+    // A blade costs the fragment stage nothing: the turn is the vertex stage's.
+    assert.equal(bladed.fragmentShader, shader.fragmentShader);
     // Colour is never written: hue stays the ink's.
     assert.doesNotMatch(shader.fragmentShader, /diffuseColor[^;]*navy/);
+  });
+
+  it('finds a blade by its shape, and gives it a frame along its own length', () => {
+    // A fin 20 long, 4 deep and 0.4 through, standing on the back and raked
+    // 0.6 rad aft: the model's frame would rule it square to the keel.
+    const rake = 0.6;
+    const fin = new BoxGeometry(20, 4, 0.4).rotateZ(rake);
+    const frame = bladeFrame(fin, BLADE);
+    assert.ok(frame);
+    const turn = new Quaternion(...frame);
+    assert.ok(Math.abs(turn.length() - 1) < 1e-9);
+    // Its length lands on the frame's z, its normal on y and its depth on x:
+    // the plane seen from above reads it, u across the blade and v along it.
+    const along = new Vector3(Math.cos(rake), Math.sin(rake), 0).applyQuaternion(turn);
+    const through = new Vector3(0, 0, 1).applyQuaternion(turn);
+    const across = new Vector3(-Math.sin(rake), Math.cos(rake), 0).applyQuaternion(turn);
+    assert.ok(Math.abs(Math.abs(along.z) - 1) < 1e-6, `along ${along.toArray()}`);
+    assert.ok(Math.abs(Math.abs(through.y) - 1) < 1e-6, `through ${through.toArray()}`);
+    assert.ok(Math.abs(Math.abs(across.x) - 1) < 1e-6, `across ${across.toArray()}`);
+    // One blade has one frame, however its triangles are held or ordered.
+    const flat = fin.toNonIndexed();
+    assert.deepEqual(bladeFrame(flat, BLADE), frame);
+    const frames = bladeFrames(fin, BLADE);
+    assert.equal(frames.length, fin.getAttribute('position').count * 4);
+    for (let i = 0; i < frames.length; i += 4)
+      assert.deepEqual([...frames.subarray(i, i + 4)], [...new Float32Array(frame)]);
+
+    // What is no blade keeps the model's frame, where a ray square to the
+    // keel is already root to tip: a vane rooted along its length, a fluke
+    // as wide as it is long, a tendril, a pod.
+    for (const [name, squat] of [
+      ['a trim vane', new BoxGeometry(4.5, 3.3, 0.4)],
+      ['a round fluke', new BoxGeometry(10, 10, 0.8)],
+      ['a tendril', new BoxGeometry(60, 8, 3.2)],
+      ['a pod', new BoxGeometry(9, 9, 9)],
+    ] as const) {
+      assert.equal(bladeFrame(squat.rotateZ(rake), BLADE), null, name);
+      const none = bladeFrames(squat, BLADE);
+      assert.deepEqual([...none.subarray(0, 4)], [0, 0, 0, 1], name);
+    }
+    assert.equal(bladeFrame(new BufferGeometry().setFromPoints([]), BLADE), null);
+  });
+
+  it('marks blades on the High template alone, and on the membrane alone', () => {
+    const raw = hull();
+    const fin = new Mesh(new BoxGeometry(20, 4, 0.4).rotateZ(0.6), materialsOf(raw)[3]!);
+    assert.equal((fin.material as Material).name, 'algae_membrane');
+    raw.add(fin);
+    const low = buildTemplate(raw, KEY, 'standard', ACTIVE_PALETTE, false).root;
+    const high = buildTemplate(raw, KEY, 'standard', ACTIVE_PALETTE, true).root;
+    // Low's geometry is what it always was: no part of it carries a frame.
+    for (const name of [...COMMUNE, 'grown_steel', 'bio_light'])
+      assert.equal(framesOf(low, name), null, `Low's ${name}`);
+    // At High every part of the membrane carries one, so they still merge
+    // into one draw: the fin its own, the squat part the turn that changes
+    // nothing. No other material has blades, and none carries a frame.
+    const frames = framesOf(high, 'algae_membrane');
+    assert.ok(frames);
+    assert.equal(frames.size, 2);
+    assert.ok(frames.has('0.0000 0.0000 0.0000 1.0000'));
+    for (const name of ['chitin_hull', 'growth_ridge', 'spore_pod', 'grown_steel', 'bio_light'])
+      assert.equal(framesOf(high, name), null, `High's ${name}`);
+    const count = (root: Group) => materialsOf(root).length;
+    assert.equal(count(high), count(low), 'a frame split a material into two draws');
+  });
+
+  it("finds the Corvette's six fins and none of the Drifter's vanes", async () => {
+    // The Corvette's membranes are all leaves, 3.5 to 4.6 depths long: the
+    // dorsal blade #1844 names, two pectorals, the keel blade, two flukes.
+    const corvette = buildTemplate(
+      await committed(UnitKind.Corvette),
+      KEY,
+      'standard',
+      ACTIVE_PALETTE,
+      true
+    ).root;
+    const fins = framesOf(corvette, 'algae_membrane');
+    assert.ok(fins);
+    assert.equal(fins.size, 6);
+    assert.ok(!fins.has('0.0000 0.0000 0.0000 1.0000'));
+    // The Drifter's are trim vanes rooted along their length, a round drive
+    // fluke and four bay valves: square to the keel is right for each.
+    const drifter = buildTemplate(
+      await committed(UnitKind.Drifter),
+      { unit: UnitKind.Drifter, faction: Faction.Pelagia },
+      'standard',
+      ACTIVE_PALETTE,
+      true
+    ).root;
+    assert.deepEqual([...framesOf(drifter, 'algae_membrane')!], ['0.0000 0.0000 0.0000 1.0000']);
+    // The rule's two neighbours, so a table that moves it says what moved:
+    // the Chorister's flukes are 2.49 depths long and blades, the Spinner's
+    // 2.24 and not. Each hull's other membranes are squatter still.
+    const blades = async (unit: UnitKind) => {
+      const key = { unit, faction: Faction.Pelagia };
+      const root = buildTemplate(await committed(unit), key, 'standard', ACTIVE_PALETTE, true).root;
+      const frames = framesOf(root, 'algae_membrane')!;
+      frames.delete('0.0000 0.0000 0.0000 1.0000');
+      return frames.size;
+    };
+    assert.equal(await blades(UnitKind.Chorister), 2);
+    assert.equal(await blades(UnitKind.Spinner), 0);
   });
 
   it('reads an image by the scale its draw wrote', () => {

@@ -745,10 +745,11 @@ Nor are the vignette and the sway
 composites the one, and the other moves a camera the frame already draws through.
 
 A navy's surface ([art-direction.md](art-direction.md#a-navys-surface)) is High's alone and
-is not capped, as no High texture is. It is reported here: one image a navy material, the
-Commune's hull skin at 512² and its other three at 256², **2.33 MiB** as three uploads
-them with their mipmaps, once the navy's models have loaded at High. It adds three taps a
-clad fragment, which are read against the 8 ms on the named GPU.
+is not capped, as no High texture is. It is reported here: one image a navy material, and
+a second for the flank of a pattern that draws along its own centreline. The Commune's
+hull skin is two at 512² and its other three one each at 256², **3.67 MiB** as three
+uploads them with their mipmaps, once the navy's models have loaded at High. It adds
+three taps a clad fragment, which are read against the 8 ms on the named GPU.
 
 An own model's cladding in the world pass
 ([art-direction.md](art-direction.md#a-model-in-the-worlds-light)) adds no pass and no

@@ -5,7 +5,9 @@
  *
  * tools/hull-models/surfaces.mjs draws each into src/assets/surface/ as
  * `<navy>-<material>.png` and writes its scale beside it
- * (navySurfaces.generated.ts). A material is found by its navy and its own
+ * (navySurfaces.generated.ts). A pattern that draws along the image's `v` 0
+ * has a second image beside the first, `<navy>-<material>-abeam.png`, which
+ * a face that looks abeam reads (#1844). A material is found by its navy and its own
  * name, which every model of the navy carries from its script
  * (tools/hull-models/factions/), so no model is tagged or re-exported to
  * wear one, and a navy with no surface drawn wears none.
@@ -51,15 +53,8 @@ export function hasNavySurface(navy: string): boolean {
   return NAVY_SURFACE_SCALES[navy] !== undefined;
 }
 
-/** The surface a navy's material wears by its name, or null when none is drawn. */
-export function navySurface(navy: string, material: string): NavySurface | null {
-  const scale = NAVY_SURFACE_SCALES[navy]?.[material];
-  if (scale === undefined) return null;
-  const name = `${navy}-${material}`;
-  const cached = surfaces.get(name);
-  if (cached !== undefined) return cached;
-  const url = SURFACE_BY_NAME.get(name);
-  if (url === undefined) return null;
+/** One image as the patch reads it: repeating data, `v` 0 on its first row. */
+function load(url: string, name: string): Texture {
   // The loader needs an <img>; where there is none the texture stays empty.
   const texture = typeof document === 'undefined' ? new Texture() : new TextureLoader().load(url);
   texture.name = `navy-surface-${name}`;
@@ -73,7 +68,26 @@ export function navySurface(navy: string, material: string): NavySurface | null 
   // slope along that v; three's loader flips by default, which would turn
   // every rise across the tile into a fall.
   texture.flipY = false;
-  const surface = { name, texture, scale };
+  return texture;
+}
+
+/** The surface a navy's material wears by its name, or null when none is drawn. */
+export function navySurface(navy: string, material: string): NavySurface | null {
+  const scale = NAVY_SURFACE_SCALES[navy]?.[material];
+  if (scale === undefined) return null;
+  const name = `${navy}-${material}`;
+  const cached = surfaces.get(name);
+  if (cached !== undefined) return cached;
+  const url = SURFACE_BY_NAME.get(name);
+  if (url === undefined) return null;
+  // The second image is the draw's whenever the scale names its mean.
+  const abeamUrl = scale.abeamMean === undefined ? undefined : SURFACE_BY_NAME.get(`${name}-abeam`);
+  const surface = {
+    name,
+    texture: load(url, name),
+    abeam: abeamUrl === undefined ? null : load(abeamUrl, `${name}-abeam`),
+    scale,
+  };
   surfaces.set(name, surface);
   return surface;
 }

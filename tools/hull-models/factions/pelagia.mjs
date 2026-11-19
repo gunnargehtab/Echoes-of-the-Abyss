@@ -351,11 +351,29 @@ export const TRIM = {
  * its 0.55. The spike found its back and its keel from the hull's own
  * section. A tile cannot, so the midrib runs down `v` 0, which is the
  * centreline of a model seen from above and from ahead and its axis seen
- * from the side: down the back, down the bow and the stern, and as a line
- * along each flank. A wide deck takes another every 16 m. A fin's rays ran along a chart of
- * that fin. Here they stand square to the keel, which is root to tip on any
- * fin that stands off it, and wander a quarter metre so two fins do not rule
- * alike.
+ * from the side: down the back, and down the bow and the stern. Along each
+ * flank it was a line no hull has, so a face that looks abeam reads the
+ * skin's second image, the same leaf from its margin with no midrib
+ * (surface.mjs `veined`, #1844). A wide deck takes another every 16 m.
+ *
+ * A fin's rays ran along a chart of that fin. Here they stand square to the
+ * keel, which is root to tip on a fin that stands square off it, and wander
+ * a quarter metre so two fins do not rule alike. On a raked blade they
+ * crossed the fin (#1844), so the membrane's row names a `blade`: a part at
+ * most `thick` of its depth through and at least `long` depths long. The
+ * client finds one by its shape and reads the tile along its length
+ * (packages/frontend/src/game/navySurface.ts `bladeFrame`).
+ *
+ * A part's length is root to tip when it is rooted at one end, and that is
+ * every long fin in the roster: the leaves `membranes` cuts, 2.7 depths and
+ * up, the Reed's and the Runner's leaves, the Glider's wing, the tails, and
+ * the swept `fins` from the Chorister's flukes at 2.49. What is rooted along
+ * its length is short: the trim vanes, 1.8 and under, and the Submersible's
+ * paddles at 2.0, where square to the keel is right already. `long` stands
+ * in the widest gap the roster leaves between the two, from the Spinner's
+ * flukes at 2.24 to the Chorister's, so no part sits on it: 32 of the navy's
+ * 175 membrane parts are blades. A quarter of the depth through takes every
+ * plate, 0.19 at most, and leaves a tendril, which is a third.
  *
  * Every texel is 3.1 cm: the hull's skin at 512² over 16 m, since it is most
  * of what a camera sees of a hull, and the other three at 256² over 8 m.
@@ -426,6 +444,7 @@ export const SURFACE = {
       wanderCells: [3, 4],
       webs: 32,
       webM: 0.003,
+      blade: { thick: 0.25, long: 2.35 },
     },
   },
 };

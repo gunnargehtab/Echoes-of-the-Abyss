@@ -76,7 +76,9 @@ const target = args.find(
   (a, i) => !a.startsWith('--') && !(args[i - 1]?.startsWith('--') && !BOOLEAN.has(args[i - 1]))
 );
 if (!target) {
-  console.error('usage: inspect.mjs <slug|file.glb> [--before <rev>] [--view id:az:el[:zoom][:parts]]');
+  console.error(
+    'usage: inspect.mjs <slug|file.glb> [--before <rev>] [--view id:az:el[:zoom][:parts]]'
+  );
   process.exit(1);
 }
 const file = target.endsWith('.glb') ? resolve(target) : join(MODELS, `${target}.glb`);
@@ -124,7 +126,10 @@ process.on('exit', () => rmSync(scratch, { recursive: true, force: true }));
 const models = [];
 if (before) {
   const path = relative(repo, file).split('\\').join('/');
-  const blob = execFileSync('git', ['show', `${before}:${path}`], { cwd: repo, maxBuffer: 1 << 28 });
+  const blob = execFileSync('git', ['show', `${before}:${path}`], {
+    cwd: repo,
+    maxBuffer: 1 << 28,
+  });
   const at = join(scratch, `before.glb`);
   writeFileSync(at, blob);
   models.push({ id: 'before', label: `before — ${before}`, file: at });
@@ -248,9 +253,8 @@ const server = createServer((req, res) => {
   else if (url.pathname.startsWith('/surface/')) {
     // Only ever a drawn surface's name: a navy, a hyphen, a material.
     const name = url.pathname.slice('/surface/'.length).replace(/\.png$/, '');
-    if (/^[a-z]+-[a-z0-9_]+$/.test(name)) path = join(repo, SURFACE_DIR, `${name}.png`);
-  }
-  else if (url.pathname.startsWith('/trim/')) {
+    if (/^[a-z]+-[a-z0-9_]+(-abeam)?$/.test(name)) path = join(repo, SURFACE_DIR, `${name}.png`);
+  } else if (url.pathname.startsWith('/trim/')) {
     const [modelId, file] = url.pathname.slice('/trim/'.length).split('/');
     if (models.some((m) => m.id === modelId) && file?.endsWith('.png'))
       path = sheetAt(modelId, file.slice(0, -'.png'.length));
@@ -276,23 +280,26 @@ const browser = await chromium.launch({
 try {
   const page = await browser.newPage({ viewport: { width: tileW, height: tileH } });
   page.on('pageerror', (e) => console.error(`page error: ${e.message}`));
-  await page.addInitScript((job) => {
-    window.__job = job;
-  }, {
-    width: tileW,
-    height: tileH,
-    exposure,
-    floorGap,
-    own,
-    views,
-    anisotropy: TRIM_SHEET.ANISOTROPY,
-    surfaceAnisotropy: HIGH_GRAPHICS.HULL_SURFACE.ANISOTROPY,
-    models: models.map((m) => ({
-      id: m.id,
-      url: `/model/${m.id}.glb`,
-      surface: m.surface ?? null,
-    })),
-  });
+  await page.addInitScript(
+    (job) => {
+      window.__job = job;
+    },
+    {
+      width: tileW,
+      height: tileH,
+      exposure,
+      floorGap,
+      own,
+      views,
+      anisotropy: TRIM_SHEET.ANISOTROPY,
+      surfaceAnisotropy: HIGH_GRAPHICS.HULL_SURFACE.ANISOTROPY,
+      models: models.map((m) => ({
+        id: m.id,
+        url: `/model/${m.id}.glb`,
+        surface: m.surface ?? null,
+      })),
+    }
+  );
   await page.goto(`http://127.0.0.1:${port}/inspect.html`);
   await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 300000 });
   const error = await page.evaluate(() => window.__error);
@@ -313,6 +320,8 @@ try {
       console.warn(`${m.id}: no sheet named ${t.missing.join(', ')}; left bare`);
     if (t.surface) {
       console.log(`${m.id}: ${m.surface} surface on ${t.surface.worn.join(', ') || 'no material'}`);
+      if (t.surface.blades.length > 0)
+        console.log(`${m.id}: ${t.surface.blades.length} blade(s): ${t.surface.blades.join(', ')}`);
       if (t.surface.missing.length > 0)
         console.warn(`${m.id}: no surface image for ${t.surface.missing.join(', ')}; left bare`);
     }
@@ -321,7 +330,8 @@ try {
 
   // The sheet: one row a view, one column a model, labelled, as a page
   // screenshot so the labels are real type rather than pixels drawn by hand.
-  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  const esc = (s) =>
+    String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
   const html = `<!doctype html><html><body style="margin:0;background:#0d1117;color:#c9d1d9;
     font:15px/1.4 system-ui,sans-serif;padding:16px;display:inline-block">
     <div style="font-size:19px;font-weight:600;margin-bottom:10px">${esc(title)}</div>
@@ -329,9 +339,13 @@ try {
     <tr><td></td>${models.map((m) => `<td style="color:#8b949e">${esc(m.label)}</td>`).join('')}</tr>
     ${views
       .map(
-        (v) => `<tr><td style="vertical-align:top;width:130px;color:#8b949e">${esc(v.id)}</td>${models
-          .map((m) => `<td><img width="${tileW}" height="${tileH}" src="${shots[`${m.id}/${v.id}`]}"></td>`)
-          .join('')}</tr>`
+        (v) =>
+          `<tr><td style="vertical-align:top;width:130px;color:#8b949e">${esc(v.id)}</td>${models
+            .map(
+              (m) =>
+                `<td><img width="${tileW}" height="${tileH}" src="${shots[`${m.id}/${v.id}`]}"></td>`
+            )
+            .join('')}</tr>`
       )
       .join('')}
     </table></body></html>`;
@@ -341,7 +355,9 @@ try {
   mkdirSync(dirname(out), { recursive: true });
   const el = await sheet.$('body');
   await el.screenshot({ path: out });
-  console.log(`${models.length} model(s) × ${views.length} view(s) → ${relative(process.cwd(), out)}`);
+  console.log(
+    `${models.length} model(s) × ${views.length} view(s) → ${relative(process.cwd(), out)}`
+  );
 } finally {
   await browser.close();
   server.close();

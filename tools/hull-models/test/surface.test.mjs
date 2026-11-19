@@ -5,14 +5,23 @@
  * ground is byte 128 in both slope channels, and a slope reads back as the
  * rise the pattern drew; no navy's table clips a slope; the draw is the same
  * every time, since check.mjs compares it with the committed file; and the
- * committed images and the generated scales are the draw's own.
+ * committed images and the generated scales are the draw's own. Since #1844
+ * a pattern that draws along `v` 0 draws a second image without it, for a
+ * face that looks abeam, on the first image's own scale.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { LEVEL, drawSurface, hash, surfaceHeight } from '../surface.mjs';
+import { LEVEL, drawSurface, drawsAbeam, hash, surfaceHeight } from '../surface.mjs';
 import { decodeRgb, encodeRgb } from '../png.mjs';
-import { SURFACE_FILE, drawAll, navySurfaces, renderSource, surfacePath } from '../surfaces.mjs';
+import {
+  SURFACE_FILE,
+  abeamName,
+  drawAll,
+  navySurfaces,
+  renderSource,
+  surfacePath,
+} from '../surfaces.mjs';
 
 /** Rings alone: a sine along `u`, nothing along `v`. */
 const RINGS = {
@@ -99,29 +108,86 @@ test("every navy's surface tiles, clips nothing and draws the same twice", async
   for (const [navy, surface] of navies)
     for (const [material, table] of Object.entries(surface.materials)) {
       const drawn = drawSurface(table);
-      const name = `${navy}-${material}`;
-      assert.equal(drawn.clipped, 0, `${name} clips ${drawn.clipped} slopes`);
-      assert.deepEqual(drawSurface(table).pixels, drawn.pixels, `${name} drew two ways`);
-      // One tile on, either way, the relief is where it was: the client
-      // repeats the image over a hull, and a field that did not close would
-      // draw its edge down every hull as a crease.
-      const height = surfaceHeight(table);
-      const T = table.tileM;
-      for (let i = 0; i < 200; i++) {
-        const u = hash(1, i) * T;
-        const v = hash(2, i) * T;
-        const here = height(u, v);
-        assert.ok(Math.abs(height(u + T, v) - here) < 1e-9, `${name} seams along u`);
-        assert.ok(Math.abs(height(u, v + T) - here) < 1e-9, `${name} seams along v`);
-        assert.ok(Math.abs(height(u - T, v - T) - here) < 1e-9, `${name} seams behind 0`);
-      }
-      const n = drawn.size;
-      // Slopes about level: a tile that closes on itself rises as much as it falls.
-      for (const k of [0, 1]) {
-        const mean = channel(drawn, k).reduce((a, b) => a + b, 0) / (n * n);
-        assert.ok(Math.abs(mean - LEVEL) < 0.5, `${name} channel ${k} leans: ${mean}`);
+      assert.deepEqual(
+        drawSurface(table).pixels,
+        drawn.pixels,
+        `${navy}-${material} drew two ways`
+      );
+      // The second image is held as the first is: a flank repeats it too.
+      const images = [[`${navy}-${material}`, drawn, false]];
+      assert.equal(drawn.abeam !== null, drawsAbeam(table));
+      if (drawn.abeam !== null)
+        images.push([abeamName(`${navy}-${material}`), { ...drawn, ...drawn.abeam }, true]);
+      for (const [name, image, abeam] of images) {
+        assert.equal(image.clipped, 0, `${name} clips ${image.clipped} slopes or heights`);
+        // One tile on, either way, the relief is where it was: the client
+        // repeats the image over a hull, and a field that did not close would
+        // draw its edge down every hull as a crease.
+        const height = surfaceHeight(table, abeam);
+        const T = table.tileM;
+        for (let i = 0; i < 200; i++) {
+          const u = hash(1, i) * T;
+          const v = hash(2, i) * T;
+          const here = height(u, v);
+          assert.ok(Math.abs(height(u + T, v) - here) < 1e-9, `${name} seams along u`);
+          assert.ok(Math.abs(height(u, v + T) - here) < 1e-9, `${name} seams along v`);
+          assert.ok(Math.abs(height(u - T, v - T) - here) < 1e-9, `${name} seams behind 0`);
+        }
+        const n = image.size;
+        // Slopes about level: a tile that closes on itself rises as much as it falls.
+        for (const k of [0, 1]) {
+          const mean = channel(image, k).reduce((a, b) => a + b, 0) / (n * n);
+          assert.ok(Math.abs(mean - LEVEL) < 0.5, `${name} channel ${k} leans: ${mean}`);
+        }
       }
     }
+});
+
+test('a face that looks abeam reads no line along its axis', async () => {
+  // The veined skin draws its midrib along v 0, which is a flank's axis on
+  // the plane seen from the side (#1844). Its second image has none: along
+  // any line of constant v the field stands no prouder than along another.
+  const table = (await navySurfaces()).get('pelagia').materials.chitin_hull;
+  assert.ok(drawsAbeam(table));
+  const T = table.tileM;
+  const along = (height, v) => {
+    let sum = 0;
+    for (let i = 0; i < 512; i++) sum += height(((i + 0.5) / 512) * T, v);
+    return sum / 512;
+  };
+  const rows = (height) => Array.from({ length: 64 }, (_, j) => along(height, (j / 64) * T));
+  const spread = (list) => Math.max(...list) - Math.min(...list);
+  const first = rows(surfaceHeight(table));
+  const second = rows(surfaceHeight(table, true));
+  // The first image's midrib is most of its own height proud of the rest.
+  assert.ok(first[0] === Math.max(...first), 'the midrib is not along v 0');
+  assert.ok(spread(first) > 0.8 * table.midribM, `the midrib stands ${spread(first)} m`);
+  // The second has laterals, a net, growth lines and pits, and no line.
+  assert.ok(spread(second) < 0.2 * table.midribM, `a line stands ${spread(second)} m abeam`);
+  // Its axis is the leaf's margin. With the laterals alone, they are at
+  // their thinnest along it and at their fullest half a tile off it.
+  const veins = surfaceHeight({ ...table, netM: 0, growthM: 0, pitM: 0 }, true);
+  assert.ok(along(veins, 0) < 0.5 * along(veins, T / 2), 'the axis is not the margin');
+  const drawn = drawSurface(table);
+  // A byte of blue is the same height in both, and each has its own mean:
+  // the second's is lower by the midrib it does not carry.
+  assert.ok(drawn.abeam.mean < drawn.mean);
+  assert.ok(drawn.mean - drawn.abeam.mean < 0.05);
+  // No other pattern draws along v 0, and none has a second image.
+  for (const [material, other] of Object.entries((await navySurfaces()).get('pelagia').materials))
+    assert.equal(drawsAbeam(other), material === 'chitin_hull', material);
+});
+
+test("a table's blade rule is carried across and never drawn", async () => {
+  // What the navy calls a blade is read by the client, off a part's shape
+  // (packages/frontend/src/game/navySurface.ts `bladeFrame`). It moves no texel.
+  const table = (await navySurfaces()).get('pelagia').materials.algae_membrane;
+  assert.deepEqual(table.blade, { thick: 0.25, long: 2.35 });
+  const { blade, ...bare } = table;
+  assert.deepEqual(drawSurface(bare).pixels, drawSurface(table).pixels);
+  const source = await renderSource(await drawAll());
+  assert.match(source, /blade: \{ thick: 0\.25, long: 2\.35 \}/);
+  assert.match(source, /chitin_hull: \{[^}]*abeamMean: 0\.\d{4}/);
 });
 
 test('the committed images and the generated scales are the draw', async () => {
