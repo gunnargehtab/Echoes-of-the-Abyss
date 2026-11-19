@@ -2,8 +2,13 @@
 
 The Close camera of [the target's README](../issue-1799/README.md) in the free-water
 crater, where each hull's disc rises over the bowl's open water. Two sets: `before` is
-`main` at 305bd196, and `after` is the fix
-([art-direction.md](../../art-direction.md#the-plate-under-a-mark)).
+`main` at 305bd196, and `after` is the fix.
+
+**The plates are gone.** The owner took them away on 19 November 2026
+([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801), D2;
+[art-direction.md](../../art-direction.md#a-mark-on-the-lit-world)). This record stands
+for what was built and judged until then, and `frames.mjs` no longer runs: the switch it
+drives went with the pass.
 
 **A software rasteriser drew every frame here**: SwiftShader, in headless Chromium, in the
 cloud container that built the fix. They show the fault and its fix and are not offered
@@ -57,8 +62,8 @@ the plate holds that to Low's. Read two ways, like with like:
 
 Low's own step there is 0.9, and the bare High water's is 0.4, where it was 1.1. The
 hold now runs over all of the disc's water above about 290 m, not the cap alone, which
-is why the count of held pixels rose. That is the cost the owner chose with the level
-([art-direction.md](../../art-direction.md#the-plate-under-a-mark)): the level that
+is why the count of held pixels rose. That is the cost the owner chose with the level:
+the level that
 held no hue left no disc and broke tritanopia's rung order deeper than Low does.
 
 The water at High went from 2.3 under Low's to 1.3 over it, the same hue's offset.
@@ -72,6 +77,6 @@ alone.
 
 ## Related
 
-- [art-direction.md](../../art-direction.md#the-plate-under-a-mark): the plate's two
-  levels
+- [art-direction.md](../../art-direction.md#a-mark-on-the-lit-world): what replaced
+  the plates
 - [The High slice's frames](../issue-1801/README.md): the step this fault was found on

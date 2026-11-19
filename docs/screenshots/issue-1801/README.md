@@ -26,6 +26,22 @@ shows about a tenth brighter, and a plate holds water to Low's own and not to th
 ground's level. [The Close camera before and after](../issue-1816/README.md) has those
 frames and their readings.
 
+## Decided
+
+The owner decided step 1 in session on 19 November 2026, on [the named GPU's
+frames](#on-the-named-gpu)
+([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)):
+
+- **The look is accepted**, and its numbers are SPEC
+  ([art-direction.md](../../art-direction.md#step-1s-numbers--spec)).
+- **Bare.** The mark plates went, with their pass and their tests
+  ([art-direction.md](../../art-direction.md#a-mark-on-the-lit-world)).
+- **No hold.** The shadow hold went, so the relief runs under each own shadow.
+
+Everything below "Reproduce" but the last section was captured before that, with the
+plates and the hold drawn, and is kept as what was judged.
+[After the decision](#after-the-decision) has the frames of the tree as it stands.
+
 ## Reproduce
 
 ```bash
@@ -39,10 +55,9 @@ quality with the development switch beside the setting, `__perspectiveQuality`, 
 writes [readings.json](software/readings.json): each frame's passes, calls, triangles and
 the bytes High holds. Reduced motion holds the camera's sway, so two runs frame alike.
 
-[plates.mjs](plates.mjs) is the second module, run the same way with `--out
-docs/screenshots/issue-1801/software/plates`. It sends the three hulls into the garden,
-selects them, and takes the High frame with its marks' plates and without them, by
-`__perspectivePlates`. [read.py](software/plates/read.py) reads a pair.
+A second module, `plates.mjs`, took the High frame with its marks' plates and without
+them, by a switch that went with the plates. It is in this file's history at b5af0b95,
+and [read.py](software/plates/read.py) read a pair.
 
 ## The frames beside the target
 
@@ -197,8 +212,11 @@ standard map's Low ground paints the detail in the program it always had.
 
 ## The plate under a mark
 
+*The plates went on 19 November 2026 ("Decided", above). This section is the record of
+what was judged.*
+
 The owner took the third reading of limit 6 on 11 November 2026: a mark carries its own
-ground ([art-direction.md](../../art-direction.md#the-plate-under-a-mark)). Under a
+ground. Under a
 mark's plate the world layer is shown no brighter than the palest ground the ladder
 weighs, 11.6% encoded luminance, which is 29.6 of 255. The ceiling that first held the
 lit ground is gone, so a stand's pool now reads on the ground: over the garden at Survey
@@ -290,6 +308,9 @@ commit, where the ink moved 1.80% of the world area's pixels by more than 2 of 2
 Survey, and 0.46% at Home.
 
 ### The hold under a ground shadow
+
+*The hold went on 19 November 2026 ("Decided", above). This section is the record of
+what was judged.*
 
 With the relief alone a trough was as dark as a shadow. At Home the left hull's shadow
 read 10.7, 625, 765 to 680, 785, against a 5th percentile of 10.1 over the rim's box and

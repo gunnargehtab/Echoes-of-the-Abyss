@@ -379,9 +379,9 @@ edge is what keeps a track readable when it does.
 
 *Decided by the owner in session on 11 November 2026
 ([art-direction.md](art-direction.md#two-layers-two-laws)). High is in development behind
-its setting, a step at a time
-([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)), and no frame
-of it is accepted.*
+its setting, a step at a time. The owner accepted its first step on 19 November 2026
+([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)), and Low is
+still the default.*
 
 This gate bounded one renderer by what it draws. It now bounds two, the second by what a
 frame costs.
@@ -389,7 +389,7 @@ frame costs.
 | Quality | What it is | Budget | Status |
 | --- | --- | --- | --- |
 | **Low** | The shipped renderer, as this gate and [art-direction.md](art-direction.md) specify it | "Low: the counted budgets" below, unchanged: at most 150 draw calls and 400,000 triangles a frame, pixel ratio capped at 1.5, and every reservation | Shipped, and the default |
-| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped | In development ([art-direction.md](art-direction.md#what-is-built-at-high)). The 8 ms is TUNABLE until the first frame the owner accepts, and is not yet read on the named GPU |
+| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped | In development; step 1 accepted on 19 November 2026 ([art-direction.md](art-direction.md#what-is-built-at-high)). The 8 ms is SPEC since that frame. Step 1 read at most 2.8 ms on the named GPU, with the plate and hold passes it has since lost ([issue-1801](screenshots/issue-1801/README.md)) |
 
 A count is a proxy for what a frame costs, and the cost itself is read now. On the named
 GPU the free-water study's frame takes at most 2.07 ms of GPU time at its four stations,
@@ -749,10 +749,8 @@ clad fragment, which are read against the 8 ms on the named GPU.
 
 An own model's cladding in the world pass
 ([art-direction.md](art-direction.md#a-model-in-the-worlds-light)) adds no pass and no
-target. The plate pass draws that cladding a second time into its mask, one call a clad
-material: ten calls and 7,608 triangles for the crater's three hulls
-([issue-1814](screenshots/issue-1814/README.md)). The world's light is two taps a clad
-fragment. Both are read against the 8 ms on the named GPU. A model draws from a High
+target. The world's light is two taps a clad
+fragment, read against the 8 ms on the named GPU. A model draws from a High
 template of its own for every navy, so a hull drawn at both qualities on one page holds
 its vertices twice.
 
@@ -883,7 +881,9 @@ The ground is held to it at the survey dolly as well. Its shape there comes from
 question: **from the ink alone, can you name the plateau, the trench and the rock?**
 
 At the High graphics quality this gate is the limit on the lit world
-([art-direction.md](art-direction.md#two-layers-two-laws), limit 6). The glance test and
+([art-direction.md](art-direction.md#two-layers-two-laws), limit 6). A mark stands bare
+there, with nothing under it to hold the world's light back
+([art-direction.md](art-direction.md#a-mark-on-the-lit-world)). So the glance test and
 both review questions are asked of the lit frame, and a lit ground that fails one is too
 bright or too busy, whatever it cost to draw.
 
