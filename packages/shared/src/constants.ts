@@ -109,10 +109,11 @@ export const FREE_WATER_OPENING = {
  * (#1801), and docs/art-direction.md, "Step 1's numbers — SPEC", prints each
  * (test/highSpec.test.ts in the frontend holds the two together). Change the
  * doc first, then the constant. That is every block here but the three at
- * the foot, the two hull blocks and the searchlight, which are TUNABLE until
- * a frame of theirs is accepted:
- * a look's numbers are written into `docs/` from the frame, not before it
- * (the `dev-loop` skill, "Look work").
+ * the foot. The two hull blocks are SPEC as well, each accepted the same day
+ * (#1814, #1811) and printed by the section of that doc that owns it, under
+ * the same test and the same rule. The searchlight is TUNABLE until a frame
+ * of it is accepted: a look's numbers are written into `docs/` from the
+ * frame, not before it (the `dev-loop` skill, "Look work").
  */
 export const HIGH_GRAPHICS = {
   /**
@@ -217,8 +218,9 @@ export const HIGH_GRAPHICS = {
     EMBER_SHARE: 0.2,
   },
   /**
-   * TUNABLE: a navy material's surface on a hull's cladding (#1811;
-   * tools/hull-models/surface.mjs draws it, navySurface.ts reads it). `RELIEF`
+   * SPEC — docs/art-direction.md, "A navy's surface" (#1811, accepted on
+   * 19 November 2026). A navy material's surface on a hull's cladding
+   * (tools/hull-models/surface.mjs draws it, navySurface.ts reads it). `RELIEF`
    * scales the drawn slopes, 1 being the relief as its table gives it in
    * metres: a vein 8 cm proud is under a pixel at every conn camera, so the
    * skin leans further than it stands. `CAVITY` is how far the rig's
@@ -228,9 +230,11 @@ export const HIGH_GRAPHICS = {
    */
   HULL_SURFACE: { RELIEF: 2.5, CAVITY: 0.5, ANISOTROPY: 4 },
   /**
-   * TUNABLE: the world's light on a model's cladding (#1814; hullLight.ts), added to
-   * the rig's. `LID` is how much of the Lid's glow a face takes of what level
-   * ground takes at its depth. `POOL` is how much of a pool's light a face
+   * SPEC — docs/art-direction.md, "A model in the world's light" (#1814,
+   * accepted on 19 November 2026). The world's light on a model's cladding
+   * (hullLight.ts), added to the rig's. `LID` is how much of the Lid's glow
+   * a face takes of what level ground takes at its depth. `POOL` is how much
+   * of a pool's light a face
    * looking straight down takes, on a hull resting on the ground, of what
    * that ground takes: well short of it, since a hull that outshone the
    * ground beside it would read as loud (gate 3). `POOL_REACH_M` is the

@@ -379,8 +379,8 @@ edge is what keeps a track readable when it does.
 
 *Decided by the owner in session on 11 November 2026
 ([art-direction.md](art-direction.md#two-layers-two-laws)). High is in development behind
-its setting, a step at a time. The owner accepted its first step on 19 November 2026
-([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801)), and Low is
+its setting, a step at a time. The owner accepted its first three steps on 19 November
+2026 ([art-direction.md](art-direction.md#what-is-built-at-high) lists them), and Low is
 still the default.*
 
 This gate bounded one renderer by what it draws. It now bounds two, the second by what a
@@ -389,7 +389,7 @@ frame costs.
 | Quality | What it is | Budget | Status |
 | --- | --- | --- | --- |
 | **Low** | The shipped renderer, as this gate and [art-direction.md](art-direction.md) specify it | "Low: the counted budgets" below, unchanged: at most 150 draw calls and 400,000 triangles a frame, pixel ratio capped at 1.5, and every reservation | Shipped, and the default |
-| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped | In development; step 1 accepted on 19 November 2026 ([art-direction.md](art-direction.md#what-is-built-at-high)). The 8 ms is SPEC since that frame. Step 1 read at most 2.8 ms on the named GPU, with the plate and hold passes it has since lost ([issue-1801](screenshots/issue-1801/README.md)) |
+| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped | In development; three steps accepted on 19 November 2026 ([art-direction.md](art-direction.md#what-is-built-at-high)). The 8 ms is SPEC since step 1's frame. Step 1 read at most 2.8 ms on the named GPU, with the plate and hold passes it has since lost ([issue-1801](screenshots/issue-1801/README.md)) |
 
 A count is a proxy for what a frame costs, and the cost itself is read now. On the named
 GPU the free-water study's frame takes at most 2.07 ms of GPU time at its four stations,
@@ -403,10 +403,11 @@ browser's compositor and a weaker card.
   [ui-ux.md](ui-ux.md)'s Settings with High's first increment, since that list holds only
   what is wired. The default stays Low until the owner accepts the High slice whole
   ([#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637)) and says the
-  default moves. A step's frame accepted on the way, as step 1's was on 19 November 2026,
-  does not move it: the steps after it are not accepted. A player can therefore choose
-  High before it is accepted, and until then the control names it as in development. The
-  hosted playtest build hides the control until then.
+  default moves. A step's frame accepted on the way does not move it: three were on
+  19 November 2026 ([art-direction.md](art-direction.md#what-is-built-at-high)), and the
+  steps after them are not accepted. A player can therefore choose High before it is
+  accepted, and until then the control names it as in development. The hosted playtest
+  build hides the control until then.
 - **High reaches a match drawn alone, on the standard surface.** That is every skirmish
   and solo map, and the free-water crater the slice is judged in. A mission placed in the
   continuous world and Sorrowgate's own surface draw Low, and Settings says so, until a
