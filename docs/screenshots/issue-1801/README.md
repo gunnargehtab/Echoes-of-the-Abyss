@@ -364,6 +364,43 @@ nothing past level ground, so it is no light a hull throws. But a paler disc und
 own hull, there at any loudness, is what limit 5 exists to keep honest: whether it reads
 as the hull's own light is the owner's to judge.
 
+## After the decision
+
+The tree as it stands, with neither plates nor hold: [software/bare/](software/bare/readings.json),
+taken at 201d1d1d by "Reproduce"'s command with `--out docs/screenshots/issue-1801/software/bare`.
+**A software rasteriser drew these too.** They show that the removal draws, and are not
+offered for acceptance: the owner judged the bare look on the named GPU's frames above.
+
+| Camera | Low | High | High's passes, calls and triangles |
+| --- | --- | --- | --- |
+| Home | [low](software/bare/01-low-home.png) | [high](software/bare/05-high-home.png) | 6, 54 and 626,610 |
+| Close | [low](software/bare/02-low-close.png) | [high](software/bare/06-high-close.png) | 6, 54 and 626,610 |
+| Low | [low](software/bare/03-low-low.png) | [high](software/bare/07-high-low.png) | 6, 35 and 619,279 |
+| Survey | [low](software/bare/04-low-survey.png) | [high](software/bare/08-high-survey.png) | 6, 54 and 627,248 |
+
+High's frame is six passes where it was eight: `high-world`, `high-scatter`,
+`high-occlusion`, `high-bloom`, `high-composite` and `high-tactical`. At Home it draws
+13 calls and 41,450 triangles fewer than the set above, and its targets hold 136,145,280
+bytes, 8,556,544 fewer: the plates' mask and the holds' plan mask. No disc stands under
+a mark, and the dune bands run under each hull's ground shadow.
+
+The 99th percentile of the world area's luma, out of 255, is 63 at Low and 61 at High at
+Home, 64 and 64 at Close, and 50 and 56 at Survey.
+
+Low did not move. `main` at b5af0b95 was taken twice with `QUALITY=low`, and read
+against itself and against this tree's Low frames as "Low does not move" reads a pair:
+
+| Camera | `main` against `main` | `main` against the branch | Calls and triangles |
+| --- | --- | --- | --- |
+| Home | 0.01 | 0.02 | 44 and 593,684, both |
+| Close | 0.01 | 0.04 | 44 and 593,684, both |
+| Survey | 0.00 | 0.00 | 45 and 594,970, both |
+
+At Close both maps are marine snow and nothing else
+([main against main](software/bare/low-control/diff-close-main-vs-main.png),
+[main against the branch](software/bare/low-control/diff-close-main-vs-branch.png)), and
+at Survey no pixel moves by more than 2.
+
 ## Related
 
 - [The target frame](../issue-1799/README.md) — the cameras, and who captures
