@@ -80,8 +80,8 @@ beam turned 0 degrees, the Harvester's model stood off the viewport in the secon
 [pairdiff.py](pairdiff.py) makes the difference and prints its figures. Its window is
 the Harvester's model box grown by half its size each way. Inside it the control stands
 8 or more of 255 over the first frame on 40,036 pixels, by 35 at most. Outside it,
-where the pair should not differ, it differs by 0.30 of 255 a pixel, in the measure
-[Low does not move](#low-does-not-move) uses.
+where only noise and the mark that went with the Harvester differ, the pair differs by
+0.30 of 255 a pixel, in the measure [Low does not move](#low-does-not-move) uses.
 
 The first take's shadow frame had no control and is not kept. The park then read the
 pool at the survey camera, where a hull is drawn larger and its lamp hangs off its drawn
@@ -199,11 +199,12 @@ hull never comes to rest, the beam moves between the pair. The run then warns, t
 every frame after it, and ends in a failure that names it. `readings.json` is written
 after every frame.
 
-This command leaves motion on. The camera then sways by up to 0.3% of the frame's
-height (`cameraSway.ts`) and the snow sinks between the pair's two frames, so
-`control.sway` reads `on` and the difference draws edges that are not shadow. The
-software run holds both. To measure the pair and not only look at it, run the first
-command again into another folder with the software run's `SETTINGS_JSON`.
+This command does not set reduced motion, so motion follows the desktop's own setting,
+and `control.sway` says which: `held` or `on`. With it on, the camera sways by about
+0.3% of the frame's height (`cameraSway.ts`) and the snow sinks between the pair's two
+frames, and the difference draws edges that are not shadow. The software run holds
+both. To measure the pair and not only look at it, run the first command again into
+another folder with the software run's `SETTINGS_JSON`.
 
 ## Related
 

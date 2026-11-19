@@ -14,8 +14,9 @@ Luma is Pillow's `L`, out of 255. The world area is ../issue-1801/low-control/
 diff.py's: under the top strip, over the console. The window is the Harvester's
 model box in the shadow frame, from `readings.json`, grown by half its size on
 every side: the hull, the ground under it and the ground behind it down the
-beam. Outside the window the pair should not differ at all, and what it does
-differ by there is the floor the figures inside stand on.
+beam. Outside the window none of the hull's shadow falls. What the pair differs
+by there is noise and any mark that went with the hull, and it is the floor the
+figures inside stand on.
 
 A pair is clean only where the camera stood still between its two frames: the
 software run holds the sway and the snow (reduced motion), and `control.sway`
