@@ -16,9 +16,9 @@
 //     --out docs/screenshots/issue-1836/gpu --steps docs/screenshots/issue-1836/frames.mjs
 //
 // QUALITY=low takes the control alone, which is how `main`'s Low is taken.
-// CLIP=1 with drive.mjs's RECORD_VIDEO=<dir> orders the fleet under way and
-// moves the camera from Home to Close at High instead, for the clip.
-// TRAVEL_S is how long the hulls run before the under-way frames. A software
+// CLIP=1 with drive.mjs's RECORD_VIDEO=<dir> moves the camera from Home to
+// Close at High instead, over the fleet at rest, for the clip. TRAVEL_S is
+// how long the hulls run before an under-way frame. A software
 // rasteriser's frames are labelled so in readings.json and are never offered
 // for acceptance; its millisecond fields measure the rasteriser.
 import assert from 'node:assert/strict';
@@ -34,11 +34,11 @@ const POSES = [
   ['survey', 2000, 2000, 10000, 0, 88, null],
 ];
 // Where the under-way orders send the fleet: north along the west rim, past
-// the garden, then back south. An under-way frame is taken a leg at a time,
-// so each finds the fleet moving.
+// the garden, then the length of the rim south. A frame a leg, so each finds
+// the fleet moving: the near camera first, on the short leg.
 const GOALS = [
-  [500, 500],
-  [500, 3400],
+  [500, 300],
+  [500, 3700],
 ];
 
 /** halo-cost.mjs's load: about 3.6 ms on the named GPU (gpuQueueLoad.ts). */
@@ -115,10 +115,10 @@ export default async ({ page, shot }) => {
     const k = view.height / 1080;
     return [(650 + xM / 6.45) * k + (view.width - 1920 * k) / 2, (232 + zM / 6.45) * k];
   };
-  // Select the three hulls on the west rim, from the survey camera.
+  // Select the three hulls where the match opens them, on the west rim, from
+  // the survey camera. The selection is kept after the order, so Silent
+  // Running is asked of the same three.
   const selectFleet = async () => {
-    await aim(page, POSES[3]);
-    await page.waitForTimeout(software ? 4000 : 1500);
     const [x0, y0] = px(150, 1650);
     const [x1, y1] = px(950, 2300);
     await page.mouse.move(x0, y0);
@@ -128,42 +128,52 @@ export default async ({ page, shot }) => {
     await page.mouse.up({ button: 'left' });
     await page.waitForTimeout(1500);
   };
+  // The selection is made once: a second drag, over water the fleet has
+  // left, would drop it.
   let legs = 0;
   const orderUnderWay = async () => {
-    await selectFleet();
+    await aim(page, POSES[3]);
+    await page.waitForTimeout(software ? 4000 : 1500);
+    if (legs === 0) await selectFleet();
     const [gx, gy] = px(...GOALS[legs++ % GOALS.length]);
     await page.mouse.click(gx, gy, { button: 'right' });
-    await page.waitForTimeout(Number(process.env.TRAVEL_S ?? 6) * 1000);
+    await page.waitForTimeout(Number(process.env.TRAVEL_S ?? 4) * 1000);
   };
-  // The Home and Close cameras carried to where the fleet is now: the same
-  // eye, the same distance, about the fleet's centroid as the opening's are,
-  // at the depth the fleet now runs at. A move order takes a hull down to
-  // the floor it is sent over.
+  // The Home and Close cameras carried to where the fleet is now, at the
+  // depth it now runs at: a move order takes a hull down to the floor it is
+  // sent over. Home keeps its eye about the fleet's centroid, as the opening's
+  // is. Close is a near camera and a fleet under way strings out, so it is
+  // carried to the loudest hull, whose beam is the brightest. Each is led by
+  // how far its subject moved since the last call: a frame is a second old on
+  // a software rasteriser by the time it is taken, and a hull covers 30 m in
+  // it. On a GPU the lead is a metre or two.
+  let last = null;
   const follow = async (pose) => {
-    const { ownCentre, depthM } = await page.evaluate(() => {
+    const now = await page.evaluate(() => {
       const units = window.__perspectiveLamps().units;
+      const loudest = units.reduce((a, b) => (b.sig > a.sig ? b : a));
       return {
-        ownCentre: window.__perspectiveProbe().ownCentre,
+        centre: window.__perspectiveProbe().ownCentre,
+        loudest: { x: loudest.xM, z: loudest.zM },
         depthM: units.reduce((sum, hull) => sum + hull.depthM, 0) / units.length,
       };
     });
-    return [
-      pose[0],
-      pose[1] + ownCentre.x - 542,
-      pose[2] + ownCentre.z - 1958,
-      pose[3],
-      pose[4],
-      pose[5],
-      depthM,
-    ];
+    const at = pose[0] === 'close' ? now.loudest : now.centre;
+    const lead =
+      last !== null && last.name === pose[0] ? { x: at.x - last.x, z: at.z - last.z } : { x: 0, z: 0 };
+    last = { name: pose[0], x: at.x, z: at.z };
+    const [x, z] =
+      pose[0] === 'close'
+        ? [at.x + lead.x, at.z + lead.z]
+        : [pose[1] + at.x + lead.x - 542, pose[2] + at.z + lead.z - 1958];
+    return [pose[0], x, z, pose[3], pose[4], pose[5], now.depthM];
   };
 
   if (process.env.CLIP === '1') {
-    // The clip: the fleet under way, the camera from Home to Close at High.
+    // The clip: Home to Close at High, the camera moved a step a frame, over
+    // the fleet at rest: the Corvette's beam and its pool, and the Harvester's.
     await setQuality('high');
-    await orderUnderWay();
-    const from = await follow(POSES[0]);
-    const to = await follow(POSES[1]);
+    const [from, to] = [POSES[0], POSES[1]];
     await aim(page, from);
     await page.waitForTimeout(2000);
     const steps = Number(process.env.CLIP_STEPS ?? 120);
@@ -184,21 +194,25 @@ export default async ({ page, shot }) => {
   let dir;
   // `moving` frames follow the fleet: aimed at where it is and taken at
   // once, since a station's hold is seconds and a hull under way is not
-  // there after it. `ordered` sends it on a fresh leg first. Their GPU time
-  // is not read; the frames at rest draw the same passes.
-  const take = async (quality, state, poses, moving = false, ordered = false) => {
+  // there after it. Their GPU time is not read; the frames at rest draw the
+  // same passes.
+  const take = async (quality, state, poses, moving = false) => {
     for (const still of poses) {
       const name = still[0];
       if (only && !only.includes(name)) continue;
-      if (ordered) await orderUnderWay();
       const pose = moving ? await follow(still) : still;
       await aim(page, pose);
       const label = state === null ? `${quality}-${name}` : `${quality}-${state}-${name}`;
       let probe;
       if (moving) {
-        await page.waitForTimeout(software ? 2500 : 400);
-        await aim(page, await follow(still));
-        await page.waitForTimeout(software ? 2500 : 200);
+        // Chased up to the shot: the last aim is a frame or two old when the
+        // frame is taken, and a hull under way covers 30 m a second.
+        // Twice on a software rasteriser, where a round trip to the page is
+        // seconds and the leg is not long: once to see the hull, once to lead it.
+        for (let i = 0; i < (software ? 2 : 4); i++) {
+          await aim(page, await follow(still));
+          await page.waitForTimeout(software ? 1200 : 150);
+        }
         probe = await page.evaluate(() => window.__perspectiveProbe());
       } else {
         probe = await settle(label);
@@ -247,10 +261,12 @@ export default async ({ page, shot }) => {
     // At rest, each hull at its idle SIG.
     await take('high', 'rest', POSES);
     // Under way: a hull under way is louder, and its beam brighter.
-    await take('high', 'underway', POSES.slice(0, 2), true, true);
+    await orderUnderWay();
+    await take('high', 'underway', [POSES[1]], true);
+    await orderUnderWay();
+    await take('high', 'underway', [POSES[0]], true);
     // On Silent Running the server holds each hull to SIG 3 to 8, under the
     // halo's floor: no beam and no pool. The selection is still the fleet's.
-    await selectFleet();
     await page.keyboard.press('Space');
     await page.waitForFunction(
       () => window.__perspectiveLamps().units.every((hull) => hull.silentRunning),

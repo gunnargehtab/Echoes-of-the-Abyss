@@ -405,8 +405,8 @@ accepted. Two calls were taken in the open with the first frames, its strength a
 shadow, and each is the
 owner's to overturn.*
 
-Each of the player's own hulls throws one beam from its bow, along its heading and under
-the level, in its navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
+Each of the player's own hulls throws one beam from its bow, along its heading, in its
+navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
 It is agent light, the first at High: it pools on the ground and the stone, lights the
 cladding of another own hull it crosses, and scatters in the water as a cone. It is the
 first light with a direction, so it is the first to cast a shadow.
@@ -423,13 +423,21 @@ first light with a direction, so it is the first to cast a shadow.
   leaves a silent hull a twentieth of a beam: a Light Scout resting at SIG 6 would
   floodlight the seabed. **The 61+ band alone**, where the prompt table says
   "floodlit", keeps the target frame's brightest light off almost every frame.
+- **It looks at the ground a throw ahead.** A move order takes a hull down to the floor
+  it is sent over, and a hull at rest in the crater hangs 66 drawn metres over it. A
+  beam at one angle under the level put the first one's pool under its own keel. So a
+  beam looks at the ground 130 m ahead of its lamp, between 8 and 50 degrees under the
+  level: a hull skimming the floor rakes it, and one over the bowl does not look
+  straight down. The lamp stands at least 4 m over the ground, since a hull is drawn
+  larger than life at the far dollies and its keel line with it.
 - **Own hulls only.** A contact throws no beam and shadows none (limit 2): the list is
   built from the player's own hulls, and a contact's model is not in it. A structure
   throws none yet.
 - **The shadow is read, not rendered.** The ground is a height field, so a lit point asks
   the ground's own heights whether the line to the lamp clears them, and asks each own
   hull the same, as its keel line and half its beam. Rock is ground here, so rock
-  shadows ground, hull and water, and a hull shadows ground and water. The other reading
+  shadows ground, hull and water, and a hull shadows ground and water. A shadow's edge
+  is 2 m of clearance either way, soft and of one width. The other reading
   was a shadow map a beam: a second camera and a pass a beam, which gate 8 refuses a
   lighting change, for the silhouette of a hull where this has its length and beam. It
   is the cheaper to reverse. What it does not draw: a hull's shadow on another hull, a

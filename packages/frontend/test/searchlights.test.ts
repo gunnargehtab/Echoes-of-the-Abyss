@@ -212,9 +212,14 @@ describe("an own hull's searchlight", () => {
     assert.equal(groundShade(ridge, { x: 250, y: -132, z: 0 }, lamp), 0);
     // And the ground before it is lit.
     assert.equal(groundShade(ridge, { x: 60, y: -132, z: 0 }, lamp), 1);
-    // The shadow's edge is soft: a point whose line just clears the crest.
-    const grazing = groundShade(ridge, { x: 250, y: -36, z: 0 }, lamp);
+    // The shadow's edge is soft: a point whose line just meets the crest.
+    const grazing = groundShade(ridge, { x: 250, y: -39, z: 0 }, lamp);
     assert.ok(grazing > 0 && grazing < 1, `a grazing line reads ${grazing}`);
+    // And a lamp skimming the floor still lights the water over it: the
+    // ground beside the lamp is near the line and casts nothing.
+    const skimming = { x: 0, y: -128, z: 0 };
+    assert.equal(groundShade(level, { x: 200, y: -100, z: 0 }, skimming), 1);
+    assert.ok(groundShade(level, { x: 60, y: -132, z: 0 }, skimming) > 0.9);
   });
 
   it('is shadowed by another own hull, and never by the hull that throws it', () => {

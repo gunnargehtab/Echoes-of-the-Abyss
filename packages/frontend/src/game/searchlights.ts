@@ -314,11 +314,18 @@ export function beamIrradiance(distanceM: number): number {
 
 type Point = { x: number; y: number; z: number };
 
+const smoothstep = (a: number, b: number, x: number): number => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
 /**
  * What the ground leaves of a beam at `at`: the shader's own walk, for the
  * tests that hold a shadow. `steps` reads of `groundY` along the line to the
- * lamp, each asking how far the line clears the ground against how far it
- * has come, so a shadow's edge widens with the distance from what casts it.
+ * lamp, each asking how far the line clears the ground: whole `SOFT_M` over
+ * it, gone `SOFT_M` under it. The edge is a width in metres and not a ratio
+ * of clearance to distance, which dimmed every beam whose lamp skims the
+ * floor: the ground beside the lamp is near the line and casts nothing.
  */
 export function groundShade(
   groundY: (x: number, z: number) => number,
@@ -326,24 +333,16 @@ export function groundShade(
   lamp: Point,
   steps: number = SPEC.SHADOW.STEPS
 ): number {
-  const reach = Math.hypot(lamp.x - at.x, lamp.y - at.y, lamp.z - at.z);
+  const { LIFT_M, SOFT_M } = SPEC.SHADOW;
   let open = 1;
   for (let i = 1; i <= steps; i++) {
     const t = i / (steps + 1);
     const y = at.y + (lamp.y - at.y) * t;
     const ground = groundY(at.x + (lamp.x - at.x) * t, at.z + (lamp.z - at.z) * t);
-    open = Math.min(
-      open,
-      ((y - ground + SPEC.SHADOW.LIFT_M) * SPEC.SHADOW.SHARPNESS) / (t * reach)
-    );
+    open = Math.min(open, smoothstep(-SOFT_M, SOFT_M, y - ground + LIFT_M));
   }
-  return Math.min(1, Math.max(0, open));
+  return open;
 }
-
-const smoothstep = (a: number, b: number, x: number): number => {
-  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
-  return t * t * (3 - 2 * t);
-};
 
 /**
  * What the hulls leave of a beam at `at`: the shader's own test. How near
@@ -390,18 +389,18 @@ const groundShadowGlsl = (name: string, steps: number): string =>
   [
     `float ${name}( vec3 at, vec3 lamp ) {`,
     '  vec3 span = lamp - at;',
-    '  float reach = length( span );',
     '  float open = 1.0;',
     `  for ( int i = 1; i <= ${steps}; i ++ ) {`,
     // Never at the point itself, nor at the lamp, which hangs in open water.
     `    float t = float( i ) / ${glsl(steps + 1)};`,
     '    vec3 p = at + span * t;',
     '    float ground = textureLod( tSearchGround, p.xz / uSearchMap, 0.0 ).r;',
-    // How far the line clears the ground, against how far it has come: a
-    // shadow's edge widens with the distance from what casts it.
-    `    open = min( open, ( p.y - ground + ${glsl(SPEC.SHADOW.LIFT_M)} ) * ${glsl(SPEC.SHADOW.SHARPNESS)} / ( t * reach ) );`,
+    // How far the line clears the ground: whole a soft edge over it, gone
+    // a soft edge under it. A width, so the ground beside a lamp that skims
+    // the floor casts nothing.
+    `    open = min( open, smoothstep( ${glsl(-SPEC.SHADOW.SOFT_M)}, ${glsl(SPEC.SHADOW.SOFT_M)}, p.y - ground + ${glsl(SPEC.SHADOW.LIFT_M)} ) );`,
     '  }',
-    '  return clamp( open, 0.0, 1.0 );',
+    '  return open;',
     '}',
   ].join('\n');
 

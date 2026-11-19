@@ -263,9 +263,9 @@ export const HIGH_GRAPHICS = {
    * light a metre of water scatters to the eye, and `VOLUME_STEPS` the steps
    * a sight line takes through the cone. `SHADOW`: `STEPS` and `VOLUME_STEPS`
    * are the reads of the ground's heights between a point and the lamp, on a
-   * surface and in the water; `LIFT_M` starts the line that far over the
-   * ground it leaves; `SHARPNESS` is how fast a shadow's edge closes, as
-   * clearance over distance; and `HULL_EDGE` is where a hull's shadow is
+   * surface and in the water; `LIFT_M` carries the line that far over the
+   * ground, so level ground never shadows itself; `SOFT_M` is the half-width
+   * of a shadow's soft edge, in metres of clearance; and `HULL_EDGE` is where a hull's shadow is
    * whole and where it is gone, in half-beams from its keel line.
    */
   SEARCHLIGHT: {
@@ -286,7 +286,7 @@ export const HIGH_GRAPHICS = {
     HULL: 0.5,
     VOLUME: 0.0001,
     VOLUME_STEPS: 16,
-    SHADOW: { STEPS: 12, VOLUME_STEPS: 4, LIFT_M: 1.5, SHARPNESS: 8, HULL_EDGE: [0.7, 1.4] },
+    SHADOW: { STEPS: 12, VOLUME_STEPS: 4, LIFT_M: 1.5, SOFT_M: 2, HULL_EDGE: [0.7, 1.4] },
   },
 } as const;
 
