@@ -130,15 +130,18 @@ builds toward that frame. The slice, its renderer work and its assets are tracke
 
 ### What is built at High
 
-*In development, a step at a time. **Step 1 is accepted**: the owner accepted its look in
-session on 19 November 2026, on the named GPU's frames
+*In development, a step at a time. **Three steps are accepted**, each by the owner in
+session on 19 November 2026, on the named GPU's frames. **Step 1**
 ([#1801](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1801);
-[issue-1801](screenshots/issue-1801/README.md)). That is the lit ground and stone, the
-water as a medium, the world's own sources and the chain, and its numbers are SPEC
-([Step 1's numbers](#step-1s-numbers--spec)). A navy's surface, an own model in the
-world's light, an own hull's searchlight and every later step are not accepted, and
-their numbers stay TUNABLE in
-`HIGH_GRAPHICS` (`packages/shared/src/constants.ts`) until a frame of theirs is.*
+[issue-1801](screenshots/issue-1801/README.md)) is the lit ground and stone, the water as
+a medium, the world's own sources and the chain
+([Step 1's numbers](#step-1s-numbers--spec)). **An own model in the world's light**
+([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)) and **a navy's
+surface** ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811)) are
+the other two. The numbers of all three are SPEC, each printed by the section that owns
+it. An own hull's searchlight and every later step are not accepted, and their numbers
+stay TUNABLE in `HIGH_GRAPHICS` (`packages/shared/src/constants.ts`) until a frame of
+theirs is.*
 
 High draws the one scene as two layers
 (`packages/frontend/src/game/highFrame.ts`):
@@ -271,19 +274,20 @@ one, how far its pool and its volume reach, and how high over the ground it stan
 | `ore` | 1.5 | 70 | 12 |
 | `civic` | 6 | 140 | 15 |
 
-`FRAME_GPU_MS`, gate 6's 8 ms, is [graphics-standards.md](graphics-standards.md)'s. The
-blocks after it, `HULL_SURFACE`, `HULL_LIGHT` and `SEARCHLIGHT`, are TUNABLE with the
-sections below that own them.
+`FRAME_GPU_MS`, gate 6's 8 ms, is [graphics-standards.md](graphics-standards.md)'s. Of
+the three blocks after step 1's, `HULL_LIGHT` and `HULL_SURFACE` are SPEC too, each
+printed by the section below that owns it and held by the same test. `SEARCHLIGHT` is
+TUNABLE with its own.
 
 #### A model in the world's light
 
-*In development with the rest of High, and not accepted. The owner took three calls in
-session on 13 November 2026, for
-[#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814), each from
-options written with the first frames
-([issue-1814](screenshots/issue-1814/README.md)). One of them, that no plate holds a
-model, went with the plates on 19 November 2026
-([A mark on the lit world](#a-mark-on-the-lit-world)).*
+*Accepted. The owner accepted this step's look in session on 19 November 2026, on the
+named GPU's frames
+([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814);
+[issue-1814](screenshots/issue-1814/README.md)), and its numbers are SPEC, below. The
+owner took three calls for it in session on 13 November 2026, each from options written
+with the first frames. One of them, that no plate holds a model, went with the plates on
+19 November 2026 ([A mark on the lit world](#a-mark-on-the-lit-world)).*
 
 The world pass draws the cladding of the player's own hulls and structures: every opaque
 material that is no lamp. So the water takes a hull's light as it takes the ground's, and
@@ -320,19 +324,33 @@ the occlusion, the bloom and the grade reach it.
 A model draws from a template of its own at High, as a surfaced one already did, so
 nothing Low draws is built, patched or keyed differently:
 `packages/frontend/test/hullLight.test.ts` holds that and the split of the two passes.
-`HIGH_GRAPHICS.HULL_LIGHT` in `packages/shared/src/constants.ts` holds how much
-of each light a hull takes, TUNABLE until this step's frames are accepted.
 
-Still open, for the frames taken on the named GPU: whether a mark that does cross a
-hull's body reads over a hull a pool lights, and whether a hull's glint feeding the bloom
-reads as loudness (gate 3, limit 5).
+How much of each light a hull takes is SPEC, promoted on 19 November 2026 with the
+owner's acceptance, at the values the accepted frames were taken with.
+`HIGH_GRAPHICS.HULL_LIGHT` in `packages/shared/src/constants.ts` holds each, and
+`packages/frontend/test/highSpec.test.ts` holds this table to it. A number moves here
+first, then there.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Share of the Lid's glow a face looking straight up takes, of what level ground takes at its depth | `HULL_LIGHT.LID` | 1 |
+| Share of a pool's light a face looking straight down takes on a hull resting on the ground, of what that ground takes | `HULL_LIGHT.POOL` | 0.3 |
+| Height over the ground at which that share has halved, drawn metres | `HULL_LIGHT.POOL_REACH_M` | 80 |
+
+Read on those frames: a mark that crosses a hull's body reads over a hull a pool lights
+(#1814, D2). Still open, since no frame has tested either: whether a hull's glint feeding
+the bloom reads as loudness (gate 3, limit 5), and a second navy, since the crater seats
+the Commune's three hulls alone.
 
 #### A navy's surface
 
-*In development with the rest of High, and not accepted. The owner chose its route in
-session on 13 November 2026, for
-[#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811): the surface is
-built before the step that lights a hull, and a hull wears it without a layout.*
+*Accepted. The owner accepted this step's look in session on 19 November 2026, on the
+named GPU's frames
+([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811);
+[issue-1811](screenshots/issue-1811/README.md)), and its numbers are SPEC, below. Blender
+is dropped for hero hulls with it. The owner chose the route in session on 13 November
+2026: the surface is built before the step that lights a hull, and a hull wears it
+without a layout.*
 
 [#1802](screenshots/issue-1802/README.md) rebuilt one hull in Blender and baked a surface
 onto it, and its control showed that surface carried most of the gain on the lit table at
@@ -381,19 +399,41 @@ flank at the hull's axis. The owner took the bow and the stern in session on 13 
 keel, `spore_pod` a pored skin, and `algae_membrane` a fin's rays. The navy's block asks
 for "growth rings and living bioluminescent veins"
 ([asset-prompts-3d.md](asset-prompts-3d.md)); these veins are relief and emit nothing.
-Their heights are in the table, in metres. `HIGH_GRAPHICS.HULL_SURFACE` in
-`packages/shared/src/constants.ts` holds how far the client leans them, TUNABLE until
-this step's frames are accepted.
+Their heights are in the table, in metres.
+
+How far the client leans them is SPEC, promoted on 19 November 2026 with the owner's
+acceptance, at the values the accepted frames were taken with.
+`HIGH_GRAPHICS.HULL_SURFACE` in `packages/shared/src/constants.ts` holds each, and
+`packages/frontend/test/highSpec.test.ts` holds this table to it. A number moves here
+first, then there.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Gain on the drawn slopes, 1 being the relief as its table gives it in metres | `HULL_SURFACE.RELIEF` | 2.5 |
+| Spread of the indirect light from the deepest hollow to the highest crest, about the surface's own mean | `HULL_SURFACE.CAVITY` | 0.5 |
+| Anisotropic taps a surface is read with, the trim sheets' four | `HULL_SURFACE.ANISOTROPY` | 4 |
 
 Two things a tile cannot do, which the Blender hull does. It cannot find a hull's own
 back, so the midrib follows the model's frame and a wide deck takes another every
 16 m. And it cannot follow a fin, so every ray stands square to the keel.
 
-Still open, for the frames taken on the named GPU
-([issue-1811](screenshots/issue-1811/README.md)): whether the kit Corvette wearing this
-reads beside the Blender one at the Close and nearest cameras, and what three taps a
-clad fragment cost against gate 6's 8 ms. The lean was set under Low's rig, before the
-world lit a hull (#1814), and is read again on those frames.
+Read on the named GPU's frames ([issue-1811](screenshots/issue-1811/README.md)), and
+closed (#1811):
+
+- **Blender is dropped for hero hulls** (D1). Beside the kit Corvette wearing this, the
+  Blender one does not clearly win at the near cameras, and it adds 83,260 triangles a
+  frame. The spike stays as [#1802](screenshots/issue-1802/README.md)'s
+  record, and no shipped hull is built by it.
+- **Nothing shimmers** on the swing round the hull (D2).
+- **The lean stays 2.5.** It was set under Low's rig, before the world lit a hull
+  (#1814), and the owner kept it under that light on 17 November 2026.
+- **Three taps a clad fragment fit gate 6.** High reads 2.11 to 2.78 ms queued at its
+  four cameras with them in it, inside the 8 ms
+  ([issue-1801](screenshots/issue-1801/README.md#on-the-named-gpu)).
+
+The tile's two faults, a fin's rays crossing a raked blade and the midrib's line along
+each flank, are filed as
+[#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844) (D3).
 
 #### An own hull's searchlight
 

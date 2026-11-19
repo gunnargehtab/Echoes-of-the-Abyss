@@ -20,8 +20,14 @@ Blender.** The reasons are the costs under "What it costs" and the control below
 lit table, most of what this hull gained is its surface and not its modelling. In the game
 the modelling still shows where the surface does not, so the question is not closed. The
 follow-up is filed as #1811: a navy's surface drawn once and worn by the kit hulls, judged
-beside this hull on the named GPU once High lights a hull. Blender stays a candidate for a
-short list of hero hulls only, if it still clearly wins there.
+beside this hull on the named GPU once High lights a hull. Blender stayed a candidate for
+a short list of hero hulls only, if it still clearly won there.
+
+On 19 November 2026 the owner judged the two side by side and **dropped Blender for hero
+hulls too** ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811),
+D1; [issue-1811](../issue-1811/README.md#decided)): it does not clearly win at the near
+cameras, and adds 83,260 triangles a frame. This page, the scripts and the spike's GLB
+stay as the record.
 
 ## What was built
 

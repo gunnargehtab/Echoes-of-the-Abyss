@@ -5,9 +5,9 @@ lights it by. This step moves the cladding of the player's own models into the w
 pass and lights it by the world: the Lid's glow, the pools, the occlusion, the bloom and
 the water as a medium.
 
-It is look work in development. **Nothing here is accepted, and a software rasteriser
-drew every frame below** (SwiftShader, the container's only one). They guide a round. The
-frames to judge are taken on the named GPU, by the commands under "Who captures".
+**A software rasteriser drew every frame below but the named GPU's** (SwiftShader, the
+container's only one). They guided a round and were not offered for acceptance. The
+frames the owner judged are under "On the named GPU".
 
 [art-direction.md](../../art-direction.md#a-model-in-the-worlds-light) says what is built.
 
@@ -17,6 +17,19 @@ relief and raised the Lid's level from 3 to 3.3. This branch has `main` merged i
 The merged tree was drawn once more over the garden to see that it draws. The frame has
 the hold pass that pull request added before the world pass and one call more, 67, and
 the hulls read as they do below. The frames here were not retaken.
+
+## Decided
+
+The owner decided this step in session on 19 November 2026, on [the named GPU's
+frames](#on-the-named-gpu)
+([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)):
+
+- **The look is accepted**, and its numbers are SPEC
+  ([art-direction.md](../../art-direction.md#a-model-in-the-worlds-light)).
+- **A mark crossing a pool-lit hull reads.**
+
+Untested, and still open there: whether a hull's glint reads as loudness, and a second
+navy. Everything below was written before that and is kept as what was judged.
 
 ## The decisions
 
@@ -209,5 +222,5 @@ GARDEN=1 VIEW_W=1920 VIEW_H=1080 node .claude/skills/run-game/scripts/drive.mjs 
   and the three calls
 - [issue-1799](../issue-1799/README.md): the High slice's target frame and its cameras
 - [issue-1801](../issue-1801/README.md): the High frame's first step, and the plates
-- [issue-1811](../issue-1811/README.md): a navy's surface, whose verdict waits on this
+- [issue-1811](../issue-1811/README.md): a navy's surface, accepted the same day
 - [graphics-standards.md](../../graphics-standards.md): gate 6, the High graphics quality

@@ -6,9 +6,27 @@ triangles. The owner declined the roster rebuilt that way. This is the route tha
 left open: a relief drawn once a navy material, tiled, and worn by every kit hull of the
 navy at the High graphics quality.
 
-It is look work in development. **Nothing here is accepted, and a software rasteriser drew
-every game frame below** (SwiftShader, the container's only one). The frames to judge are
-taken on the named GPU, by the commands under "Who captures".
+**A software rasteriser drew every game frame below but the named GPU's** (SwiftShader,
+the container's only one). They guided a round and were not offered for acceptance. The
+frames the owner judged are under "On the named GPU".
+
+## Decided
+
+The owner decided this step in session on 19 November 2026, on [the named GPU's
+frames](#on-the-named-gpu)
+([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811)):
+
+- **The look is accepted**, and its numbers are SPEC
+  ([art-direction.md](../../art-direction.md#a-navys-surface)).
+- **Blender is dropped for hero hulls.** It does not clearly win at the near cameras,
+  and adds 83,260 triangles a frame. The spike stays as
+  [#1802](../issue-1802/README.md)'s record.
+- **No shimmer.**
+- **The tile's two faults are filed**, as
+  [#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844): a fin's rays
+  across a raked blade, and the midrib's line along each flank.
+
+Everything below was written before that and is kept as what was judged.
 
 ## The decisions
 
