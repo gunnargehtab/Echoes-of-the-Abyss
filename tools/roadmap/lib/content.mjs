@@ -621,6 +621,7 @@ export const items = {
   1820: 'The saved pictures of the richer water look being taken before the ships’ new navy surface, so they no longer matched the game',
   1828: 'The start-up check passing even when the game would run on an older 3D engine than the one it asks for',
   1829: 'A flat black shape filling the top left of the screen at the close camera beside a Corvette, on the richer water look',
+  1832: 'On the richer graphics setting, a glass roof over your own ship staying clear of the water that covers everything else',
   1816: 'On the richer graphics setting, the dark discs under marks showing over shallow water that the standard look keeps clear',
   1823: 'On the richer graphics setting, a faint disc under a mark still showing over the shallow water of three biomes',
   1777: 'The opening view of the open-water patch showing no sea life large enough to see',

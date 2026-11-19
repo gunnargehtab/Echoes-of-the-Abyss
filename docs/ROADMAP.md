@@ -904,6 +904,7 @@ and no row below is open.
 | Mirrored hull parts drawing near-black in the conn view | [#1812](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1812) |
 | Screenshots of the water look predating the hulls' navy surface | [#1820](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1820) |
 | A flat black shape at the Corvette's near-port camera | [#1829](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1829) |
+| A glass roof at High skipping the water the rest of the scene gets | [#1832](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1832) |
 
 **How the project runs**
 
