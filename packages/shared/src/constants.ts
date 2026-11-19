@@ -252,9 +252,13 @@ export const HIGH_GRAPHICS = {
    * `GAIN_SIG_CAP` is the live SIG past which a beam no longer brightens: the
    * halo climbs to 80, but a pool is ground a mark stands on (limit 6).
    * `INNER_DEG` and `OUTER_DEG` are the half-angles the cone is whole inside
-   * and gone outside, and `DEPRESSION_DEG` how far under the level it looks.
-   * `CLEAR_M` is how far off the bow the lamp hangs and `KEEL` how far under
-   * the keel line, in beams. `HULL` is how much of a beam another own hull's
+   * and gone outside. A beam looks at the ground `THROW_M` ahead of its lamp,
+   * so its pool leads the hull at any height, between the two angles under
+   * the level `DEPRESSION_DEG` holds it to: a hull skimming the floor still
+   * rakes it, and one high over the bowl does not look straight down.
+   * `CLEAR_M` is how far off the bow the lamp hangs, `KEEL` how far under
+   * the keel line, in beams, and `LAMP_CLEAR_M` the least it stands over the
+   * ground, since a hull is drawn larger than life at the far dollies. `HULL` is how much of a beam another own hull's
    * cladding takes of what ground would. `VOLUME` is the share of a beam's
    * light a metre of water scatters to the eye, and `VOLUME_STEPS` the steps
    * a sight line takes through the cone. `SHADOW`: `STEPS` and `VOLUME_STEPS`
@@ -269,14 +273,16 @@ export const HIGH_GRAPHICS = {
     OCCLUDERS: 8,
     POWER: 40,
     REF_M: 100,
-    CORE_M: 30,
+    CORE_M: 45,
     REACH_M: 520,
     GAIN_SIG_CAP: 45,
     INNER_DEG: 10,
     OUTER_DEG: 17,
-    DEPRESSION_DEG: 28,
+    THROW_M: 130,
+    DEPRESSION_DEG: [8, 50],
     CLEAR_M: 3,
     KEEL: 0.25,
+    LAMP_CLEAR_M: 4,
     HULL: 0.5,
     VOLUME: 0.0001,
     VOLUME_STEPS: 16,

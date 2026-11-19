@@ -754,6 +754,14 @@ fragment, read against the 8 ms on the named GPU. A model draws from a High
 template of its own for every navy, so a hull drawn at both qualities on one page holds
 its vertices twice.
 
+An own hull's searchlight
+([art-direction.md](art-direction.md#an-own-hulls-searchlight)) adds no pass, target or
+camera. It adds one instanced draw to the scatter pass, a quad a beam and six at most,
+and one texture, the ground's heights at 16 pixels a cell in half-floats: 131,072 bytes
+for the crater's 16 × 16 cells. Its cost is fragments: a lit ground fragment inside a
+cone reads those heights twelve times a beam, and a sight line through a cone sixteen
+steps of four reads. That is read against the 8 ms on the named GPU and is not yet.
+
 **Lamp halo** ([art-direction.md](art-direction.md#lamp-halo--spec), on by default:
 the Lamp halos toggle in Settings turns it off, and a development switch drives captures). With Lamp halos off it spends no pass, call, triangle or target. The one cost it
 keeps is the canvas's stencil, which the canvas always asks for so the setting stays live

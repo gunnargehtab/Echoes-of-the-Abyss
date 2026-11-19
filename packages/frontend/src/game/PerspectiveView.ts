@@ -5295,10 +5295,12 @@ export class PerspectiveView {
         sig: unit.sig,
       });
     }
-    const { lights, occluders } = searchlightsOf(hulls, FACTION_PALETTE[this.faction].glow, {
-      x: this.target.x,
-      z: this.target.z,
-    });
+    const { lights, occluders } = searchlightsOf(
+      hulls,
+      FACTION_PALETTE[this.faction].glow,
+      { x: this.target.x, z: this.target.z },
+      (x, z) => this.groundYAt(x, z)
+    );
     setSearchlights(
       lights,
       occluders,

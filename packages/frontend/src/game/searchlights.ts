@@ -118,22 +118,24 @@ const squared = (ax: number, az: number, bx: number, bz: number): number =>
 /**
  * The beams a frame draws and the hulls that stand in their way, from the
  * player's own hulls alone. A hull throws one beam from its bow, along its
- * heading and `DEPRESSION_DEG` under the level. Hulls that throw none are
- * left out, and of the rest the `MAX` nearest the camera's focus are kept,
- * ties by id, so the choice is the same on every frame of a still camera.
- * Every hull near the focus may occlude, lit or not.
+ * heading, at the ground `THROW_M` ahead of it: `groundY` is the drawn
+ * ground's height at a plan point. Hulls that throw none are left out, and
+ * of the rest the `MAX` nearest the camera's focus are kept, ties by id, so
+ * the choice is the same on every frame of a still camera. Every hull near
+ * the focus may occlude, lit or not.
  */
 export function searchlightsOf(
   hulls: readonly SearchlightHull[],
   glow: number,
-  focus: { x: number; z: number }
+  focus: { x: number; z: number },
+  groundY: (x: number, z: number) => number
 ): { lights: Searchlight[]; occluders: SearchlightOccluder[] } {
   const nearest = [...hulls].sort(
     (a, b) =>
       squared(a.x, a.z, focus.x, focus.z) - squared(b.x, b.z, focus.x, focus.z) || a.id - b.id
   );
   const color = new Color(glow);
-  const pitch = (SPEC.DEPRESSION_DEG * Math.PI) / 180;
+  const [shallowest, steepest] = SPEC.DEPRESSION_DEG.map((deg) => (deg * Math.PI) / 180);
   const lights: Searchlight[] = [];
   for (const hull of nearest) {
     if (lights.length === SPEC.MAX) break;
@@ -141,14 +143,22 @@ export function searchlightsOf(
     if (gain <= 0) continue;
     const fx = Math.cos(hull.heading);
     const fz = Math.sin(hull.heading);
-    // Off the bow and under the keel line, clear of the hull's own capsule.
+    // Off the bow and under the keel line, clear of the hull's own capsule,
+    // and never in the ground: a hull skimming the floor at a far dolly is
+    // drawn several times its size, and its keel line with it.
     const ahead = hull.lengthM / 2 + SPEC.CLEAR_M;
+    const x = hull.x + fx * ahead;
+    const z = hull.z + fz * ahead;
+    const y = Math.max(hull.y - hull.beamM * SPEC.KEEL, groundY(x, z) + SPEC.LAMP_CLEAR_M);
+    // At the ground a throw ahead, so the pool leads the hull at any height.
+    const fall = y - groundY(x + fx * SPEC.THROW_M, z + fz * SPEC.THROW_M);
+    const pitch = Math.min(steepest!, Math.max(shallowest!, Math.atan2(fall, SPEC.THROW_M)));
     const power = SPEC.POWER * gain;
     lights.push({
       hull: hull.id,
-      x: hull.x + fx * ahead,
-      y: hull.y - hull.beamM * SPEC.KEEL,
-      z: hull.z + fz * ahead,
+      x,
+      y,
+      z,
       dx: fx * Math.cos(pitch),
       dy: -Math.sin(pitch),
       dz: fz * Math.cos(pitch),

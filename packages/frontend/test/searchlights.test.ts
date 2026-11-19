@@ -31,6 +31,9 @@ import {
 const SPEC = HIGH_GRAPHICS.SEARCHLIGHT;
 const GLOW = FACTION_PALETTE[Faction.Pelagia].glow;
 
+/** A level floor at 600 m, as the crater's rim is drawn: 66 m under a hull at 300 m. */
+const FLOOR = (): number => -132;
+
 const hull = (over: Partial<SearchlightHull> = {}): SearchlightHull => ({
   id: 1,
   x: 1000,
@@ -65,13 +68,18 @@ describe("an own hull's searchlight", () => {
     assert.ok(SILENT_RUNNING.SIG_MAX < HALO_SIG_FLOOR);
     for (let sig = SILENT_RUNNING.SIG_MIN; sig <= SILENT_RUNNING.SIG_MAX; sig++) {
       assert.equal(searchlightGain(sig), 0);
-      const { lights } = searchlightsOf([hull({ sig })], GLOW, { x: 1000, z: 1000 });
+      const { lights } = searchlightsOf([hull({ sig })], GLOW, { x: 1000, z: 1000 }, FLOOR);
       assert.equal(lights.length, 0, `a hull at SIG ${sig} throws a beam`);
     }
   });
 
   it("throws one beam a loud hull, off its bow, in its navy's glow", () => {
-    const { lights } = searchlightsOf([hull({ heading: Math.PI / 2 })], GLOW, { x: 0, z: 0 });
+    const { lights } = searchlightsOf(
+      [hull({ heading: Math.PI / 2 })],
+      GLOW,
+      { x: 0, z: 0 },
+      FLOOR
+    );
     assert.equal(lights.length, 1);
     const [beam] = lights;
     // Heading a quarter turn from +x looks along +z: plan y is the world's z.
@@ -79,8 +87,10 @@ describe("an own hull's searchlight", () => {
     assert.ok(Math.abs(beam!.z - (1000 + 40 + SPEC.CLEAR_M)) < 1e-9);
     assert.ok(beam!.y < -66, 'the lamp hangs under the keel line');
     assert.ok(Math.abs(Math.hypot(beam!.dx, beam!.dy, beam!.dz) - 1) < 1e-9);
-    assert.ok(Math.abs(beam!.dy + Math.sin((SPEC.DEPRESSION_DEG * Math.PI) / 180)) < 1e-9);
     assert.ok(beam!.dz > 0 && Math.abs(beam!.dx) < 1e-9);
+    // It looks at the ground a throw ahead of the lamp.
+    const fall = beam!.y - FLOOR();
+    assert.ok(Math.abs(-beam!.dy / beam!.dz - fall / SPEC.THROW_M) < 1e-9);
     // Hue is the navy's (gate 4): the glow token, scaled and never mixed.
     const glow = new Color(GLOW);
     assert.ok(Math.abs(beam!.r - glow.r * SPEC.POWER) < 1e-9);
@@ -88,8 +98,25 @@ describe("an own hull's searchlight", () => {
     assert.ok(Math.abs(beam!.b / beam!.r - glow.b / glow.r) < 1e-9);
   });
 
+  it('leads the hull with its pool at any height, and never hangs its lamp in the ground', () => {
+    const [shallowest, steepest] = SPEC.DEPRESSION_DEG.map((deg) => (deg * Math.PI) / 180);
+    const beamOf = (y: number, lengthM = 80, beamM = 12) =>
+      searchlightsOf([hull({ y, lengthM, beamM })], GLOW, { x: 0, z: 0 }, FLOOR).lights[0]!;
+    // A hull skimming the floor still rakes it, at the shallowest angle.
+    const skimming = beamOf(-128);
+    assert.ok(Math.abs(Math.asin(-skimming.dy) - shallowest!) < 1e-9);
+    // One high over the floor does not look straight down.
+    assert.ok(Math.abs(Math.asin(-beamOf(200).dy) - steepest!) < 1e-9);
+    // A hull drawn several times its size at a far dolly: its keel line is
+    // under the ground, and the lamp is not.
+    const large = beamOf(-128, 280, 42);
+    assert.equal(large.y, FLOOR() + SPEC.LAMP_CLEAR_M);
+    assert.ok(skimming.y >= FLOOR() + SPEC.LAMP_CLEAR_M);
+  });
+
   it('brightens with the hull, by the gain alone', () => {
-    const at = (sig: number) => searchlightsOf([hull({ sig })], GLOW, { x: 0, z: 0 }).lights[0]!.g;
+    const at = (sig: number) =>
+      searchlightsOf([hull({ sig })], GLOW, { x: 0, z: 0 }, FLOOR).lights[0]!.g;
     assert.ok(Math.abs(at(28) / at(HALO_SIG_FULL) - haloGain(28)) < 1e-9);
     assert.ok(at(SPEC.GAIN_SIG_CAP) > at(HALO_SIG_FULL));
   });
@@ -99,8 +126,8 @@ describe("an own hull's searchlight", () => {
       hull({ id: 10 + i, x: 1000 + 100 * i })
     );
     const shuffled = [...fleet].reverse();
-    const first = searchlightsOf(fleet, GLOW, { x: 1000, z: 1000 });
-    const second = searchlightsOf(shuffled, GLOW, { x: 1000, z: 1000 });
+    const first = searchlightsOf(fleet, GLOW, { x: 1000, z: 1000 }, FLOOR);
+    const second = searchlightsOf(shuffled, GLOW, { x: 1000, z: 1000 }, FLOOR);
     assert.equal(first.lights.length, SPEC.MAX);
     assert.deepEqual(
       first.lights.map((l) => l.hull),
@@ -110,7 +137,7 @@ describe("an own hull's searchlight", () => {
     // A silent hull in the way leaves its slot to the next loud one, and
     // still stands in a beam.
     const quiet = fleet.map((h, i) => (i === 0 ? { ...h, sig: 5 } : h));
-    const third = searchlightsOf(quiet, GLOW, { x: 1000, z: 1000 });
+    const third = searchlightsOf(quiet, GLOW, { x: 1000, z: 1000 }, FLOOR);
     assert.equal(third.lights[0]!.hull, 11);
     assert.equal(third.lights.length, SPEC.MAX);
     assert.equal(third.occluders[0]!.hull, 10);
@@ -121,7 +148,7 @@ describe("an own hull's searchlight", () => {
     // Limit 2: a contact throws no light and casts no shadow. The list is
     // built from what it is handed, and the view hands it `units`, which
     // holds no contact (PerspectiveView `aimSearchlights`).
-    const { lights, occluders } = searchlightsOf([], GLOW, { x: 0, z: 0 });
+    const { lights, occluders } = searchlightsOf([], GLOW, { x: 0, z: 0 }, FLOOR);
     assert.deepEqual(lights, []);
     assert.deepEqual(occluders, []);
   });
@@ -130,7 +157,8 @@ describe("an own hull's searchlight", () => {
     const { lights, occluders } = searchlightsOf(
       [hull({ id: 7 }), hull({ id: 9, x: 1400, sig: 5 })],
       GLOW,
-      { x: 1000, z: 1000 }
+      { x: 1000, z: 1000 },
+      FLOOR
     );
     const ground = groundHeightTexture({ cols: 2, rows: 2, cellM: 250 } as never, () => -132);
     setSearchlights(lights, occluders, ground, 500, 500);
@@ -160,7 +188,7 @@ describe("an own hull's searchlight", () => {
   it('falls by the square of the distance, to nothing at its reach', () => {
     // `POWER` at `REF_M`, less what the core and the window take there.
     const atRef = beamIrradiance(SPEC.REF_M) / SPEC.POWER;
-    assert.ok(atRef > 0.8 && atRef <= 1, `at REF_M a beam is ${atRef} of POWER`);
+    assert.ok(atRef > 0.7 && atRef <= 1, `at REF_M a beam is ${atRef} of POWER`);
     assert.ok(beamIrradiance(2 * SPEC.REF_M) < beamIrradiance(SPEC.REF_M) / 3);
     assert.equal(beamIrradiance(SPEC.REACH_M), 0);
     assert.equal(beamIrradiance(SPEC.REACH_M + 100), 0);

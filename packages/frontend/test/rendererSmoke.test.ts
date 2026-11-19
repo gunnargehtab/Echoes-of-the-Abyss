@@ -2334,7 +2334,7 @@ describe('renderer smoke test: the conn view', () => {
         world.frame(3);
         const lit = world.gl.frameDraws.flatMap((pass) => keysOf(pass));
         assert.equal(lit.length, 1, `${look}: one ground carries the detail, in one pass`);
-        assert.ok(lit[0]!.endsWith(':seabed-detail-5-relief-1:lit-ground-7'), lit[0]);
+        assert.ok(lit[0]!.endsWith(':seabed-detail-5-relief-1:lit-ground-8'), lit[0]);
 
         assert.equal(probes.__perspectiveQuality!('low'), 'low');
         world.frame(3);
@@ -2374,6 +2374,7 @@ describe('renderer smoke test: the conn view', () => {
           targetBytes: 0,
           groundBytes: 0,
           worldLights: 0,
+          searchlights: 0,
           frameGpuBudgetMs: 8,
         },
         'Low holds nothing of High’s'
@@ -8094,6 +8095,70 @@ describe("where a marker's name stands (#1662)", () => {
         'on the model'
       );
       holdsTheRule(world, mark, box);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('throws a searchlight from a loud own hull at High, and none at Low or on Silent Running (#1836)', async () => {
+    // docs/art-direction.md, "An own hull's searchlight", and limit 5: "A
+    // hull on Silent Running does not floodlight the seabed." Counted here as
+    // beams and draws; the pixels are docs/screenshots/issue-1836.
+    const template = buildTemplate(await parsedModel('corvette-pelagia'), {
+      unit: UnitKind.Corvette,
+      faction: Faction.Pelagia,
+    });
+    const world = await boot();
+    try {
+      const probes = (
+        globalThis as unknown as {
+          window: {
+            __perspectiveProbe: () => {
+              passes: string[];
+              graphicsQuality: { searchlights: number };
+            };
+            __perspectiveQuality: (quality: 'low' | 'high') => string;
+          };
+        }
+      ).window;
+      const beams = () => probes.__perspectiveProbe().graphicsQuality.searchlights;
+      // The runner's model manifest is empty, so the canned Corvette's model
+      // is handed to its handle as the loader would. It rests at SIG 48; the
+      // canned Light Scout has no model and rests at 12.
+      const apply = (sig: number, silentRunning: boolean) => {
+        const handles = (world.conn as unknown as { unitHandles: Map<number, unknown> })
+          .unitHandles;
+        const handle = handles.get(11) as { model: unknown; modelKey: string };
+        if (handle.model === null) {
+          handle.model = instantiate(template);
+          handle.modelKey = 'test';
+        }
+        const snapshot = cannedSnapshot();
+        Object.assign(snapshot.units[0]!, { sig, silentRunning });
+        world.conn.applySnapshot(snapshot);
+        world.frame(3);
+      };
+      apply(48, false);
+      assert.equal(beams(), 0, 'Low throws no beam');
+      assert.deepEqual(probes.__perspectiveProbe().passes.slice(0, 1), ['canvas']);
+
+      assert.equal(probes.__perspectiveQuality('high'), 'high');
+      apply(48, false);
+      assert.equal(beams(), 1, 'the loud Corvette throws one');
+      // No pass of its own: the cones are one more instanced draw, into the
+      // scatter pass's target and over the sources' volumes.
+      assert.ok(probes.__perspectiveProbe().passes.includes('high-scatter'));
+      const lit = world.gl.frameDraws.length;
+      assert.equal(world.gl.frameDraws[2]!.length, 1, 'every beam is one instanced draw');
+      assert.equal(world.gl.frameTargets[2], world.gl.frameTargets[1], 'into the one target');
+
+      apply(5, true);
+      assert.equal(beams(), 0, 'and none on Silent Running');
+      assert.equal(world.gl.frameDraws.length, lit - 1, 'the sources alone again');
+
+      assert.equal(probes.__perspectiveQuality('low'), 'low');
+      apply(48, false);
+      assert.equal(beams(), 0, 'Low again throws none');
     } finally {
       world.teardown();
     }
