@@ -181,7 +181,7 @@ export interface Settings {
    * §14, #1801): Low, the shipped renderer, or High, the lit world layer.
    *
    * Low by default, and a choice rather than a default that moves: High is in
-   * development until the owner accepts a frame of it, so a stored `high` is
+   * development until the owner accepts the slice whole, so a stored `high` is
    * always something the player picked. The tactical layer is the same at
    * both, so neither costs a player any information; a display that fails
    * High's check keeps the choice and draws Low, and the row says so.

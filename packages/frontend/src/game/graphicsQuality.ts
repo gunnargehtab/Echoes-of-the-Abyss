@@ -5,7 +5,7 @@
  *
  * Low is the shipped renderer and the default. High is the lit world layer
  * (docs/art-direction.md, "Two layers, two laws"), in development until the
- * owner accepts a frame of it (#1801): production code behind this setting,
+ * owner accepts the High slice whole (#1637): production code behind this setting,
  * never behind a development URL flag.
  *
  * Three-free, like `lampHalo.ts`, so the settings store and its screen hold
@@ -16,7 +16,7 @@
 
 export type GraphicsQuality = 'low' | 'high';
 
-/** TUNABLE: stays Low until the owner accepts a High frame and says it moves (gate 6). */
+/** TUNABLE: stays Low until the owner accepts the High slice whole and says it moves (gate 6). */
 export const GRAPHICS_QUALITY_DEFAULT: GraphicsQuality = 'low';
 
 /** A stored value, or the default for anything else. */
@@ -26,7 +26,7 @@ export function graphicsQualityOf(raw: unknown): GraphicsQuality {
 
 /**
  * Whether this build offers the control. The hosted playtest build hides it
- * until a High frame is accepted (gate 6), and is told so when its image is
+ * until the High slice is accepted whole (gate 6), and is told so when its image is
  * built (`ECHOES_HOSTED`, deploy/compose.playtest.yml).
  */
 export function graphicsQualityOffered(hosted: string | undefined): boolean {

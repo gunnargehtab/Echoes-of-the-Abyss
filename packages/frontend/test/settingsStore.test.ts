@@ -190,7 +190,7 @@ describe('the settings store', () => {
 
   it('loads the Graphics quality at Low, and keeps a choice of High', () => {
     // graphics-standards.md gate 6: "High is a player's choice", and "The
-    // default stays Low until the owner accepts a High frame". A record older
+    // default stays Low until the owner accepts the High slice whole". A record older
     // than the control loads Low, where every build before it drew.
     assert.equal(DEFAULT_SETTINGS.graphicsQuality, 'low');
     assert.equal(loadSettings().graphicsQuality, 'low');

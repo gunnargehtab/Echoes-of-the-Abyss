@@ -17,7 +17,8 @@
 # - **The origin lock names the page.** The backend image runs with
 #   NODE_ENV=production and refuses to start without CORS_ORIGIN.
 # - **The client hides the Graphics quality control.** High is in development
-#   until the owner accepts a frame of it (docs/graphics-standards.md gate 6).
+#   until the owner accepts the High slice whole (#1637;
+#   docs/graphics-standards.md gate 6).
 #
 # ECHOES_DOMAIN is the host name the DNS record points at this machine. The
 # deploy job writes it into the host's `.env`, which compose reads on its own.
@@ -48,7 +49,7 @@ services:
     build:
       args:
         VITE_SERVER_URL: ''
-        # Hides the Graphics quality control until a High frame is accepted
+        # Hides the Graphics quality control until the High slice is accepted whole
         # (docs/graphics-standards.md gate 6; game/graphicsQuality.ts).
         ECHOES_HOSTED: '1'
     ports: !reset []
