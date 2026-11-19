@@ -470,7 +470,11 @@ each flank, are filed as
 [issue-1836](screenshots/issue-1836/README.md)). Every number is TUNABLE in
 `HIGH_GRAPHICS.SEARCHLIGHT` (`packages/shared/src/constants.ts`) until a frame of it is
 accepted. Three calls were taken in the open with the first frames: its strength, its
-shadow, and how many beams a hull throws. Each is the owner's to overturn.*
+shadow, and how many beams a hull throws. **The owner kept all three**, in session on
+19 November 2026: the lamp halo's gain, the read shadow, and one beam a hull. The
+readings not taken stay written under each. Keeping a call accepts no frame. Still open,
+for the named GPU's take: the look's acceptance, gate 6's 8 ms, and gate 7's glance at a
+ring over its own pool, which reads on the software frames.*
 
 Each of the player's own hulls throws one beam from its bow, along its heading, in its
 navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
@@ -517,8 +521,9 @@ first light with a direction, so it is the first to cast a shadow.
   six beams light six hulls, and a beam costs every lit fragment in its cone the same
   whichever hull throws it. **A beam from each lamp the model carries** is the closest
   to the target, and a beam would leave a lamp the tactical pass draws. Six beams would
-  then light fewer hulls. It is the next look step if the owner wants the
-  target's count. **A count a hull class**, written in
+  then light fewer hulls. The owner kept one beam, and a beam from each lamp is a look
+  step of its own ([#1845](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1845)),
+  blocked by this step's acceptance. **A count a hull class**, written in
   [asset-prompts-3d.md](asset-prompts-3d.md), needs that doc's blocks first. Past six,
   the hulls nearest the camera's focus throw theirs and the rest throw none: a beam off
   the frame lights nothing a player sees. The work lights keep the loudest instead

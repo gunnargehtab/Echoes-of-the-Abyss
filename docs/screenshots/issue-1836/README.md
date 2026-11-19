@@ -12,22 +12,36 @@ named GPU, with the command under "Who captures".
 
 The set was taken on `claude/issue-1836-yiljpg`, over
 [#1838](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/1838): no plate, no hold.
+The three frames under `software/poses` are one later run of the whole module, on the
+branch that added the two poses
+[#1842](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1842) asked for, over
+`main` at b9ca3366, the merge of the first. Its
+[readings.json](software/poses/readings.json) lies beside them. Its other eleven frames
+repeat the poses of the set here and are not kept.
 
 ## Reproduce
 
 ```bash
 SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
   node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
-  --out docs/screenshots/issue-1836/software --steps docs/screenshots/issue-1836/frames.mjs
+  --out docs/screenshots/issue-1836/software/poses --steps docs/screenshots/issue-1836/frames.mjs
 ```
 
-[frames.mjs](frames.mjs) takes Low at the four cameras, then High four times: the fleet
-at rest, the Harvester parked in the Corvette's beam, the fleet under way, and on Silent
-Running. It writes [readings.json](software/readings.json): each frame's passes, calls,
-triangles, beams and every hull's live SIG. An under-way frame follows the fleet, so its
-camera is the Home eye carried to where the hulls are. The Close eye under way is taken
-on a GPU alone: this rasteriser's frame is seconds old when it is taken, and a hull
-under way has left a 420 m dolly's frame by then.
+That is the later run. The set was taken by the same command into `software`, before
+the module took the two poses: run there now it would number its frames past the pair
+and write over the set's readings. The set's `readings.json` keeps a `pool` row whose
+frame is gone.
+
+[frames.mjs](frames.mjs) takes Low at the four cameras, then High five times: the fleet
+at rest, the Harvester parked in the Corvette's beam and then sent off it, the fleet
+under way, on Silent Running, and the Corvette alone at the foot of the rim. It writes
+`readings.json` after every frame: its passes, calls, triangles and beams, its camera,
+and every hull's live SIG, place and beam. [The set's](software/readings.json) was
+written before the camera, the places and the beams were;
+[the later run's](software/poses/readings.json) has them. An under-way frame follows the
+fleet, so its camera is the Home eye carried to where the hulls are. The Close eye under
+way is taken on a GPU alone: this rasteriser's frame is seconds old when it is taken,
+and a hull under way has left a 420 m dolly's frame by then.
 
 ## The frames beside the target
 
@@ -44,7 +58,9 @@ rests at SIG 6, the Corvette at 28 and the Harvester at 18.
 
 | State | Frames | What it shows |
 | --- | --- | --- |
-| A hull in a beam | [across the beam](software/09-high-shadow-pool.png) | The Harvester sent into the Corvette's pool, seen square across the beam. The beam comes in from the left and pools on the dunes, and the pool stops at the Harvester: the ground under and behind it is dark, out to about its ring. That is the hull's shadow, read from its keel line and half its beam, and it is a blob and not a silhouette |
+| A hull in a beam | [across the beam](software/poses/09-high-shadow-pool.png) | The Harvester sent into the Corvette's pool, seen square across the beam. The beam comes in from the upper left. The pool's near half is bright, and the pool stops at the Harvester: the ground behind it is dark. The streak at the lower right is the Harvester's own faint pool |
+| The same pool, empty | [control](software/poses/10-high-shadow-pool-empty.png), [difference](software/poses/diff-shadow-pool-vs-empty.png) | The same camera with the Harvester sent 260 m off, out of the frame. The pool is a whole ellipse. In the difference red is light the first frame lacks: under the hull and down the beam to 132 pixels past its model's box, up to 35 of 255 darker. That is the hull's shadow, read from its keel line and half its beam, and it is a blob and not a silhouette. Cyan is what the hull adds: itself, its ring and its own faint pool. The two lines along the top are a mark of the selected Harvester's, which went with it |
+| Rock in a beam | [at the rim's foot](software/poses/14-high-rim-foot.png) | The Corvette alone on the bowl's floor at 1,470 m, its bow at the west rim's wall. Its cone ends on the rock, and the pool climbs the wall unbroken, ribbed by the relief on it. Nothing is lit behind the wall |
 | Under way | [home](software/10-high-underway-home.png), and [close](software/09-high-underway-close.png) from an earlier take of this tree, at 87a29736 | The fleet ordered along the rim, which takes it down to the floor. The Harvester runs at SIG 40 and its beam rakes the ground ahead of it, white at the lamp; the Corvette's, at 28, is dim; the Light Scout, at 6 to 12, throws none |
 | Silent Running | [home](software/11-high-silent-home.png), [close](software/12-high-silent-close.png) | The same fleet at SIG 3.5 to 5.3: no beam and no pool, and `readings.json` counts none |
 
@@ -54,17 +70,43 @@ the rasteriser drew it.
 
 What the target shows and these do not: beams from more than one lamp a hull, white
 light where these are the navy's green, a rock's shadow across a pool, and life in the
-water. No frame here puts rock in a beam: the crater's rim is level where the fleet
-opens. So the ground's shadow is held by `packages/frontend/test/searchlights.test.ts`
-and not yet by a picture, and the hull's by the frame above. That frame has no control:
-a pool's own edge and a shadow's look alike at this angle. The GPU's take wants the same
-pose again with the Harvester moved off, and the difference between the two.
+water.
+
+The hull's shadow is held by a pair. A pool's own edge and a shadow's look alike, so
+`frames.mjs` takes the pose twice, with the Harvester in the pool and with it sent off,
+and the shadow is what differs. Between the two the Corvette's lamp moved 0 m and its
+beam turned 0 degrees, the Harvester's model stood off the viewport in the second, and
+`readings.json` records all three as that frame's `control`.
+[pairdiff.py](pairdiff.py) makes the difference and prints its figures. Its window is
+the Harvester's model box grown by half its size each way. Inside it the control stands
+8 or more of 255 over the first frame on 40,036 pixels, by 35 at most. Outside it,
+where only noise and the mark that went with the Harvester differ, the pair differs by
+0.30 of 255 a pixel, in the measure [Low does not move](#low-does-not-move) uses.
+
+The first take's shadow frame had no control and is not kept. The park then read the
+pool at the survey camera, where a hull is drawn larger and its lamp hangs off its drawn
+bow. A run here with that park stood the Harvester about 90 m down the beam of where the
+beam's axis met the ground, at the pool's faint end, and its control found only a faint
+shadow. `frames.mjs` now reads the pool at the frame's own dolly.
+
+The ground's shadow has a frame now, and half an answer. At the rim's foot the wall
+faces the lamp and nothing stands between them, so the walk has nothing to cut. The JS
+copy, `groundShade` in `searchlights.ts`, was run once over the crater's own heights
+sampled every 5 m, a scratch run that is not kept, and left 99.5% of that beam's light.
+In the frame the pool is unbroken, on a wall some 900 m high. A steep face is where a walk over filtered heights is likeliest to
+shadow what it should light, so that is what the frame holds. What no frame holds yet is
+a cast edge, rock's shadow on other lit ground: at this pose nothing the beam lights
+lies behind anything. `packages/frontend/test/searchlights.test.ts` still holds that
+case alone.
 
 The shadow frame also shows a fault of the client's that is older than this step. A hull
 passing near another nudges it a metre or two, and until #1840 the conn view turned a hull
 to where it last moved, so the Corvette's beam swung when the Harvester arrived
 ([#1840](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1840)). `frames.mjs`
 parks the Harvester in the pool as it then lies.
+A metre or two is not its limit: in the run under `software/poses` the Corvette was
+shoved 5 m and its beam swung from east to 19 degrees west of south, which is why that
+pair looks east across a beam thrown south.
 
 ## What the frame costs
 
@@ -85,7 +127,9 @@ this map.
 
 The cost that is not counted here is fragments: a lit ground fragment inside a cone
 reads the ground's heights twelve times a beam, and a sight line through a cone sixteen
-steps of four reads. Gate 6's 8 ms is read on the named GPU and has not been.
+steps of four reads. Gate 6's 8 ms is read on the named GPU and has not been. The
+shadow pair and the rim frame are taken at rest, so that run reads their queued GPU
+time too: what a hull in a cone costs, and a cone on rock.
 
 ## Low does not move
 
@@ -137,8 +181,30 @@ CLIP=1 RECORD_VIDEO=docs/screenshots/issue-1836/gpu VIEW_W=1920 VIEW_H=1080 \
   --out docs/screenshots/issue-1836/gpu --steps docs/screenshots/issue-1836/frames.mjs
 ```
 
-The first writes the frames and `readings.json`, whose `queued` GPU time at the four
-cameras at rest is gate 6's reading. The second records the clip.
+The first writes fifteen frames and `readings.json`, whose `queued` GPU time at the
+four cameras at rest is gate 6's reading. The second records the clip. Three frames of
+the first answer [#1842](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1842):
+
+- `high-shadow-pool` and `high-shadow-pool-empty` are the hull's shadow and its control.
+  The run prints whether they are a pair, and `readings.json` holds it as `control`.
+  The shadow is their difference:
+  `python3 docs/screenshots/issue-1836/pairdiff.py docs/screenshots/issue-1836/gpu`
+  writes the map beside them and prints the figures [above](#the-frames-beside-the-target).
+- `high-rim-foot` is rock in a beam. The pool should stand whole on the wall, as it
+  does here: a hole in it is the GLSL walk cutting what the JS copy does not.
+
+The rim frame comes last and waits out a 900 m dive. Either staged frame can fail to
+stage: the Harvester never stands in the pool, neither side of the beam is level rim, a
+hull never comes to rest, the beam moves between the pair. The run then warns, takes
+every frame after it, and ends in a failure that names it. `readings.json` is written
+after every frame.
+
+This command does not set reduced motion, so motion follows the desktop's own setting,
+and `control.sway` says which: `held` or `on`. With it on, the camera sways by about
+0.3% of the frame's height (`cameraSway.ts`) and the snow sinks between the pair's two
+frames, and the difference draws edges that are not shadow. The software run holds
+both. To measure the pair and not only look at it, run the first command again into
+another folder with the software run's `SETTINGS_JSON`.
 
 ## Related
 
