@@ -32,7 +32,7 @@ import {
   type MeshStandardMaterial,
   type Object3D,
 } from 'three';
-import { MODEL_LAYER, WORLD_LAYER } from './highFrame.ts';
+import { WORLD_LAYER } from './highFrame.ts';
 import { markLamp } from './lampHaloPass.ts';
 import type { RosterModelInstance, Template } from './rosterModels.ts';
 
@@ -267,13 +267,9 @@ class Batch {
   }
 }
 
-/**
- * A part's layers: the world pass's, and the one the plate pass draws the
- * models alone by to cut them from its mask (markPlates.ts), or the canvas's.
- */
+/** A part's layer: the world pass's, or the canvas's. */
 function layer(mesh: InstancedMesh, world: boolean): void {
   mesh.layers.set(world ? WORLD_LAYER : 0);
-  if (world) mesh.layers.enable(MODEL_LAYER);
 }
 
 /** Whether `array` holds `matrix` at `offset`, compared as the buffer stores it. */

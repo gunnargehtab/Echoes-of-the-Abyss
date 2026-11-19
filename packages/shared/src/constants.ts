@@ -126,11 +126,12 @@ export const HIGH_GRAPHICS = {
    * and no shadow (docs/art-direction.md, limit 1). `IRRADIANCE` is what level
    * ground takes at the Lid, in the renderer's linear units; it is held where
    * the palest ground it lights is no paler than the palest ground the
-   * loudness ladder weighs, so a mark's plate changes nothing the Lid alone
-   * lights (test/litGround.test.ts), and where no ground it lights reaches
-   * the bloom's knee, so only a source blooms (test/highChain.test.ts). The
+   * loudness ladder weighs, so a mark, which stands bare on the lit world,
+   * reads over ground the Lid alone lights as the ladder holds it
+   * (test/litGround.test.ts), and where no ground it lights reaches the
+   * bloom's knee, so only a source blooms (test/highChain.test.ts). The
    * second binds first: at 3.3 the palest ground stands within a tenth of the
-   * plate's, and little of what the bounds leave is given away. `FALLOFF_M` is
+   * ladder's, and little of what the bounds leave is given away. `FALLOFF_M` is
    * the depth over which the water above takes it to 1/e, so depth still
    * darkens. `HORIZON` is what a vertical face keeps of it.
    */
@@ -185,20 +186,6 @@ export const HIGH_GRAPHICS = {
     SATURATION: 1.12,
   },
   /**
-   * A mark's plate (docs/art-direction.md, "The plate under a mark"): where
-   * the world layer is held under a mark, in CSS pixels at the UI's scale.
-   * The level it is held to is not here: it is derived from the ground the
-   * ladder weighs (markPlates.ts `PLATE_LEVEL`). `LINE_PX` is how far the
-   * plate stands whole either side of a traced line's centre: the widest
-   * stroke is four pixels, an active hazard's rim, and a line reads against
-   * what stands beside it.
-   * `INK_PX` is the same for a stroke of survey ink, which is thinner and
-   * everywhere. `AGENT_PX` is how far past an agent's farthest steady mark
-   * its disc stands whole, and `FEATHER_PX` the soft edge every plate ends
-   * in.
-   */
-  PLATE: { LINE_PX: 4, INK_PX: 2, AGENT_PX: 4, FEATHER_PX: 3 },
-  /**
    * The world's own sources (docs/style-neon-noir.md "World light"), a family
    * a row: `POWER` is the light level ground takes directly under one source,
    * in the renderer's linear units, as the rig's key gives 1.8 face on;
@@ -239,9 +226,8 @@ export const HIGH_GRAPHICS = {
    * the rig's. `LID` is how much of the Lid's glow a face takes of what level
    * ground takes at its depth. `POOL` is how much of a pool's light a face
    * looking straight down takes, on a hull resting on the ground, of what
-   * that ground takes: well short of it, since a hull stands inside its own
-   * mark's plate, where the ground beside it is held down, and a hull that
-   * outshone that ground would read as loud (gate 3). `POOL_REACH_M` is the
+   * that ground takes: well short of it, since a hull that outshone the
+   * ground beside it would read as loud (gate 3). `POOL_REACH_M` is the
    * height over the ground, in the world's drawn metres, at which that has
    * halved: the sources stand tens of metres up, and a hull at 300 m hangs
    * 66 drawn metres over a 600 m floor.

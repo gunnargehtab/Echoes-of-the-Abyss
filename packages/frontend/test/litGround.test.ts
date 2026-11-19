@@ -11,7 +11,7 @@ import { MeshBasicMaterial, ShaderLib } from 'three';
 import { Biome, HIGH_GRAPHICS, MODEL_LIGHTING } from '@echoes/shared';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 import { BIOME_COLOR, LID_GLOW, ROCK_FACE } from '../src/game/palette.ts';
-import { encodedLuminance } from '../src/game/ladder.ts';
+import { encodedLuminance, LADDER_GROUND_LEVEL } from '../src/game/ladder.ts';
 import {
   installLitGround,
   installLitRoof,
@@ -20,7 +20,6 @@ import {
   litGroundBytes,
   litGroundSurface,
 } from '../src/game/litGround.ts';
-import { PLATE_LEVEL } from '../src/game/markPlates.ts';
 import {
   BIOME_RELIEF,
   LIT_ALBEDO_GAIN,
@@ -310,10 +309,10 @@ describe('the lit ground’s material (#1801)', () => {
   };
 
   it('adds a source’s pool to the Lid’s glow, with nothing holding the sum down', () => {
-    // art-direction.md, "What is built at High": "A pool lifts the ground as
-    // far as its light reaches: the ceiling that first held the lit ground
-    // under the marks is gone, and the plates hold limit 6 instead"
-    // (test/markPlates.test.ts).
+    // art-direction.md, "What is built at High": a pool lifts the ground as
+    // far as its light reaches. The ceiling that first held the lit ground
+    // under the marks is gone, and nothing replaced it: a mark stands bare
+    // on the lit world (#1801, D2).
     const sum = LIT_GROUND_GLSL.indexOf(
       'vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;'
     );
@@ -328,19 +327,20 @@ describe('the lit ground’s material (#1801)', () => {
     );
   });
 
-  it('lights no ground a plate would change with the Lid’s glow alone', () => {
-    // A mark's plate holds the world to the palest ground the ladder weighs
-    // (markPlates.ts `PLATE_LEVEL`). The Lid's level is set so its brightest
-    // ground is no paler than that, so a plate bites only where a source of
-    // the world's stands, and a mark over open ground looks as it does at
-    // Low. Not held needlessly dark either: within a tenth of it. The bloom's
-    // knee is the bound that stops it short of the rest (highChain.test.ts).
+  it('lights no ground paler than the ladder weighs with the Lid’s glow alone', () => {
+    // A mark stands bare on the lit world, and the ladder's order holds from
+    // black to the palest ground it weighs (ladder.ts `LADDER_GROUND_LEVEL`).
+    // The Lid's level is set so its brightest ground is no paler than that,
+    // so a mark over ground the Lid alone lights reads as the ladder holds
+    // it, and only a source of the world's stands paler under one. Not held
+    // needlessly dark either: within a tenth of it. The bloom's knee is the
+    // bound that stops it short of the rest (highChain.test.ts).
     const brightest = Math.max(...brightestUnderLid().map(encodedLuminance));
     assert.ok(
-      brightest <= PLATE_LEVEL,
-      `${(brightest * 100).toFixed(1)}% past ${(PLATE_LEVEL * 100).toFixed(1)}%`
+      brightest <= LADDER_GROUND_LEVEL,
+      `${(brightest * 100).toFixed(1)}% past ${(LADDER_GROUND_LEVEL * 100).toFixed(1)}%`
     );
-    assert.ok(brightest > 0.9 * PLATE_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
+    assert.ok(brightest > 0.9 * LADDER_GROUND_LEVEL, `only ${(brightest * 100).toFixed(1)}%`);
   });
 
   it('takes a hollow’s share off the Lid’s glow and the pools alike, and never adds', () => {

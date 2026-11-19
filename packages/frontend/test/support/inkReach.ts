@@ -1,7 +1,7 @@
 /**
  * How far the farthest ink a Graphics draws stands from its own origin, in
- * its own units: the oracle a mark's plate is held against
- * (docs/art-direction.md, "The plate under a mark"; #1801).
+ * its own units: the oracle a mark's footprint is held against
+ * (test/silhouetteReach.test.ts).
  *
  * Read off the shapes the Graphics was actually told to draw, never off a
  * second copy of their geometry: a circle's centre and radius, a polygon's

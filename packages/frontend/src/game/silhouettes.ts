@@ -291,11 +291,7 @@ export function drawFactionGlyph(
   }
 }
 
-/**
- * A hall's block, as multiples of its structure's radius: wide, then deep.
- * The one place the outline below and its reach both read, so a hall redrawn
- * wider is a hall whose mark's plate is wider (`structureOutlineReachM`).
- */
+/** A hall's block, as multiples of its structure's radius: wide, then deep. */
 const STRUCTURE_HALL = {
   [StructureKind.Refinery]: [1.7, 1.15],
   [StructureKind.Foundry]: [1.8, 1.25],
@@ -306,33 +302,6 @@ const STRUCTURE_HALL = {
 /** A Spore Veil's bed: ten lobes, and how far lobe `i` stands, in radii. */
 const SPORE_LOBES = 10;
 const sporeLobe = (i: number): number => 1 + 0.18 * Math.sin(i * 2.7);
-
-/**
- * How far a structure's outline stands from its centre, in metres, as
- * `drawStructureSilhouette` draws it without detail: a hall to its corners, a
- * Spore Veil to its longest lobe, and every other kind to its radius. A mark's
- * plate is sized by it at the High graphics quality (EchoRenderer; markPlates.ts):
- * a structure's `radiusM` is its footing, and five outlines stand past it.
- * test/silhouetteReach.test.ts draws every kind and holds the two together.
- */
-export function structureOutlineReachM(kind: StructureKind, radiusM: number): number {
-  switch (kind) {
-    case StructureKind.Refinery:
-    case StructureKind.Foundry:
-    case StructureKind.Slipway:
-    case StructureKind.BaffleBarge: {
-      const [wide, deep] = STRUCTURE_HALL[kind];
-      return (radiusM * Math.hypot(wide, deep)) / 2;
-    }
-    case StructureKind.SporeVeil: {
-      let most = 0;
-      for (let i = 0; i < SPORE_LOBES; i++) most = Math.max(most, sporeLobe(i));
-      return radiusM * most;
-    }
-    default:
-      return radiusM;
-  }
-}
 
 export function drawStructureSilhouette(
   g: Graphics,

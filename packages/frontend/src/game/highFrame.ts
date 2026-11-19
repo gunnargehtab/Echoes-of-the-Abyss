@@ -18,21 +18,17 @@
  * 3. **The occlusion pass and the bloom passes** (highChain.ts): how much of
  *    the water above each point the ground round it hides, and the light
  *    over a soft threshold spread down four levels and back.
- * 4. **The plate pass** (markPlates.ts): where the marks stand, as a mask of
- *    the frame's size, and where a model stands in front of one. A mark
- *    carries its own ground at High (limit 6), and a model is not ground.
- * 5. **The composite.** One full-screen draw to the canvas sums the frame's
+ * 4. **The composite.** One full-screen draw to the canvas sums the frame's
  *    light: the world's, occluded; the water's own, by what each pixel lost
  *    (waterMedium.ts); the sources' volumes; and the bloom. It grades the
- *    sum, runs the curve, holds the result under the plates, and writes the
- *    world's depth, so the pass after it is hidden by the world as it is at
- *    Low. In front of a model a plate holds the water's part of the sum
- *    alone, before the curve. The first takes nothing Low could draw, and
- *    the second none of the depth ramp's own light.
- * 6. **The tactical pass.** Everything else in the scene, drawn to the canvas
+ *    sum, runs the curve, and writes the world's depth, so the pass after it
+ *    is hidden by the world as it is at Low.
+ * 5. **The tactical pass.** Everything else in the scene, drawn to the canvas
  *    exactly as the Low quality draws it: the same materials, the same
  *    per-material tone curve, the same fog. That is the law's "unchanged at
  *    both graphics qualities", kept by construction rather than by matching.
+ *    A mark stands bare on the lit world: nothing is held under it (#1801,
+ *    D2), so no pass before this one knows where a mark is.
  *
  * The lamp halo and the chromatic split follow on the canvas as they always
  * have (PerspectiveView `renderFrame`).
@@ -72,21 +68,12 @@ import {
 import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
 import { BLOOM_THRESHOLD_GLSL, LightChain } from './highChain.ts';
 import { LightVolumes } from './lightVolumes.ts';
-import { PLATE_HOLD_GLSL, PLATE_LEVEL_GLSL, PLATE_MEDIUM_GLSL, PlatePass } from './markPlates.ts';
 import { WATER_HUE } from './palette.ts';
-import type { SurveyInkPlateUniforms } from './surveyInk.ts';
 import { BACKDROP_SPAN_M, HIGH_WORLD_FOG_SIGN, WATER_RAMP_GLSL } from './water.ts';
 import { WATER_MEDIUM_GLSL } from './waterMedium.ts';
 
 /** The layer the world pass draws: every renderable the High quality lights. */
 export const WORLD_LAYER = 1;
-
-/**
- * The layer a model's world-pass cladding is on as well (rosterBatches.ts),
- * so the plate pass can draw the models alone: a plate never holds a model
- * (markPlates.ts `PlatePass.render`).
- */
-export const MODEL_LAYER = 2;
 
 /** `on` while the frame is drawn by this path; `unavailable` says why it is not. */
 export type HighFrameState = 'off' | 'on' | `unavailable: ${string}`;
@@ -117,7 +104,6 @@ const COMPOSITE_FRAGMENT = [
   'uniform sampler2D tScatter;',
   'uniform sampler2D tOcclusion;',
   'uniform sampler2D tBloom;',
-  'uniform sampler2D tPlates;',
   'uniform vec2 uOcclusionTexel;',
   'uniform mat4 uInvViewProj;',
   'uniform vec3 uEye;',
@@ -127,15 +113,12 @@ const COMPOSITE_FRAGMENT = [
   'varying vec4 vFarPoint;',
   WATER_RAMP_GLSL,
   WATER_MEDIUM_GLSL,
-  PLATE_LEVEL_GLSL,
   BLOOM_THRESHOLD_GLSL,
   // The frame's light at this pixel, scene-referred, before the bloom, in two
   // parts: what the world's surfaces send, returned, and `medium`, what the
   // water adds between them and the eye. The prefilter cuts their sum and
-  // the composite grades it; a plate under a model holds the second alone.
-  // `swim` is what a plate's level reads (markPlates.ts): the share of the
-  // pixel the swim gave to the water, and the depth its water is read at.
-  'vec3 echoesHighLight( out float depth, out vec3 medium, out vec2 swim ) {',
+  // the composite grades it.
+  'vec3 echoesHighLight( out float depth, out vec3 medium ) {',
   '  vec4 world = texture2D( tWorld, vUv );',
   '  depth = texture2D( tDepth, vUv ).r;',
   // The water a pixel looks into: where there is ground, the water the ground
@@ -164,23 +147,17 @@ const COMPOSITE_FRAGMENT = [
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, 0.5 ) ).r +',
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( 0.5, - 0.5 ) ).r +',
   '    texture2D( tOcclusion, vUv + uOcclusionTexel * vec2( - 0.5, - 0.5 ) ).r );',
-  '  swim = vec2( 1.0 - clamp( world.a, 0.0, 1.0 ), depthM );',
-  '  medium = swim.x * water + texture2D( tScatter, vUv ).rgb;',
+  '  medium = ( 1.0 - clamp( world.a, 0.0, 1.0 ) ) * water + texture2D( tScatter, vUv ).rgb;',
   `  return world.rgb * mix( 1.0, open, ${glsl(HIGH_GRAPHICS.AO.STRENGTH)} );`,
   '}',
   'void main() {',
   '  float depth;',
   '  vec3 medium;',
-  '  vec2 swim;',
-  '  vec3 light = echoesHighLight( depth, medium, swim );',
+  '  vec3 light = echoesHighLight( depth, medium );',
   '  #ifdef BLOOM_PREFILTER',
   '    gl_FragColor = vec4( echoesBloomCut( light + medium ), 1.0 );',
   '  #else',
   `    medium += texture2D( tBloom, vUv ).rgb * ${glsl(HIGH_GRAPHICS.BLOOM.INTENSITY)};`,
-  // Where a model stands in front of a mark's plate, the water's light is
-  // held, down to the ramp's own and no further, and the model's is not
-  // (markPlates.ts).
-  PLATE_MEDIUM_GLSL,
   '    light += medium;',
   // The grade, before the curve: slope, offset and power a channel, then
   // saturation about the luminance.
@@ -190,10 +167,6 @@ const COMPOSITE_FRAGMENT = [
   `    gl_FragColor = vec4( light * ${glsl(HIGH_GRAPHICS.EXPOSURE)}, 1.0 );`,
   '    #include <tonemapping_fragment>',
   '    #include <colorspace_fragment>',
-  // A mark's plate, on the colour the canvas is about to take: the world is
-  // shown no brighter under it than Low could draw it, the palest ground the
-  // ladder weighs or Low's own water.
-  PLATE_HOLD_GLSL,
   '    gl_FragDepth = depth;',
   '  #endif',
   '}',
@@ -231,7 +204,6 @@ export class HighFrame {
     tScatter: { value: this.dark as Texture },
     tOcclusion: { value: this.open as Texture },
     tBloom: { value: this.dark as Texture },
-    tPlates: { value: this.dark as Texture },
     uOcclusionTexel: { value: new Vector2(1, 1) },
     tWaterHue: { value: this.openWater as Texture },
     uWaterMapM: { value: new Vector2(1, 1) },
@@ -262,14 +234,6 @@ export class HighFrame {
   });
   /** Ambient occlusion and bloom (highChain.ts). */
   private readonly chain = new LightChain();
-  /** Where the marks stand, for the composite to hold the world under (markPlates.ts). */
-  private readonly plates = new PlatePass();
-  /**
-   * Whether the plates are drawn. Off only for a capture's on and off pair
-   * (PerspectiveView `__perspectivePlates`): a player has no such setting,
-   * since a plate is limit 6 and not a choice.
-   */
-  platesHeld = true;
   private readonly quad = new Mesh(new PlaneGeometry(2, 2), this.material);
   private readonly scene = new Scene();
   private readonly camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -296,12 +260,7 @@ export class HighFrame {
     if (this.target === null) return 0;
     const pixels = this.target.width * this.target.height;
     // Half-float RGBA and 24-bit depth, multisampled, and one resolve of each.
-    return (
-      pixels * (8 + 4) * (HIGH_GRAPHICS.SAMPLES + 1) +
-      this.volumes.bytes +
-      this.chain.bytes +
-      this.plates.bytes
-    );
+    return pixels * (8 + 4) * (HIGH_GRAPHICS.SAMPLES + 1) + this.volumes.bytes + this.chain.bytes;
   }
 
   /** Sources whose light the scatter pass draws. */
@@ -322,21 +281,6 @@ export class HighFrame {
   /** The world's own sources, as `volumeInstances` lays them out (worldLights.ts). */
   setLights(instances: Float32Array): void {
     this.volumes.setLights(instances);
-  }
-
-  /** The marks' plates, as `MarkPlates.pack` lays them out (markPlates.ts). */
-  setPlates(instances: Float32Array<ArrayBuffer>): void {
-    this.plates.setPlates(instances);
-  }
-
-  /** The survey ink's plate for this ground, or none (markPlates.ts `PlatePass.setInk`). */
-  setInkPlate(mesh: Mesh | null, uniforms: SurveyInkPlateUniforms | null = null): void {
-    this.plates.setInk(mesh, uniforms);
-  }
-
-  /** Bands and discs the plate pass draws, the ink's own aside. */
-  get platesDrawn(): number {
-    return this.plates.count;
   }
 
   /**
@@ -361,13 +305,11 @@ export class HighFrame {
     this.target = null;
     this.volumes.release();
     this.chain.release();
-    this.plates.release();
     this.uniforms.tWorld.value = null;
     this.uniforms.tDepth.value = null;
     this.uniforms.tScatter.value = this.dark;
     this.uniforms.tOcclusion.value = this.open;
     this.uniforms.tBloom.value = this.dark;
-    this.uniforms.tPlates.value = this.dark;
     this.current = reason === undefined ? 'off' : `unavailable: ${reason}`;
   }
 
@@ -375,7 +317,6 @@ export class HighFrame {
     this.disable();
     this.volumes.dispose();
     this.chain.dispose();
-    this.plates.dispose();
     this.dark.dispose();
     this.open.dispose();
     this.openWater.dispose();
@@ -511,24 +452,7 @@ export class HighFrame {
       this.uniforms.tBloom.value = this.chain.bloom(renderer);
       this.quad.material = this.material;
 
-      // 4. Where the marks stand, for the composite to hold the world under.
-      const plated = this.platesHeld && this.plates.drawn;
-      if (plated) {
-        this.marker?.('high-plates');
-        this.uniforms.tPlates.value = this.plates.render(
-          renderer,
-          camera,
-          fog,
-          target.depthTexture!,
-          target.width,
-          target.height,
-          { scene, layer: MODEL_LAYER }
-        );
-      } else {
-        this.uniforms.tPlates.value = this.dark;
-      }
-
-      // 5. The composite, to the canvas, writing the world's depth.
+      // 4. The composite, to the canvas, writing the world's depth.
       this.marker?.('high-composite');
       renderer.setRenderTarget(null);
       renderer.setClearColor(this.clear, clearAlpha);
@@ -536,7 +460,7 @@ export class HighFrame {
       renderer.autoClear = false;
       renderer.render(this.scene, this.camera);
 
-      // 6. The tactical layer, over it, as Low draws it.
+      // 5. The tactical layer, over it, as Low draws it.
       this.marker?.('high-tactical');
       camera.layers.mask = mask;
       renderer.render(scene, camera);
@@ -545,7 +469,6 @@ export class HighFrame {
         ...(scattered ? ['high-scatter'] : []),
         'high-occlusion',
         'high-bloom',
-        ...(plated ? ['high-plates'] : []),
         'high-composite',
         'high-tactical',
       ];

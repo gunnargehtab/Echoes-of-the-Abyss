@@ -55,6 +55,8 @@ import {
   furnitureFloorStrokes,
   INSTRUMENT_OUTLINES,
   instrumentFloorLift,
+  LADDER_GROUND,
+  LADDER_GROUND_LEVEL,
   liftOf,
   strokesOf,
   type Stroke,
@@ -163,6 +165,16 @@ const RUNG_7_UNDER_RUNG_6_FLOOR: Record<PaletteName, readonly string[]> = {
   protanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4', 'hitSprayTier4'],
   tritanopia: ['countRingTier3', 'glyphTier3', 'glyphTier4', 'healthBarTier4', 'hitSprayTier4'],
 };
+
+describe('the loudness ladder’s palest ground', () => {
+  it('is the ground every comparison here is weighed over, by name', () => {
+    // ladder.ts exports it for the High graphics quality, whose Lid glow is
+    // bounded by it (test/litGround.test.ts): a mark stands bare on the lit
+    // world, so the ground the Lid alone lights must be one these tests reach.
+    assert.equal(LADDER_GROUND, LIFTED_GROUND);
+    assert.equal(LADDER_GROUND_LEVEL, encodedLuminance(LIFTED_GROUND));
+  });
+});
 
 describe('the loudness ladder, rung 5', () => {
   it('records every outline that lifts some ground less than its floor', () => {

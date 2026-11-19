@@ -54,9 +54,9 @@
  * Two blends are modelled, because the map draws with two (`Blend`).
  */
 
-import { ECHO_MARKS, Faction, ResolutionTier, ResourceKind } from '@echoes/shared';
+import { ECHO_MARKS, Faction, ResolutionTier, ResourceKind, TERRAIN_LIFT } from '@echoes/shared';
 import { MARK_STYLE } from './echoMarks.ts';
-import { TIER_SHAPE, type Palette } from './palette.ts';
+import { BIOME_COLOR, scaleRgb, TIER_SHAPE, type Palette } from './palette.ts';
 
 /**
  * The alpha of every outline rung 5 draws, by draw site.
@@ -535,6 +535,26 @@ export function encodedLuminance(color: number): number {
     255
   );
 }
+
+/**
+ * The palest ground the ladder weighs: the palest biome fill lifted by the
+ * terrain cap (test/ladder.test.ts, `LIFTED_GROUND`; docs/art-direction.md
+ * "Reading the Sea Floor"). The ladder's comparisons hold from black to it in
+ * all four palettes, and are linear in the ground's luminance.
+ *
+ * The High graphics quality reads it once: a mark stands bare on the lit
+ * world (docs/art-direction.md, limit 6), and the Lid's glow is held where
+ * the ground it alone lights is no paler than this (`HIGH_GRAPHICS.LID`;
+ * test/litGround.test.ts). A pool may stand paler, and gate 7's glance is
+ * what reads a mark over one.
+ */
+export const LADDER_GROUND = scaleRgb(
+  Object.values(BIOME_COLOR).reduce((a, b) => (encodedLuminance(a) >= encodedLuminance(b) ? a : b)),
+  1 + TERRAIN_LIFT.MAX
+);
+
+/** That ground's encoded luminance: derived, not chosen. */
+export const LADDER_GROUND_LEVEL = encodedLuminance(LADDER_GROUND);
 
 /**
  * How far a stroke of `color` at `alpha` lifts a pixel of `ground`, in

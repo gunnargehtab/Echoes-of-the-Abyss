@@ -128,7 +128,7 @@ export const LIT_GROUND_GLSL = [
   '  vec3 normal = vec3( slope.x, sqrt( max( 0.0, 1.0 - dot( slope, slope ) ) ), slope.y );',
   // The world's own sources pool on it (worldLights.ts): light from beside
   // the ground, which the water above it does not take. Nothing holds the sum
-  // down here: a mark carries its own ground (markPlates.ts; limit 6).
+  // down, here or after: a mark stands bare on the lit world (#1801, D2).
   '  vec3 irradiance = echoesLitIrradiance( normal, worldY ) + texture2D( uLitPools, uv ).rgb;',
   // A hollow hides both from the ground in it, as the bake's occlusion does,
   // and under an own entity's ground shadow as anywhere else: the relief

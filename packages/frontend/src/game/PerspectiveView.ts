@@ -37,7 +37,6 @@ import {
   BufferGeometry,
   CanvasTexture,
   Color,
-  CustomBlending,
   DataTexture,
   DirectionalLight,
   DoubleSide,
@@ -50,11 +49,9 @@ import {
   LineLoop,
   LineSegments,
   Matrix4,
-  MaxEquation,
   Mesh,
   MeshBasicMaterial,
   NormalBlending,
-  OneFactor,
   PerspectiveCamera,
   PlaneGeometry,
   Points,
@@ -198,7 +195,6 @@ import {
   surveyCellTexture,
   surveyFloorTexture,
   type SurveyFloorSamples,
-  type SurveyInkPlateUniforms,
 } from './surveyInk.ts';
 import { forgetRoundedCells } from './roundedCells.ts';
 import {
@@ -227,7 +223,6 @@ import { gatherHaloSplats } from './haloSource.ts';
 import { ChromaticSplit } from './chromaticSplit.ts';
 import { columnsFor, InkOcclusion } from './inkOcclusion.ts';
 import { FURNITURE_OUTLINE_ALPHA } from './ladder.ts';
-import { MarkPlates } from './markPlates.ts';
 import { FaunaStipple } from './faunaStipple.ts';
 import { DREAM_LOOP } from './dreamLoop.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
@@ -1189,15 +1184,6 @@ export class PerspectiveView {
   private groundSkin: MeshBasicMaterial | null = null;
   private inkOverlay: Mesh | null = null;
   /**
-   * The marks' plates under High (markPlates.ts): the ink's own, a mesh on
-   * the ground's geometry the plate pass draws, and the bands and discs the
-   * chart hands over as it draws its marks, with the lines this view draws.
-   * `platesPacked` is the revision the pass last took.
-   */
-  private inkPlate: Mesh | null = null;
-  private readonly plates = new MarkPlates();
-  private platesPacked = -1;
-  /**
    * The water's hue over this ground, a plan texture (waterMedium.ts), and
    * the light the world's own sources pool on it (worldLights.ts), under
    * High alone. `litPools` is the uniform the lit ground reads the pools
@@ -1569,15 +1555,6 @@ export class PerspectiveView {
     this.applyGraphicsQuality();
   }
 
-  /**
-   * Where the chart writes its marks' plates, or null while no frame draws
-   * them: the Low quality, and a view High does not reach. The chart opens a
-   * group for each layer it redraws (EchoRenderer `draw`).
-   */
-  markPlates(): MarkPlates | null {
-    return this.high.on ? this.plates : null;
-  }
-
   /** What the view draws, as Settings and the probe read it. */
   private get qualityState(): GraphicsQualityState {
     const state = this.high.state;
@@ -1605,14 +1582,7 @@ export class PerspectiveView {
     this.backdrop.mesh.visible = !this.high.on;
     if (this.high.on === was) return;
     this.models.setWorldPass(this.high.on);
-    if (!this.high.on) {
-      this.leaveWorldLayer();
-      // No frame holds the world under a plate now; the chart stops handing
-      // them over when `markPlates` answers null.
-      this.plates.clear();
-      this.high.setPlates(new Float32Array(0));
-      this.platesPacked = -1;
-    }
+    if (!this.high.on) this.leaveWorldLayer();
     // The ground is another material under High, over another bake.
     if (this.terrain !== null) this.rebuildTerrain();
   }
@@ -2030,7 +2000,6 @@ export class PerspectiveView {
     delete (window as unknown as { __freeWaterDecoration?: unknown }).__freeWaterDecoration;
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
     delete (window as unknown as { __perspectiveSplit?: unknown }).__perspectiveSplit;
-    delete (window as unknown as { __perspectivePlates?: unknown }).__perspectivePlates;
     delete (window as unknown as { __perspectiveSplitFrame?: unknown }).__perspectiveSplitFrame;
     delete (window as unknown as { __perspectiveGpuSplit?: unknown }).__perspectiveGpuSplit;
     delete (window as unknown as { __perspectiveGpuQueue?: unknown }).__perspectiveGpuQueue;
@@ -3291,11 +3260,6 @@ export class PerspectiveView {
         (this.inkOverlay.material as MeshBasicMaterial).dispose();
         this.inkOverlay = null;
       }
-      if (this.inkPlate !== null) {
-        this.high.setInkPlate(null);
-        (this.inkPlate.material as MeshBasicMaterial).dispose();
-        this.inkPlate = null;
-      }
       this.litMaterial?.dispose();
       this.litMaterial = null;
       this.litSurface?.albedo.dispose();
@@ -3533,23 +3497,6 @@ export class PerspectiveView {
       // is part of the opaque ground, under all of them.
       this.inkOverlay.renderOrder = -2;
       this.scene.add(this.inkOverlay);
-      // And the strokes' plates: the same ground in the ink's `plate` mode,
-      // drawn by the plate pass into its mask, where the greater of two
-      // plates stands (markPlates.ts). The mask has no depth; the patch reads
-      // the world's.
-      const plate = new MeshBasicMaterial({
-        toneMapped: false,
-        transparent: true,
-        depthTest: false,
-        depthWrite: false,
-        blending: CustomBlending,
-        blendEquation: MaxEquation,
-        blendSrc: OneFactor,
-        blendDst: OneFactor,
-      });
-      const reads = installSurveyInk(plate, terrain, cells, drawnSurvey, 'plate');
-      this.inkPlate = new Mesh(geometry, plate);
-      this.high.setInkPlate(this.inkPlate, reads as SurveyInkPlateUniforms);
     } else {
       this.terrainMesh = new Mesh(geometry, material);
     }
@@ -3859,10 +3806,6 @@ export class PerspectiveView {
     // (docs/art-direction.md, "Reading the Sea Floor"). Sampled at the
     // heightfield's step so it rides the crag rather than cutting through it.
     // Rung 5, map furniture (docs/map-visuals.md §5), at the ladder's alpha.
-    // Under High a line this view draws carries its plate as the chart's
-    // marks do, fading into the water with it (markPlates.ts).
-    const plates = this.high.on ? this.plates : null;
-    plates?.begin('terrain');
     const routePoints: number[] = [];
     for (const passage of passages.list) {
       const roofY = (xM: number, yM: number) =>
@@ -3887,10 +3830,7 @@ export class PerspectiveView {
           const y0 = a.yM + ((b.yM - a.yM) * k) / steps;
           const x1 = a.xM + ((b.xM - a.xM) * (k + 1)) / steps;
           const y1 = a.yM + ((b.yM - a.yM) * (k + 1)) / steps;
-          const h0 = roofY(x0, y0);
-          const h1 = roofY(x1, y1);
-          routePoints.push(x0, h0, y0, x1, h1, y1);
-          plates?.line(x0, h0, y0, x1, h1, y1, HIGH_GRAPHICS.PLATE.LINE_PX, 1, true);
+          routePoints.push(x0, roofY(x0, y0), y0, x1, roofY(x1, y1), y1);
         }
       }
     }
@@ -3918,11 +3858,6 @@ export class PerspectiveView {
     // unnamed in §5 and placed on rung 1, the deep water the world ends in.
     if (!this.dreamStudy) {
       const rim = perimeter.map((p) => new Vector3(p.x, p.y + 4, p.z));
-      for (let i = 0; i < rim.length; i++) {
-        const a = rim[i]!;
-        const b = rim[(i + 1) % rim.length]!;
-        plates?.line(a.x, a.y, a.z, b.x, b.y, b.z, HIGH_GRAPHICS.PLATE.LINE_PX, 1, true);
-      }
       this.terrainDressing.add(
         new LineLoop(
           new BufferGeometry().setFromPoints(rim),
@@ -3935,8 +3870,6 @@ export class PerspectiveView {
         )
       );
     }
-
-    plates?.close();
 
     // A placed mission has no wall: its exterior is ground that fades
     // (docs/world-map.md §7.4). The rim above stays, as chart ink.
@@ -6133,10 +6066,6 @@ export class PerspectiveView {
         const terrain = this.terrain;
         if (this.pools === null || terrain === null) setHullPools(null);
         else setHullPools(this.pools, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
-        if (this.plates.revision !== this.platesPacked) {
-          this.platesPacked = this.plates.revision;
-          this.high.setPlates(this.plates.pack());
-        }
         passes.push(
           ...this.high.render(renderer, this.scene, this.camera, {
             focusDepthM: this.focusDepthNowM,
@@ -6313,15 +6242,6 @@ export class PerspectiveView {
       ).__perspectiveQuality = (quality: GraphicsQuality) => {
         this.setGraphicsQuality(quality);
         return this.qualityState;
-      };
-      // The plates' capture switch (docs/screenshots/issue-1801/plates.mjs):
-      // the High frame with its marks' plates and without, on one page.
-      // Players have no setting: a plate is limit 6 (art-direction.md).
-      (
-        window as unknown as { __perspectivePlates?: (on: boolean) => unknown }
-      ).__perspectivePlates = (on: boolean) => {
-        this.high.platesHeld = on;
-        return this.high.platesHeld;
       };
       // The chromatic split's capture switch (tools/render-stack/split-cost.mjs):
       // its on/off pair for gate 6. Players have no setting (art-direction.md).
@@ -6534,8 +6454,6 @@ export class PerspectiveView {
         groundBytes: this.litSurface === null ? 0 : litGroundBytes(this.litSurface),
         // The world's own sources lighting this ground and its water.
         worldLights: this.worldLightCount,
-        // Bands and discs the plate pass draws under the marks this frame.
-        plates: this.high.platesDrawn,
         frameGpuBudgetMs: HIGH_GRAPHICS.FRAME_GPU_MS,
       },
       textures: info?.memory.textures ?? 0,

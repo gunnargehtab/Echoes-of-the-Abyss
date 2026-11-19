@@ -7,8 +7,12 @@
 //     node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
 //     --out docs/screenshots/issue-1816/software/after --steps docs/screenshots/issue-1816/frames.mjs
 //
-// `__perspectivePlates` is the development switch beside
-// `__perspectiveQuality`; a player has no such setting. read.py reads a set.
+// `__perspectivePlates` was the development switch beside
+// `__perspectiveQuality`; a player had no such setting. read.py reads a set.
+//
+// A record, not a capture to run again: the plates and their switch went
+// with #1801's D2, so this module stops at its first `__perspectivePlates`.
+// It is kept to say how the committed frames beside it were taken.
 import assert from 'node:assert/strict';
 
 // Plan x, plan z, dolly, yaw, pitch, focus depth: the Close pose.
