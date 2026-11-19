@@ -404,7 +404,8 @@ membrane parts, the Corvette's six fins among them. A part's length is root to t
 is rooted at one end, and 2.35 stands in the widest gap the roster leaves, between the
 Spinner's flukes at 2.24 and the Chorister's at 2.49. A trim vane rooted along its length,
 a fluke as wide as it is long, a pod and a ring are not blades, and square to the keel is
-already root to tip on each. The navy's block asks
+already root to tip on each. Both numbers are the table's own, as the heights are, and
+move freely until #1844's frames are accepted. The navy's block asks
 for "growth rings and living bioluminescent veins"
 ([asset-prompts-3d.md](asset-prompts-3d.md)); these veins are relief and emit nothing.
 Their heights are in the table, in metres. `HIGH_GRAPHICS.HULL_SURFACE` in
