@@ -216,6 +216,9 @@ export function jellyMembrane(part: 'bell' | 'core', uniforms: JellyUniforms): M
     blendDstAlpha: OneFactor,
     depthWrite: false,
     side: DoubleSide,
+    // Light adds in any order, so both sides go in one draw: three would
+    // otherwise draw a blended two-sided part twice, back faces then front.
+    forceSinglePass: true,
     // The water takes it with distance (water.ts `installWaterFog`).
     fog: true,
   });

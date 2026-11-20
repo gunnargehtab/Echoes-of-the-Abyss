@@ -200,7 +200,7 @@ forest ends rather than dissolving into props at every depth.
 | Crater / distance | Existing authored-floor relief and water | Bare drop, no illuminated floor, false cave mouth or copy of Sorrowgate's arch |
 | Small life / close inspection | The four small shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
 | Large life / the opening | The ray below, one public decorative body of 18 m (#1777) | The same independence; no silhouette of a classified animal, and nothing of the colossus |
-| Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence; not the Tetherjelly, its stipple figure or the Hollow's crescent; no light in its file |
+| Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence. Not the Tetherjelly or its stipple figure: a field's bell is seven times as wide, a figure in dots in the fauna colour with six tentacles, and stands where it is, where a lantern is a lit skin in a hue of its own over twenty-two strands, adrift alone. Not the Hollow's crescent. No light in its file |
 
 Two placement options were considered:
 
@@ -365,8 +365,8 @@ at any match time, where one school would pass once a lap.
 
 The **drifting bodies** are five `env-drift-jelly`, each alone on its own loop: a 14 m
 radius and a lap in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
-goes. Each hangs by its bell's mid-height, 8.69 m over its longest arm's tip, at an
-authored depth from an authored start.
+goes, its bell leaning 12 degrees into the turn. Each hangs by its bell's mid-height,
+2.76 m over its lowest lobe's tip, at an authored depth from an authored start.
 
 | Jelly | Loop centre, map x / y | Depth | Start, degrees round its loop |
 | --- | --- | --- | --- |

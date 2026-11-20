@@ -112,7 +112,7 @@ const BLOCK_4_HEIGHT_M: Record<string, number> = {
   'env-outer-fish': 1.69,
   'env-deep-fish': 0.84,
   'env-rim-ray': 4.05,
-  'env-drift-jelly': 10.97,
+  'env-drift-jelly': 4.11,
 };
 const bankedReach = (p: PropPlacement) => {
   const m = p.motion!;

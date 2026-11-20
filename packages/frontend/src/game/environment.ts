@@ -373,7 +373,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
       ['env-outer-fish', 4, 342],
       ['env-deep-fish', 2, 304],
       ['env-rim-ray', 18, 586],
-      ['env-drift-jelly', 6, 682],
+      ['env-drift-jelly', 6, 594],
     ] as const
   ).map(([slug, footprintM, triBudget]): PropSpec => ({
     slug,

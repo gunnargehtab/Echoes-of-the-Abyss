@@ -115,6 +115,7 @@ describe('a jelly is a lantern (#1837)', () => {
       );
       assert.equal(material.depthWrite, false);
       assert.equal(material.side, DoubleSide);
+      assert.equal(material.forceSinglePass, true, 'one draw for both sides');
       assert.equal(material.toneMapped, false);
       assert.equal(material.fog, true, 'the water takes it with distance');
       assert.equal(material.userData.worldLayer, true);

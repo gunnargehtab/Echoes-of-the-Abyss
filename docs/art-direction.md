@@ -697,9 +697,9 @@ holds Low's list unmoved under High's.
 `HIGH_GRAPHICS.LIFE.JELLY` (`packages/shared/src/constants.ts`) until a frame of it is
 accepted. The owner called it in session on 20 November 2026, with a crop of the target
 ([target-jelly.jpg](screenshots/issue-1837/target-jelly.jpg)): bring the jellies closer to
-the target's and develop their bioluminescence, in as many rounds as it takes. Three
+the target's and develop their bioluminescence, in as many rounds as it takes. Four
 calls were taken in the open on the way, and wait on the owner: its hue, how bright it
-stands, and what moves.*
+stands, what moves, and its strands beside the Tetherjelly's figure.*
 
 The target's jelly is light and not a lit body: a translucent bell glowing from within,
 over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
@@ -711,8 +711,8 @@ over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
   the bell a plainer light. The file emits nothing and is flat-shaded stone at intake;
   the renderer gives the membrane one normal a vertex, so the skin curves where the
   file's facets meet.
-- **Its strands are beads of light, not geometry.** Sixteen hang from the lip, 9 to 17 m
-  long and 22 beads each, smaller and dimmer toward the tip. With them go a point on
+- **Its strands are beads of light, not geometry.** Twenty-two hang from the lip, 9 to
+  17 m long and 22 beads each, smaller and dimmer toward the tip. With them go a point on
   each of the six seats the file marks, and one soft disc 15 m across for the glow in
   the water round the bell. All are points of the world pass, as a fry's light is, each
   never narrower than its floor.
@@ -732,8 +732,29 @@ over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
   ([What the world layer may do at High](#what-the-world-layer-may-do-at-high)). No
   hull, shot, ping or camera starts, hurries or brightens any of it, and reduced motion
   holds all three, with no wave held on the body.
+- **It stands at the target's own level.** The target's jelly reads 176 of 255 at its
+  brightest. On the Close frame the three nearest lanterns' lips read 196, 188 and 181,
+  from 190, 260 and 318 m, the far two 162 and 152, and a bead 161 at most. The first
+  take stood them at 218 and was turned down. A lantern is still the brightest life in
+  the frame, and over every lamp beside it, which read 165, 159 and 130. The first cut
+  held a seat under the lamps; that was the author's bar and not a rule. World light is
+  not loudness at High, and what tells a lantern from a lamp is its hue and its form.
+  The held frames show no wave, which adds 60% as it passes. Whether five lanterns over
+  the fleet muddy gate 3's reading of a hull is the owner's glance, on the named GPU.
+- **It is not the Tetherjelly's figure.** A shallow bell over trailing strands is also
+  what a Tetherjelly field's stipple draws ([map-visuals.md](map-visuals.md) §8), and
+  [free-water-slice.md](free-water-slice.md) §5 keeps the two apart. Three readings were
+  written. **A bell alone** is clear of the figure and is not the target. **Strands as
+  unbroken lines** leave the figure's dots, and the target's beads with them. **Beads, as
+  the target has them** is taken, on the owner's call for the target. What still stands
+  between the two: a lantern is a lit skin and not a figure in dots, in its own hue and
+  not the fauna colour, a seventh as wide, over twenty-two strands and not six, alone and
+  adrift where a field's bells stand. Whether one could be read as a field's bell is the
+  owner's glance.
 - **Low draws none of it, and no mark, lamp or halo is touched.** A jelly is not stood
-  at Low, and Low's template of its file is the stone it always was.
+  at Low, and Low's template of its file is the stone it always was. A lantern hangs
+  inside the Harvester's ring at Home and the Corvette's at Close, and along every
+  ring's circle the lanterns lift the ground by 7 of 255 at most.
 
 `packages/frontend/test/jellyLight.test.ts` holds the two templates apart, the membrane's
 blend and pass, the patch's anchors, the points a jelly hangs and what reduced motion
@@ -741,23 +762,23 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 
 | What | Constant | Value |
 | --- | --- | --- |
-| Light a face of the bell square to the eye gives, in the renderer's linear units | `LIFE.JELLY.BELL.LEVEL` | 0.05 |
-| What a face edge-on adds | `LIFE.JELLY.BELL.RIM` | 0.3 |
+| Light a face of the bell square to the eye gives, in the renderer's linear units | `LIFE.JELLY.BELL.LEVEL` | 0.04 |
+| What a face edge-on adds | `LIFE.JELLY.BELL.RIM` | 0.2 |
 | How fast that falls toward the face: the exponent on one less the cosine | `LIFE.JELLY.BELL.RIM_POWER` | 2.2 |
 | Radial canals round the bell | `LIFE.JELLY.BELL.RIBS` | 16 |
-| What a canal adds on its line | `LIFE.JELLY.BELL.RIB` | 0.07 |
-| What the lip's band adds | `LIFE.JELLY.BELL.MARGIN` | 0.18 |
-| Light of the lobes under the bell | `LIFE.JELLY.BELL.CORE` | 0.1 |
-| Strands a jelly hangs | `LIFE.JELLY.STRANDS.COUNT` | 16 |
+| What a canal adds on its line | `LIFE.JELLY.BELL.RIB` | 0.04 |
+| What the lip's band adds | `LIFE.JELLY.BELL.MARGIN` | 0.07 |
+| Light of the lobes under the bell | `LIFE.JELLY.BELL.CORE` | 0.08 |
+| Strands a jelly hangs | `LIFE.JELLY.STRANDS.COUNT` | 22 |
 | Beads a strand | `LIFE.JELLY.STRANDS.BEADS` | 22 |
 | The longest strand, metres | `LIFE.JELLY.STRANDS.LENGTH_M` | 17 |
 | The shortest, as a share of the longest | `LIFE.JELLY.STRANDS.SHORTEST` | 0.55 |
-| Width of a bead at the lip, metres | `LIFE.JELLY.STRANDS.SIZE_M` | 0.55 |
-| A bead's light at its centre, at the lip | `LIFE.JELLY.STRANDS.LEVEL` | 0.6 |
+| Width of a bead at the lip, metres | `LIFE.JELLY.STRANDS.SIZE_M` | 0.45 |
+| A bead's light at its centre, at the lip | `LIFE.JELLY.STRANDS.LEVEL` | 0.38 |
 | How far a strand's tip sways, metres | `LIFE.JELLY.STRANDS.SWAY_M` | 1.6 |
 | How far its tip trails behind the drift, metres | `LIFE.JELLY.STRANDS.TRAIL_M` | 4 |
 | Width of the glow round the bell, metres | `LIFE.JELLY.HALO.SIZE_M` | 15 |
-| That glow at its centre | `LIFE.JELLY.HALO.LEVEL` | 0.035 |
+| That glow at its centre | `LIFE.JELLY.HALO.LEVEL` | 0.03 |
 | Seconds a stroke of the bell | `LIFE.JELLY.SWIM.PERIOD_S` | 5.5 |
 | Share of its radius a stroke draws the lip in | `LIFE.JELLY.SWIM.SQUEEZE` | 0.16 |
 | Seconds between two waves of light | `LIFE.JELLY.PULSE.PERIOD_S` | 9 |
@@ -827,7 +848,7 @@ chimney's breath another way.
   frames against the same frames without the stand, along each ring's own circle. At
   Close the light lifts the ground under the Light Scout's ring on 35% of its arc, by 22
   of 255 at most, and under the Corvette's on 37%, by 33. At Home it is 56% and 55 for
-  the Light Scout's, 36% and 76 for the Corvette's. The Harvester's is untouched. Where
+  the Light Scout's, 37% and 76 for the Corvette's. The Harvester's is untouched. Where
   the ground is lifted, a ring's stroke stands 19 to 22 of 255 over the ground beside it
   at the median, where it stood 23 to 25 before. At Survey the fleet's three rings
   overlap one another, and the stand lies under them. A search of the rim ranked slots
@@ -836,7 +857,8 @@ chimney's breath another way.
   18 px, and the frames show the light reaching well past it.
 - **A mark over the stand's light is the owner's glance** (limit 6, gate 7). Nothing
   holds a mark over a volume by construction, and the limit refuses only a light a mark
-  cannot be read over. The stand is the frame's brightest light, 234 of 255 at its core.
+  cannot be read over. The stand is the frame's brightest light, 231 to 234 of 255 at its
+  core over three takes.
   Two of its numbers are this step's and TUNABLE: both chimneys in one cell, which makes
   one source of √2 where two cells would make two, and the slot. The third is not: the
   `vent` family's strength is step 1's SPEC, accepted on frames that held no vent, and

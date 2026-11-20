@@ -132,8 +132,9 @@ export const FREE_WATER_HIGH_LIFE = {
    * depth its bell hangs at and where it stands when the match starts, in
    * degrees round its loop. A jelly drifts: one lap of a loop 14 m in radius
    * in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
-   * goes. Its `axisM` is the bell's mid-height over the model's origin, its
-   * longest arm's tip.
+   * goes, its bell leaning `bankDeg` into the turn as the target's leans.
+   * Its `axisM` is the bell's mid-height over the model's origin, its lowest
+   * lobe's tip.
    */
   JELLIES: {
     SLOTS: [
@@ -143,7 +144,7 @@ export const FREE_WATER_HIGH_LIFE = {
       [509, 1909, 110, 210],
       [678, 2025, 130, 280],
     ],
-    MOTION: { radiusM: 14, periodS: 280, depthSwingM: 10, axisM: 8.69 },
+    MOTION: { radiusM: 14, periodS: 280, depthSwingM: 10, axisM: 2.76, bankDeg: 12 },
   },
 } as const;
 
@@ -449,18 +450,26 @@ export const HIGH_GRAPHICS = {
      * adding `GAIN` of the level it passes. Reduced motion holds all three.
      */
     JELLY: {
-      BELL: { LEVEL: 0.05, RIM: 0.3, RIM_POWER: 2.2, RIBS: 16, RIB: 0.07, MARGIN: 0.18, CORE: 0.1 },
+      BELL: {
+        LEVEL: 0.04,
+        RIM: 0.2,
+        RIM_POWER: 2.2,
+        RIBS: 16,
+        RIB: 0.04,
+        MARGIN: 0.07,
+        CORE: 0.08,
+      },
       STRANDS: {
-        COUNT: 16,
+        COUNT: 22,
         BEADS: 22,
         LENGTH_M: 17,
         SHORTEST: 0.55,
-        SIZE_M: 0.55,
-        LEVEL: 0.6,
+        SIZE_M: 0.45,
+        LEVEL: 0.38,
         SWAY_M: 1.6,
         TRAIL_M: 4,
       },
-      HALO: { SIZE_M: 15, LEVEL: 0.035 },
+      HALO: { SIZE_M: 15, LEVEL: 0.03 },
       SWIM: { PERIOD_S: 5.5, SQUEEZE: 0.16 },
       PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, GAIN: 0.6 },
     },

@@ -1928,7 +1928,8 @@ broad blunt head, two short cephalic lobes, wings swept back to rounded
 tips, a short whip tail, no jaw, nothing swept to a point, no armour —
 and nothing of the colossus, under a third of the smallest Sounder. The
 one drifting body, the drift jelly, is held to every line above at 6 m
-across its bell: one solitary medusa and not the Tetherjelly's colony —
+across its bell: one solitary medusa, and neither the Tetherjelly's
+colony nor its stipple bell —
 a shallow, wide bell, an oblate dome about twice as wide as it is tall,
 closed underneath, with a thin margin slightly flared; under the bell's
 middle a short core of a few frilled oral lobes hung from one stalk,
