@@ -362,6 +362,7 @@ at any match time, where one school would pass once a lap.
 | --- | --- | --- | --- | --- |
 | Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 5 of 96 | 7 m, 1.6 m, 5 m |
 | Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 14 m, 6 m, 14 m |
+| Backlit outer fish, `env-outer-fish` | `(462, 2,069)`, 34 m, 150 s | 355 ± 25 m | 4 of 30 | 20 m, 3 m, 12 m |
 
 The **drifting bodies** are five `env-drift-jelly`, each alone on its own loop: a 14 m
 radius and a lap in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
@@ -394,6 +395,27 @@ no collision, no tell, the same loop for every client, held still under reduced 
 The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`)
 until the owner accepts a frame. How a body is lit there, and the one light a fry
 carries, are [art-direction.md](art-direction.md#life-in-the-worlds-light)'s.
+
+**A school before the vent's light (#1856).** *In development, and not accepted.*
+[The target's](screenshots/issue-1799/README.md) schools are dark masses against lit
+water, and the two streams above read by a light of their own or barely. The third stream
+is a mill of outer fish, which carry no light, between the Close eye and the vent stand
+below: its loop is centred 300 m from that eye on its line to the stand, and ends 51 m
+short of the stand's nearest basalt. All lap long every body on it stands before the
+stand's light as that eye sees it, 265 to 338 m out, where a 4 m body draws 18 to 22 px,
+and the eye's line through it passes within 58 m of the light's centre, inside its 160 m
+reach. A body there hides the light behind it, and takes none of it on the flank it shows
+([art-direction.md](art-direction.md#life-in-the-worlds-light)), so it reads dark
+against the glow. A school is a ribbon 40 m long, so the four fill 160 m of the loop's
+214 m, and 57 to 72 of the 120 bodies stand within 40 m of the eye's line to the light's
+centre at any moment. The loop swims 318 to 392 m deep, under the hulls' 300 m and over
+the rim's 600 m floor, 135 m from the Corvette's start. Its south side swims lower than
+its north, by up to 25 m either way, which leans the ring down to the right in the Close
+frame. Its first school starts at 161 degrees, the loop's nearest point to the Close eye,
+broadside across the stand. In that frame the mill stands between the Light Scout's ring
+and the Corvette's, and reaches neither. From Home's eye it is 760 to 825 m off, and a
+body draws 7 to 8 px. Placement only: no model, material or light is new. The numbers are
+TUNABLE in `FREE_WATER_HIGH_LIFE.BACKLIT_STREAM` until the owner accepts a frame.
 
 **High's own vents (#1837).** *In development with the same look step, and not accepted.
 The owner chose an authored stand on the rim in session on 20 November 2026, against

@@ -31,6 +31,7 @@ import {
   FaunaSpecies,
   FREE_WATER_HIGH_LIFE,
   FREE_WATER_HIGH_VENTS,
+  HIGH_GRAPHICS,
   ResolutionTier,
   UnitKind,
 } from '@echoes/shared';
@@ -665,12 +666,19 @@ describe('authored public decoration', () => {
     const high = freeWaterPlacements(terrain, true, true);
     assert.deepEqual(high.slice(0, low.length), low);
     const own = high.slice(low.length);
-    const { FRY_STREAM, OUTER_STREAM } = FREE_WATER_HIGH_LIFE;
+    const { FRY_STREAM, OUTER_STREAM, BACKLIT_STREAM } = FREE_WATER_HIGH_LIFE;
+    // A stream's slug, its row's name in §5, and its numbers.
+    const streams = [
+      ['env-shoal-fry', 'Rim fry', FRY_STREAM],
+      ['env-outer-fish', 'Rim outer fish', OUTER_STREAM],
+      ['env-outer-fish', 'Backlit outer fish', BACKLIT_STREAM],
+    ] as const;
     const counts: Record<string, number> = {};
     for (const p of own) counts[p.slug] = (counts[p.slug] ?? 0) + 1;
     assert.deepEqual(counts, {
       'env-shoal-fry': FRY_STREAM.SCHOOLS * FRY_STREAM.COUNT,
-      'env-outer-fish': OUTER_STREAM.SCHOOLS * OUTER_STREAM.COUNT,
+      'env-outer-fish':
+        OUTER_STREAM.SCHOOLS * OUTER_STREAM.COUNT + BACKLIT_STREAM.SCHOOLS * BACKLIT_STREAM.COUNT,
       'env-drift-jelly': FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length,
       'env-vent-chimney': FREE_WATER_HIGH_VENTS.CHIMNEYS.length,
       'env-vent-basalt': FREE_WATER_HIGH_VENTS.BASALT.length,
@@ -683,12 +691,11 @@ describe('authored public decoration', () => {
     }
     assert.deepEqual(freeWaterPlacements(terrain, true, true), high);
 
-    for (const [slug, stream] of [
-      ['env-shoal-fry', FRY_STREAM],
-      ['env-outer-fish', OUTER_STREAM],
-    ] as const) {
-      const fish = own.filter((p) => p.slug === slug);
+    for (const [slug, name, stream] of streams) {
       const [x, y] = stream.at;
+      // Two streams are outer fish: a stream's are the ones on its own loop.
+      const fish = own.filter((p) => p.slug === slug && p.xM === x && p.yM === y);
+      assert.equal(fish.length, stream.SCHOOLS * stream.COUNT, name);
       // A stream is schools evenly round one loop: every fish keeps within
       // its school's station of a point `SCHOOLS` of which divide the lap.
       const lap = (Math.PI * 2) / stream.SCHOOLS;
@@ -761,12 +768,9 @@ describe('authored public decoration', () => {
       assert.ok(row, `§5 lost jelly ${i + 1}`);
       assert.deepEqual(numbers(row.split('|').slice(2).join(' ')), [...slot]);
     });
-    for (const [slug, stream] of [
-      ['env-shoal-fry', FRY_STREAM],
-      ['env-outer-fish', OUTER_STREAM],
-    ] as const) {
-      const row = doc.split('\n').find((line) => line.startsWith('| Rim') && line.includes(slug));
-      assert.ok(row, `§5 lost ${slug}'s stream`);
+    for (const [slug, name, stream] of streams) {
+      const row = doc.split('\n').find((line) => line.startsWith(`| ${name}, \`${slug}\` |`));
+      assert.ok(row, `§5 lost the stream of ${name}`);
       const [, , loop, depth, schools, station] = row.split('|').map((cell) => cell.trim());
       assert.deepEqual(numbers(loop!), [
         ...stream.at,
@@ -781,6 +785,119 @@ describe('authored public decoration', () => {
         stream.STATION.depthM,
       ]);
     }
+  });
+
+  it('mills High’s backlit school between the Close eye and the vent stand’s light (#1856)', () => {
+    // §5, "A school before the vent's light": every body of the third stream
+    // stands before the stand's light as the target's Close camera sees it,
+    // all lap long, which is what reads it dark against lit water.
+    const terrain = ground();
+    const low = freeWaterPlacements(terrain, true);
+    const high = freeWaterPlacements(terrain, true, true);
+    const { BACKLIT_STREAM } = FREE_WATER_HIGH_LIFE;
+    const { MOTION, STATION } = BACKLIT_STREAM;
+    const count = BACKLIT_STREAM.SCHOOLS * BACKLIT_STREAM.COUNT;
+    // The list's last slots, so every slot #1837 stood keeps its place in it.
+    const fish = high.slice(-count);
+    for (const p of fish) {
+      assert.equal(p.slug, 'env-outer-fish');
+      assert.deepEqual([p.xM, p.yM], [...BACKLIT_STREAM.at]);
+    }
+    assert.ok(!low.some((p) => p.xM === BACKLIT_STREAM.at[0] && p.yM === BACKLIT_STREAM.at[1]));
+
+    // docs/screenshots/issue-1799/README.md, Cameras: Close's focus on the
+    // fleet's centroid at the hulls' 300 m, a 420 m dolly, 60 degrees east of
+    // north, 2 degrees of pitch.
+    const yaw = (-60 * Math.PI) / 180;
+    const pitch = (2 * Math.PI) / 180;
+    const eye = new Vector3(
+      Math.sin(yaw) * Math.cos(pitch),
+      Math.sin(pitch),
+      Math.cos(yaw) * Math.cos(pitch)
+    )
+      .multiplyScalar(420)
+      .add(new Vector3(542, -300 * DEPTH_VISUAL_M_PER_M, 1958));
+    // The stand is one source (worldLights.ts `worldLightsOf`): its chimneys'
+    // mean, the vent family's height over the rim's 600 m floor.
+    const { CHIMNEYS, BASALT } = FREE_WATER_HIGH_VENTS;
+    const vent = HIGH_GRAPHICS.WORLD_LIGHT.vent;
+    const light = new Vector3(
+      (CHIMNEYS[0][0] + CHIMNEYS[1][0]) / 2,
+      -600 * DEPTH_VISUAL_M_PER_M + vent.HEIGHT_M,
+      (CHIMNEYS[0][1] + CHIMNEYS[1][1]) / 2
+    );
+    const toLight = light.clone().sub(eye);
+    // Home's eye, the study's opening pose: 1,200 m back from a focus at 709 /
+    // 1,710, 34 degrees east of north, 15 degrees of pitch.
+    const homeYaw = (-34 * Math.PI) / 180;
+    const homePitch = (15 * Math.PI) / 180;
+    const home = new Vector3(
+      Math.sin(homeYaw) * Math.cos(homePitch),
+      Math.sin(homePitch),
+      Math.cos(homeYaw) * Math.cos(homePitch)
+    )
+      .multiplyScalar(1200)
+      .add(new Vector3(709, -300 * DEPTH_VISUAL_M_PER_M, 1710));
+    // The loop's centre is on the eye's line to the light, in plan, 300 m out.
+    const [x, y] = BACKLIT_STREAM.at;
+    const centre = new Vector3(x - eye.x, 0, y - eye.z);
+    const plan = new Vector3(toLight.x, 0, toLight.z).normalize();
+    assert.ok(Math.abs(centre.dot(plan) - 300) < 1, `${centre.dot(plan)} m out`);
+    assert.ok(centre.clone().addScaledVector(plan, -centre.dot(plan)).length() < 1);
+
+    const focal = 540 / Math.tan((CONN_FOV_DEG / 2) * (Math.PI / 180));
+    const length = propSpec('env-outer-fish')!.footprintM;
+    let [nearest, farthest, widest] = [Infinity, 0, 0];
+    let [shallowest, deepest] = [Infinity, 0];
+    let [homeNearest, homeFarthest] = [Infinity, 0];
+    for (let step = 0; step < 72; step++) {
+      const ms = (MOTION.periodS * 1000 * step) / 72;
+      let nearTheCentre = 0;
+      for (const p of fish) {
+        const pose = decorationPose(p, ms, () => 0);
+        const body = new Vector3(pose.x, pose.y + MOTION.axisM, pose.z);
+        const sight = body.clone().sub(eye);
+        const out = sight.length();
+        sight.normalize();
+        // Before the light: the eye meets the body, then the light's centre.
+        const along = toLight.dot(sight);
+        assert.ok(out < along, `a body ${out} m out stands behind the light`);
+        const miss = toLight.clone().addScaledVector(sight, -along).length();
+        widest = Math.max(widest, miss);
+        if (miss <= 40) nearTheCentre++;
+        nearest = Math.min(nearest, out);
+        farthest = Math.max(farthest, out);
+        homeNearest = Math.min(homeNearest, body.distanceTo(home));
+        homeFarthest = Math.max(homeFarthest, body.distanceTo(home));
+        const depthM = -body.y / DEPTH_VISUAL_M_PER_M;
+        shallowest = Math.min(shallowest, depthM);
+        deepest = Math.max(deepest, depthM);
+      }
+      // 57 to 72 of the 120 within 40 m of the line to the light's centre.
+      assert.ok(nearTheCentre >= 57 && nearTheCentre <= 72, `${nearTheCentre} at ${ms} ms`);
+    }
+    // 265 to 338 m out, a 4 m body 18 to 22 px long at 1,920 by 1,080.
+    assert.ok(nearest >= 264 && farthest <= 339, `${nearest} to ${farthest} m`);
+    assert.equal(Math.round((length * focal) / farthest), 18);
+    assert.equal(Math.round((length * focal) / nearest), 22);
+    // From Home's eye 760 to 825 m off, a body 7 to 8 px.
+    assert.ok(homeNearest >= 759 && homeFarthest <= 825, `${homeNearest} to ${homeFarthest} m`);
+    assert.equal(Math.round((length * focal) / homeFarthest), 7);
+    assert.equal(Math.round((length * focal) / homeNearest), 8);
+    // Its sight lines pass within 58 m of the light's centre, inside its reach.
+    assert.ok(widest <= 58 && widest < vent.RADIUS_M, `${widest} m wide of the light`);
+    // 318 to 392 m deep: under the hulls' 300 m, over the rim's 600 m floor.
+    assert.ok(shallowest >= 318 && deepest <= 392, `${shallowest} to ${deepest} m deep`);
+    // 51 m short of the stand's nearest basalt, and 135 m from the Corvette's start.
+    const reach = MOTION.radiusM + STATION.acrossM;
+    const clear = ([px, py]: readonly [number, number, ...number[]]) =>
+      Math.hypot(px - x, py - y) - reach;
+    assert.equal(Math.floor(Math.min(...[...CHIMNEYS, ...BASALT].map(clear))), 51);
+    const corvette = FREE_WATER_SLICE.openingFleet!.find((u) => u.kind === UnitKind.Corvette)!;
+    assert.equal(Math.floor(clear([corvette.x, corvette.y])), 135);
+    // A ribbon 40 m long: the four fill 160 m of the loop's 214 m.
+    assert.equal(Math.round(2 * Math.PI * MOTION.radiusM), 214);
+    assert.equal(BACKLIT_STREAM.SCHOOLS * 2 * STATION.alongM, 160);
   });
 
   it('stands High’s one vent stand on the outside rim, and none at Low (#1837)', () => {

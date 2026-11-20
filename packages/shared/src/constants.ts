@@ -126,6 +126,22 @@ export const FREE_WATER_HIGH_LIFE = {
     STATION: { alongM: 14, acrossM: 6, depthM: 14 },
   },
   /**
+   * Outer fish milling between the Close eye and the vent stand's light
+   * (#1856): a loop 300 m out on that eye's line to the stand, short of its
+   * basalt, so every body on it stands before the light and reads dark
+   * against it. An outer fish carries no light of its own. Its depth swings
+   * with the lap's south side low, which leans the ring across the frame.
+   */
+  BACKLIT_STREAM: {
+    at: [462, 2069],
+    startDeg: 161,
+    SCHOOLS: 4,
+    COUNT: 30,
+    MOTION: { radiusM: 34, periodS: 150, depthM: 355, depthSwingM: 25, axisM: 0.78 },
+    // A ribbon 40 m long: four fill 160 m of the loop's 214 m.
+    STATION: { alongM: 20, acrossM: 3, depthM: 12 },
+  },
+  /**
    * The drifting bodies: `env-drift-jelly`, five of them hanging over the
    * fleet's start, 110 to 150 m deep, where the Close camera has the water
    * above the hulls' rings. A slot is a loop's centre in map metres, the
