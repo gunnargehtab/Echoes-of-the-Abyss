@@ -65,6 +65,14 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
   handed for acceptance are taken on a real GPU. A software rasteriser's frames may guide
   a round; they are labelled so and never offered for acceptance. Colour-vision palettes,
   reduced motion and the GPU station table run once, at promotion.
+- **The GPU run is one, at the end of #1637.** The owner set this in session on
+  20 November 2026, in place of a run after every increment. While #1637 is open a look
+  increment goes up and merges on a software rasteriser's frames, labelled so. Its
+  numbers stay TUNABLE and in development, and its issue closes when its pull request
+  merges. The frames for acceptance and gate 6's 8 ms are taken once, on the named GPU,
+  when #1637's design work is finished. One exception: an increment that adds a pass or
+  per-fragment work carries one unpaced, queued timing run from the named GPU in its
+  pull request. That run is a reading, not acceptance. Placement alone needs none.
 - **Low does not move.** Each increment shows the Low quality's frame unchanged at the
   same cameras, as its non-target control.
 - **A refusal names one cause.** When the owner refuses a frame, write the one cause that
@@ -72,8 +80,10 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
   issue per remark (#1749 to #1753), each closed, and the frame was refused again two
   days later.
 - **Acceptance is the owner's.** No loop, critic or reading accepts a look. A round ends
-  with its frames in the pull request, and the look is done when the owner says so on the
-  issue. Unattended, a session may build a look increment; it never accepts or promotes one.
+  with its frames in the pull request, and the look is done when the owner says so: on
+  #1637 after its one GPU run, while that is open, and on the issue otherwise. A merge
+  is not acceptance. Unattended, a session may build a look increment; it never accepts
+  or promotes one.
 - **A Fable session does it.** The owner set this routing on 11 November 2026. Look work,
   like shape work, is authored under Fable, and the Routine is pinned to another model.
   A look issue stays assigned to the owner until a Fable session takes it, and whoever
@@ -200,8 +210,9 @@ Stop when **all** hold:
   stop signal, not a finding.
 - The change is still one instalment.
 - The verification pass has covered every edit made after the last verdict.
-- For look work, the round's frames stand beside the target frame in the pull request.
-  The owner's acceptance is not a criterion a loop can meet: stop there and wait for it.
+- For look work, the round's frames stand beside the target frame in the pull request,
+  with the timing run if "Look work" asks one of this increment. The owner's acceptance
+  is not a criterion a loop can meet: stop there.
 
 Do not run a round for polish. There is no score to maximise.
 

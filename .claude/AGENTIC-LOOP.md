@@ -106,8 +106,10 @@ Look work has one more, set by the owner in session on 11 November 2026 after th
 free-water slice was refused twice with every evidence row passing (#1694): **the target
 is a frame the owner named, and only the owner accepts against it.** `dev-loop`'s "Look work" holds
 the rules, `loop-critic` grades the picture before the diff, and
-`docs/graphics-standards.md` gate 6 bounds the High graphics quality by frame time. No
-gate enforces any of it: a look is judged by looking.
+`docs/graphics-standards.md` gate 6 bounds the High graphics quality by frame time. Since
+20 November 2026 the owner looks once, on the named GPU, when #1637's design work is
+finished; an increment merges on software frames, and one that adds shading cost carries
+a timing run. No gate enforces any of it: a look is judged by looking.
 
 ### These files are gated too, and a number in them carries its source
 
