@@ -766,6 +766,13 @@ for the crater's 16 × 16 cells. Its cost is fragments: a lit ground fragment in
 cone reads those heights twelve times a beam, and a sight line through a cone sixteen
 steps of four reads. That is read against the 8 ms on the named GPU and is not yet.
 
+The snow in a beam ([art-direction.md](art-direction.md#snow-in-a-beam)) adds no pass,
+target or texture. It adds one instanced draw of points to the world pass, an instance a
+beam: 36,000 vertices a beam and 216,000 at six. A vertex in no beam is sent off the clip
+volume, and one in a beam reads the ground's heights four times. A lit mote is a blended
+disc, 1.5 pixels across from the far cameras and up to 5 at the Close camera's 450 m.
+That is read against the 8 ms on the named GPU and is not yet.
+
 **Lamp halo** ([art-direction.md](art-direction.md#lamp-halo--spec), on by default:
 the Lamp halos toggle in Settings turns it off, and a development switch drives captures). With Lamp halos off it spends no pass, call, triangle or target. The one cost it
 keeps is the canvas's stencil, which the canvas always asks for so the setting stays live

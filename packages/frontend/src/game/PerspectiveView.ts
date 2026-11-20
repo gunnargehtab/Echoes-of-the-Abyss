@@ -169,6 +169,7 @@ import { SiltPlume, plumeStrength, type PlumeSource } from './siltPlume.ts';
 import { WorkLights } from './workLight.ts';
 import { EnvironmentLayer, type StudySwitches } from './environmentLayer.ts';
 import { createWaterEnvironment, keepsGlowOutsideToneMapping } from './modelLighting.ts';
+import { BeamMotes } from './beamMotes.ts';
 import { HighFrame, WORLD_LAYER } from './highFrame.ts';
 import { setHullPools } from './hullLight.ts';
 import {
@@ -1209,6 +1210,11 @@ export class PerspectiveView {
   private readonly searchHulls: SearchlightHull[] = [];
   /** The last frame's beams and occluders, for the development readout. */
   private searchReading: ReturnType<typeof searchlightsOf> = { lights: [], occluders: [] };
+  /**
+   * The fine snow those beams show (beamMotes.ts, #1855). The world pass's
+   * for good, by its layer: the canvas pass never draws it, so Low has none.
+   */
+  private readonly beamMotes = new BeamMotes();
   /** Stencil bits the canvas got, read once at mount (the halo needs 8). */
   private canvasStencilBits = 0;
   /** The renders that made the last frame, in order (gate 6's pass list). */
@@ -1304,6 +1310,8 @@ export class PerspectiveView {
       this.snow.points
     );
     if (this.nearSnow !== null) this.scene.add(this.nearSnow.points);
+    this.beamMotes.points.layers.set(WORLD_LAYER);
+    this.scene.add(this.beamMotes.points);
     if (this.dreamLights !== null) this.scene.add(this.dreamLights.group);
     // The clear colour under the backdrop, and the deepest water there is —
     // the ramp's bottom stop is `UI.background` exactly, so the abyss is the
@@ -1475,6 +1483,7 @@ export class PerspectiveView {
     }
     this.snow.setReducedMotion(reduced);
     this.nearSnow?.setReducedMotion(reduced);
+    this.beamMotes.setReducedMotion(reduced);
     this.ordnanceLayer.setReducedMotion(reduced);
     this.wake.setReducedMotion(reduced);
     this.hits.setReducedMotion(reduced);
@@ -1599,7 +1608,10 @@ export class PerspectiveView {
     if (this.high.on === was) return;
     this.models.setWorldPass(this.high.on);
     this.environment.setWorldPass(this.high.on);
-    if (!this.high.on) this.leaveWorldLayer();
+    if (!this.high.on) {
+      this.leaveWorldLayer();
+      this.beamMotes.hide();
+    }
     // The ground is another material under High, over another bake.
     if (this.terrain !== null) this.rebuildTerrain();
   }
@@ -1985,6 +1997,7 @@ export class PerspectiveView {
     this.backdrop.dispose();
     this.snow.dispose();
     this.nearSnow?.dispose();
+    this.beamMotes.dispose();
     this.dreamLights?.dispose();
     this.life.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
@@ -6137,6 +6150,7 @@ export class PerspectiveView {
         if (this.pools === null || terrain === null) setHullPools(null);
         else setHullPools(this.pools, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
         this.aimSearchlights();
+        this.beamMotes.update(now, searchlightCount());
         passes.push(
           ...this.high.render(renderer, this.scene, this.camera, {
             focusDepthM: this.focusDepthNowM,
@@ -6532,6 +6546,8 @@ export class PerspectiveView {
         worldLights: this.worldLightCount,
         // Own hulls throwing a searchlight this frame (searchlights.ts).
         searchlights: this.high.on ? searchlightCount() : 0,
+        // The fine snow those beams hand the GPU, a cell a beam (beamMotes.ts).
+        beamMotes: this.high.on ? this.beamMotes.motes : 0,
         frameGpuBudgetMs: HIGH_GRAPHICS.FRAME_GPU_MS,
       },
       textures: info?.memory.textures ?? 0,

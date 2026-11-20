@@ -699,6 +699,16 @@ searchlight in its navy's glow where one crosses
 ([art-direction.md](art-direction.md#the-vents-at-work)). Rules 4 and 5 hold: it is
 placed by the map's chimneys, and wears no hue but those lights'.
 
+**Snow in a beam at High.** *In development with
+[#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855), and not
+accepted.* Marine snow is the water's, in the water's one blue, at both qualities. At
+High the fine snow inside an own hull's searchlight is drawn as matter too, and takes no
+token of its own: a mote shows by the beam that falls on it, in that navy's glow, and by
+nothing else ([art-direction.md](art-direction.md#snow-in-a-beam)). It is agent light on
+the world's matter, so rule 5 holds as it holds for the beam, and rule 4 is not asked of
+it: the snow is placed by a fixed table and answers nothing, and the light on it answers
+its hull's SIG, as gate 3 has it.
+
 Every family obeys the same five rules, and they are gates, not suggestions:
 
 1. **World light is points and seams, never area glow.** No lit ground, no

@@ -28,6 +28,7 @@ import { CanvasTextMetrics, Container, Graphics, Text, type GraphicsPath } from 
 import {
   CAMERA_FEEL,
   FREE_WATER_OPENING,
+  HIGH_GRAPHICS,
   ACTIVE_SONAR,
   DEPTH,
   DRIFT_ROSTER,
@@ -2375,6 +2376,7 @@ describe('renderer smoke test: the conn view', () => {
           groundBytes: 0,
           worldLights: 0,
           searchlights: 0,
+          beamMotes: 0,
           frameGpuBudgetMs: 8,
         },
         'Low holds nothing of High’s'
@@ -8115,13 +8117,16 @@ describe("where a marker's name stands (#1662)", () => {
           window: {
             __perspectiveProbe: () => {
               passes: string[];
-              graphicsQuality: { searchlights: number };
+              graphicsQuality: { searchlights: number; beamMotes: number };
             };
             __perspectiveQuality: (quality: 'low' | 'high') => string;
           };
         }
       ).window;
       const beams = () => probes.__perspectiveProbe().graphicsQuality.searchlights;
+      // The fine snow a beam shows (#1855; "Snow in a beam"): a cell a beam.
+      const motes = () => probes.__perspectiveProbe().graphicsQuality.beamMotes;
+      const worldDraws = () => world.gl.frameDraws[0]!.length;
       // The runner's model manifest is empty, so the canned Corvette's model
       // is handed to its handle as the loader would. It rests at SIG 48; the
       // canned Light Scout has no model and rests at 12.
@@ -8140,6 +8145,7 @@ describe("where a marker's name stands (#1662)", () => {
       };
       apply(48, false);
       assert.equal(beams(), 0, 'Low throws no beam');
+      assert.equal(motes(), 0, 'and shows no snow in one');
       assert.deepEqual(probes.__perspectiveProbe().passes.slice(0, 1), ['canvas']);
 
       assert.equal(probes.__perspectiveQuality('high'), 'high');
@@ -8151,14 +8157,20 @@ describe("where a marker's name stands (#1662)", () => {
       const lit = world.gl.frameDraws.length;
       assert.equal(world.gl.frameDraws[2]!.length, 1, 'every beam is one instanced draw');
       assert.equal(world.gl.frameTargets[2], world.gl.frameTargets[1], 'into the one target');
+      // Its snow is one more draw of the world pass, and no pass.
+      assert.equal(motes(), HIGH_GRAPHICS.MOTES.COUNT, 'one beam shows one cell of the snow');
+      const litWorld = worldDraws();
 
       apply(5, true);
       assert.equal(beams(), 0, 'and none on Silent Running');
       assert.equal(world.gl.frameDraws.length, lit - 1, 'the sources alone again');
+      assert.equal(motes(), 0, 'a silent hull shows no snow');
+      assert.equal(worldDraws(), litWorld - 1, "the world pass without the snow's draw");
 
       assert.equal(probes.__perspectiveQuality('low'), 'low');
       apply(48, false);
       assert.equal(beams(), 0, 'Low again throws none');
+      assert.equal(motes(), 0, 'and shows none');
     } finally {
       world.teardown();
     }

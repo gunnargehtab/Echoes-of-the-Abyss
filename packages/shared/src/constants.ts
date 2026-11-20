@@ -513,6 +513,28 @@ export const HIGH_GRAPHICS = {
     GLOW: 6,
     GLOW_REACH_M: 14,
   },
+  /**
+   * TUNABLE: marine snow in a searchlight (docs/art-direction.md, "Snow in a
+   * beam"; #1855), until a frame of it is accepted. The fine snow an own
+   * hull's beam shows, drawn as matter that sends on the beam's light
+   * (beamMotes.ts). The snow is one lattice, fixed in the world: `COUNT`
+   * motes a cell `CELL_M` on a side, and a beam draws the copy of each
+   * nearest a point `AHEAD_M` along its axis. A mote is whole within
+   * `FADE_M[0]` of that point and gone by `FADE_M[1]`, which is no more than
+   * half a cell, so none is lit where it wraps. It is `SIZE_M` across, the
+   * least and the most, never drawn narrower than `MIN_PX`. The coarsest
+   * sends on `ALBEDO` of the light on it, and the finest `FINE_SHARE` of that.
+   */
+  MOTES: {
+    COUNT: 36000,
+    CELL_M: 240,
+    AHEAD_M: 86,
+    FADE_M: [96, 120],
+    SIZE_M: [0.5, 1.4],
+    MIN_PX: 1.5,
+    ALBEDO: 0.07,
+    FINE_SHARE: 0.4,
+  },
 } as const;
 
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */
