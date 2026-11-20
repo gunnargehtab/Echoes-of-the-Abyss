@@ -6,9 +6,9 @@
  * their light", each source "in its own token" (limits 3 and 4). A fry of the
  * crater's schools carries one point of it on its flank, in `life-glint`
  * (docs/style-neon-noir.md "World light"), so a school in unlit water reads as
- * a drift of faint lights and not as holes in it. A drifting jelly carries
- * six, one on each seat its file marks round the bell, wider and at a fry's
- * level.
+ * a drift of faint lights and not as holes in it. A drifting jelly's seats
+ * and the beads of its strands are points of the same kind in a cloud of
+ * their own, in the jelly's token (jellyLight.ts).
  *
  * It is world light, not a mark, and it is drawn where world light is: one
  * `Points` in the world pass (highFrame.ts), scene-referred, so the water
@@ -46,15 +46,11 @@ import {
 import { HIGH_GRAPHICS } from '@echoes/shared';
 import { LIFE_GLINT } from './palette.ts';
 
-const { LEVEL, SIZE_M, MIN_PX, LIFT_M, LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
+const { LEVEL, SIZE_M, MIN_PX, LIFT_M } = HIGH_GRAPHICS.LIFE.GLOW;
 
-/**
- * A light's width in metres and its level against the token, by what carries
- * it: a fry's one point, and each of a jelly's six seats.
- */
+/** A fry's light: its width in metres, and its level against its cloud's. */
 export const LIFE_GLOW_KIND = {
   axis: [SIZE_M, 1],
-  seats: [LANTERN.SIZE_M, LANTERN.LEVEL / LEVEL],
 } as const;
 
 const glsl = (value: number): string => {
@@ -122,9 +118,13 @@ export class LifeGlow {
   private capacity = 0;
   private drawn = 0;
 
-  constructor() {
+  /**
+   * A cloud in one token: `level` is the light a point of level 1 gives at
+   * its centre, in the renderer's linear units. The fry's by default.
+   */
+  constructor(token: number = LIFE_GLINT, level: number = LEVEL, name = 'life_glow') {
     this.material = new PointsMaterial({
-      color: new Color(LIFE_GLINT).multiplyScalar(LEVEL),
+      color: new Color(token).multiplyScalar(level),
       // The patch sizes a point in metres (`patchLifeGlow`): 1 leaves the
       // `size` uniform the pixel ratio alone, and three attenuates nothing.
       size: 1,
@@ -146,7 +146,7 @@ export class LifeGlow {
     this.material.onBeforeCompile = (shader) => patchLifeGlow(shader);
     this.material.customProgramCacheKey = () => 'life-glow-2';
     this.points = new Points(new BufferGeometry(), this.material);
-    this.points.name = 'life_glow';
+    this.points.name = name;
     // The world pass's, and never the canvas's (PerspectiveView `enterWorldLayer`).
     this.points.userData.worldLayer = true;
     // One cloud spans the map: per-object culling would hide it whole.

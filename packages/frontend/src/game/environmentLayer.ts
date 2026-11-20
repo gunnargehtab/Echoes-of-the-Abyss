@@ -82,6 +82,8 @@ import type { MaskLandmarkPart } from './archMask.ts';
 import { setDistanceGradeOn } from './distanceGrade.ts';
 import { VentPlume, plumeSites, type PlumeSite } from './ventPlume.ts';
 import { LIFE_GLOW_KIND, LifeGlow } from './lifeGlow.ts';
+import { writeJellyLights } from './jellyLight.ts';
+import { JELLY_LANTERN } from './palette.ts';
 import { VentSmoke } from './ventSmoke.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
@@ -179,6 +181,13 @@ export class EnvironmentLayer {
    */
   readonly glow = new LifeGlow();
   /**
+   * The points of light the crater's jellies carry at High, in their own
+   * token: the glow round each bell, its seats and its strands' beads
+   * (jellyLight.ts, #1837). One more draw in the world pass, in the group
+   * while the view draws one. A point's level is its own, so the cloud's is 1.
+   */
+  readonly lantern = new LifeGlow(JELLY_LANTERN, 1, 'jelly_lantern');
+  /**
    * What the crater's vent stand breathes at High, one draw in the world
    * pass, in place of `plume`; in the group while a column stands there and
    * the view draws a world pass (ventSmoke.ts, #1837).
@@ -189,6 +198,8 @@ export class EnvironmentLayer {
    * and level beside it, five floats a light, for `glow` to copy.
    */
   private glintAt = new Float32Array(0);
+  /** The same of each jelly's points, for `lantern`. */
+  private lanternAt = new Float32Array(0);
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
@@ -510,7 +521,8 @@ export class EnvironmentLayer {
           if (generation === this.generation) this.rebuild(terrain, groundY);
         },
         this.look,
-        this.worldPass && spec.life === true
+        // A body in the world's light at High, and the jelly as a lantern.
+        this.worldPass && spec.life === true && (spec.glint === 'lantern' ? 'lantern' : true)
       );
       if (template === null) continue;
       let batch = this.fixtureBatches.get(slug);
@@ -532,6 +544,9 @@ export class EnvironmentLayer {
           const mesh = new InstancedMesh(part.geometry, part.material, list.length);
           mesh.name = slug;
           mesh.frustumCulled = false;
+          // A blended part that is still the world pass's names itself, as
+          // a jelly's membrane does (PerspectiveView `enterWorldLayer`).
+          if (part.material.userData.worldLayer === true) mesh.userData.worldLayer = true;
           this.group.add(mesh);
           return mesh;
         });
@@ -564,8 +579,8 @@ export class EnvironmentLayer {
       )
     );
     if (this.decorativeDots !== null) this.group.add(this.decorativeDots.points);
-    if (this.worldPass) this.group.add(this.glow.points);
-    else this.group.remove(this.glow.points);
+    if (this.worldPass) this.group.add(this.glow.points, this.lantern.points);
+    else this.group.remove(this.glow.points, this.lantern.points);
     this.tickFixture();
   }
 
@@ -582,7 +597,21 @@ export class EnvironmentLayer {
     const points: Vector3[] = [];
     // Where each light a body carries stands now, in a buffer kept across
     // frames: the bodies move every frame and their count only with a
-    // rebuild. A fry's is one point on its axis; a jelly's are its seats.
+    // rebuild. A fry's is one point on its axis, in the fry's cloud; a
+    // jelly's are its own, in the lantern's.
+    let lanterns = 0;
+    const lantern = (at: Vector3, sizeM: number, level: number) => {
+      if (this.lanternAt.length < (lanterns + 1) * 5) {
+        const grown = new Float32Array(Math.max(2048, (lanterns + 1) * 2) * 5);
+        grown.set(this.lanternAt);
+        this.lanternAt = grown;
+      }
+      at.toArray(this.lanternAt, lanterns * 5);
+      this.lanternAt[lanterns * 5 + 3] = sizeM;
+      this.lanternAt[lanterns * 5 + 4] = level;
+      lanterns++;
+    };
+    const timeS = this.matchMs / 1000;
     let glints = 0;
     const glint = (at: Vector3, [sizeM, level]: readonly [number, number]) => {
       if (this.glintAt.length < (glints + 1) * 5) {
@@ -599,17 +628,27 @@ export class EnvironmentLayer {
       if (template.sway !== null) {
         template.sway.uSwayTime.value = this.reducedMotion ? SWAY_HOLD_S : this.matchMs / 1000;
       }
+      if (template.jelly !== undefined) {
+        template.jelly.uniforms.uJellyTime.value = timeS;
+        template.jelly.uniforms.uJellyMoves.value = this.reducedMotion ? 0 : 1;
+      }
       const carries = propSpec(slug)?.glint;
       list.forEach((p, i) => {
         if (p.motion === undefined || p.disabled === true) return;
         this.writeFixturePose(meshes, p, i);
-        if (carries === 'seats') {
+        if (carries === 'lantern') {
           // A jelly's seats are world light at High and nothing at Low: never
           // the stipple channel's dots, which are the deep fish's alone.
-          if (!this.worldPass) return;
-          for (const seat of template.photophores ?? []) {
-            glint(TMP_POS.copy(seat).applyMatrix4(TMP_MATRIX), LIFE_GLOW_KIND.seats);
-          }
+          if (!this.worldPass || template.jelly === undefined) return;
+          writeJellyLights(
+            template.jelly.shape,
+            template.photophores ?? [],
+            TMP_MATRIX,
+            i,
+            timeS,
+            !this.reducedMotion,
+            lantern
+          );
           return;
         }
         for (const seat of template.photophores ?? [])
@@ -624,6 +663,13 @@ export class EnvironmentLayer {
       for (let i = 0; i < glints; i++) {
         positions.set(lit.subarray(i * 5, i * 5 + 3), i * 3);
         glow.set(lit.subarray(i * 5 + 3, i * 5 + 5), i * 2);
+      }
+    });
+    const hung = this.lanternAt;
+    this.lantern.write(lanterns, (positions, glow) => {
+      for (let i = 0; i < lanterns; i++) {
+        positions.set(hung.subarray(i * 5, i * 5 + 3), i * 3);
+        glow.set(hung.subarray(i * 5 + 3, i * 5 + 5), i * 2);
       }
     });
     this.decorativeDots?.write(points.length, (anchor, dot, seed) => {
@@ -849,6 +895,7 @@ export class EnvironmentLayer {
     cloudMotes: number;
     decorativePhotophores: number;
     lifeGlints: number;
+    jellyLights: number;
     fixtureAssets: Record<string, number>;
   } {
     return {
@@ -863,6 +910,7 @@ export class EnvironmentLayer {
       cloudMotes: this.cloud.motes,
       decorativePhotophores: this.decorativeDots?.dotCount ?? 0,
       lifeGlints: this.glow.count,
+      jellyLights: this.lantern.count,
       fixtureAssets: Object.fromEntries(
         [...this.fixtureBatches].map(([slug, batch]) => [
           slug,
@@ -985,6 +1033,7 @@ export class EnvironmentLayer {
     this.sift.dispose();
     this.cloud.dispose();
     this.glow.dispose();
+    this.lantern.dispose();
     this.decorativeDots?.dispose();
   }
 
@@ -1016,5 +1065,6 @@ export class EnvironmentLayer {
     this.matchMs = 0;
     this.decorativeDots?.write(0, () => {});
     this.glow.write(0, () => {});
+    this.lantern.write(0, () => {});
   }
 }

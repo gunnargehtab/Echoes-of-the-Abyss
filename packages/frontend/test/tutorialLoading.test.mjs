@@ -6,7 +6,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { BoxGeometry, Group, Mesh, MeshStandardMaterial } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createServer } from 'vite';
-import { Biome, Faction, FREE_WATER_HIGH_LIFE, UnitKind } from '@echoes/shared';
+import { Biome, Faction, FREE_WATER_HIGH_LIFE, HIGH_GRAPHICS, UnitKind } from '@echoes/shared';
 
 // The Node asset shim intentionally has no URLs. Vite expands the real manifest;
 // only network/decode completion is controlled, not the cache or its consumers.
@@ -205,6 +205,7 @@ describe('pending prop delivery', () => {
       cloudMotes: 0,
       decorativePhotophores: 0,
       lifeGlints: 0,
+      jellyLights: 0,
       fixtureAssets: {},
     });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');
@@ -473,7 +474,7 @@ describe('a body’s own light at High (#1837)', () => {
     });
   };
 
-  it('lights a fry’s flank and a jelly’s six seats, and leaves the stipple the deep fish’s', async () => {
+  it('lights a fry’s flank, hangs a jelly’s lantern, and leaves the stipple the deep fish’s', async () => {
     controlLoads();
     served = 0;
     const { terrainFor } = await import('../../backend/src/sim/maps/index.ts');
@@ -491,6 +492,7 @@ describe('a body’s own light at High (#1837)', () => {
       const seats = low.decorativePhotophores / count('env-deep-fish');
       assert.ok(Number.isInteger(seats) && seats >= 1 && seats <= 6, `${seats} seats a deep fish`);
       assert.equal(low.lifeGlints, 0);
+      assert.equal(low.jellyLights, 0);
       assert.equal(count('env-drift-jelly'), 0);
 
       layer.setWorldPass(true);
@@ -500,13 +502,26 @@ describe('a body’s own light at High (#1837)', () => {
         () =>
           count('env-drift-jelly') === jellies &&
           count('env-shoal-fry') > low.fixtureAssets['env-shoal-fry'] &&
-          layer.stats().lifeGlints > count('env-shoal-fry')
+          layer.stats().lifeGlints > 0 &&
+          layer.stats().jellyLights > 0
       );
       layer.tick(0, undefined, 2000);
       const high = layer.stats();
       // docs/art-direction.md, "Life in the world's light": one light a fry,
-      // six a jelly, and no other body carries one.
-      assert.equal(high.lifeGlints, count('env-shoal-fry') + 6 * jellies);
+      // in the fry's cloud, and no other body in it.
+      assert.equal(high.lifeGlints, count('env-shoal-fry'));
+      // "A jelly is a lantern": the glow round its bell, its six seats and
+      // its strands' beads, in a cloud of its own token.
+      const { COUNT, BEADS } = HIGH_GRAPHICS.LIFE.JELLY.STRANDS;
+      assert.equal(high.jellyLights, jellies * (1 + 6 + COUNT * BEADS));
+      assert.ok(layer.group.children.includes(layer.lantern.points));
+      // Its file is drawn as a membrane there, and names itself the world pass's.
+      const bells = layer.group.children.filter((c) => c.name === 'env-drift-jelly');
+      assert.ok(bells.length > 0);
+      for (const bell of bells) {
+        assert.match(bell.material.name, /^jelly_/);
+        assert.equal(bell.userData.worldLayer, true);
+      }
       // A jelly's seats are world light, never the stipple channel's dots:
       // those are the deep fish's alone, as at Low.
       assert.equal(high.decorativePhotophores, low.decorativePhotophores);
@@ -515,6 +530,8 @@ describe('a body’s own light at High (#1837)', () => {
       layer.rebuild(cells, () => -132);
       layer.tick(0, undefined, 3000);
       assert.equal(layer.stats().lifeGlints, 0);
+      assert.equal(layer.stats().jellyLights, 0);
+      assert.ok(!layer.group.children.includes(layer.lantern.points));
       assert.equal(count('env-drift-jelly'), 0);
       assert.equal(layer.stats().decorativePhotophores, low.decorativePhotophores);
     } finally {

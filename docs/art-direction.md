@@ -224,9 +224,10 @@ Built so far:
   ([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)). Below.
 - **An own hull throws a searchlight, and it casts a shadow**
   ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836)). Below.
-- **The crater's life stands in the world's light, and its fry and jellies carry
-  their own** ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)).
-  In development and not accepted. Below.
+- **The crater's life stands in the world's light, its fry carry their own, and its
+  jellies are lanterns**
+  ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)). In
+  development and not accepted. Below.
 - **The crater stands one vent stand, and its chimneys breathe lit smoke** (#1837). In
   development and not accepted. Below.
 
@@ -600,9 +601,10 @@ gives 1.8 face on.
 a frame of it is accepted. The owner took three calls in session on 20 November 2026,
 before any frame: the bodies are the crater's decorative life, the drifting bodies are a
 new jelly model, and the vents are an authored stand on the rim. The schools were the
-step's first instalment and the jelly its third; the vents are the section after this.
-Four more calls were taken in the open with the frames, and wait on the owner: a body's
-register, a fry's own light, a jelly's, and where High's life stands.*
+step's first instalment and the jelly its third. Its own light is the section after this,
+on a fourth call of the owner's, and the vents the one after that. Three more calls were
+taken in the open with the frames, and wait on the owner: a body's register, a fry's own
+light, and where High's life stands.*
 
 The crater's decorative bodies
 ([free-water-slice.md](free-water-slice.md) §5) were props in the world pass under the
@@ -644,21 +646,13 @@ does, and nothing Low draws is built, patched or keyed differently.
   body** would make the ray and the outer fish lamps of their own. A light far enough to
   draw under 1.6 pixels is drawn at 1.6 with its level cut by the area gained, so a far
   school fades instead of sparkling.
-- **A drifting jelly carries six.** `env-drift-jelly`
-  ([asset-prompts-3d.md](asset-prompts-3d.md) Block 4) marks six seats round its bell as
-  dark facets, as the deep fish marks its own, and its file emits nothing. At High each
-  seat carries a point of `life-glint`, 0.55 m across, at a fry's level and never over
-  it. The first cut drew a seat at twice that, so that six lights would say a bell hangs
-  there from 400 m. On the Close frame a seat 190 m off then read 174 of 255, over every
-  lamp beside it: the Corvette's reads 165. At a fry's level the same seat reads 127,
-  under the quiet Light Scout's 130. The bell reads by its body instead. At the
-  cladding's register in the world's light, as every body's is, its crown stands 68 of
-  255 against water of 36 from 190 m and 56 against 33 from 416 m, over arms darker
-  than the water. One token serves the fry and the jelly, since the law names the bodies
-  of public life as one kind of source; a hue of the jelly's own was the other reading,
-  and the target's violet is reserved
-  ([style-neon-noir.md](style-neon-noir.md)). At Low a jelly is not stood, and its seats
-  are never the stipple channel's dots.
+- **A drifting jelly is not a lit body.** Its first cut was one: `env-drift-jelly` at
+  the cladding's register, a pewter bell over dark arms, with a point of `life-glint` on
+  each of the six seats its file marks, at a fry's level. A seat 190 m off read 127 of
+  255 at Close, under every lamp, and the bell read by its body. The owner saw that
+  frame on 20 November 2026 and asked for the target's jelly instead:
+  [A jelly is a lantern](#a-jelly-is-a-lantern), below. At Low a jelly is not stood, and
+  its seats are never the stipple channel's dots.
 - **A fry's light is not the stipple.** Rung 5's stipple is public life's field mark, in
   the palette's fauna colour, on the tactical layer at both qualities
   ([map-visuals.md](map-visuals.md) §8). This is world light, in a world token, and it
@@ -694,6 +688,82 @@ holds Low's list unmoved under High's.
 | How far toward the eye a light is drawn from its body's axis, metres | `LIFE.GLOW.LIFT_M` | 0.15 |
 | A jelly's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.LANTERN.LEVEL` | 0.3 |
 | Width of a jelly's seat light, metres | `LIFE.GLOW.LANTERN.SIZE_M` | 0.55 |
+
+#### A jelly is a lantern
+
+*In development with the rest of High, and not accepted
+([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837);
+[issue-1837](screenshots/issue-1837/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.LIFE.JELLY` (`packages/shared/src/constants.ts`) until a frame of it is
+accepted. The owner called it in session on 20 November 2026, with a crop of the target
+([target-jelly.jpg](screenshots/issue-1837/target-jelly.jpg)): bring the jellies closer to
+the target's and develop their bioluminescence, in as many rounds as it takes. Three
+calls were taken in the open on the way, and wait on the owner: its hue, how bright it
+stands, and what moves.*
+
+The target's jelly is light and not a lit body: a translucent bell glowing from within,
+over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
+
+- **The bell is a membrane.** Each face adds its light to what is behind it and hides
+  nothing, both sides drawn. So the far wall shows through the near one, and the edge,
+  where the eye looks along the skin, is the brightest of it: what a thin lit skin does.
+  Sixteen radial canals and the lip are brighter lines on it, and the short lobes under
+  the bell a plainer light. The file emits nothing and is flat-shaded stone at intake;
+  the renderer gives the membrane one normal a vertex, so the skin curves where the
+  file's facets meet.
+- **Its strands are beads of light, not geometry.** Sixteen hang from the lip, 9 to 17 m
+  long and 22 beads each, smaller and dimmer toward the tip. With them go a point on
+  each of the six seats the file marks, and one soft disc 15 m across for the glow in
+  the water round the bell. All are points of the world pass, as a fry's light is, each
+  never narrower than its floor.
+- **Its light is a token of its own, `jelly-lantern`**
+  ([style-neon-noir.md](style-neon-noir.md#world-light--the-terrain-carve-outs)). Three
+  readings were written. **The target's own hue** is Hadron's glow within a degree, and
+  violet is reserved: no world-owned light takes an agent's token. **`life-glint`**, the
+  bone white the first cut wore, keeps one token for all life and is nothing like the
+  target. **An orchid pink of its own** is taken: 31 degrees pinker than Hadron's violet
+  and 33 bluer than the interface's magenta, at about half its saturation.
+- **It moves, and for nothing** (limit 4). Three things run on the shared match time,
+  each jelly 2.3 s behind the last, so no two are in step. The bell strokes: once in
+  5.5 s the lip is drawn in by 16% of its radius and let go. The strands sway 1.6 m at
+  the tip and trail 4 m behind the way the jelly drifts. And a wave of light runs from
+  the crown down the bell and out along the strands once in 9 s, at 5 m/s, adding 60% to
+  what it passes. High lets a world light move smoothly
+  ([What the world layer may do at High](#what-the-world-layer-may-do-at-high)). No
+  hull, shot, ping or camera starts, hurries or brightens any of it, and reduced motion
+  holds all three, with no wave held on the body.
+- **Low draws none of it, and no mark, lamp or halo is touched.** A jelly is not stood
+  at Low, and Low's template of its file is the stone it always was.
+
+`packages/frontend/test/jellyLight.test.ts` holds the two templates apart, the membrane's
+blend and pass, the patch's anchors, the points a jelly hangs and what reduced motion
+holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the crater.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Light a face of the bell square to the eye gives, in the renderer's linear units | `LIFE.JELLY.BELL.LEVEL` | 0.05 |
+| What a face edge-on adds | `LIFE.JELLY.BELL.RIM` | 0.3 |
+| How fast that falls toward the face: the exponent on one less the cosine | `LIFE.JELLY.BELL.RIM_POWER` | 2.2 |
+| Radial canals round the bell | `LIFE.JELLY.BELL.RIBS` | 16 |
+| What a canal adds on its line | `LIFE.JELLY.BELL.RIB` | 0.07 |
+| What the lip's band adds | `LIFE.JELLY.BELL.MARGIN` | 0.18 |
+| Light of the lobes under the bell | `LIFE.JELLY.BELL.CORE` | 0.1 |
+| Strands a jelly hangs | `LIFE.JELLY.STRANDS.COUNT` | 16 |
+| Beads a strand | `LIFE.JELLY.STRANDS.BEADS` | 22 |
+| The longest strand, metres | `LIFE.JELLY.STRANDS.LENGTH_M` | 17 |
+| The shortest, as a share of the longest | `LIFE.JELLY.STRANDS.SHORTEST` | 0.55 |
+| Width of a bead at the lip, metres | `LIFE.JELLY.STRANDS.SIZE_M` | 0.55 |
+| A bead's light at its centre, at the lip | `LIFE.JELLY.STRANDS.LEVEL` | 0.6 |
+| How far a strand's tip sways, metres | `LIFE.JELLY.STRANDS.SWAY_M` | 1.6 |
+| How far its tip trails behind the drift, metres | `LIFE.JELLY.STRANDS.TRAIL_M` | 4 |
+| Width of the glow round the bell, metres | `LIFE.JELLY.HALO.SIZE_M` | 15 |
+| That glow at its centre | `LIFE.JELLY.HALO.LEVEL` | 0.035 |
+| Seconds a stroke of the bell | `LIFE.JELLY.SWIM.PERIOD_S` | 5.5 |
+| Share of its radius a stroke draws the lip in | `LIFE.JELLY.SWIM.SQUEEZE` | 0.16 |
+| Seconds between two waves of light | `LIFE.JELLY.PULSE.PERIOD_S` | 9 |
+| Speed of a wave along the body, metres a second | `LIFE.JELLY.PULSE.SPEED_MPS` | 5 |
+| Width of a wave, metres | `LIFE.JELLY.PULSE.WIDTH_M` | 3.5 |
+| What a wave adds, as a share of the light it passes | `LIFE.JELLY.PULSE.GAIN` | 0.6 |
 
 #### The vents at work
 

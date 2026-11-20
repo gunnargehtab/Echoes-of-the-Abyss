@@ -14,7 +14,9 @@ commands under [Who captures](#who-captures).
 **These are the step's three instalments: the schools, the vents at work and the
 drifting jellies.** The owner took three calls in session on 20 November 2026: the bodies
 are the crater's decorative life, the drifting bodies are a new jelly model, and the
-vents are an authored stand on the rim.
+vents are an authored stand on the rim. A fourth call, the same day, asked for the
+target's jelly: a lantern, in [the crop the owner sent](target-jelly.jpg). The frames
+below predate it and are retaken next.
 
 ## Reproduce
 

@@ -50,6 +50,14 @@ import { installPropVeil } from './veilShading.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
 import { installDistanceGrade } from './distanceGrade.ts';
 import { installLifeLight } from './lifeLight.ts';
+import {
+  jellyMembrane,
+  jellyShape,
+  jellyUniforms,
+  smoothMembrane,
+  type JellyShape,
+  type JellyUniforms,
+} from './jellyLight.ts';
 
 /**
  * TUNABLE — the diffuse luminance a prop's brightest material is set to,
@@ -95,6 +103,8 @@ export interface EnvTemplate {
   heightM: number;
   /** Named public-life seats, transformed exactly like the baked vertices. */
   photophores?: readonly Vector3[];
+  /** Present only on a jelly's High template: what its membrane reads, and where its lip is. */
+  jelly?: { uniforms: JellyUniforms; shape: JellyShape };
 }
 
 const loader = new GLTFLoader();
@@ -205,13 +215,15 @@ export function propFootprint(root: Object3D): number {
  * decorative body (docs/art-direction.md, "Life in the world's light",
  * #1837): its register is a body's own and it takes the world's light
  * (lifeLight.ts). Low's template is built without it, as it always was.
+ * `'lantern'` is the drifting jelly's High template instead: every part a
+ * lit membrane and none of it stone (jellyLight.ts).
  */
 export function buildTemplate(
   scene: Group,
   footprintM: number,
   swayM: number,
   look: WorldLook = 'standard',
-  worldLit = false
+  worldLit: boolean | 'lantern' = false
 ): EnvTemplate {
   // Clone materials through an identity map (rosterModels' argument: shared
   // materials must keep sharing their clone or the merge silently fails).
@@ -272,6 +284,11 @@ export function buildTemplate(
   const sway: SwayUniforms | null =
     swayM > 0 ? { uSwayTime: { value: 0 }, uSwayAmpM: { value: swayM } } : null;
 
+  // A lantern needs its lip, which its seats ring: a file with no seat is
+  // drawn as a body in the world's light, and never as a membrane with no lip.
+  const shape = worldLit === 'lantern' ? jellyShape({ heightM, photophores }) : null;
+  const jelly = shape === null ? undefined : { uniforms: jellyUniforms(shape), shape };
+
   const parts: EnvTemplate['parts'] = [];
   let triangles = 0;
   merged.traverse((child) => {
@@ -283,6 +300,17 @@ export function buildTemplate(
     geometry.computeBoundingSphere();
     const position = geometry.getAttribute('position');
     triangles += Math.floor((geometry.index?.count ?? position.count) / 3);
+    if (jelly !== undefined) {
+      // The bell is the part in the swimmers' flank; the lobes under it and
+      // the seats are the darker material, and a plainer light.
+      const part = (child.material as Material).name === 'fish_flank' ? 'bell' : 'core';
+      parts.push({
+        geometry: smoothMembrane(geometry),
+        material: jellyMembrane(part, jelly.uniforms),
+      });
+      geometry.dispose();
+      return;
+    }
     const material = child.material as Material;
     if (sway !== null) {
       const weights = new Float32Array(position.count);
@@ -313,7 +341,7 @@ export function buildTemplate(
     if (look === 'sorrowgate' && ARCH_STUDY_ON) installDistanceGrade(material);
     parts.push({ geometry, material });
   });
-  return { parts, trianglesPerInstance: triangles, sway, heightM, photophores };
+  return { parts, trianglesPerInstance: triangles, sway, heightM, photophores, jelly };
 }
 
 /**
@@ -329,11 +357,11 @@ export function envTemplate(
   swayM: number,
   onReady: () => void,
   look: WorldLook = 'standard',
-  worldLit = false
+  worldLit: boolean | 'lantern' = false
 ): EnvTemplate | null {
   // The High template of a body is another object under another key, so
   // Low's is never patched and a view at either quality finds its own.
-  const key = `${slug}:${look}${worldLit ? ':high' : ''}`;
+  const key = `${slug}:${look}${worldLit !== false ? ':high' : ''}`;
   const cached = templates.get(key);
   if (cached !== undefined) {
     waiting.get(key)?.add(onReady);

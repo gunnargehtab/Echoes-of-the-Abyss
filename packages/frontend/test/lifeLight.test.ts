@@ -5,9 +5,9 @@
  * Low's is the object it always was; the High one stands at the cladding's
  * register and takes the Lid's glow, the pools and an own hull's searchlight,
  * shadowed by the ground and by a hull; a schooling fry carries one light of
- * its own in `life-glint` and a drifting jelly six, and no other body any,
- * drawn in the world pass, never narrower than its floor and cut by the area
- * the floor adds. What it looks
+ * its own in `life-glint`, drawn in the world pass, never narrower than its
+ * floor and cut by the area the floor adds. A drifting jelly is a lantern, in
+ * a token of its own: jellyLight.test.ts. What it looks
  * like is the frames in docs/screenshots/issue-1837.
  */
 import assert from 'node:assert/strict';
@@ -75,8 +75,8 @@ describe('the crater’s life in the world’s light (#1837)', () => {
       ENVIRONMENT_PROPS.filter((spec) => spec.life === true).map((spec) => spec.slug),
       LIFE
     );
-    // A fry carries one point on its axis and a jelly one on each seat; the
-    // deep fish's seats stay the stipple channel's, and no other body emits.
+    // A fry carries one point on its axis and a jelly is a lantern; the deep
+    // fish's seats stay the stipple channel's, and no other body emits.
     assert.deepEqual(
       ENVIRONMENT_PROPS.filter((spec) => spec.glint !== undefined).map((spec) => [
         spec.slug,
@@ -84,13 +84,15 @@ describe('the crater’s life in the world’s light (#1837)', () => {
       ]),
       [
         ['env-shoal-fry', 'axis'],
-        ['env-drift-jelly', 'seats'],
+        ['env-drift-jelly', 'lantern'],
       ]
     );
   });
 
   it('builds a body’s High template apart from Low’s, at the cladding’s register', async () => {
-    for (const slug of LIFE) {
+    // Every body but the jelly, which is a lantern at High and no lit body
+    // (jellyLight.test.ts).
+    for (const slug of LIFE.filter((body) => propSpec(body)!.glint !== 'lantern')) {
       const spec = propSpec(slug)!;
       const scene = await parse(slug);
       const low = buildTemplate(scene, spec.footprintM, spec.swayM, 'free-water');
@@ -222,7 +224,7 @@ describe('a fry’s own light (#1837)', () => {
     for (const anchor of LIFE_GLOW_ANCHORS.fragment)
       assert.ok(shader.fragmentShader.includes(anchor), `fragment: ${anchor}`);
     patchLifeGlow(shader);
-    const { LEVEL, SIZE_M, MIN_PX, LIFT_M, LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
+    const { SIZE_M, MIN_PX, LIFT_M } = HIGH_GRAPHICS.LIFE.GLOW;
     // A light's own width in metres through the projection, never under the
     // floor, and its own level cut by the area the floor adds.
     assert.ok(shader.vertexShader.includes('float glowPx = aGlow.x * projectionMatrix'));
@@ -231,11 +233,8 @@ describe('a fry’s own light (#1837)', () => {
       shader.vertexShader,
       /vGlowLevel = aGlow\.y \* \( glowPx \* glowPx \) \/ \( gl_PointSize \* gl_PointSize \)/
     );
-    // A fry's point is the material's own level; a jelly's seat is wider, at
-    // its own level by the constants' ratio, and never over a fry's.
+    // A fry's point is its cloud's own level.
     assert.deepEqual([...LIFE_GLOW_KIND.axis], [SIZE_M, 1]);
-    assert.deepEqual([...LIFE_GLOW_KIND.seats], [LANTERN.SIZE_M, LANTERN.LEVEL / LEVEL]);
-    assert.ok(LANTERN.SIZE_M > SIZE_M && LANTERN.LEVEL <= LEVEL);
     assert.ok(shader.vertexShader.includes(`1.0 - ${LIFT_M.toFixed(6)} /`));
     assert.match(shader.fragmentShader, /diffuseColor\.rgb \*= glowFall \* glowFall \* vGlowLevel/);
   });
@@ -245,15 +244,16 @@ describe('a fry’s own light (#1837)', () => {
     assert.equal(glow.points.visible, false);
     glow.write(3, (positions, kinds) => {
       positions.set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-      kinds.set([...LIFE_GLOW_KIND.axis, ...LIFE_GLOW_KIND.seats, ...LIFE_GLOW_KIND.axis]);
+      kinds.set([...LIFE_GLOW_KIND.axis, 0.55, 0.5, ...LIFE_GLOW_KIND.axis]);
     });
     assert.equal(glow.count, 3);
     assert.equal(glow.points.visible, true);
     assert.equal(glow.points.geometry.drawRange.count, 3);
     assert.equal(glow.points.geometry.getAttribute('position').getY(1), 5);
-    // Each light keeps its own width, a jelly's seat beside a fry's point.
+    // Each light keeps its own width and level, whatever stands beside it.
     const kind = glow.points.geometry.getAttribute('aGlow');
-    assert.ok(Math.abs(kind.getX(1) - HIGH_GRAPHICS.LIFE.GLOW.LANTERN.SIZE_M) < 1e-6);
+    assert.ok(Math.abs(kind.getX(1) - 0.55) < 1e-6);
+    assert.ok(Math.abs(kind.getY(1) - 0.5) < 1e-6);
     assert.ok(Math.abs(kind.getX(0) - HIGH_GRAPHICS.LIFE.GLOW.SIZE_M) < 1e-6);
     // Fewer bodies keep the buffer and draw fewer.
     const held = glow.points.geometry;

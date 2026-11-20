@@ -117,13 +117,14 @@ export interface PropSpec {
    */
   life?: true;
   /**
-   * Carries light of its own at High, in `life-glint` (lifeGlow.ts): `axis`
-   * is one point on the body's axis, the schooling fry's, and `seats` one on
-   * each photophore seat its file names, the drifting jelly's six. Every
-   * other body emits nothing there, and the deep fish's seats stay the
-   * stipple channel's, as at Low.
+   * Carries light of its own at High. `axis` is one point on the body's
+   * axis in `life-glint`, the schooling fry's (lifeGlow.ts). `lantern` is
+   * the drifting jelly's: its file drawn as a lit membrane, with its seats
+   * and its strands' beads as points, all in `jelly-lantern` (jellyLight.ts).
+   * Every other body emits nothing there, and the deep fish's seats stay
+   * the stipple channel's, as at Low.
    */
-  glint?: 'axis' | 'seats';
+  glint?: 'axis' | 'lantern';
 }
 
 /**
@@ -388,7 +389,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     swayM: 0,
     life: true,
     ...(slug === 'env-shoal-fry' ? { glint: 'axis' as const } : {}),
-    ...(slug === 'env-drift-jelly' ? { glint: 'seats' as const } : {}),
+    ...(slug === 'env-drift-jelly' ? { glint: 'lantern' as const } : {}),
   })),
 ];
 

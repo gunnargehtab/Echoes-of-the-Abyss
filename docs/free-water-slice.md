@@ -457,7 +457,9 @@ ground-light family and does not enter the own-agent lamp halo. Other new animal
 nothing. The kelp retains `flora-biolight` and its licensed sway. That is Low. At the
 High graphics quality a schooling fry carries one point of world light, in a token of its
 own (High's own life, above), and its body is still no emitter: its GLB is unchanged. A
-jelly carries six, on the seats its file marks dark.
+jelly is drawn there as a lantern, in a token of its own
+([art-direction.md](art-direction.md#a-jelly-is-a-lantern)): a lit membrane over strands
+of beads of light, which are the renderer's and not its file's.
 
 Gameplay fauna remain unchanged: public Lampfry/Tetherjelly retain their established
 disclosures and stipples; classified animals retain species-shaped dots, with no

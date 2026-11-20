@@ -640,6 +640,16 @@ export const WORLD_LIGHT: Record<WorldLightFamily, number> = {
 export const LIFE_GLINT = 0xb9bfa2;
 
 /**
+ * A drifting jelly's own light at the High graphics quality,
+ * docs/style-neon-noir.md "World light" (`jelly-lantern`, in development with
+ * #1837): its bell, its seats and the beads of its strands (jellyLight.ts).
+ * An orchid pink, as near the target's jelly as the palette's law lets a
+ * world light stand: pinker than Hadron's violet, bluer and far greyer than
+ * the interface's magenta, and no navy's glow.
+ */
+export const JELLY_LANTERN = 0xcc7ad4;
+
+/**
  * The water's hue over each biome at the High graphics quality,
  * docs/style-neon-noir.md "World light", the water hues (SPEC by token,
  * accepted with High's first step, #1801): the biome fill's own hue at one

@@ -427,6 +427,43 @@ export const HIGH_GRAPHICS = {
       // fry's level the first frames read a seat over every lamp beside it.
       LANTERN: { LEVEL: 0.3, SIZE_M: 0.55 },
     },
+    /**
+     * A drifting jelly as a lantern (jellyLight.ts; docs/art-direction.md, "A
+     * jelly is a lantern"), in `jelly-lantern`: the owner's target shows a
+     * translucent bell lit from within over long strands of beads of light.
+     *
+     * `BELL` is the membrane: `LEVEL` the light a face square to the eye
+     * gives, in the renderer's linear units, `RIM` what a face edge-on adds
+     * and `RIM_POWER` how fast that falls toward the face; `RIBS` the radial
+     * canals round the bell and `RIB` what one adds on its line; `MARGIN`
+     * what the band at the bell's lip adds, and `CORE` the level of the
+     * short lobes under it. `STRANDS` hang from the lip: `COUNT` of them,
+     * `BEADS` a strand, the longest `LENGTH_M` and the shortest that times
+     * `SHORTEST`; a bead is `SIZE_M` wide at the lip at `LEVEL`, fading to
+     * the tip; a strand waves `SWAY_M` at its tip and trails `TRAIL_M`
+     * behind the way its jelly drifts. `HALO` is the glow in the water round
+     * the bell, one soft disc. `SWIM` is the bell's stroke: one a
+     * `PERIOD_S`, the lip drawn in by `SQUEEZE` of its radius. `PULSE` is a
+     * wave of light that runs from the crown down the bell and out along the
+     * strands: one a `PERIOD_S`, `SPEED_MPS` along the body, `WIDTH_M` wide,
+     * adding `GAIN` of the level it passes. Reduced motion holds all three.
+     */
+    JELLY: {
+      BELL: { LEVEL: 0.05, RIM: 0.3, RIM_POWER: 2.2, RIBS: 16, RIB: 0.07, MARGIN: 0.18, CORE: 0.1 },
+      STRANDS: {
+        COUNT: 16,
+        BEADS: 22,
+        LENGTH_M: 17,
+        SHORTEST: 0.55,
+        SIZE_M: 0.55,
+        LEVEL: 0.6,
+        SWAY_M: 1.6,
+        TRAIL_M: 4,
+      },
+      HALO: { SIZE_M: 15, LEVEL: 0.035 },
+      SWIM: { PERIOD_S: 5.5, SQUEEZE: 0.16 },
+      PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, GAIN: 0.6 },
+    },
   },
   /**
    * TUNABLE: a vent at work (docs/art-direction.md, "The vents at work";

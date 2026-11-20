@@ -631,16 +631,29 @@ faction and no interface token wears. The owner accepted them with High's first 
 
 **Life's own light at High.** *In development with
 [#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837), and not
-accepted.* One more world-owned source at the High graphics quality: `life-glint`,
-`#B9BFA2`, the light a body of the free-water crater's decorative life carries of its
-own: one point on a schooling fry's flank, and six round a drifting jelly's bell
-([art-direction.md](art-direction.md#life-in-the-worlds-light)). One token for both: the
-law names "the bodies of public life" as one kind of source. A pale bone white with
+accepted.* Two more world-owned sources at the High graphics quality, each the light a
+body of the free-water crater's decorative life carries of its own
+([art-direction.md](art-direction.md#life-in-the-worlds-light)).
+
+`life-glint`, `#B9BFA2`, is one point on a schooling fry's flank. A pale bone white with
 no neon's chroma: warmer than every contact tier's blue, greyer than the civic lamp's
-tallow, and no navy's glow, so rule 5 holds. It is placed by the fixture's authored loops
-and answers nothing a match does (rule 4). It is not the fauna colour: that is the
-stipple's, on the tactical layer. `LIFE_GLINT` in `packages/frontend/src/game/palette.ts`
-transcribes it.
+tallow, and no navy's glow, so rule 5 holds. It is not the fauna colour: that is the
+stipple's, on the tactical layer.
+
+`jelly-lantern`, `#CC7AD4`, is a drifting jelly: its bell, its seats and the beads of its
+strands ([art-direction.md](art-direction.md#a-jelly-is-a-lantern)). The owner's target
+shows a jelly as a lantern of pink-violet light, and its brightest pixels are `#BFA6E2`,
+at a hue of 265 degrees: the hue of Hadron's glow, `#C9A6FF`, within a degree. A world
+light takes no agent's token (rule 5), and violet is reserved, so that hue does not
+transfer, as the target's cyan ring did not. The lantern is an orchid pink at 295
+degrees instead, in the gap between the two hues that flank it: 31 degrees pinker than
+Hadron's violet, and 33 degrees bluer than `neon-magenta` at about half its saturation.
+It is not `neon-violet` and stands for nothing unresolved. Whether it reads apart from a
+Hadron lamp and from a panel's bevel is the owner's glance, in all four palettes.
+
+Both are placed by the fixture's authored loops and answer nothing a match does
+(rule 4). `LIFE_GLINT` and `JELLY_LANTERN` in `packages/frontend/src/game/palette.ts`
+transcribe them.
 
 **A vent's breath at High.** *In development with #1837, and not accepted.* The steam
 over a chimney's mouth is world light in `vent-ember`, as the table says, at both
@@ -741,8 +754,8 @@ point channel to its decorative deep fish, not to a gameplay animal: non-emissiv
 bodies with at most six soft photophore dots each, bounded by rung 5. No lit skin,
 halo, new ground-light family or response to a participant is licensed. Its other
 decorative animals carry no emission; this exception remains confined to the study. At
-High a schooling fry carries one point of world light and a drifting jelly six,
-`life-glint`, above.
+High a schooling fry carries one point of world light, `life-glint`, and a drifting
+jelly is drawn as a lantern, `jelly-lantern`, both above.
 
 ### The arch study's licence
 

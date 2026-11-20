@@ -89,7 +89,7 @@ export default async ({ page, shot }) => {
   };
   // High's own bodies decode after the switch: a template a quality. The
   // crater stands 144 fry at Low and 624 at High, each with its light, and
-  // five jellies at High alone, six lights a bell.
+  // five jellies at High alone, each a lantern.
   const setQuality = async (quality) => {
     const drawn = await page.evaluate((q) => window.__perspectiveQuality(q), quality);
     assert.equal(drawn, quality, `the view draws ${drawn}, asked ${quality}`);
@@ -106,10 +106,12 @@ export default async ({ page, shot }) => {
         // The vent stand is High's too: its chimneys decode, then breathe.
         const stacks = probe.fixtureAssets['env-vent-chimney'] ?? 0;
         const jellies = probe.fixtureAssets['env-drift-jelly'] ?? 0;
+        const lanterns = probe.jellyLights ?? 0;
         const vents = high ? stacks > 0 && probe.ventPlumes === stacks : stacks === 0;
         return high
-          ? fry > 144 && jellies > 0 && glints === fry + 6 * jellies && vents
-          : fry === 144 && jellies === 0 && glints === 0 && vents && probe.ventPlumes === 0;
+          ? fry > 144 && glints === fry && jellies > 0 && lanterns > 0 && vents
+          : fry === 144 && glints === 0 && jellies === 0 && lanterns === 0 && vents &&
+              probe.ventPlumes === 0;
       },
       quality === 'high',
       { timeout: 120000 }
@@ -176,7 +178,12 @@ export default async ({ page, shot }) => {
         sway: probe.sway ?? null,
         // What the crater stands at this quality, and the lights its fry and
         // its jellies carry.
-        life: { bodies: probe.fixtureAssets, glints: probe.lifeGlints ?? 0 },
+        life: {
+          bodies: probe.fixtureAssets,
+          glints: probe.lifeGlints ?? 0,
+          // The points of a jelly's lantern: its glow, its seats, its beads.
+          jellyLights: probe.jellyLights ?? 0,
+        },
         // Columns standing over the vent stand's chimneys, and the world's sources.
         vents: { plumes: probe.ventPlumes, worldLights: probe.graphicsQuality?.worldLights ?? 0 },
         graphicsQuality: probe.graphicsQuality ?? null,
