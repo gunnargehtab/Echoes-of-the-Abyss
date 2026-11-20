@@ -177,7 +177,7 @@ overturn:
 - **A chimney's breath is lit matter in the world pass**, not Low's steam.
 - **The crater's stand alone breathes it.** Every chimney on every map was taken first,
   and the round's critic overturned it: no frame shows a Thermal Vein at High. Every
-  other map keeps its steam.
+  other map keeps its steam, and #1853 holds the other reading.
 - **The crater's stand is between the Light Scout and the Corvette**, 421 m from the
   Close eye, where its light reaches both their rings.
 

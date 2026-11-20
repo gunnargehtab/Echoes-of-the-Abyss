@@ -727,7 +727,7 @@ chimney's breath another way.
   every Thermal Vein at High, no frame shows one, and look work starts from a frame. **The
   crater's stand alone** is taken: at High the stand's two chimneys breathe lit smoke, and
   every other map's chimneys keep Low's steam on the canvas at both qualities. One plume a
-  stack, never both. The other reading is its own issue, with a frame of a vent field.
+  stack, never both. The other reading is #1853, which starts from a frame of a vent field.
 - **The crater's stand is between two hulls.** The fixture stands two chimneys and three
   basalt boulders ([free-water-slice.md](free-water-slice.md) §5, "High's own vents").
   Both chimneys lie in one 80 m cell of the `vent` family's lattice, so the stand is one
