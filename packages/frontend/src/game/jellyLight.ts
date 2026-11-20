@@ -46,17 +46,8 @@ import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { HIGH_GRAPHICS } from '@echoes/shared';
 import { JELLY_LANTERN } from './palette.ts';
 
-const { BELL, STRANDS, HALO, SWIM, PULSE } = HIGH_GRAPHICS.LIFE.JELLY;
+const { BELL, STRANDS, HALO, SWIM, PULSE, STAGGER_S } = HIGH_GRAPHICS.LIFE.JELLY;
 const { LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
-
-/** Seconds between one jelly's clock and the next's: no two bells stroke or flash in step. */
-export const JELLY_STAGGER_S = 2.3;
-/** How far over the crown a wave starts, in its own widths, so it enters and is not switched on. */
-const PULSE_LEAD = 2;
-/** Half-width of the lip's bright band, metres. */
-const LIP_BAND_M = 0.3;
-/** One wave of a strand's sway takes this long, seconds. */
-const SWAY_PERIOD_S = 7;
 
 /** What a membrane's program reads of its jelly; one object a template, driven by the layer. */
 export interface JellyUniforms {
@@ -91,7 +82,7 @@ export function jellyShape(template: {
 }
 
 /** A jelly's own clock: the match's, set off by its place in the list. */
-const clock = (timeS: number, index: number): number => timeS + index * JELLY_STAGGER_S;
+const clock = (timeS: number, index: number): number => timeS + index * STAGGER_S;
 
 /** How far the bell's stroke has drawn the lip in, 0 to 1: a quick squeeze and a slow release. */
 export function jellyStroke(timeS: number, index: number, moves: boolean): number {
@@ -108,7 +99,7 @@ export function jellyStroke(timeS: number, index: number, moves: boolean): numbe
 export function jellyPulse(alongM: number, timeS: number, index: number, moves: boolean): number {
   if (!moves) return 0;
   const sinceS = ((clock(timeS, index) % PULSE.PERIOD_S) + PULSE.PERIOD_S) % PULSE.PERIOD_S;
-  const headM = PULSE.SPEED_MPS * sinceS - PULSE_LEAD * PULSE.WIDTH_M;
+  const headM = PULSE.SPEED_MPS * sinceS - PULSE.LEAD * PULSE.WIDTH_M;
   const off = (alongM - headM) / PULSE.WIDTH_M;
   return Math.exp(-off * off);
 }
@@ -145,7 +136,7 @@ export function patchJellyMembrane(shader: { vertexShader: string; fragmentShade
       [
         vBegin,
         // The instance is the jelly's place in its list, as the beads' is.
-        `vJellyClock = uJellyTime + float( gl_InstanceID ) * ${glsl(JELLY_STAGGER_S)};`,
+        `vJellyClock = uJellyTime + float( gl_InstanceID ) * ${glsl(STAGGER_S)};`,
         // The stroke (`jellyStroke`): the lip drawn in, the crown still, and
         // the lobes under the lip carried with it.
         `float jellyBeat = 0.5 - 0.5 * cos( 6.2831853 * vJellyClock / ${glsl(SWIM.PERIOD_S)} );`,
@@ -172,11 +163,11 @@ export function patchJellyMembrane(shader: { vertexShader: string; fragmentShade
         `float jellyRim = pow( 1.0 - jellyFacing, ${glsl(BELL.RIM_POWER)} );`,
         // The radial canals, crown to lip, and the lip's own band.
         `float jellyRib = pow( abs( cos( atan( vJellyP.z, vJellyP.x ) * ${glsl(BELL.RIBS / 2)} ) ), 12.0 );`,
-        `float jellyLipOff = ( vJellyP.y - uJellyShape.x ) / ${glsl(LIP_BAND_M)};`,
+        `float jellyLipOff = ( vJellyP.y - uJellyShape.x ) / ${glsl(BELL.LIP_M)};`,
         'float jellyLip = exp( - jellyLipOff * jellyLipOff );',
         // The wave of light (`jellyPulse`), by metres below the crown.
         `float jellySince = mod( vJellyClock, ${glsl(PULSE.PERIOD_S)} );`,
-        `float jellyOff = ( ( uJellyShape.y - vJellyP.y ) - ( ${glsl(PULSE.SPEED_MPS)} * jellySince - ${glsl(PULSE_LEAD * PULSE.WIDTH_M)} ) ) / ${glsl(PULSE.WIDTH_M)};`,
+        `float jellyOff = ( ( uJellyShape.y - vJellyP.y ) - ( ${glsl(PULSE.SPEED_MPS)} * jellySince - ${glsl(PULSE.LEAD * PULSE.WIDTH_M)} ) ) / ${glsl(PULSE.WIDTH_M)};`,
         `float jellyWave = uJellyMoves * ${glsl(PULSE.GAIN)} * exp( - jellyOff * jellyOff );`,
         // x: a face square to the eye. y: its edge. z: a canal. w: the lip.
         'diffuseColor.rgb *= ( uJellySkin.x + uJellySkin.y * jellyRim + uJellySkin.z * jellyRib + uJellySkin.w * jellyLip ) * ( 1.0 + jellyWave );',
@@ -289,7 +280,7 @@ export function writeJellyLights(
       LANTERN.LEVEL * atLip
     );
   }
-  const swayAt = moves ? (2 * Math.PI * clock(timeS, index)) / SWAY_PERIOD_S : 0;
+  const swayAt = moves ? (2 * Math.PI * clock(timeS, index)) / STRANDS.SWAY_PERIOD_S : 0;
   for (let k = 0; k < STRANDS.COUNT; k++) {
     const seed = index * 131 + k;
     const bearing = (2 * Math.PI * (k + 0.6 * hash(seed + 0.5))) / STRANDS.COUNT;

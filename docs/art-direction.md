@@ -768,6 +768,7 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 | Radial canals round the bell | `LIFE.JELLY.BELL.RIBS` | 16 |
 | What a canal adds on its line | `LIFE.JELLY.BELL.RIB` | 0.04 |
 | What the lip's band adds | `LIFE.JELLY.BELL.MARGIN` | 0.07 |
+| Half-width of that band, metres | `LIFE.JELLY.BELL.LIP_M` | 0.3 |
 | Light of the lobes under the bell | `LIFE.JELLY.BELL.CORE` | 0.08 |
 | Strands a jelly hangs | `LIFE.JELLY.STRANDS.COUNT` | 22 |
 | Beads a strand | `LIFE.JELLY.STRANDS.BEADS` | 22 |
@@ -776,6 +777,7 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 | Width of a bead at the lip, metres | `LIFE.JELLY.STRANDS.SIZE_M` | 0.45 |
 | A bead's light at its centre, at the lip | `LIFE.JELLY.STRANDS.LEVEL` | 0.38 |
 | How far a strand's tip sways, metres | `LIFE.JELLY.STRANDS.SWAY_M` | 1.6 |
+| Seconds one sway of a strand takes | `LIFE.JELLY.STRANDS.SWAY_PERIOD_S` | 7 |
 | How far its tip trails behind the drift, metres | `LIFE.JELLY.STRANDS.TRAIL_M` | 4 |
 | Width of the glow round the bell, metres | `LIFE.JELLY.HALO.SIZE_M` | 15 |
 | That glow at its centre | `LIFE.JELLY.HALO.LEVEL` | 0.03 |
@@ -784,7 +786,9 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 | Seconds between two waves of light | `LIFE.JELLY.PULSE.PERIOD_S` | 9 |
 | Speed of a wave along the body, metres a second | `LIFE.JELLY.PULSE.SPEED_MPS` | 5 |
 | Width of a wave, metres | `LIFE.JELLY.PULSE.WIDTH_M` | 3.5 |
+| How far over the crown a wave starts, in its widths | `LIFE.JELLY.PULSE.LEAD` | 2 |
 | What a wave adds, as a share of the light it passes | `LIFE.JELLY.PULSE.GAIN` | 0.6 |
+| Seconds one jelly's clock runs behind the last's | `LIFE.JELLY.STAGGER_S` | 2.3 |
 
 #### The vents at work
 

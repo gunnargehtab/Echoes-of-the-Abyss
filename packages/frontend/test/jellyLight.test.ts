@@ -30,7 +30,6 @@ import { propSpec } from '../src/game/environment.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
 import {
   JELLY_MEMBRANE_ANCHORS,
-  JELLY_STAGGER_S,
   jellyLightCount,
   jellyMembrane,
   jellyPulse,
@@ -42,7 +41,7 @@ import {
 } from '../src/game/jellyLight.ts';
 import { JELLY_LANTERN, LIFE_GLINT, PALETTES, WORLD_LIGHT } from '../src/game/palette.ts';
 
-const { BELL, STRANDS, HALO, SWIM, PULSE } = HIGH_GRAPHICS.LIFE.JELLY;
+const { BELL, STRANDS, HALO, SWIM, PULSE, STAGGER_S } = HIGH_GRAPHICS.LIFE.JELLY;
 const { LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
 
 const parse = async (slug: string): Promise<Group> => {
@@ -151,7 +150,7 @@ describe('a jelly is a lantern (#1837)', () => {
     patchJellyMembrane(shader);
     // The stroke draws the lip in and leaves the crown, and stops with motion.
     assert.match(shader.vertexShader, /transformed\.xz \*= 1\.0 - [\d.]+ \* uJellyMoves/);
-    assert.ok(shader.vertexShader.includes(`gl_InstanceID ) * ${JELLY_STAGGER_S.toFixed(6)}`));
+    assert.ok(shader.vertexShader.includes(`gl_InstanceID ) * ${STAGGER_S.toFixed(6)}`));
     // A thin skin: brightest edge-on, and the wave multiplies what it passes.
     assert.ok(shader.fragmentShader.includes('abs( dot( normalize( vJellyN )'));
     assert.match(shader.fragmentShader, /jellyWave = uJellyMoves \* /);
@@ -256,7 +255,7 @@ describe('a jelly’s points of light (#1837)', () => {
         if (jellyPulse(s, t, 0, true) > jellyPulse(best, t, 0, true)) best = s;
       return best;
     };
-    const lead = (2 * PULSE.WIDTH_M) / PULSE.SPEED_MPS;
+    const lead = (PULSE.LEAD * PULSE.WIDTH_M) / PULSE.SPEED_MPS;
     assert.ok(Math.abs(head(lead + 1) - PULSE.SPEED_MPS) < 0.06);
     assert.ok(head(lead + 2) > head(lead + 1));
     // And it is gone between two waves: most of a period is the jelly's steady light.

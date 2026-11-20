@@ -437,17 +437,20 @@ export const HIGH_GRAPHICS = {
      * gives, in the renderer's linear units, `RIM` what a face edge-on adds
      * and `RIM_POWER` how fast that falls toward the face; `RIBS` the radial
      * canals round the bell and `RIB` what one adds on its line; `MARGIN`
-     * what the band at the bell's lip adds, and `CORE` the level of the
-     * short lobes under it. `STRANDS` hang from the lip: `COUNT` of them,
+     * what the band at the bell's lip adds and `LIP_M` that band's
+     * half-width, and `CORE` the level of the short lobes under it. `STRANDS` hang from the lip: `COUNT` of them,
      * `BEADS` a strand, the longest `LENGTH_M` and the shortest that times
      * `SHORTEST`; a bead is `SIZE_M` wide at the lip at `LEVEL`, fading to
-     * the tip; a strand waves `SWAY_M` at its tip and trails `TRAIL_M`
-     * behind the way its jelly drifts. `HALO` is the glow in the water round
+     * the tip; a strand waves `SWAY_M` at its tip, once a `SWAY_PERIOD_S`,
+     * and trails `TRAIL_M` behind the way its jelly drifts. `HALO` is the glow in the water round
      * the bell, one soft disc. `SWIM` is the bell's stroke: one a
      * `PERIOD_S`, the lip drawn in by `SQUEEZE` of its radius. `PULSE` is a
      * wave of light that runs from the crown down the bell and out along the
      * strands: one a `PERIOD_S`, `SPEED_MPS` along the body, `WIDTH_M` wide,
-     * adding `GAIN` of the level it passes. Reduced motion holds all three.
+     * starting `LEAD` of its widths over the crown so it enters and is not
+     * switched on, and adding `GAIN` of the level it passes. Each jelly's
+     * clock runs `STAGGER_S` behind the last's, so no two stroke or flash in
+     * step. Reduced motion holds all three.
      */
     JELLY: {
       BELL: {
@@ -457,6 +460,7 @@ export const HIGH_GRAPHICS = {
         RIBS: 16,
         RIB: 0.04,
         MARGIN: 0.07,
+        LIP_M: 0.3,
         CORE: 0.08,
       },
       STRANDS: {
@@ -467,11 +471,13 @@ export const HIGH_GRAPHICS = {
         SIZE_M: 0.45,
         LEVEL: 0.38,
         SWAY_M: 1.6,
+        SWAY_PERIOD_S: 7,
         TRAIL_M: 4,
       },
       HALO: { SIZE_M: 15, LEVEL: 0.03 },
       SWIM: { PERIOD_S: 5.5, SQUEEZE: 0.16 },
-      PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, GAIN: 0.6 },
+      PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, LEAD: 2, GAIN: 0.6 },
+      STAGGER_S: 2.3,
     },
   },
   /**
