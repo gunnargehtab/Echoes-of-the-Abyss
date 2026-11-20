@@ -130,10 +130,10 @@ export const FREE_WATER_HIGH_LIFE = {
    * fleet's start, 110 to 150 m deep, where the Close camera has the water
    * above the hulls' rings. A slot is a loop's centre in map metres, the
    * depth its bell hangs at and where it stands when the match starts, in
-   * degrees round its loop. A jelly drifts: one lap of a 14 m loop in 280 s,
-   * a twentieth of a fry's pace, rising and sinking 10 m as it goes. Its
-   * `axisM` is the bell's mid-height over the model's origin, its longest
-   * arm's tip.
+   * degrees round its loop. A jelly drifts: one lap of a loop 14 m in radius
+   * in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
+   * goes. Its `axisM` is the bell's mid-height over the model's origin, its
+   * longest arm's tip.
    */
   JELLIES: {
     SLOTS: [

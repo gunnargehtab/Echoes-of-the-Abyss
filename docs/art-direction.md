@@ -601,8 +601,8 @@ a frame of it is accepted. The owner took three calls in session on 20 November 
 before any frame: the bodies are the crater's decorative life, the drifting bodies are a
 new jelly model, and the vents are an authored stand on the rim. The schools were the
 step's first instalment and the jelly its third; the vents are the section after this.
-Three more calls were taken in the open with the first frames, and wait on the owner: a
-body's register, its own light, and where High's life stands.*
+Four more calls were taken in the open with the frames, and wait on the owner: a body's
+register, a fry's own light, a jelly's, and where High's life stands.*
 
 The crater's decorative bodies
 ([free-water-slice.md](free-water-slice.md) §5) were props in the world pass under the

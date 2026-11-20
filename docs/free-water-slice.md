@@ -363,10 +363,10 @@ at any match time, where one school would pass once a lap.
 | Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 5 of 96 | 7 m, 1.6 m, 5 m |
 | Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 14 m, 6 m, 14 m |
 
-The **drifting bodies** are five `env-drift-jelly`, each alone on its own loop: 14 m
-round in 280 s, a twentieth of a fry's pace, rising and sinking 10 m as it goes. Each
-hangs by its bell's mid-height, 8.69 m over its longest arm's tip, at an authored depth
-from an authored start.
+The **drifting bodies** are five `env-drift-jelly`, each alone on its own loop: a 14 m
+radius and a lap in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
+goes. Each hangs by its bell's mid-height, 8.69 m over its longest arm's tip, at an
+authored depth from an authored start.
 
 | Jelly | Loop centre, map x / y | Depth | Start, degrees round its loop |
 | --- | --- | --- | --- |
@@ -376,9 +376,9 @@ from an authored start.
 | 4 | 509 / 1,909 | 110 m | 210 |
 | 5 | 678 / 2,025 | 130 m | 280 |
 
-They hang 180 to 520 m from the Close eye and 80 to 120 m over its own depth, so they
-stand in the water above the hulls' rings, as the target's do. A 6 m bell draws 17 to
-50 px there, and 10 from Home's eye.
+Over a lap they hang 166 to 534 m from the Close eye, 190 to 526 m at its start, and 73
+to 133 m over the eye's own depth, so they stand in the water above the hulls' rings, as
+the target's do. A 6 m bell draws 17 to 56 px there, and 10 to 13 from Home's eye.
 
 The fry's loop passes 50 m in front of the Close eye, 233 m deep at `(178, 2,168)`, where
 a 0.5 m body draws 15 px. A fry school is a ribbon, 14 m long, 3 m across and 2 m deep as

@@ -7,7 +7,8 @@
  * crater's schools carries one point of it on its flank, in `life-glint`
  * (docs/style-neon-noir.md "World light"), so a school in unlit water reads as
  * a drift of faint lights and not as holes in it. A drifting jelly carries
- * six, one on each seat its file marks round the bell, wider and brighter.
+ * six, one on each seat its file marks round the bell, wider and at a fry's
+ * level.
  *
  * It is world light, not a mark, and it is drawn where world light is: one
  * `Points` in the world pass (highFrame.ts), scene-referred, so the water

@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { after, afterEach, before, describe, it, mock } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { BoxGeometry, Group, Mesh, MeshStandardMaterial } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createServer } from 'vite';
-import { Biome, Faction, UnitKind } from '@echoes/shared';
+import { Biome, Faction, FREE_WATER_HIGH_LIFE, UnitKind } from '@echoes/shared';
 
 // The Node asset shim intentionally has no URLs. Vite expands the real manifest;
 // only network/decode completion is controlled, not the cache or its consumers.
@@ -443,5 +444,81 @@ describe('roster look and palette cache isolation', () => {
     assert.doesNotMatch(cladding(standard).material.customProgramCacheKey(), /sorrowgate/);
     assert.match(cladding(tutorial).material.customProgramCacheKey(), /sorrowgate/);
     assert.equal(pending.length, 1, 'both looks and palettes reuse the parsed source');
+  });
+});
+
+describe('a body’s own light at High (#1837)', () => {
+  // A seat is a node its file names, so the two bodies that carry seats are
+  // served as their real files and every other load as the stub.
+  const SEATED = ['env-deep-fish', 'env-drift-jelly'];
+  const real = (slug) => {
+    const bytes = readFileSync(
+      new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
+    );
+    return new GLTFLoader().parseAsync(
+      bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+      ''
+    );
+  };
+  let served = 0;
+  const settle = async (done) => {
+    await until(() => {
+      while (served < pending.length) {
+        const load = pending[served++];
+        const slug = SEATED.find((seated) => String(load.url).includes(`${seated}.glb`));
+        if (slug === undefined) load.resolve(source());
+        else real(slug).then(load.resolve, load.reject);
+      }
+      return done();
+    });
+  };
+
+  it('lights a fry’s flank and a jelly’s six seats, and leaves the stipple the deep fish’s', async () => {
+    controlLoads();
+    served = 0;
+    const { terrainFor } = await import('../../backend/src/sim/maps/index.ts');
+    const { FREE_WATER_SLICE } = await import('../../backend/src/sim/maps/freeWaterSlice.ts');
+    const cells = terrainFor(FREE_WATER_SLICE).serialize();
+    const layer = new EnvironmentLayer('free-water');
+    const count = (slug) => layer.stats().fixtureAssets[slug] ?? 0;
+    try {
+      layer.rebuild(cells, () => -132);
+      await settle(() => count('env-shoal-fry') > 0 && layer.stats().decorativePhotophores > 0);
+      layer.tick(0, undefined, 1000);
+      const low = layer.stats();
+      // Low: the deep fish's seats are the stipple's dots, no body is lit and
+      // no jelly stands.
+      const seats = low.decorativePhotophores / count('env-deep-fish');
+      assert.ok(Number.isInteger(seats) && seats >= 1 && seats <= 6, `${seats} seats a deep fish`);
+      assert.equal(low.lifeGlints, 0);
+      assert.equal(count('env-drift-jelly'), 0);
+
+      layer.setWorldPass(true);
+      layer.rebuild(cells, () => -132);
+      const jellies = FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length;
+      await settle(
+        () =>
+          count('env-drift-jelly') === jellies &&
+          count('env-shoal-fry') > low.fixtureAssets['env-shoal-fry'] &&
+          layer.stats().lifeGlints > count('env-shoal-fry')
+      );
+      layer.tick(0, undefined, 2000);
+      const high = layer.stats();
+      // docs/art-direction.md, "Life in the world's light": one light a fry,
+      // six a jelly, and no other body carries one.
+      assert.equal(high.lifeGlints, count('env-shoal-fry') + 6 * jellies);
+      // A jelly's seats are world light, never the stipple channel's dots:
+      // those are the deep fish's alone, as at Low.
+      assert.equal(high.decorativePhotophores, low.decorativePhotophores);
+
+      layer.setWorldPass(false);
+      layer.rebuild(cells, () => -132);
+      layer.tick(0, undefined, 3000);
+      assert.equal(layer.stats().lifeGlints, 0);
+      assert.equal(count('env-drift-jelly'), 0);
+      assert.equal(layer.stats().decorativePhotophores, low.decorativePhotophores);
+    } finally {
+      layer.destroy();
+    }
   });
 });

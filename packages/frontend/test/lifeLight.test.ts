@@ -4,9 +4,10 @@
  * that section promises: a body draws from a template of its own at High and
  * Low's is the object it always was; the High one stands at the cladding's
  * register and takes the Lid's glow, the pools and an own hull's searchlight,
- * shadowed by the ground and by a hull; a schooling fry, and no other body,
- * carries one light of its own in `life-glint`, drawn in the world pass, never
- * narrower than its floor and cut by the area the floor adds. What it looks
+ * shadowed by the ground and by a hull; a schooling fry carries one light of
+ * its own in `life-glint` and a drifting jelly six, and no other body any,
+ * drawn in the world pass, never narrower than its floor and cut by the area
+ * the floor adds. What it looks
  * like is the frames in docs/screenshots/issue-1837.
  */
 import assert from 'node:assert/strict';
