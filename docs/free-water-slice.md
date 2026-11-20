@@ -668,7 +668,8 @@ before/after sequence for each implemented camera or world increment, keeping me
 evidence folders unchanged. A standalone model viewer cannot pass the integrated row.
 
 **Budgets are gates, not forecasts.** Retain [graphics-standards.md](graphics-standards.md)
-gate 6's 150 draw calls and DPR of at most 1.5. This study's frame cap is 720,000 triangles
+gate 6's 150 draw calls and DPR of at most 1.5. At the Low graphics quality this study's
+frame cap is 720,000 triangles
 over every pass rather than gate 6's 400,000, by the owner's decision on #1712
 (2 November 2026): the kelp forest is a development slice for map design patterns and may
 spend what a shipped map may not; shipped maps keep 400,000. Reserve at most 30 calls /
@@ -680,10 +681,10 @@ clusters (6,208), wildlife (59,520: 58,720 since #1771, from 31,680, and the one
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
 opening list's contract; per-model triangle limits remain ceilings. Share instanced
 batches per template/material; no per-fish draw or further relaxation of this study's
-720,000.
+caps, 720,000 at Low and 900,000 at High (below).
 
 **At the High graphics quality the frame cap is 900,000 triangles** over every pass, by
-the owner's decision on #1856 (20 November 2026). High stands life and a vent stand that
+the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent stand that
 Low does not (§5): its frame stood at up to 720,318 after #1837 and stands at up to
 761,358 with #1856's school. Low keeps 720,000, and gate 6's 8 ms of GPU time still
 binds High's frame. The 600,000 reservation above is read as the Low list's, which is

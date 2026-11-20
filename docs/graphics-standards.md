@@ -389,7 +389,7 @@ frame costs.
 | Quality | What it is | Budget | Status |
 | --- | --- | --- | --- |
 | **Low** | The shipped renderer, as this gate and [art-direction.md](art-direction.md) specify it | "Low: the counted budgets" below, unchanged: at most 150 draw calls and 400,000 triangles a frame, pixel ratio capped at 1.5, and every reservation | Shipped, and the default |
-| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped | In development; three steps accepted on 19 November 2026 ([art-direction.md](art-direction.md#what-is-built-at-high)). The 8 ms is SPEC since step 1's frame. Step 1 read at most 2.8 ms on the named GPU, with the plate and hold passes it has since lost ([issue-1801](screenshots/issue-1801/README.md)) |
+| **High** | The lit world layer | **Frame time.** At most **8 ms** of GPU time over every pass of the frame, at 1920 × 1080 and pixel ratio 1 on the named GPU, at the close, home, low and survey cameras, read queued and unpaced as "Abyss Render Stack increment" below reads it. The frame also holds the display's 16.7 ms interval at those cameras. Draw calls, triangles and render-target bytes are reported by the probe and not capped, save the free-water crater fixture's 900,000 triangles a frame (the carve-out under "Low: the counted budgets"; [free-water-slice.md](free-water-slice.md) §7) | In development; three steps accepted on 19 November 2026 ([art-direction.md](art-direction.md#what-is-built-at-high)). The 8 ms is SPEC since step 1's frame. Step 1 read at most 2.8 ms on the named GPU, with the plate and hold passes it has since lost ([issue-1801](screenshots/issue-1801/README.md)) |
 
 A count is a proxy for what a frame costs, and the cost itself is read now. On the named
 GPU the free-water study's frame takes at most 2.07 ms of GPU time at its four stations,
@@ -486,8 +486,8 @@ slice for map design patterns, it spends up to 720,000 triangles a frame and 600
 props and decorative life, fifty-six kelp stands of 9,000 among them
 ([free-water-slice.md](free-water-slice.md) §7); shipped maps keep this gate's 400,000 and
 120,000. At the High quality the same fixture may spend 900,000 triangles a frame, by the
-owner's decision on #1856 (20 November 2026). That is the one count capped at High, and
-the 8 ms still binds it.
+owner's decision in session on 20 November 2026 (#1856). That is the one count capped at
+High, and the 8 ms still binds it.
 
 The probe reports the
 landmark, its triangles and both mote counts on their own, as it reports the props.

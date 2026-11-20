@@ -110,8 +110,8 @@ and no slot of the mill in it.
 ## Calls taken with these frames
 
 Five, each the owner's to overturn. The first is written with its other readings in
-[art-direction.md](../../art-direction.md#life-in-the-worlds-light), and the second and
-third in [free-water-slice.md](../../free-water-slice.md) §5.
+[art-direction.md](../../art-direction.md#life-in-the-worlds-light), and the second in
+[free-water-slice.md](../../free-water-slice.md) §5.
 
 - **A third stream, of outer fish.** The issue's recommendation, against moving the rim's
   outer stream and against dimming a backlit fry's light.
