@@ -63,10 +63,10 @@ snow that left the box since #1837's frame reads as body too; 125 px brightened 
 much, which is the size of that error.
 
 It is a dark body and not the target's. The target's fish are near black on bright teal,
-and number in the hundreds. Here the flank a body shows still takes the shared rig and
-the Lid's glow at the cladding's register, `LIFE.ALBEDO`
-([art-direction.md](../../art-direction.md#life-in-the-worlds-light)), which this
-placement does not touch. Whether 0.65 reads as a silhouette on the named GPU is the
+and number in the hundreds. Here the flank a body shows still takes the shared rig, the
+Lid's glow and a quarter of the stand's pool, at the cladding's register, `LIFE.ALBEDO`
+([art-direction.md](../../art-direction.md#life-in-the-worlds-light)), none of which
+this placement touches. Whether 0.65 reads as a silhouette on the named GPU is the
 owner's glance.
 
 ## What is new in the frame
@@ -109,9 +109,9 @@ and no slot of the mill in it.
 
 ## Calls taken with these frames
 
-Five, each the owner's to overturn. The first three are written with their other readings
-in [art-direction.md](../../art-direction.md#life-in-the-worlds-light) and
-[free-water-slice.md](../../free-water-slice.md) §5.
+Five, each the owner's to overturn. The first is written with its other readings in
+[art-direction.md](../../art-direction.md#life-in-the-worlds-light), and the second and
+third in [free-water-slice.md](../../free-water-slice.md) §5.
 
 - **A third stream, of outer fish.** The issue's recommendation, against moving the rim's
   outer stream and against dimming a backlit fry's light.
