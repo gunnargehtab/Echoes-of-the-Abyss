@@ -1929,11 +1929,13 @@ tips, a short whip tail, no jaw, nothing swept to a point, no armour —
 and nothing of the colossus, under a third of the smallest Sounder. The
 one drifting body, the drift jelly, is held to every line above at 6 m
 across its bell: one solitary medusa and not the Tetherjelly's colony —
-a bell taller than a hemisphere and closed underneath, a scalloped
-margin of lappets, a few thick oral arms hung from one boss under the
-bell's middle, no fringe of fine tentacles, no open hollow bell, nothing
-coiled, no arm ending on a barb — and regular enough about its own
-vertical axis that a slow turn about it reads as drifting.
+a shallow, wide bell, an oblate dome about twice as wide as it is tall,
+closed underneath, with a thin margin slightly flared; under the bell's
+middle a short core of a few frilled oral lobes hung from one stalk,
+well inside the margin, so the bell is the silhouette; no arm, no
+tentacle of any length, no open hollow bell, nothing coiled, nothing
+ending on a barb — and regular enough about its own vertical axis that
+a slow turn about it reads as drifting.
 ```
 
 The variant is the scoped amendment [free-water-slice.md](free-water-slice.md) §5 asks of
@@ -1944,8 +1946,12 @@ to anything, never a scenic copy of a hidden gameplay animal, and a fifth, the r
 draws 5 px at 900 m), and a sixth, the drift jelly (#1837), one drifting body for the
 High graphics quality's life, which the owner commissioned in session on 20 November
 2026: one medusa under a seventh as wide as a single stipple bell of a Tetherjelly field
-([map-visuals.md](map-visuals.md) §8), and drawn away from that figure in every line its
-clause names. It covers those six slugs and nothing else — no other floating prop, no
+([map-visuals.md](map-visuals.md) §8). Its clause first drew it away from that figure in
+every line, a bell taller than a hemisphere over lappets and thick arms. The owner's
+target of the same day is a shallow dome over a plain margin, which the stipple bell also
+is, so the clause now names that shape and what still stands between the two: its size,
+its closed underside, its oral core, and that its file carries nothing that trails. It
+covers those six slugs and nothing else — no other floating prop, no
 gameplay fauna — and the rest of ENV STYLE
 binds them as it binds a crag. All six rows carry Light `none`, the deep fish and the
 drift jelly included. The deep fish's
@@ -1954,15 +1960,16 @@ photophores are the runtime's, at most six soft rung-5 dots on the public-life c
 with six named `photophore_NN` facets in the body's own material, 2 cm proud and
 non-emissive, so #1713 reads the seats off the file rather than inventing them (the
 owner's call, 3 November 2026). The drift jelly's file marks six the same way, under the
-same names, evenly round its bell's margin, for the runtime to light at the High graphics
-quality; what light a seat takes there is the runtime's and
+same names, evenly round its bell's margin, in its second material and not the bell's
+own, for the runtime to light at the High graphics quality; what light a seat takes
+there, and what the runtime hangs from the margin, is the runtime's and
 [art-direction.md](art-direction.md)'s to say, and nothing in the file. The swimmers and
 the medusa are built as every prop is, lowest vertex on
 y = 0 (`seabed.mjs` `stand`), and the fixture hangs each at its listed depth; nothing in
 the file says where in the column it belongs (the owner's call of 3 November 2026 too). Their
 footprint is the body's length, the slice's canonical size; the crab's is its spread
-across the legs, the ray's its wingspan, and the jelly's the width of its bell across the
-lappets.
+across the legs, the ray's its wingspan, and the jelly's the width of its bell across its
+margin.
 
 The prop table — one row per asset, with the numbers intake and the registry check.
 `Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`) and the
@@ -1994,7 +2001,7 @@ metre (to the centimetre for the six decorative bodies), a range the band a gene
 | Crater bowl and garden, suspended | `env-outer-fish` | 4 m | 1.69 m | ≤ 600 | none |
 | Crater deep pocket, suspended | `env-deep-fish` | 2 m | 0.84 m | ≤ 400 | none |
 | Crater rim approach, suspended | `env-rim-ray` | 18 m | 4.05 m | ≤ 800 | none |
-| Crater open water, suspended | `env-drift-jelly` | 6 m | 10.97 m | ≤ 700 | none |
+| Crater open water, suspended | `env-drift-jelly` | 6 m | 4.11 m | ≤ 700 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
@@ -2059,11 +2066,13 @@ touches. A fish's corners mirror port to starboard, so its two eyes do, which ea
 script asserts. The three fish differ in proportion and fin plan and in nothing else; the
 ray is the same shaft laid across its span, its rings chord sections rather than girths
 (`wingBody`), mirrored port to starboard triangle for triangle; the jelly is the same
-shaft stood on end, as the crab's shell is, with blades for its lappets and the shaft
-again for its arms, and having no port and starboard it mirrors about nothing: its band
-quads are all cut the same way round, so the bell turns into itself six times about its
-axis; and
-every one of the six is authored as a seeded formula in its script with no export behind
+shaft stood on end, as the crab's shell is, run on round its margin and back in under its
+lip, with the shaft again for its stalk and for each oral lobe, a folded leaf's section
+standing where a body has a girth, and having no port and starboard it mirrors about
+nothing: its band quads are all cut the same way round. Those two skins are the two a
+point taken for inside cannot wind, so they are stitched by their rings' order
+(`shaft` `wound`), and the script holds every part to a closed skin facing out.
+Every one of the six is authored as a seeded formula in its script with no export behind
 it, as the nodule bed and the kelp stand are. Two tokens were added for the kit,
 `carapace` and `fish-flank` ([style-neon-noir.md](style-neon-noir.md) "The props"); the
 second material on each is `stone_dark`. The jelly adds no third: its bell wears
@@ -2160,65 +2169,91 @@ the lobes' ends to the tail's, the belly at the centreline on y = 0 and the body
 mid-plane 0.756 m over it. Authored in `tools/hull-models/props/rim-ray.mjs`.
 
 `env-drift-jelly` is the one drifting body, a solitary medusa hanging in the crater's open
-water, and deliberately not the Tetherjelly. That is a colony of the bestiary and a mark of
-the tactical layer: stipple bells of 22 m radius, each a dome, a rim and trailing
+water, and not the Tetherjelly. That is a colony of the bestiary and a mark of the
+tactical layer: stipple bells of 22 m radius, each a dome, a rim and trailing
 tentacles in dots ([map-visuals.md](map-visuals.md) §8), drawn today as a dome 16 m high
-over a plain rim with six tentacles 44 m long evenly round it (`faunaStipple.ts`, its
-TUNABLE figures), and at Tier 3 as a bell over three tethers (`faunaAgentStipple.ts`).
-This is one animal under a seventh of a bell across, and every line of it is drawn away
-from those two figures and from the Hollow's, which the same file draws as an open
-crescent: a helmet's bell, 4.56 m from hem to apex on 5.69 by 5.93 m, 0.77–0.80 as
-tall as it is wide where the stipple dome is 0.36; closed underneath, a shallow cone and no
-hollow, since an open bell seen from the side is a crescent; a scalloped margin where the
-stipple's rim is a ring; and five thick arms hung from one boss under the bell's middle,
-not six round its rim and not three. The bell is one `shaft` stood on end, six
-twelve-cornered rings fanned to an apex point above and to an underside point 0.36 m under
-the hem: six panels of 40° with six rib strips of 20° between them, a lantern of six
-gores. Its widest ring is the collar's head, at y 7.23–7.35 and 2.95–3.04 m from the axis;
-the hem tucks in under it, at y 6.39–6.43 and 2.87–2.93 m; over it a crease, at y
-7.47–7.64, steps the wall in to 2.72–2.84 m, and the dome closes through 2.55–2.68 m at y
-8.63–8.77, 2.01–2.16 at 9.74–9.86 and 1.06–1.11 at 10.55–10.63 to the apex at 10.97. Every
-corner is pushed and lifted by the stream, and every panel once more as a whole, so the
-collar is lobed and not turned. The margin is twelve lappets, blades rooted through the
-skin over the hem, 9 cm inboard of its edge, and hung 14° out of the vertical, so the
-fringe flares from under the tucked hem: a broad one under each panel, six-cornered, 1.90 m
-across at its widest and 0.87 across its end, ending a metre under the hem at y 5.28–5.40,
-and a small one under each rib strip, four-cornered, 0.73 m across narrowing to 0.56,
-ending at y 5.67–5.78. Under the bell hangs the manubrium, a boss of three eight-cornered
-rings from inside the bell to a flat cap a metre under the hem, y 5.40–6.90, behind the
-fringe from a level eye; and from it five oral arms, each a shaft of five six-cornered
-rings to a blunt end, a flattened ribbon 0.62–0.64 m across at its root, 0.87–0.96 at its
-widest and 0.43–0.45 at its last ring, and 0.30–0.43 m through down to that last ring's
-0.27–0.28, turned 110–170° on itself from root to end and hung in one slow bend. The
-middle arm hangs from the axis, 6.01 m long, and four hang 1.14 m out on bearings 16.6°,
-81.7°, 156.6° and 263.4° from +x toward +z, 4.92, 3.50, 5.32 and 4.09 m long: the gaps
-between them are 65°, 75°, 107° and 113°, uneven on purpose, since four arms spaced near
-90° line up as two pairs along a diagonal and read as legs, and the middle arm fills the
-gap from every bearing. None coils, none ends on a barb, and none reaches further than
-1.82 m from the axis, inside the fringe at 3.04. A medusa has no bow: the still pose is the
-hang, and a slow turn about the bell's axis reads as drift. The six photophore seats are
-`photophore_01`..`_06`, lozenges of 30 by 16 cm in the bell's own `fish_flank`, each 2 cm
-proud of the collar facet it sits on and facing its way, its long way round the rim: one at
-the foot of each rib strip, over its small lappet and between two broad ones, where a
-medusa carries its marginal sense organs, on the middle of the facet's cut diagonal half
-way up the collar, at y 6.83–6.88 and 2.92–2.95 m from the axis. They stand on bearings
-210.18°, 270.11°, 330.18°, 30.23°, 90.21° and 150.22°, 60° apart within 0.1°, in one
-continuous round, `_01`–`_03` on port (−z) and `_04`–`_06` on starboard; in the file,
-(x, y, z) −2.522, 6.825, −1.448; 0.007, 6.884, −2.914; 2.547, 6.827, −1.438; 2.541, 6.858,
-1.500; −0.009, 6.870, 2.957; and −2.556, 6.862, 1.485. Each faces 3–11° below the level,
-the collar tucking in under its head. The script asserts all six: dark, in `fish_flank`,
-2 cm off their facet by the file's triangles, within a degree of their bearings and three
-a side, each measured where the runtime reads it, at the middle of its node's box. It
-asserts as well that every lappet's buried corners lie inside the closed bell, the
-manubrium's top ring inside the bell and every arm's root ring inside the manubrium, that
-no arm ring is under 0.25 m through, and that the middle arm's end alone is on y = 0.
-`fish_flank` on the bell and seats, `stone_dark` on the lappets, the manubrium and the
-arms; 682 triangles; 10.97 m tall (10.9725) at its 6 m, 5.89 m along x and 6.00 across z,
-the bell alone 5.69 by 5.93; the bell's axis stands 2 cm off the origin, and no vertex
-more than 3.06 m from the origin, so turned to any heading the body keeps inside a circle
-6.11 m across. Intake takes `--footprint-m 6 --max-tris 700` for this row, under its
-default of 800, and no `--world-light`. Authored in
-`tools/hull-models/props/drift-jelly.mjs`.
+over a plain rim with six tentacles 44 m long hung evenly round it at 0.55 of its radius
+(`faunaStipple.ts`, its TUNABLE figures), and at Tier 3 as a bell over three tethers
+(`faunaAgentStipple.ts`). The Hollow's figure, in that second file, is an open crescent.
+
+This is the slug's second shape. The first was a helmet's bell 4.56 m tall over twelve
+lappets and five arms up to 6 m long, 10.97 m in all, drawn away from the stipple bell in
+every line, and in the crater it read as a pewter helmet over long dark arms. The owner
+named the target the same day, the jellies of the High slice's target frame
+([issue-1799](screenshots/issue-1799/README.md)): a shallow, wide bell about twice as wide
+as it is tall with a soft thin margin, no solid arm under it, a textured middle under the
+dome, and tentacles that are strands of beads of light. The strands are the runtime's to
+draw, as world light, and [art-direction.md](art-direction.md)'s to say; the file carries
+none. A dome over a margin is the stipple bell's own figure, so this shape stands nearer it
+than the first did, and what stands between the two is narrower: one animal under a
+seventh of a stipple bell across; a body of the world layer at High alone and never a
+stipple; closed underneath, a dish 0.50 m deep and no hollow, so no view of it is an open
+bell's crescent; a stalk and five folded lobes under its middle, which neither figure has;
+and nothing in the file that trails. Its six seats stand evenly round its margin, and six
+round a rim is the stipple bell's count: what the runtime hangs from that margin, and how
+many, decides how near the whole comes to that figure, and that is
+[free-water-slice.md](free-water-slice.md) §5's and the owner's to say.
+
+The bell is one `shaft` stood on end, six eighteen-cornered rings fanned to an apex point
+above and, under the lip, in to the middle of the underside. In the order the skin runs:
+the ring under the lip at y 1.56–1.57 and 2.54–2.58 m from the axis; the margin's edge,
+the bell's widest ring and its lowest, at y 1.40–1.41 and 2.99–3.02 m; the waist at y
+1.66–1.69 and 2.77–2.81 m; and the dome through 2.46–2.52 m at y 2.61–2.64, 1.88–1.93 at
+3.41–3.44 and 1.01–1.03 at 3.93–3.95 to the apex at 4.11. It stands 2.70 m from margin to
+apex on 6.00 by 5.92 m, 0.45 as tall as it is wide, where the first shape was 0.77–0.80
+and the stipple dome is 0.36. The lip flares 0.21 m outward over its 0.27 m of height and
+thins from 0.19 m under the waist to an edge. Its facets look 36–43° above the level and
+the dome's four bands 15–19°, 34–38°, 58–61° and 80–81°, so the wall over the lip is the
+steepest thing on the bell and nothing overhangs. The underside climbs from the edge to
+its middle at y 1.91, 0.50 m over the margin's edge and 2.20 m under the apex. Every
+corner is pushed by up to 0.5 % of its radius at the margin's edge and 1.6 % at the dome's
+last ring and lifted by up to 1–1.5 cm, and no more: the target's bell is round, and the
+runtime smooths the facets' normals where it draws the bell as a membrane, while the file
+keeps them flat as every prop's are.
+
+Under the bell's middle stands the manubrium, a stalk of three eight-cornered rings from
+inside the bell to a mouth 0.50 m under the margin's edge, y 0.90–2.14, no more than
+0.37 m from the axis. Round it hang five oral lobes, each a pleated leaf 8 cm thick with
+its broad face outward: a shaft of four rings, each a zigzag strip of eight corners,
+0.17–0.18 m across at its root inside the stalk and 0.43–0.45, 0.59–0.64 and 0.43–0.48 m
+across under that, folded three times along its length, and fanned to an end 135–153°
+wide. They root 0.22 m from the axis at y 1.52, on bearings 6.8°, 74.7°, 147.2°, 221.0°
+and 292.3° from +x toward +z, on gaps of 68° to 75° with no two alike, and are 1.52,
+1.05, 1.27, 0.94 and 1.16 m long: their ends hang 1.41, 0.94, 1.15, 0.83 and 1.04 m under
+the margin's edge, and the longest is the lowest point of the file. None reaches further
+than 0.75 m from the axis, a quarter of the bell's 3.02, so the bell is the silhouette on
+every bearing. None coils, none ends on a spike or a barb, and there is no arm: the first
+shape's five are gone, and its twelve lappets with them. A medusa has no bow: the still
+pose is the hang, and a slow turn about the bell's axis reads as drift.
+
+The six photophore seats are `photophore_01`..`_06`, lozenges of 30 by 16 cm in
+`stone_dark`, the core's material and not the bell's as the first shape's were, each 2 cm
+proud of the lip facet it sits on and facing its way, its long way round the rim: one on
+every third facet of the lip, where a medusa carries its marginal sense organs, on the
+middle of the facet's cut diagonal, at y 1.544–1.560, 0.14 m over the margin's edge, and
+2.85–2.89 m from the axis. They stand on bearings 209.64°, 269.62°, 329.65°, 29.61°,
+89.62° and 149.62°, 60° apart within 0.05°, in one continuous round, `_01`–`_03` on port
+(−z) and `_04`–`_06` on starboard; in the file, (x, y, z) −2.507, 1.549, −1.427; −0.018,
+1.548, −2.860; 2.493, 1.555, −1.459; 2.493, 1.560, 1.415; 0.020, 1.545, 2.864; and −2.459,
+1.544, 1.442. Each faces 37–42° above the level, the lip's own way. A far eye at the conn
+camera's 55° has four or five of the six centres in its sight on every bearing, a level
+one three or four, and one 10° to 35° under the level, where the Close camera stands, two
+or three: the bell's own wall stands before the rest. The script asserts all six: dark, in
+`stone_dark`, 2 cm off the bell's skin by the file's triangles, within a degree of 210°,
+270°, 330°, 30°, 90° and 150° and three a side, each measured where the runtime reads it,
+at the middle of its node's box. It asserts as well that the manubrium's top ring lies
+inside the closed bell and every lobe's root ring inside the manubrium, that every part is
+a closed skin facing out, that the bell stands 2.6 to 3.0 m over its margin and no facet
+of it from the margin up looks below the level, that nothing under it reaches 0.45 as far
+from the axis as the bell does or hangs 2.5 m under the margin, that every lobe's end
+opens wider than 120°, and that the longest lobe's end alone is on y = 0.
+`fish_flank` on the bell, `stone_dark` on the manubrium, the lobes and the seats; 594
+triangles; 4.11 m tall (4.1075) at its 6 m, 6.00 m along x and 5.92 across z, which is the
+bell's own box; the bell's axis stands 1 mm off the origin, and no vertex more than 3.02 m
+from it, so turned to any heading the body keeps inside a circle 6.04 m across; the bell's
+mid-height, half way from its margin to its apex, is y 2.76. Intake takes
+`--footprint-m 6 --max-tris 700` for this row, under its default of 800, and no
+`--world-light`. Authored in `tools/hull-models/props/drift-jelly.mjs`.
 
 Shape cues, so the prompts land in each biome's materials brief
 ([environments.md](environments.md)): vent props are basalt and magma glass, cracked
