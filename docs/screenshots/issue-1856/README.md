@@ -123,10 +123,16 @@ third in [free-water-slice.md](../../free-water-slice.md) §5.
   reads as a mass at 18 to 22 px a body, at 41,040 triangles.
 - **Last in High's list.** Every slot #1837 stood keeps its index, so its frames do not
   move.
-- **The crater's 720,000 triangles are read as Low's cap.**
-  [free-water-slice.md](../../free-water-slice.md) §7 caps the study's frame there, and
-  [graphics-standards.md](../../graphics-standards.md) gate 6 caps no count at High.
-  #1837's Survey frame stood at 720,318. High's Close frame now stands at 760,720.
+- **What High alone stands has no reservation of its own.**
+  [free-water-slice.md](../../free-water-slice.md) §7 reserves 600,000 triangles for
+  props and life, and its test sums Low's list. High's own life and vents are counted
+  against the frame's cap alone.
+
+One was put to the owner and answered in session on 20 November 2026.
+[free-water-slice.md](../../free-water-slice.md) §7 capped the study's frame at 720,000
+triangles, and #1837's Survey frame already stood at 720,318. **High's cap is 900,000**,
+written into §7 and gate 6's carve-out; Low keeps 720,000. High's frames here stand at
+753,389 to 761,358.
 
 ## Who captures
 

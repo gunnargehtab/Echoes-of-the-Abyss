@@ -682,6 +682,16 @@ opening list's contract; per-model triangle limits remain ceilings. Share instan
 batches per template/material; no per-fish draw or further relaxation of this study's
 720,000.
 
+**At the High graphics quality the frame cap is 900,000 triangles** over every pass, by
+the owner's decision on #1856 (20 November 2026). High stands life and a vent stand that
+Low does not (§5): its frame stood at up to 720,318 after #1837 and stands at up to
+761,358 with #1856's school. Low keeps 720,000, and gate 6's 8 ms of GPU time still
+binds High's frame. The 600,000 reservation above is read as the Low list's, which is
+what `packages/frontend/test/freeWaterDecoration.test.ts` sums: 551,850 by the
+registry's budgets. High's list sums to 685,954 by the same budgets, and to 644,914
+before #1856, so what High alone stands is counted against the frame's 900,000 and has
+no reservation of its own.
+
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,
 and gate-6 unpaced/queued GPU timing at DPR 1 and 1.5. Exercise motion, not only stills.
 CPU frame intervals and software rendering are not GPU evidence; unavailable hardware

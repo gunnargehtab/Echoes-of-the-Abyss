@@ -485,7 +485,9 @@ the frame's 400,000, by the owner's decision on #1712 (2 November 2026): a devel
 slice for map design patterns, it spends up to 720,000 triangles a frame and 600,000 on
 props and decorative life, fifty-six kelp stands of 9,000 among them
 ([free-water-slice.md](free-water-slice.md) §7); shipped maps keep this gate's 400,000 and
-120,000.
+120,000. At the High quality the same fixture may spend 900,000 triangles a frame, by the
+owner's decision on #1856 (20 November 2026). That is the one count capped at High, and
+the 8 ms still binds it.
 
 The probe reports the
 landmark, its triangles and both mote counts on their own, as it reports the props.
