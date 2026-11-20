@@ -905,6 +905,7 @@ and no row below is open.
 | Screenshots of the water look predating the hulls' navy surface | [#1820](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1820) |
 | A flat black shape at the Corvette's near-port camera | [#1829](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1829) |
 | A glass roof at High skipping the water the rest of the scene gets | [#1832](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1832) |
+| A hull nudged by separation turning to face the nudge | [#1840](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1840) |
 
 **How the project runs**
 
@@ -990,6 +991,8 @@ recorded and left.
 | Improve the in-game graphics: three design paths, the owner picks | [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) |
 | The High plate darkening open water Low draws, and the grade dimming the ramp | [#1816](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1816) |
 | Three biomes' High water reading paler than Low's, so a plate's disc still shows | [#1823](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1823) |
+| Searchlights: the GPU frame time, a beam on rock, and the lights not yet built | [#1842](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1842) |
+| A fin's rays and a flank's midrib: the named GPU's frames and the owner's acceptance | [#1849](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1849) |
 
 A reading of the world is worth less done by the hands that wrote it, so no unattended run
 takes this one.
