@@ -665,11 +665,30 @@ does, and nothing Low draws is built, patched or keyed differently.
   ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
   written. **Add to Low's lists** would move the frame Low draws. **Slots High alone
   stands** is taken: two streams of schools by the fleet's start, 480 fry and 48 outer
-  fish, and five jellies over it, after Low's list and never among it. A school there
+  fish, and five jellies over it, after Low's list and never among it. #1856 adds a
+  third stream, below. A school there
   keeps a tight station: a ribbon of fry 14 m long with a body about every metre. The
   first cut spread a school over 52 m, so that a still camera always held fish, and from
   the Close eye it read as scattered points and not as a school. Five schools a loop keep
   the frame filled instead.
+- **A school stands before a light, to read dark against it**
+  ([#1856](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1856);
+  [issue-1856](screenshots/issue-1856/README.md)). *In development, and not accepted.*
+  The target's schools are dark masses against lit water. No model, material or light
+  is new to get one. A source's volume stops at what the world pass draws, a body as
+  the ground ([What is built at High](#what-is-built-at-high)), so a body before a
+  source hides the light behind it. An outer fish carries no light. Its flank is still
+  lit: by the rig, by the Lid's glow and by a quarter of a pool, less by its height
+  over the floor, as a hull's is
+  ([A model in the world's light](#a-model-in-the-worlds-light)). On the software
+  frames a body before the vent stand reads at 0.65 of the water behind it, darker than
+  the glow and paler than the target's near black. A silhouette is the aim, and whether
+  this is one is the owner's glance on the named GPU. Three readings were written. **A
+  third stream, of outer fish, before the vent stand** is taken: a mill of 120 between
+  the Close eye and the stand's light ([free-water-slice.md](free-water-slice.md) §5).
+  **Move the rim's outer stream there** would change frames #1837 already shows. **Dim
+  a fry's light where it is backlit** is refused: a light that answers a light is an
+  instrument (limit 4).
 - **No mark, lamp or halo is touched.** A fry's light is a point of the world layer's,
   under every mark, and gate 7's glance at a ring among a school is the owner's, on the
   named GPU.

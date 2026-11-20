@@ -362,6 +362,7 @@ at any match time, where one school would pass once a lap.
 | --- | --- | --- | --- | --- |
 | Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 5 of 96 | 7 m, 1.6 m, 5 m |
 | Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 14 m, 6 m, 14 m |
+| Backlit outer fish, `env-outer-fish` | `(462, 2,069)`, 34 m, 150 s | 355 ± 25 m | 4 of 30 | 20 m, 3 m, 12 m |
 
 The **drifting bodies** are five `env-drift-jelly`, each alone on its own loop: a 14 m
 radius and a lap in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
@@ -394,6 +395,35 @@ no collision, no tell, the same loop for every client, held still under reduced 
 The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`)
 until the owner accepts a frame. How a body is lit there, and the one light a fry
 carries, are [art-direction.md](art-direction.md#life-in-the-worlds-light)'s.
+
+**A school before the vent's light (#1856).** *In development, and not accepted.*
+[The target's](screenshots/issue-1799/README.md) schools are dark masses against lit
+water, and the two streams above read by a light of their own or barely. The third stream
+is a mill of outer fish, which carry no light, between the Close eye and the vent stand
+below: its loop is centred 300 m from that eye on its line to the stand, and ends 51 m
+short of the stand's nearest basalt. All lap long every body on it stands before the
+stand's light as that eye sees it, 265 to 338 m out, where a 4 m body draws 18 to 22 px,
+and the eye's line through it passes within 58 m of the light's centre, inside its 160 m
+reach. A body there hides the light behind it, which is what darkens it against the glow.
+It is no black cut-out: the flank it shows still takes the shared rig, the Lid's glow
+and a quarter of the stand's pool, less by its height over the floor
+([art-direction.md](art-direction.md#life-in-the-worlds-light)). On the software frames
+a body reads at 0.65 of the water behind it
+([issue-1856](screenshots/issue-1856/README.md)). A silhouette is the aim, and whether
+this reads as one is the owner's glance on the named GPU. Two shapes were written for the
+loop. **A loop round the stand**, at a 100 m radius, has a fifth of its length before the
+light and within those 58 m, so four fifths of its bodies stand elsewhere. **A mill
+wholly before the light** is taken. A school is a ribbon 40 m long, so the four fill
+160 m of the loop's 214 m, and 57 to 72 of the 120 bodies stand within 40 m of the eye's
+line to the light's centre at any moment. The count is this cut's: the target's schools
+are hundreds, and 120 is what read as a mass at that size. The loop swims 318 to 392 m deep, under the hulls' 300 m and over
+the rim's 600 m floor, 135 m from the Corvette's start. Its south side swims lower than
+its north, by up to 25 m either way, which leans the ring down to the right in the Close
+frame. Its first school starts at 161 degrees, the loop's nearest point to the Close eye,
+broadside across the stand. In that frame the mill stands between the Light Scout's ring
+and the Corvette's, and reaches neither. From Home's eye it is 760 to 825 m off, and a
+body draws 7 to 8 px. Placement only: no model, material or light is new. The numbers are
+TUNABLE in `FREE_WATER_HIGH_LIFE.BACKLIT_STREAM` until the owner accepts a frame.
 
 **High's own vents (#1837).** *In development with the same look step, and not accepted.
 The owner chose an authored stand on the rim in session on 20 November 2026, against
@@ -638,11 +668,12 @@ before/after sequence for each implemented camera or world increment, keeping me
 evidence folders unchanged. A standalone model viewer cannot pass the integrated row.
 
 **Budgets are gates, not forecasts.** Retain [graphics-standards.md](graphics-standards.md)
-gate 6's 150 draw calls and DPR of at most 1.5. This study's frame cap is 720,000 triangles
+gate 6's 150 draw calls and DPR of at most 1.5. At the Low graphics quality this study's
+frame cap is 720,000 triangles
 over every pass rather than gate 6's 400,000, by the owner's decision on #1712
 (2 November 2026): the kelp forest is a development slice for map design patterns and may
 spend what a shipped map may not; shipped maps keep 400,000. Reserve at most 30 calls /
-600,000 triangles for all props and decorative life together, raised from 400,000 by
+600,000 triangles for all props and decorative life of the Low list together, raised from 400,000 by
 decision 5 on #1748 (§9). The authored list totals at
 most 569,728 triangles: 56 new kelp stands at at most 9,000 each (504,000), 16 retained
 clusters (6,208), wildlife (59,520: 58,720 since #1771, from 31,680, and the one rim ray's
@@ -650,7 +681,18 @@ clusters (6,208), wildlife (59,520: 58,720 since #1771, from 31,680, and the one
 The remaining reservation is unused, not permission to fill the bowl. Counts are the
 opening list's contract; per-model triangle limits remain ceilings. Share instanced
 batches per template/material; no per-fish draw or further relaxation of this study's
-720,000.
+caps, 720,000 at Low and 900,000 at High (below).
+
+**At the High graphics quality the frame cap is 900,000 triangles** over every pass, by
+the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent
+stand that Low does not (§5): its frame stood at up to 720,318 after #1837 and stands at
+up to 761,358 with #1856's school. Low keeps 720,000, and gate 6's 8 ms of GPU time
+still binds High's frame. The 600,000 reservation above binds the Low list alone, by the
+owner's decision the same day, against binding High's list too and against a second
+reservation for High. It is what `packages/frontend/test/freeWaterDecoration.test.ts`
+sums: 551,850 by the registry's budgets. High's list sums to 685,954 by the same
+budgets, and to 644,914 before #1856. What High alone stands is counted against the
+frame's 900,000 and has no reservation of its own.
 
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,
 and gate-6 unpaced/queued GPU timing at DPR 1 and 1.5. Exercise motion, not only stills.

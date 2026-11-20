@@ -307,7 +307,7 @@ export function freeWaterPlacements(
       COUNT,
       MOTION,
       STATION,
-    }: (typeof FREE_WATER_HIGH_LIFE)['FRY_STREAM' | 'OUTER_STREAM']
+    }: (typeof FREE_WATER_HIGH_LIFE)['FRY_STREAM' | 'OUTER_STREAM' | 'BACKLIT_STREAM']
   ) => {
     const [x, y] = at;
     const start = (startDeg * Math.PI) / 180;
@@ -343,6 +343,9 @@ export function freeWaterPlacements(
   for (const [x, y, yawDeg] of FREE_WATER_HIGH_VENTS.BASALT) {
     add('env-vent-basalt', x, y, undefined, (yawDeg * Math.PI) / 180);
   }
+  // The school before the vent's light (#1856), last in the list: every slot
+  // #1837 stood keeps its index, and the frames that step showed do not move.
+  stream('env-outer-fish', FREE_WATER_HIGH_LIFE.BACKLIT_STREAM);
   return slots;
 }
 
