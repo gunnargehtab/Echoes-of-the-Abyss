@@ -13,9 +13,10 @@
  * and two of its own, `silt_drift` and `ore_trace` — #1555; the sixteenth,
  * the kelp stand, the cluster's two — #1712; the four microfauna that make
  * twenty, `stone_dark` again under two skins of their own, `carapace` and
- * `fish_flank` — #1711; and the rim ray that makes twenty-one, the same
- * two — #1777), the builders more than one prop needs, and the root every
- * prop stands on.
+ * `fish_flank` — #1711; the rim ray that makes twenty-one, the same
+ * two — #1777; and the drift jelly that makes twenty-two, the same two
+ * again — #1837), the builders more than one prop needs, and the root
+ * every prop stands on.
  *
  * Three things about the fourteen batch files are worth knowing before
  * reading one, and this module is where they are written down:
@@ -70,7 +71,7 @@
 import { THREE, clad, lamp, hex, box, flatShaded, tabled, faceted } from './kit.mjs';
 
 /**
- * The palette, as the twenty Block 4 files and the arch carry it: ten
+ * The palette, as the twenty-two Block 4 files and the arch carry it: ten
  * stones, sediments and growths, two living skins and five lights, each
  * named by its docs/style-neon-noir.md "The props" token.
  * Metalness is 0 on every material in the set — "nothing manufactured"
@@ -146,7 +147,10 @@ export const ground = {
   /**
    * Fish flank, `fish-flank`: the one skin all three swimmers share (#1711),
    * the fry, the outer fish and the deep fish, their photophore seats
-   * included. A cold pewter — sRGB hue 186°, 23 % saturated — between the
+   * included; the rim ray's body since (#1777), and the drift jelly's bell
+   * and its seats (#1837), a pale bell over darker lappets and arms as a
+   * flank is over its fins. A cold pewter — sRGB hue 186°, 23 %
+   * saturated — between the
    * stones' blue (204–212°) and the living coral's green, so a fish reads
    * as a body and not as a chip of the rock it passes; 0.0215 linear
    * luminance, 2.4× `stone-dark`, which the fins and eyes carry at 0.41
@@ -577,8 +581,9 @@ export function bake(root) {
  * The microfauna — env-rim-crab, env-shoal-fry, env-outer-fish and
  * env-deep-fish (#1711), the four public decorative bodies
  * docs/free-water-slice.md §5 commissions under Block 4's public-microfauna
- * variant of ENV STYLE, and env-rim-ray (#1777), the one large body the
- * variant's fifth clause admits. Five files, one grammar: a body is a
+ * variant of ENV STYLE, env-rim-ray (#1777), the one large body the
+ * variant's fifth clause admits, and env-drift-jelly (#1837), the one
+ * drifting body its sixth does. Six files, one grammar: a body is a
  * `shaft`, a closed run of corner rings whose facets are crisp because
  * every corner is drawn with a little jitter from a seeded stream;
  * everything flat on it — a fin, a claw's hand — is a `blade`, a thin
@@ -588,7 +593,10 @@ export function bake(root) {
  * and claw arms are the same shaft along a bent axis, its shell the same
  * shaft stood on end. The ray is the same shaft laid across the span, its
  * rings chord sections rather than girths (`wingBody`), and its lobes and
- * tail the same shaft again. Both builders wind every triangle against a
+ * tail the same shaft again. The jelly's bell is the shaft stood on end as
+ * the crab's shell is, its lappets blades, its manubrium and arms the
+ * shaft again, and its photophore seats the deep fish's `seat`, told
+ * which way is round the rim. Both builders wind every triangle against a
  * point inside the part it belongs to, so no script here checks a facet's
  * facing after the fact as the nodule bed and the kelp stand do: the wind
  * is the construction.
@@ -997,9 +1005,17 @@ export function fin({ root, along, span, outline, thickness }) {
  * with the normal's share taken out), `t2` across it. Built from x rather
  * than from a cross product with up, so a port normal gives the mirror of
  * a starboard basis and a lozenge or a lens ring mirrors with its seat.
+ * `along` replaces x for a body that does not lie along x — the drift
+ * jelly's bell stands on end (#1837), where x runs round the rim on the
+ * facets that face ±z and into the skin on those that face ±x, so each
+ * seat names the way round its own rim instead.
  */
-function tangents(n) {
-  const x = Math.abs(n.x) < 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+function tangents(n, along = null) {
+  const x = along
+    ? new THREE.Vector3(...along)
+    : Math.abs(n.x) < 0.9
+      ? new THREE.Vector3(1, 0, 0)
+      : new THREE.Vector3(0, 1, 0);
   const t1 = x.addScaledVector(n, -x.dot(n)).normalize();
   const t2 = new THREE.Vector3().crossVectors(n, t1).normalize();
   return [t1, t2];
@@ -1042,11 +1058,17 @@ export function lens(facet, radius, { sink = 0.1, proud = 0.25 } = {}) {
  * — the deep fish's photophore seats, dark facets in the body's own
  * material that the runtime lights and the file does not. Returns the
  * geometry and the skin point it stands off.
+ *
+ * Two things a body stood on end asks (the drift jelly's bell, #1837),
+ * both leaving a fish's seat as it was: `u` null stands the seat off the
+ * middle of the quad's cut diagonal, for a bare `bandFacet`, which has no
+ * u of its own; and `along` is the direction `w` runs, projected into the
+ * quad's plane, where the default takes x for it (`tangents`).
  */
-export function seat(facet, u, [w, h], proud) {
-  const on = facet.at(u);
+export function seat(facet, u, [w, h], proud, { along = null } = {}) {
+  const on = u === null ? facet.mid.clone() : facet.at(u);
   const n = facet.normal;
-  const [t1, t2] = tangents(n);
+  const [t1, t2] = tangents(n, along);
   const c = on.clone().addScaledVector(n, proud);
   const points = [
     c.clone().addScaledVector(t1, w / 2).toArray(),
