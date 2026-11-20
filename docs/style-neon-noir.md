@@ -626,6 +626,18 @@ faction and no interface token wears. The owner accepted them with High's first 
 | `water-resonance` | `#443961` | Resonance Fields |
 | `water-coral` | `#334148` | Coral Ruins |
 
+**A fry's own light at High.** *In development with
+[#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837), and not
+accepted.* One more world-owned source at the High graphics quality: `fry-glint`,
+`#B9BFA2`, the point of light a schooling fry of the free-water crater's decorative life
+carries on its flank
+([art-direction.md](art-direction.md#life-in-the-worlds-light)). A pale bone white with
+no neon's chroma: warmer than every contact tier's blue, greyer than the civic lamp's
+tallow, and no navy's glow, so rule 5 holds. It is placed by the fixture's authored loops
+and answers nothing a match does (rule 4). It is not the fauna colour: that is the
+stipple's, on the tactical layer. `FRY_GLINT` in `packages/frontend/src/game/palette.ts`
+transcribes it.
+
 Every family obeys the same five rules, and they are gates, not suggestions:
 
 1. **World light is points and seams, never area glow.** No lit ground, no
@@ -715,7 +727,8 @@ The planned [free-water slice](free-water-slice.md) §5 applies this same public
 point channel to its decorative deep fish, not to a gameplay animal: non-emissive
 bodies with at most six soft photophore dots each, bounded by rung 5. No lit skin,
 halo, new ground-light family or response to a participant is licensed. Its other
-decorative animals carry no emission; this exception remains confined to the study.
+decorative animals carry no emission; this exception remains confined to the study. At
+High a schooling fry carries one point of world light, `fry-glint`, above.
 
 ### The arch study's licence
 

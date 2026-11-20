@@ -342,6 +342,35 @@ than moved from it, by the owner's calls of that day:
 Life may cross the clearing row although plants may not: a crab, a fry or a fish is
 neither a tall prop nor a blocker (§3).
 
+**High's own life (#1837).** *In development with the High graphics quality's third
+look step, and not accepted. The owner chose the crater's decorative life as that step's
+bodies in session on 20 November 2026.* The list above is Low's, and High draws all of it.
+Behind the Graphics quality setting the fixture stands more, where
+[the target's](screenshots/issue-1799/README.md) Home and Close cameras read a body:
+Home's eye is 840 m and more from the hulls and Close's 350 to 530 m, and #1771's patches
+stand a kilometre off in the garden. High's slots follow Low's in the list and never
+stand among them, so Low's counts, order and frame do not move.
+
+A **stream** is schools sharing one loop, evenly round it, each fish keeping station on
+its school's own point as #1771's do. A camera held beside the loop then sees fish pass
+at any match time, where one school would pass once a lap.
+
+| Stream | Loop centre, radius, period | Depth | Schools and fish | Station: along, across, depth |
+| --- | --- | --- | --- | --- |
+| Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 4 of 80 | 26 m, 7 m, 14 m |
+| Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 22 m, 9 m, 30 m |
+
+The fry's loop passes 50 m in front of the Close eye, 233 m deep at `(178, 2,168)`, where
+a 0.5 m body draws 15 px; over a lap, 160 to 252 of the 320 stand inside that frame at any
+moment. The outer fish cross the water between the Corvette's lamp at 300 m and its pool
+on the 600 m rim, so at rest a school swims through its beam; 490 to 670 m from the Close
+eye a 4 m body draws 9 to 12 px, and 6 from Home's. Both loops lie over the outside rim's
+600 m floor. They are decoration under every rule of this section: no reaction,
+no collision, no tell, the same loop for every client, held still under reduced motion.
+The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`)
+until the owner accepts a frame. How a body is lit there, and the one light a fry
+carries, are [art-direction.md](art-direction.md#life-in-the-worlds-light)'s.
+
 **The wildlife choice is an explicit, narrow extension of the bible.** Keeping only
 the existing stipples would preserve today's presentation but not the requested close
 wildlife. Converting gameplay fauna into public fish would disclose hidden state and is
@@ -378,7 +407,9 @@ The deep fish's photophores use the existing public-life channel: soft additive 
 gain ([style-neon-noir.md](style-neon-noir.md), World light). At most six points per fish,
 no body emission, bloom halo, point light or smooth brightness pulse. This adds no sixth
 ground-light family and does not enter the own-agent lamp halo. Other new animals emit
-nothing. The kelp retains `flora-biolight` and its licensed sway.
+nothing. The kelp retains `flora-biolight` and its licensed sway. That is Low. At the
+High graphics quality a schooling fry carries one point of world light, in a token of its
+own (High's own life, above), and its body is still no emitter: its GLB is unchanged.
 
 Gameplay fauna remain unchanged: public Lampfry/Tetherjelly retain their established
 disclosures and stipples; classified animals retain species-shaped dots, with no

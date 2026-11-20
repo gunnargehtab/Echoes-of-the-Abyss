@@ -203,6 +203,7 @@ describe('pending prop delivery', () => {
       siftMotes: 0,
       cloudMotes: 0,
       decorativePhotophores: 0,
+      lifeGlints: 0,
       fixtureAssets: {},
     });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');

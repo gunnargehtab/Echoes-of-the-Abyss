@@ -82,6 +82,46 @@ export const FREE_WATER_LIFE = {
 } as const;
 
 /**
+ * TUNABLE — docs/free-water-slice.md §5, "High's own life" (#1837): the life
+ * the crater stands at the High graphics quality alone, where the target's
+ * three cameras read a body. A look step in development, so nothing here is
+ * SPEC until the owner accepts a frame of it (the `dev-loop` skill, "Look
+ * work"); Low's list is `FREE_WATER_LIFE` and does not move.
+ *
+ * A stream is schools sharing one loop, `SCHOOLS` of them evenly round it, so
+ * a still camera beside the loop sees fish pass at any match time rather than
+ * once a lap. `at` is the loop's centre in map metres, and `STATION` how far a
+ * fish keeps from its school's own point, as `FRY_SCHOOL` is.
+ */
+export const FREE_WATER_HIGH_LIFE = {
+  /**
+   * Fry past the Close camera's eye, 233 m deep at 178 / 2,168: the loop's
+   * near side crosses its sight line 50 m out, where a 0.5 m body draws
+   * fifteen pixels.
+   */
+  FRY_STREAM: {
+    at: [299, 2098],
+    SCHOOLS: 4,
+    COUNT: 80,
+    MOTION: { radiusM: 90, periodS: 380, depthM: 228, depthSwingM: 6, axisM: 0.06 },
+    STATION: { alongM: 26, acrossM: 7, depthM: 14 },
+  },
+  /**
+   * Outer fish among the hulls and through the water the Corvette's beam
+   * crosses at rest, between its lamp at 300 m and its pool on the 600 m rim:
+   * a 4 m body draws nine to twelve pixels from the Close eye and six from
+   * Home's.
+   */
+  OUTER_STREAM: {
+    at: [760, 2050],
+    SCHOOLS: 4,
+    COUNT: 12,
+    MOTION: { radiusM: 75, periodS: 300, depthM: 430, depthSwingM: 40, axisM: 0.78 },
+    STATION: { alongM: 22, acrossM: 9, depthM: 30 },
+  },
+} as const;
+
+/**
  * docs/free-water-slice.md §9, Opening view: how the study's orbit opens on the
  * first sight of the force. SPEC: the heading toward mark A, 34 degrees east
  * of north; 15 degrees of pitch; the focus at the hulls' 300 m exercise depth.
@@ -293,6 +333,40 @@ export const HIGH_GRAPHICS = {
     VOLUME: 0.0001,
     VOLUME_STEPS: 16,
     SHADOW: { STEPS: 12, VOLUME_STEPS: 4, LIFT_M: 1.5, SOFT_M: 2, HULL_EDGE: [0.7, 1.4] },
+  },
+  /**
+   * TUNABLE: life in the world's light (docs/art-direction.md, "Life in the
+   * world's light"; #1837), until a frame of it is accepted. The world's
+   * light on a decorative body (lifeLight.ts), added to the rig's as a hull's
+   * is. `LID` is how much of the Lid's glow a face takes of what level ground
+   * takes at its depth, `POOL` how much of a pool a face looking straight
+   * down takes on a body at the ground, and `POOL_REACH_M` the drawn height
+   * over the ground at which that has halved: a hull's three, since a fish
+   * beside a hull stands in the same light. `BEAM` is how much of an own
+   * hull's searchlight a body takes of what ground would. `ALBEDO` is the
+   * diffuse luminance a body's brightest material is lifted to there, over
+   * the props' 0.06: a body a metre long is a few pixels, and at the props'
+   * register it reads as a hole in the water. It is an own hull's cladding
+   * ceiling and no higher (rosterModels.ts `CLADDING_CEILING`), so scenery
+   * still never out-reads a vessel.
+   *
+   * `GLOW` is the light a schooling fry carries of its own (lifeGlow.ts), in
+   * `fry-glint`: `LEVEL` its radiance at the point's centre, in the
+   * renderer's linear units, at the bloom's threshold so a near light
+   * spreads a little and no more, and under the lamps of a hull loud enough
+   * to throw a beam (gate 3; a quiet hull's lamp is dimmer than a fry, which
+   * the doc leaves to the owner's glance); `SIZE_M` the soft disc's width; `MIN_PX` the least a
+   * point is drawn, in pixels, its level cut by the area that floor adds; and
+   * `LIFT_M` how far toward the eye a light is drawn from its body's axis, so
+   * the body's own flank does not cut it.
+   */
+  LIFE: {
+    LID: 1,
+    POOL: 0.3,
+    POOL_REACH_M: 80,
+    BEAM: 0.5,
+    ALBEDO: 0.16,
+    GLOW: { LEVEL: 0.3, SIZE_M: 0.22, MIN_PX: 1.6, LIFT_M: 0.15 },
   },
 } as const;
 

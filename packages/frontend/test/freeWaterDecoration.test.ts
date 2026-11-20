@@ -24,7 +24,14 @@ import {
 } from '../src/game/perspectiveTerrain.ts';
 import { seabedSeed } from '../src/game/seabed.ts';
 import { CONN_FOV_DEG } from '../src/game/readability.ts';
-import { Biome, Faction, FaunaSpecies, ResolutionTier, UnitKind } from '@echoes/shared';
+import {
+  Biome,
+  Faction,
+  FaunaSpecies,
+  FREE_WATER_HIGH_LIFE,
+  ResolutionTier,
+  UnitKind,
+} from '@echoes/shared';
 import { Match } from '../../backend/src/sim/match.ts';
 import { spawnFauna, spawnUnit } from '../../backend/src/sim/world.ts';
 
@@ -299,7 +306,7 @@ describe('authored public decoration', () => {
   });
 
   it('holds whole loops inside their authored patches and places the body axis at depth', () => {
-    for (const p of freeWaterPlacements(ground())) {
+    for (const p of freeWaterPlacements(ground(), false, true)) {
       if (p.motion === undefined) continue;
       const m = p.motion;
       const start = decorationPose(p, 0, () => -88);
@@ -332,7 +339,7 @@ describe('authored public decoration', () => {
     // banked body's low wing reaches under its level origin (`bankedReach`).
     const terrain = ground();
     const groundY = drawnGround(terrain);
-    for (const p of freeWaterPlacements(terrain)) {
+    for (const p of freeWaterPlacements(terrain, false, true)) {
       if (p.motion === undefined || p.motion.depthM === null) continue;
       const half = propSpec(p.slug)!.footprintM / 2;
       const { below } = bankedReach(p);
@@ -643,6 +650,100 @@ describe('authored public decoration', () => {
     } finally {
       baseline.dispose();
       variant.dispose();
+    }
+  });
+
+  it('stands High’s own life after Low’s list, and moves none of it (#1837)', () => {
+    // §5, "High's own life": behind the Graphics quality setting the fixture
+    // stands more, and Low's slots keep their order and their indices, so the
+    // frame Low draws does not move.
+    const terrain = ground();
+    const low = freeWaterPlacements(terrain, true);
+    const high = freeWaterPlacements(terrain, true, true);
+    assert.deepEqual(high.slice(0, low.length), low);
+    const own = high.slice(low.length);
+    const { FRY_STREAM, OUTER_STREAM } = FREE_WATER_HIGH_LIFE;
+    const counts: Record<string, number> = {};
+    for (const p of own) counts[p.slug] = (counts[p.slug] ?? 0) + 1;
+    assert.deepEqual(counts, {
+      'env-shoal-fry': FRY_STREAM.SCHOOLS * FRY_STREAM.COUNT,
+      'env-outer-fish': OUTER_STREAM.SCHOOLS * OUTER_STREAM.COUNT,
+    });
+    // Slots, not scatter: none is refused by the public ground it stands
+    // over, none is scaled, and a second call draws the same list.
+    for (const p of own) {
+      assert.notEqual(p.disabled, true, `${p.slug} of ${p.xM},${p.yM} is refused`);
+      assert.equal(p.scale, 1);
+    }
+    assert.deepEqual(freeWaterPlacements(terrain, true, true), high);
+
+    for (const [slug, stream] of [
+      ['env-shoal-fry', FRY_STREAM],
+      ['env-outer-fish', OUTER_STREAM],
+    ] as const) {
+      const fish = own.filter((p) => p.slug === slug);
+      const [x, y] = stream.at;
+      // A stream is schools evenly round one loop: every fish keeps within
+      // its school's station of a point `SCHOOLS` of which divide the lap.
+      const lap = (Math.PI * 2) / stream.SCHOOLS;
+      const reach = stream.STATION.alongM / stream.MOTION.radiusM;
+      const first = fish[0]!.motion!.phase;
+      for (const p of fish) {
+        assert.deepEqual([p.xM, p.yM], [x, y]);
+        const m = p.motion!;
+        assert.ok(Math.abs(m.radiusM - stream.MOTION.radiusM) <= stream.STATION.acrossM);
+        assert.ok(Math.abs(m.depthM! - stream.MOTION.depthM) <= stream.STATION.depthM);
+        assert.equal(m.periodS, stream.MOTION.periodS);
+        const turn = (((m.phase - first) % lap) + lap) % lap;
+        assert.ok(
+          Math.min(turn, lap - turn) <= 2 * reach + 1e-9,
+          `${slug}: a fish stands ${turn} rad off every school`
+        );
+      }
+      // Seeded by the school's number, so no two schools are one formation
+      // turned a quarter lap.
+      const shape = (school: number) =>
+        fish
+          .slice(school * stream.COUNT, (school + 1) * stream.COUNT)
+          .map((p) => p.motion!.radiusM.toFixed(3))
+          .join(',');
+      assert.notEqual(shape(0), shape(1));
+      // Over the outside rim alone, clear of the crater's lip: §3's routes
+      // run the rim at 300 m, and no body here is a blocker either way.
+      for (const p of fish) {
+        for (let step = 0; step < 24; step++) {
+          const pose = decorationPose(p, (p.motion!.periodS * 1000 * step) / 24, () => 0);
+          const cell =
+            Math.floor(pose.z / terrain.cellM) * terrain.cols + Math.floor(pose.x / terrain.cellM);
+          assert.equal(terrain.biomes[cell], Biome.CoralRuins);
+          assert.equal(terrain.floor[cell], 600);
+        }
+      }
+    }
+
+    // §5 prints each stream as the constants hold it.
+    const doc = readFileSync(new URL('../../../docs/free-water-slice.md', import.meta.url), 'utf8');
+    const numbers = (text: string) =>
+      [...text.replace(/,(?=\d{3})/g, '').matchAll(/\d+(?:\.\d+)?/g)].map(Number);
+    for (const [slug, stream] of [
+      ['env-shoal-fry', FRY_STREAM],
+      ['env-outer-fish', OUTER_STREAM],
+    ] as const) {
+      const row = doc.split('\n').find((line) => line.startsWith('| Rim') && line.includes(slug));
+      assert.ok(row, `§5 lost ${slug}'s stream`);
+      const [, , loop, depth, schools, station] = row.split('|').map((cell) => cell.trim());
+      assert.deepEqual(numbers(loop!), [
+        ...stream.at,
+        stream.MOTION.radiusM,
+        stream.MOTION.periodS,
+      ]);
+      assert.deepEqual(numbers(depth!), [stream.MOTION.depthM, stream.MOTION.depthSwingM]);
+      assert.deepEqual(numbers(schools!), [stream.SCHOOLS, stream.COUNT]);
+      assert.deepEqual(numbers(station!), [
+        stream.STATION.alongM,
+        stream.STATION.acrossM,
+        stream.STATION.depthM,
+      ]);
     }
   });
 

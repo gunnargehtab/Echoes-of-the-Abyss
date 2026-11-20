@@ -36,10 +36,12 @@ import {
   Material,
   Mesh,
   MeshStandardMaterial,
+  NormalBlending,
   Vector3,
   type Object3D,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { HIGH_GRAPHICS } from '@echoes/shared';
 import { mergeByMaterial } from './rosterModels.ts';
 import { swayWeight } from './environment.ts';
 import { installPropSurface, type WorldLook } from './tutorialLook.ts';
@@ -47,6 +49,7 @@ import { keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { installPropVeil } from './veilShading.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
 import { installDistanceGrade } from './distanceGrade.ts';
+import { installLifeLight } from './lifeLight.ts';
 
 /**
  * TUNABLE — the diffuse luminance a prop's brightest material is set to,
@@ -196,12 +199,19 @@ export function propFootprint(root: Object3D): number {
   return Math.max(size.x, size.z);
 }
 
-/** One prop's template from its parsed file; exported for the test that holds it to intake. */
+/**
+ * One prop's template from its parsed file; exported for the test that holds
+ * it to intake. `worldLit` builds the High graphics quality's template for a
+ * decorative body (docs/art-direction.md, "Life in the world's light",
+ * #1837): its register is a body's own and it takes the world's light
+ * (lifeLight.ts). Low's template is built without it, as it always was.
+ */
 export function buildTemplate(
   scene: Group,
   footprintM: number,
   swayM: number,
-  look: WorldLook = 'standard'
+  look: WorldLook = 'standard',
+  worldLit = false
 ): EnvTemplate {
   // Clone materials through an identity map (rosterModels' argument: shared
   // materials must keep sharing their clone or the merge silently fails).
@@ -222,7 +232,10 @@ export function buildTemplate(
         : cloneOf(child.material);
     }
   });
-  normaliseLuminance(materialClones.values());
+  normaliseLuminance(
+    materialClones.values(),
+    worldLit ? HIGH_GRAPHICS.LIFE.ALBEDO : ENV_LUMINANCE_CEILING
+  );
 
   // Scale first, on the parts as delivered: the larger horizontal axis to
   // footprintM (no length-on-X — a prop stands at a random yaw).
@@ -282,6 +295,17 @@ export function buildTemplate(
     if (material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0) {
       keepGlowOutsideToneMapping(material);
     }
+    // A body in the world's light: opaque and standard, as a hull's cladding
+    // is told (rosterModels.ts `isCladding`). A blended part stays the
+    // canvas's, where the world pass never draws it.
+    if (
+      worldLit &&
+      material instanceof MeshStandardMaterial &&
+      !material.transparent &&
+      material.blending === NormalBlending
+    ) {
+      installLifeLight(material);
+    }
     // Last: it wraps the glow's surface term (veilShading.ts).
     installPropVeil(material);
     // The arch study's distance grade (§11) on the prologue's props, after
@@ -304,9 +328,12 @@ export function envTemplate(
   footprintM: number,
   swayM: number,
   onReady: () => void,
-  look: WorldLook = 'standard'
+  look: WorldLook = 'standard',
+  worldLit = false
 ): EnvTemplate | null {
-  const key = `${slug}:${look}`;
+  // The High template of a body is another object under another key, so
+  // Low's is never patched and a view at either quality finds its own.
+  const key = `${slug}:${look}${worldLit ? ':high' : ''}`;
   const cached = templates.get(key);
   if (cached !== undefined) {
     waiting.get(key)?.add(onReady);
@@ -322,7 +349,7 @@ export function envTemplate(
   waiting.set(key, listeners);
   const started = generation;
   load
-    .then((scene) => buildTemplate(scene, footprintM, swayM, look))
+    .then((scene) => buildTemplate(scene, footprintM, swayM, look, worldLit))
     .then(
       (template) => {
         if (started !== generation) return;

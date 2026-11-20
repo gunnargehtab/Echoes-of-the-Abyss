@@ -81,6 +81,7 @@ import type { WorldLook } from './tutorialLook.ts';
 import type { MaskLandmarkPart } from './archMask.ts';
 import { setDistanceGradeOn } from './distanceGrade.ts';
 import { VentPlume, plumeSites } from './ventPlume.ts';
+import { LifeGlow } from './lifeGlow.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
 const TMP_MATRIX = new Matrix4();
@@ -152,6 +153,14 @@ export class EnvironmentLayer {
   >();
   private fixtureGround: ((x: number, y: number) => number) | null = null;
   private matchMs = 0;
+  /**
+   * Whether the view draws a world pass: the High graphics quality
+   * (highFrame.ts). The crater's fixture then stands High's own slots beside
+   * Low's (docs/free-water-slice.md §5, "High's own life") and draws each
+   * body from its High template (lifeLight.ts). The caller rebuilds, as for
+   * every other change to what stands on the ground.
+   */
+  private worldPass = false;
 
   /** Added to the scene once by the view; rebuilt in place. */
   readonly group = new Group();
@@ -163,6 +172,13 @@ export class EnvironmentLayer {
   readonly sift = new LandmarkSift();
   /** The collapse's cloud, one draw, alive for the 14 s after the ground change. */
   readonly cloud = new CollapseCloud();
+  /**
+   * The light the crater's fry carry of their own at High, one draw in the
+   * world pass; in the group while the view draws one (lifeGlow.ts, #1837).
+   */
+  readonly glow = new LifeGlow();
+  /** Where the glinting bodies stood on the last tick, for `glow` to copy. */
+  private glintAt = new Float32Array(0);
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
@@ -254,7 +270,7 @@ export class EnvironmentLayer {
   worldLightSites(terrain: TerrainPayload): WorldLightSite[] {
     const placements =
       this.look === 'free-water'
-        ? freeWaterPlacements(terrain, true)
+        ? freeWaterPlacements(terrain, true, this.worldPass)
         : placeAll(terrain, ENVIRONMENT_PROPS, this.look, this.fields, this.landmarks).placements;
     const sites: WorldLightSite[] = [];
     for (const placement of placements) {
@@ -437,7 +453,7 @@ export class EnvironmentLayer {
     this.fixtureGround = groundY;
     this.props = this.propTris = 0;
     const bySlug = new Map<string, PropPlacement[]>();
-    for (const p of freeWaterPlacements(terrain, true)) {
+    for (const p of freeWaterPlacements(terrain, true, this.worldPass)) {
       const list = bySlug.get(p.slug) ?? [];
       list.push(p);
       bySlug.set(p.slug, list);
@@ -451,10 +467,24 @@ export class EnvironmentLayer {
         () => {
           if (generation === this.generation) this.rebuild(terrain, groundY);
         },
-        this.look
+        this.look,
+        this.worldPass && spec.life === true
       );
       if (template === null) continue;
       let batch = this.fixtureBatches.get(slug);
+      // A batch is as long as its list was when it was made, and draws the
+      // template it was made from: another quality's is another batch.
+      if (
+        batch !== undefined &&
+        (batch.template !== template || batch.list.length !== list.length)
+      ) {
+        for (const mesh of batch.meshes) {
+          this.group.remove(mesh);
+          mesh.dispose();
+        }
+        this.fixtureBatches.delete(slug);
+        batch = undefined;
+      }
       if (batch === undefined) {
         const meshes = template.parts.map((part) => {
           const mesh = new InstancedMesh(part.geometry, part.material, list.length);
@@ -480,6 +510,8 @@ export class EnvironmentLayer {
       this.propTris += list.length * template.trianglesPerInstance;
     }
     if (this.decorativeDots !== null) this.group.add(this.decorativeDots.points);
+    if (this.worldPass) this.group.add(this.glow.points);
+    else this.group.remove(this.glow.points);
     this.tickFixture();
   }
 
@@ -494,17 +526,33 @@ export class EnvironmentLayer {
 
   private tickFixture(): void {
     const points: Vector3[] = [];
-    for (const { template, meshes, list } of this.fixtureBatches.values()) {
+    // Where each glinting body's axis stands now, three floats a body, in a
+    // buffer kept across frames: the bodies move every frame and their count
+    // only with a rebuild.
+    let glints = 0;
+    for (const [slug, { template, meshes, list }] of this.fixtureBatches) {
       if (template.sway !== null) {
         template.sway.uSwayTime.value = this.reducedMotion ? SWAY_HOLD_S : this.matchMs / 1000;
       }
+      const carries = this.worldPass && propSpec(slug)?.glint === true;
       list.forEach((p, i) => {
         if (p.motion === undefined || p.disabled === true) return;
         this.writeFixturePose(meshes, p, i);
         for (const seat of template.photophores ?? [])
           points.push(seat.clone().applyMatrix4(TMP_MATRIX));
+        if (carries) {
+          if (this.glintAt.length < (glints + 1) * 3) {
+            const grown = new Float32Array(Math.max(list.length, glints + 1) * 6);
+            grown.set(this.glintAt);
+            this.glintAt = grown;
+          }
+          TMP_POS.set(0, p.motion.axisM, 0).applyMatrix4(TMP_MATRIX);
+          TMP_POS.toArray(this.glintAt, glints++ * 3);
+        }
       });
     }
+    const lit = this.glintAt.subarray(0, glints * 3);
+    this.glow.write(glints, (positions) => positions.set(lit));
     this.decorativeDots?.write(points.length, (anchor, dot, seed) => {
       dot.fill(0);
       points.forEach((point, i) => {
@@ -583,6 +631,14 @@ export class EnvironmentLayer {
     this.landmarksStanding++;
     this.landmarkTris += state.triangles;
     return template;
+  }
+
+  /**
+   * Take the view's quality: whether it draws a world pass (above). The
+   * caller rebuilds, as for the fields: the view owns *when*.
+   */
+  setWorldPass(on: boolean): void {
+    this.worldPass = on;
   }
 
   /**
@@ -716,6 +772,7 @@ export class EnvironmentLayer {
     siftMotes: number;
     cloudMotes: number;
     decorativePhotophores: number;
+    lifeGlints: number;
     fixtureAssets: Record<string, number>;
   } {
     return {
@@ -728,6 +785,7 @@ export class EnvironmentLayer {
       siftMotes: this.sift.motes,
       cloudMotes: this.cloud.motes,
       decorativePhotophores: this.decorativeDots?.dotCount ?? 0,
+      lifeGlints: this.glow.count,
       fixtureAssets: Object.fromEntries(
         [...this.fixtureBatches].map(([slug, batch]) => [
           slug,
@@ -848,6 +906,7 @@ export class EnvironmentLayer {
     this.haze.dispose();
     this.sift.dispose();
     this.cloud.dispose();
+    this.glow.dispose();
     this.decorativeDots?.dispose();
   }
 
@@ -877,5 +936,6 @@ export class EnvironmentLayer {
     this.fixtureGround = null;
     this.matchMs = 0;
     this.decorativeDots?.write(0, () => {});
+    this.glow.write(0, () => {});
   }
 }

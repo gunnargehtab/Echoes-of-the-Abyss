@@ -223,9 +223,14 @@ Built so far:
   ([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)). Below.
 - **An own hull throws a searchlight, and it casts a shadow**
   ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836)). Below.
+- **The crater's life stands in the world's light, and its fry carry their own**
+  ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)). In
+  development and not accepted. Below.
 
-Not built yet: a searchlight on a prop, a prop's shadow, a hull's shadow on another
-hull, and the work lights and floodlights of the player's own structures.
+Not built yet: a searchlight on a standing prop, a prop's shadow, a hull's shadow on
+another hull, and the work lights and floodlights of the player's own structures. Of
+[#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837), the drifting
+bodies and the vents at work.
 
 #### Step 1's numbers — SPEC
 
@@ -539,7 +544,9 @@ first light with a direction, so it is the first to cast a shadow.
   hollows take a share of it as they take a share of a pool.
 - **A prop takes none yet.** A stand in a beam is lit by the rig as it was. Props are
   one material at both qualities, and a High prop needs a template of its own first, as
-  a hull's cladding has.
+  a hull's cladding has. A decorative body has one since #1837 and takes a beam
+  ([Life in the world's light](#life-in-the-worlds-light)); a standing prop still takes
+  none.
 - **No mark, lamp or halo is touched.** The lamp a beam leaves is the tactical pass's,
   at the strength its SIG set (gate 3). A mark over a pool stands bare (limit 6), and
   gate 7's glance at one reads in the standard palette and is owed in the other three
@@ -582,6 +589,87 @@ gives 1.8 face on.
 | Height the shadow's line is carried over the ground, so level ground never shadows itself, metres | `SEARCHLIGHT.SHADOW.LIFT_M` | 1.5 |
 | Half-width of a shadow's soft edge, in metres of clearance | `SEARCHLIGHT.SHADOW.SOFT_M` | 2 |
 | Where a hull's shadow is whole and where it is gone, in half-beams from its keel line | `SEARCHLIGHT.SHADOW.HULL_EDGE` | 0.7, 1.4 |
+
+#### Life in the world's light
+
+*In development with the rest of High, and not accepted
+([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837);
+[issue-1837](screenshots/issue-1837/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.LIFE` and `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`) until
+a frame of it is accepted. The owner took three calls in session on 20 November 2026,
+before any frame: the bodies are the crater's decorative life, the drifting bodies are a
+new jelly model, and the vents are an authored stand on the rim. This is the step's first
+instalment, the schools. The jelly and the vents are not built. Three more calls were
+taken in the open with the first frames, and wait on the owner: a body's register, its
+own light, and where High's life stands.*
+
+The crater's decorative bodies
+([free-water-slice.md](free-water-slice.md) §5) were props in the world pass under the
+shared rig: a fish beside a lit hull stood in none of the light the hull did, and read as
+a hole in the water. Each now draws from a template of its own at High, as an own hull
+does, and nothing Low draws is built, patched or keyed differently.
+
+- **A body takes the light a hull takes.** The rig stays, and beside it a face takes the
+  Lid's glow by how far it looks up and by the water over it, and the pools from below,
+  at a hull's own three shares ([A model in the world's light](#a-model-in-the-worlds-light)):
+  a fish beside a hull stands in the same light. An own hull's searchlight lights a body
+  that swims through it, at half of what ground would take, and the ground and a hull
+  shadow it. So a school crossing a beam shows in the navy's glow, and one outside it is
+  lit by the Lid alone.
+- **It answers the light and never the hull** (limit 4). Where a body swims is its
+  authored loop and the shared match time. A beam finds a school or misses it and moves
+  neither. A contact throws no beam, so no body is ever lit by one (limit 2).
+- **Its register is the cladding's ceiling.** A prop's brightest material is held to
+  0.06 linear, under every vessel, and at that a body a few pixels long is darker than
+  the water behind it. Three readings were written. **The props' 0.06** keeps the rule
+  and loses the fish. **An own hull's cladding ceiling, 0.16**, is taken: a body stands
+  no brighter than a vessel's cladding, so scenery still never out-reads one. **A silver
+  flank**, 0.4 and up, reads best under the Lid and blooms white in a beam.
+- **A schooling fry carries one light of its own**, in `fry-glint`
+  ([style-neon-noir.md](style-neon-noir.md) "World light"). Under the Lid alone a school
+  at the cladding's register is still only a little paler than the water, and the law
+  gives the world layer "the modelled bodies of public life with their light". Three
+  readings were written. **No light but the deep fish's photophores**, as Low has them,
+  leaves a school dim wherever no beam is. **One point on each schooling fry** is taken:
+  a soft disc 0.22 m across on the flank, drawn in the world pass, so the water takes it
+  with distance and the bloom spreads it a little. Its level stands under the lamps of a
+  hull loud enough to throw a beam: on the software frames a near light peaks at 144 of
+  255 and the Corvette's lamp, at SIG 28, at 165. A quiet hull's lamp is dimmer than a
+  fry: the Light Scout's, at SIG 6, reads 126. World light is not loudness at High
+  ([What it releases at High](#what-it-releases-at-high)), and whether a school beside a
+  quiet hull muddies gate 3's reading of it is the owner's glance. **A light on every
+  body** would make the ray and the outer fish lamps of their own. A light far enough to
+  draw under 1.6 pixels is drawn at 1.6 with its level cut by the area gained, so a far
+  school fades instead of sparkling.
+- **A fry's light is not the stipple.** Rung 5's stipple is public life's field mark, in
+  the palette's fauna colour, on the tactical layer at both qualities
+  ([map-visuals.md](map-visuals.md) §8). This is world light, in a world token, and it
+  never scatters, gathers or brightens for anything a match does. The deep fish's
+  photophores stay the stipple channel's, as at Low, until a step moves them.
+- **High stands more life than Low**, where the target's cameras read a body
+  ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
+  written. **Add to Low's lists** would move the frame Low draws. **Slots High alone
+  stands** is taken: two streams of schools by the fleet's start, 320 fry and 48 outer
+  fish, after Low's list and never among it.
+- **No mark, lamp or halo is touched.** A fry's light is a point of the world layer's,
+  under every mark, and gate 7's glance at a ring among a school is the owner's, on the
+  named GPU.
+
+`packages/frontend/test/lifeLight.test.ts` holds the two templates apart, the patch's
+anchors and the light's pass, and `packages/frontend/test/freeWaterDecoration.test.ts`
+holds Low's list unmoved under High's.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Share of the Lid's glow a face looking straight up takes, of what level ground takes at its depth | `LIFE.LID` | 1 |
+| Share of a pool's light a face looking straight down takes on a body at the ground, of what that ground takes | `LIFE.POOL` | 0.3 |
+| Height over the ground at which that share has halved, drawn metres | `LIFE.POOL_REACH_M` | 80 |
+| Share of a beam a body takes, of what ground would | `LIFE.BEAM` | 0.5 |
+| Linear luminance a body's brightest material is lifted to | `LIFE.ALBEDO` | 0.16 |
+| A fry's light at its centre, in the renderer's linear units | `LIFE.GLOW.LEVEL` | 0.3 |
+| Width of a fry's light, metres | `LIFE.GLOW.SIZE_M` | 0.22 |
+| The least a light is drawn, pixels | `LIFE.GLOW.MIN_PX` | 1.6 |
+| How far toward the eye a light is drawn from its body's axis, metres | `LIFE.GLOW.LIFT_M` | 0.15 |
 
 #### A mark on the lit world
 

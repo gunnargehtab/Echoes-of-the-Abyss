@@ -1,5 +1,5 @@
 import { Matrix4, Quaternion, Vector3 } from 'three';
-import { Biome, FREE_WATER_LIFE } from '@echoes/shared';
+import { Biome, FREE_WATER_HIGH_LIFE, FREE_WATER_LIFE } from '@echoes/shared';
 import { propHash, propSpec, type PropPlacement, type TerrainGrid } from './environment.ts';
 import { DEPTH_VISUAL_M_PER_M, depthToWorldY } from './perspectiveTerrain.ts';
 
@@ -101,8 +101,16 @@ const KELP_CLUSTERS = [
 /**
  * docs/free-water-slice.md §5. Slots, not scatter: neither hidden state nor the
  * camera is an input. Every closed path's entire envelope stays in its patch.
+ *
+ * `high` adds the slots the High graphics quality alone stands (§5, "High's
+ * own life", #1837), after Low's list and never among it: Low's slots keep
+ * their order and their indices, so the frame Low draws does not move.
  */
-export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false): PropPlacement[] {
+export function freeWaterPlacements(
+  terrain: TerrainGrid,
+  retainInvalid = false,
+  high = false
+): PropPlacement[] {
   const slots: PropPlacement[] = [];
   const add = (
     slug: string,
@@ -270,6 +278,38 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
   // the rim's edge, for the opening's first minute.
   const { startDeg, ...ray } = RAY;
   add('env-rim-ray', 735, 2210, { ...ray, phase: (startDeg * Math.PI) / 180 });
+  if (!high) return slots;
+  // High's own (#1837): streams where the target's cameras read a body. A
+  // stream is schools sharing one loop, evenly round it, each keeping station
+  // as a school does; the seed takes the school's number, so no two schools
+  // of a stream are one formation turned.
+  const stream = (
+    slug: string,
+    {
+      at,
+      SCHOOLS,
+      COUNT,
+      MOTION,
+      STATION,
+    }: (typeof FREE_WATER_HIGH_LIFE)['FRY_STREAM' | 'OUTER_STREAM']
+  ) => {
+    const [x, y] = at;
+    const start = propHash([FREE_WATER_LIFE.SEED, x, y]) * Math.PI * 2;
+    for (let s = 0; s < SCHOOLS; s++) {
+      for (let i = 0; i < COUNT; i++) {
+        const offset = (axis: number) => propHash([FREE_WATER_LIFE.SEED, x, y, s, i, axis]) * 2 - 1;
+        add(slug, x, y, {
+          ...MOTION,
+          radiusM: MOTION.radiusM + offset(1) * STATION.acrossM,
+          phase:
+            start + (s * Math.PI * 2) / SCHOOLS + (offset(2) * STATION.alongM) / MOTION.radiusM,
+          depthM: MOTION.depthM + offset(3) * STATION.depthM,
+        });
+      }
+    }
+  };
+  stream('env-shoal-fry', FREE_WATER_HIGH_LIFE.FRY_STREAM);
+  stream('env-outer-fish', FREE_WATER_HIGH_LIFE.OUTER_STREAM);
   return slots;
 }
 

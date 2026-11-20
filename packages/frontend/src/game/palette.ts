@@ -630,6 +630,15 @@ export const WORLD_LIGHT: Record<WorldLightFamily, number> = {
 };
 
 /**
+ * A fry's own light at the High graphics quality, docs/style-neon-noir.md
+ * "World light" (`fry-glint`, in development with #1837): the one point a
+ * schooling fry of the crater's decorative life carries (lifeGlow.ts). A pale
+ * bone white with no neon's chroma: warmer than every contact tier's blue,
+ * greyer than the civic lamp's tallow, and no navy's glow.
+ */
+export const FRY_GLINT = 0xb9bfa2;
+
+/**
  * The water's hue over each biome at the High graphics quality,
  * docs/style-neon-noir.md "World light", the water hues (SPEC by token,
  * accepted with High's first step, #1801): the biome fill's own hue at one

@@ -24,7 +24,8 @@ const HEADINGS = {
   HULL_LIGHT: "#### A model in the world's light",
   HULL_SURFACE: "#### A navy's surface",
   SEARCHLIGHT: "#### An own hull's searchlight",
-  MARK: '#### A mark on the lit world',
+  // In development (#1837): its numbers are TUNABLE, and no table here holds them.
+  LIFE: "#### Life in the world's light",
 } as const;
 
 /** A section's text, from its heading to the next one this file names. */
@@ -96,7 +97,7 @@ const FAMILIES = ['vent', 'flora', 'crystal', 'ore', 'civic'] as const;
 const LATER_STEPS = [
   { block: 'HULL_LIGHT', heading: HEADINGS.HULL_LIGHT, next: HEADINGS.HULL_SURFACE },
   { block: 'HULL_SURFACE', heading: HEADINGS.HULL_SURFACE, next: HEADINGS.SEARCHLIGHT },
-  { block: 'SEARCHLIGHT', heading: HEADINGS.SEARCHLIGHT, next: HEADINGS.MARK },
+  { block: 'SEARCHLIGHT', heading: HEADINGS.SEARCHLIGHT, next: HEADINGS.LIFE },
 ] as const;
 
 describe("High's step 1, as SPEC", () => {

@@ -64,6 +64,12 @@ const UNIFORMS = {
   uHullPoolMap: { value: new Vector2(1, 1) },
 };
 
+/**
+ * The same pair, for the other programs the world pass lights from below: a
+ * decorative body reads the pools a hull reads (lifeLight.ts).
+ */
+export const POOL_UNIFORMS = UNIFORMS;
+
 /** Hand the world pass the pools of the ground it is about to draw over, or none. */
 export function setHullPools(pools: Texture | null, widthM = 1, heightM = 1): void {
   UNIFORMS.uHullPools.value = pools ?? NO_POOLS;

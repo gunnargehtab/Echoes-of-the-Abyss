@@ -109,6 +109,19 @@ export interface PropSpec {
    * everything that is not a stack — a basalt boulder has no mouth.
    */
   plume?: true;
+  /**
+   * A body of the free-water crater's decorative life
+   * (docs/free-water-slice.md §5). At the High graphics quality its template
+   * is its own and stands in the world's light (lifeLight.ts, #1837); a
+   * standing prop keeps the one template at both qualities.
+   */
+  life?: true;
+  /**
+   * Carries one point of its own light at High, in `fry-glint`
+   * (lifeGlow.ts): the schooling fry alone. Every other body emits nothing
+   * there, as at Low.
+   */
+  glint?: true;
 }
 
 /**
@@ -370,6 +383,8 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     scaleJitter: [1, 1],
     worldLight: 'none',
     swayM: 0,
+    life: true,
+    ...(slug === 'env-shoal-fry' ? { glint: true as const } : {}),
   })),
 ];
 
