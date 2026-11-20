@@ -258,6 +258,12 @@ export class BeamMotes {
     this.points.visible = this.geometry.instanceCount > 0;
   }
 
+  /** Draw nothing: the view has left the High quality, and no beam is aimed. */
+  hide(): void {
+    this.geometry.instanceCount = 0;
+    this.points.visible = false;
+  }
+
   /** Reduced motion (docs/ui-ux.md §11) holds the sink and keeps the motes. */
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;

@@ -1610,7 +1610,7 @@ export class PerspectiveView {
     this.environment.setWorldPass(this.high.on);
     if (!this.high.on) {
       this.leaveWorldLayer();
-      this.beamMotes.update(performance.now(), 0);
+      this.beamMotes.hide();
     }
     // The ground is another material under High, over another bake.
     if (this.terrain !== null) this.rebuildTerrain();

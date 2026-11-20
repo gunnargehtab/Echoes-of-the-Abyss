@@ -2376,6 +2376,7 @@ describe('renderer smoke test: the conn view', () => {
           groundBytes: 0,
           worldLights: 0,
           searchlights: 0,
+          beamMotes: 0,
           frameGpuBudgetMs: 8,
         },
         'Low holds nothing of High’s'

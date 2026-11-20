@@ -130,6 +130,11 @@ describe('snow in a beam (#1855)', () => {
     motes.update(1032, 0);
     assert.equal(motes.points.visible, false, 'a fleet on Silent Running shows no mote');
     assert.equal(motes.motes, 0);
+    // Nor does a view that has left High, whatever the last frame aimed.
+    motes.update(1048, 3);
+    motes.hide();
+    assert.equal(motes.points.visible, false);
+    assert.equal(motes.motes, 0);
     // The lattice is a fixed table: a second cloud is the same one.
     const again = new BeamMotes();
     assert.deepEqual(
