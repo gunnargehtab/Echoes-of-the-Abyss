@@ -7,8 +7,8 @@ with the HUD on.
 
 **A software rasteriser drew every frame here**: SwiftShader, in headless Chromium, in the
 cloud container that built the step. They guide a round and are not offered for
-acceptance. **Nothing here is accepted.** The frames the owner judges are taken on the
-named GPU, with the command under "Who captures".
+acceptance. The owner accepted the step on 19 November 2026 on the frames under
+[On the named GPU](#on-the-named-gpu).
 
 The set was taken on `claude/issue-1836-yiljpg`, over
 [#1838](https://github.com/gunnargehtab/Echoes-of-the-Abyss/pull/1838): no plate, no hold.
@@ -127,9 +127,8 @@ this map.
 
 The cost that is not counted here is fragments: a lit ground fragment inside a cone
 reads the ground's heights twelve times a beam, and a sight line through a cone sixteen
-steps of four reads. Gate 6's 8 ms is read on the named GPU and has not been. The
-shadow pair and the rim frame are taken at rest, so that run reads their queued GPU
-time too: what a hull in a cone costs, and a cone on rock.
+steps of four reads. Gate 6's 8 ms is read [on the named GPU](#on-the-named-gpu), at the
+four cameras and at the shadow pair and the rim frame.
 
 ## Low does not move
 
@@ -164,6 +163,55 @@ GPU, in the four palettes.
 
 Limit 5 is the three states above: the beam is the lamp halo's gain, so the silent
 frames are dark by construction and the loud hull is the bright one.
+
+## On the named GPU
+
+Taken on 19 November 2026 on the GTX 1070 of
+[graphics-standards.md](../../graphics-standards.md) gate 6, in Edge, on `main` at
+`a636f25d`, by the first command under [Who captures](#who-captures). **The owner
+accepted these frames in session the same day.** The run's [readings.json](gpu/readings.json) lies beside its fifteen
+frames. The camera swayed (`sway: on`), so the same command was run once more with the
+software run's `SETTINGS_JSON` into `gpu/held`, which keeps the pair, its difference, the
+rim frame and [its readings](gpu/held/readings.json).
+
+| Camera | Low | High at rest | Queued GPU time, Low and High |
+| --- | --- | --- | --- |
+| Home | [low](gpu/01-low-home.png) | [high](gpu/05-high-rest-home.png) | 1.62 and 2.72 ms |
+| Close | [low](gpu/02-low-close.png) | [high](gpu/06-high-rest-close.png) | 1.57 and 2.71 ms |
+| Low | [low](gpu/03-low-low.png) | [high](gpu/07-high-rest-low.png) | 1.26 and 2.18 ms |
+| Survey | [low](gpu/04-low-survey.png) | [high](gpu/08-high-rest-survey.png) | 1.22 and 2.05 ms |
+
+Gate 6's 8 ms holds at every camera. High at rest costs 0.83 to 1.14 ms more than Low,
+and the held run reads each camera within 0.13 ms of these. The calls and triangles are
+the ones [What the frame costs](#what-the-frame-costs) counts.
+
+| State | Swaying | Held | Queued GPU time, held |
+| --- | --- | --- | --- |
+| A hull in a beam | [frame](gpu/09-high-shadow-pool.png) | [frame](gpu/held/09-high-shadow-pool.png) | 2.71 ms |
+| The same pool, empty | [control](gpu/10-high-shadow-pool-empty.png), [difference](gpu/diff-shadow-pool-vs-empty.png) | [control](gpu/held/10-high-shadow-pool-empty.png), [difference](gpu/held/diff-shadow-pool-vs-empty.png) | 2.55 ms |
+| Rock in a beam | [frame](gpu/15-high-rim-foot.png) | [frame](gpu/held/15-high-rim-foot.png) | 2.38 ms |
+| Under way | [close](gpu/11-high-underway-close.png), [home](gpu/12-high-underway-home.png) | | |
+| Silent Running | [home](gpu/13-high-silent-home.png), [close](gpu/14-high-silent-close.png) | | |
+
+Both pairs are pairs: the lamp moved 0 m, the beam turned 0 degrees, and the Harvester
+stood off the second frame. This time the beam is thrown east and the pair looks north
+across it. In the held pair the control stands 8 or more of 255 over the shadow frame on
+77,567 pixels, by 111 at most, and outside the window the two differ by 0.42 of 255. The
+red lies on and behind the Harvester, down the beam. The swaying pair reads 89,643
+pixels, by 146, and 2.45 outside: its difference also draws edges the sway moved.
+
+At the rim's foot the pool stands whole on the wall in both runs, with no hole cut in
+it. In the held run the Corvette rested at a bearing of −125.9 degrees, as the software
+run's did at −125, and the frame matches that one's. In the swaying run it rested at
+−134.7, so its pool lies farther along the wall and dimmer.
+
+Under way the Corvette and the Harvester each throw a beam, and on Silent Running none
+is thrown, as `readings.json` counts. [The clip](gpu/clip-home-to-close.mp4) is the
+second command's recording without the match's load: 16 s at 1920 × 1080, in real time.
+
+Gate 7 reads in the standard palette: the owner read the Corvette's ring over its own
+pool on these frames the same day. Every frame here is in that palette, so the other
+three are not read.
 
 ## Who captures
 

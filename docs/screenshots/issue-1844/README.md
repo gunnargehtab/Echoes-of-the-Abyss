@@ -6,9 +6,9 @@ filed. A fin's rays stood square to the keel, so they crossed the Corvette's rak
 blade. And the hull skin's midrib ran as a line along each flank, where the Blender hull
 has none.
 
-It is look work in development. **Nothing here is accepted, and a software rasteriser drew
-every game frame below** (SwiftShader, the container's only one). The frames to judge are
-taken on the named GPU, by the command under "Who captures".
+**A software rasteriser drew every game frame below** (SwiftShader, the container's only
+one), except those under [On the named GPU](#on-the-named-gpu). The owner accepted those
+on 19 November 2026 and kept [the decisions](#the-decisions) as taken.
 
 ## The decisions
 
@@ -168,6 +168,36 @@ differs. The frames agree, main on the left:
 
 The two runs are not pixel for pixel, since the marine snow drifts between them.
 
+## On the named GPU
+
+Taken on 19 November 2026 on the GTX 1070 of
+[graphics-standards.md](../../graphics-standards.md) gate 6, in Edge, on `main` at
+`a636f25d`, the merge of this change, by the command under
+[Who captures](#who-captures). **The owner accepted these frames in session the same
+day.**
+
+![The Corvette at the nearest camera at High, on the named GPU](gpu/04-near-port.png)
+
+Off the port quarter the rays run root to tip on the dorsal blade, both pectorals and
+both flukes, and no line runs along the flank.
+
+| Camera | High | Low | #1811's, at High |
+| --- | --- | --- | --- |
+| Close | [frame](gpu/02-close.png) | [frame](gpu-low/02-close.png) | [frame](../issue-1811/gpu/surfaced/02-close.png) |
+| Near, port | [frame](gpu/04-near-port.png) | [frame](gpu-low/04-near-port.png) | [frame](../issue-1811/gpu/surfaced/04-near-port.png) |
+| Near, bow | [frame](gpu/05-near-bow.png) | [frame](gpu-low/05-near-bow.png) | [frame](../issue-1811/gpu/surfaced/05-near-bow.png) |
+
+Home, the station and Survey lie beside them, as `01-home.png`, `03-station.png` and
+`06-survey.png` in each folder.
+[The swing](gpu/clip-near-swing.mp4) is 120 steps of 80 ms at High and 1280 × 720,
+assembled at 30 frames a second.
+
+Every count in [the High run's readings](gpu/readings.json) and
+[the Low run's](gpu-low/readings.json) matches the table under [Readings](#readings), at
+all six cameras. `frames.mjs` reads no GPU time, so gate 6 is not read here.
+[#1836's run](../issue-1836/README.md#on-the-named-gpu) on the same tree reads High at
+rest at 2.05 to 2.72 ms queued.
+
 ## What it costs
 
 - **Bytes.** 477,424 for the skin's second image, once, in the client's assets: 1,279,216
@@ -183,12 +213,9 @@ The two runs are not pixel for pixel, since the marine snow drifts between them.
 
 ## What it does not prove
 
-- **A frame on the named GPU.** Every game frame above is a software rasteriser's.
 - **Gate 6's 8 ms.** The change adds no tap, pass, call or triangle, so it is expected to
   read as 046dbaef's did ([issue-1801](../issue-1801/README.md#on-the-named-gpu)). A
   software rasteriser's milliseconds measure the rasteriser, so it is not read here.
-- **That parallel rays read as a fin's.** They run along the blade and off its edge. If
-  that is refused, the fin's chart in the file is the route left.
 - **The other nine models with blades.** Only the Corvette was looked at closely. The
   rule is their shape's, and the nearest misses are named above.
 - **A tall hull's flank.** The second image tiles every 16 m. Its laterals meet at their

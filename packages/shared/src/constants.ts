@@ -109,10 +109,10 @@ export const FREE_WATER_OPENING = {
  * (#1801), and docs/art-direction.md, "Step 1's numbers — SPEC", prints each
  * (test/highSpec.test.ts in the frontend holds the two together). Change the
  * doc first, then the constant. That is every block here but the three at
- * the foot. The two hull blocks are SPEC as well, each accepted the same day
- * (#1814, #1811) and printed by the section of that doc that owns it, under
- * the same test and the same rule. The searchlight is TUNABLE until a frame
- * of it is accepted: a look's numbers are written into `docs/` from the
+ * the foot. Those three are SPEC as well, each accepted the same day (#1814,
+ * #1811, #1836) and printed by the section of that doc that owns it, under
+ * the same test and the same rule. A later step's block is TUNABLE until a
+ * frame of it is accepted: a look's numbers are written into `docs/` from the
  * frame, not before it (the `dev-loop` skill, "Look work").
  */
 export const HIGH_GRAPHICS = {
@@ -244,8 +244,8 @@ export const HIGH_GRAPHICS = {
    */
   HULL_LIGHT: { LID: 1, POOL: 0.3, POOL_REACH_M: 80 },
   /**
-   * TUNABLE: an own hull's searchlight (docs/art-direction.md, "An own hull's
-   * searchlight"; #1836; searchlights.ts), in development and not accepted.
+   * SPEC — docs/art-direction.md, "An own hull's searchlight" (#1836, accepted
+   * on 19 November 2026). An own hull's searchlight (searchlights.ts).
    * `MAX` is how many beams a frame draws, nearest the camera's focus first,
    * and `OCCLUDERS` how many own hulls may shadow them. `POWER` is the light
    * a face square to the beam takes at `REF_M` along it, at the halo's gain

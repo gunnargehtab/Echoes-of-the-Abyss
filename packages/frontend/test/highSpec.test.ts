@@ -5,9 +5,10 @@
  * the same thing, in both directions, and a number moved in one place alone
  * fails here.
  *
- * The same day the owner accepted an own model in the world's light (#1814)
- * and a navy's surface (#1811). Each of those is one block, printed as a
- * table by the section that owns it, and held here the same way.
+ * The same day the owner accepted an own model in the world's light (#1814),
+ * a navy's surface (#1811) and an own hull's searchlight (#1836). Each of
+ * those is one block, printed as a table by the section that owns it, and
+ * held here the same way.
  */
 
 import assert from 'node:assert/strict';
@@ -23,6 +24,7 @@ const HEADINGS = {
   HULL_LIGHT: "#### A model in the world's light",
   HULL_SURFACE: "#### A navy's surface",
   SEARCHLIGHT: "#### An own hull's searchlight",
+  MARK: '#### A mark on the lit world',
 } as const;
 
 /** A section's text, from its heading to the next one this file names. */
@@ -88,12 +90,13 @@ const STEP_1 = ['SAMPLES', 'EXPOSURE', 'LID', 'GROUND', 'WATER', 'AO', 'BLOOM', 
 const FAMILIES = ['vent', 'flora', 'crystal', 'ore', 'civic'] as const;
 
 /**
- * The steps accepted after step 1 (#1814, #1811): a block each, printed by the
- * section that owns it, which ends where the next of the doc's begins.
+ * The steps accepted after step 1 (#1814, #1811, #1836): a block each, printed
+ * by the section that owns it, which ends where the next of the doc's begins.
  */
 const LATER_STEPS = [
   { block: 'HULL_LIGHT', heading: HEADINGS.HULL_LIGHT, next: HEADINGS.HULL_SURFACE },
   { block: 'HULL_SURFACE', heading: HEADINGS.HULL_SURFACE, next: HEADINGS.SEARCHLIGHT },
+  { block: 'SEARCHLIGHT', heading: HEADINGS.SEARCHLIGHT, next: HEADINGS.MARK },
 ] as const;
 
 describe("High's step 1, as SPEC", () => {
