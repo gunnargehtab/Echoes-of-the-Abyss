@@ -35,13 +35,17 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-crab": 32,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
           "env-deep-fish": 26,
+          "env-rim-crab": 32,
           "env-rim-ray": 1
         },
         "glints": 0
+      },
+      "vents": {
+        "plumes": 0,
+        "worldLights": 0
       },
       "graphicsQuality": {
         "asked": "low",
@@ -84,13 +88,17 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-crab": 32,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
           "env-deep-fish": 26,
+          "env-rim-crab": 32,
           "env-rim-ray": 1
         },
         "glints": 0
+      },
+      "vents": {
+        "plumes": 0,
+        "worldLights": 0
       },
       "graphicsQuality": {
         "asked": "low",
@@ -129,13 +137,17 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-crab": 32,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
           "env-deep-fish": 26,
+          "env-rim-crab": 32,
           "env-rim-ray": 1
         },
         "glints": 0
+      },
+      "vents": {
+        "plumes": 0,
+        "worldLights": 0
       },
       "graphicsQuality": {
         "asked": "low",
@@ -178,13 +190,17 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-crab": 32,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
           "env-deep-fish": 26,
+          "env-rim-crab": 32,
           "env-rim-ray": 1
         },
         "glints": 0
+      },
+      "vents": {
+        "plumes": 0,
+        "worldLights": 0
       },
       "graphicsQuality": {
         "asked": "low",
@@ -223,13 +239,17 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-crab": 32,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
           "env-deep-fish": 26,
+          "env-rim-crab": 32,
           "env-rim-ray": 1
         },
         "glints": 0
+      },
+      "vents": {
+        "plumes": 0,
+        "worldLights": 0
       },
       "graphicsQuality": {
         "asked": "low",
@@ -262,8 +282,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 56,
-      "triangles": 715030,
+      "calls": 60,
+      "triangles": 716710,
       "camera": [
         709,
         1710,
@@ -277,20 +297,26 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-ray": 1,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3
         },
         "glints": 624
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
       },
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
-        "worldLights": 71,
+        "worldLights": 72,
         "searchlights": 2,
         "frameGpuBudgetMs": 8
       },
@@ -316,8 +342,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 56,
-      "triangles": 715030,
+      "calls": 60,
+      "triangles": 716710,
       "camera": [
         542,
         1958,
@@ -331,20 +357,26 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-ray": 1,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3
         },
         "glints": 624
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
       },
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
-        "worldLights": 71,
+        "worldLights": 72,
         "searchlights": 2,
         "frameGpuBudgetMs": 8
       },
@@ -366,8 +398,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 37,
-      "triangles": 707699,
+      "calls": 41,
+      "triangles": 709379,
       "camera": [
         2000,
         2000,
@@ -381,20 +413,26 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-ray": 1,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3
         },
         "glints": 624
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
       },
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
-        "worldLights": 71,
+        "worldLights": 72,
         "searchlights": 2,
         "frameGpuBudgetMs": 8
       },
@@ -420,8 +458,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 56,
-      "triangles": 715668,
+      "calls": 60,
+      "triangles": 717348,
       "camera": [
         2000,
         2000,
@@ -435,20 +473,26 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-ray": 1,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3
         },
         "glints": 624
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
       },
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
-        "worldLights": 71,
+        "worldLights": 72,
         "searchlights": 2,
         "frameGpuBudgetMs": 8
       },
@@ -470,8 +514,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 43,
-      "triangles": 712347,
+      "calls": 47,
+      "triangles": 714027,
       "camera": [
         1875,
         1125,
@@ -485,20 +529,26 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-rim-ray": 1,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3
         },
         "glints": 624
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
       },
       "graphicsQuality": {
         "asked": "high",
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
-        "worldLights": 71,
+        "worldLights": 72,
         "searchlights": 2,
         "frameGpuBudgetMs": 8
       },

@@ -43,7 +43,9 @@ Each loud own hull throws a searchlight (#1836, `searchlights.ts`): one set of u
 for the page, read by the lit ground, the cladding and the scatter pass's cones, with its
 shadow read from the ground's heights rather than rendered. The crater's decorative
 bodies draw from a High template too (#1837, `lifeLight.ts`), in the light a hull takes,
-and its fry carry a point of their own in the world pass (`lifeGlow.ts`).
+and its fry carry a point of their own in the world pass (`lifeGlow.ts`). A chimney's
+steam leaves the canvas at High: `ventSmoke.ts` draws it in the world pass as matter lit
+by the vent, the Lid and the beams, one plume a stack at either quality.
 
 ## Tests run under a Vite shim
 

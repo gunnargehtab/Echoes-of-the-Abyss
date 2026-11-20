@@ -128,6 +128,29 @@ export const FREE_WATER_HIGH_LIFE = {
 } as const;
 
 /**
+ * TUNABLE — docs/free-water-slice.md §5, "High's own vents" (#1837): the one
+ * vent stand the crater stands, at the High graphics quality alone, on the
+ * outside rim by the fleet's start, where the target's Close camera has its
+ * chimneys. Props by authored slots, each a plan position in map metres and
+ * a heading in degrees: the rim's cells stay Coral Ruins at 600 m, so no
+ * floor, PF or route moves. Not SPEC until the owner accepts a frame of the
+ * step.
+ */
+export const FREE_WATER_HIGH_VENTS = {
+  // Both inside one 80 m cell of the vent family's lattice, so the stand is
+  // one source and not two (worldLights.ts `worldLightsOf`).
+  CHIMNEYS: [
+    [562, 2018, 20],
+    [582, 2042, -35],
+  ],
+  BASALT: [
+    [544, 2036, 10],
+    [598, 2016, -60],
+    [570, 2064, 130],
+  ],
+} as const;
+
+/**
  * docs/free-water-slice.md §9, Opening view: how the study's orbit opens on the
  * first sight of the force. SPEC: the heading toward mark A, 34 degrees east
  * of north; 15 degrees of pitch; the focus at the hulls' 300 m exercise depth.
@@ -374,6 +397,30 @@ export const HIGH_GRAPHICS = {
     BEAM: 0.5,
     ALBEDO: 0.16,
     GLOW: { LEVEL: 0.3, SIZE_M: 0.22, MIN_PX: 1.6, LIFT_M: 0.15 },
+  },
+  /**
+   * TUNABLE: a vent at work (docs/art-direction.md, "The vents at work";
+   * #1837), until a frame of it is accepted. What a chimney breathes at High,
+   * drawn as matter that shows by the light on it (ventSmoke.ts). A column is
+   * `PUFFS` puffs, each `LIFE_S` from the mouth to gone, climbing `RISE_M`
+   * from a mouth `MOUTH_M` in radius and opening `SPREAD_M` about its axis by
+   * the top; a puff is `SIZE_M` across at the mouth and at the top. `ALBEDO`
+   * is the share of the light on a puff it sends to the eye. `GLOW` is the
+   * vent's own light on a puff at the mouth, in `vent-ember` and the
+   * renderer's linear units, and `GLOW_REACH_M` the height over the mouth at
+   * which it has halved: the column is amber where it leaves the stack and
+   * the Lid's colour above.
+   */
+  VENT: {
+    PUFFS: 30,
+    LIFE_S: 18,
+    RISE_M: 130,
+    MOUTH_M: 2.5,
+    SPREAD_M: 16,
+    SIZE_M: [5, 24],
+    ALBEDO: 0.07,
+    GLOW: 6,
+    GLOW_REACH_M: 14,
   },
 } as const;
 

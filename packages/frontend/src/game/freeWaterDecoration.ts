@@ -1,5 +1,10 @@
 import { Matrix4, Quaternion, Vector3 } from 'three';
-import { Biome, FREE_WATER_HIGH_LIFE, FREE_WATER_LIFE } from '@echoes/shared';
+import {
+  Biome,
+  FREE_WATER_HIGH_LIFE,
+  FREE_WATER_HIGH_VENTS,
+  FREE_WATER_LIFE,
+} from '@echoes/shared';
 import { propHash, propSpec, type PropPlacement, type TerrainGrid } from './environment.ts';
 import { DEPTH_VISUAL_M_PER_M, depthToWorldY } from './perspectiveTerrain.ts';
 
@@ -98,6 +103,9 @@ const KELP_CLUSTERS = [
   [2741.5, 611.5, -6],
 ] as const;
 
+/** The props that stand on the outside rim's 600 m floor, where a plant stands on the garden's 400. */
+const RIM_STAND = new Set(['env-vent-chimney', 'env-vent-basalt']);
+
 /**
  * docs/free-water-slice.md §5. Slots, not scatter: neither hidden state nor the
  * camera is an input. Every closed path's entire envelope stays in its patch.
@@ -139,9 +147,14 @@ export function freeWaterPlacements(
             terrain.floor[i]! &&
           motion.depthM - motion.depthSwingM - spec.footprintM / DEPTH_VISUAL_M_PER_M >
             terrain.ceiling[i]!
-        : terrain.biomes[i] === Biome.KelpForest &&
-          terrain.floor[i] === 400 &&
-          terrain.ceiling[i] === 0;
+        : RIM_STAND.has(slug)
+          ? // The vent stand, on the outside rim alone (§5, "High's own vents").
+            terrain.biomes[i] === Biome.CoralRuins &&
+            terrain.floor[i] === 600 &&
+            terrain.ceiling[i] === 0
+          : terrain.biomes[i] === Biome.KelpForest &&
+            terrain.floor[i] === 400 &&
+            terrain.ceiling[i] === 0;
     valid &&= admits(cellIndex);
     // Test the whole swept plan envelope, including neighbouring cells. The
     // footprint's disc holds a turned stand whole: its script fences every
@@ -313,6 +326,14 @@ export function freeWaterPlacements(
   };
   stream('env-shoal-fry', FREE_WATER_HIGH_LIFE.FRY_STREAM);
   stream('env-outer-fish', FREE_WATER_HIGH_LIFE.OUTER_STREAM);
+  // And the one vent stand (§5, "High's own vents"): chimneys and the basalt
+  // round them, on the rim by the fleet's start.
+  for (const [x, y, yawDeg] of FREE_WATER_HIGH_VENTS.CHIMNEYS) {
+    add('env-vent-chimney', x, y, undefined, (yawDeg * Math.PI) / 180);
+  }
+  for (const [x, y, yawDeg] of FREE_WATER_HIGH_VENTS.BASALT) {
+    add('env-vent-basalt', x, y, undefined, (yawDeg * Math.PI) / 180);
+  }
   return slots;
 }
 

@@ -638,6 +638,14 @@ and answers nothing a match does (rule 4). It is not the fauna colour: that is t
 stipple's, on the tactical layer. `FRY_GLINT` in `packages/frontend/src/game/palette.ts`
 transcribes it.
 
+**A vent's breath at High.** *In development with #1837, and not accepted.* At Low the
+steam over a chimney's mouth is world light in `vent-ember`, as the table says. At High
+it is matter and takes no token of its own: a column shows by the light that falls on
+it, which is `vent-ember` from the mouth under it, `lid-glow` above, and an own hull's
+searchlight in its navy's glow where one crosses
+([art-direction.md](art-direction.md#the-vents-at-work)). Rules 4 and 5 hold: it is
+placed by the map's chimneys, and wears no hue but those lights'.
+
 Every family obeys the same five rules, and they are gates, not suggestions:
 
 1. **World light is points and seams, never area glow.** No lit ground, no

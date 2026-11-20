@@ -16,6 +16,7 @@ import {
   propSpec,
   type PropPlacement,
 } from '../src/game/environment.ts';
+import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
 import {
   DEPTH_VISUAL_M_PER_M,
@@ -29,6 +30,7 @@ import {
   Faction,
   FaunaSpecies,
   FREE_WATER_HIGH_LIFE,
+  FREE_WATER_HIGH_VENTS,
   ResolutionTier,
   UnitKind,
 } from '@echoes/shared';
@@ -668,6 +670,8 @@ describe('authored public decoration', () => {
     assert.deepEqual(counts, {
       'env-shoal-fry': FRY_STREAM.SCHOOLS * FRY_STREAM.COUNT,
       'env-outer-fish': OUTER_STREAM.SCHOOLS * OUTER_STREAM.COUNT,
+      'env-vent-chimney': FREE_WATER_HIGH_VENTS.CHIMNEYS.length,
+      'env-vent-basalt': FREE_WATER_HIGH_VENTS.BASALT.length,
     });
     // Slots, not scatter: none is refused by the public ground it stands
     // over, none is scaled, and a second call draws the same list.
@@ -747,6 +751,75 @@ describe('authored public decoration', () => {
         stream.STATION.acrossM,
         stream.STATION.depthM,
       ]);
+    }
+  });
+
+  it('stands High’s one vent stand on the outside rim, and none at Low (#1837)', () => {
+    // §5, "High's own vents": props by authored slots on the rim's own cells,
+    // so no floor, PF or route moves; Low stands none of it.
+    const terrain = ground();
+    const vents = (list: readonly PropPlacement[]) =>
+      list.filter((p) => p.slug === 'env-vent-chimney' || p.slug === 'env-vent-basalt');
+    assert.equal(vents(freeWaterPlacements(terrain, true)).length, 0);
+    const stand = vents(freeWaterPlacements(terrain, true, true));
+    const { CHIMNEYS, BASALT } = FREE_WATER_HIGH_VENTS;
+    assert.deepEqual(
+      stand.map((p) => [p.slug, p.xM, p.yM, Math.round((p.yawRad * 180) / Math.PI)]),
+      [
+        ...CHIMNEYS.map(([x, y, yaw]) => ['env-vent-chimney', x, y, yaw]),
+        ...BASALT.map(([x, y, yaw]) => ['env-vent-basalt', x, y, yaw]),
+      ]
+    );
+    for (const p of stand) {
+      assert.notEqual(p.disabled, true, `${p.slug} at ${p.xM},${p.yM} is refused`);
+      assert.equal(p.scale, 1);
+      assert.equal(p.motion, undefined);
+      // Its whole footprint on the rim's cells: Coral Ruins at 600 m, open.
+      const half = propSpec(p.slug)!.footprintM / 2;
+      for (const [dx, dy] of [
+        [-half, -half],
+        [half, -half],
+        [-half, half],
+        [half, half],
+      ] as const) {
+        const cell =
+          Math.floor((p.yM + dy) / terrain.cellM) * terrain.cols +
+          Math.floor((p.xM + dx) / terrain.cellM);
+        assert.equal(terrain.biomes[cell], Biome.CoralRuins);
+        assert.equal(terrain.floor[cell], 600);
+        assert.equal(terrain.ceiling[cell], 0);
+      }
+    }
+    // One source, not two: both chimneys in one cell of the vent family's
+    // 80 m lattice (worldLights.ts `worldLightsOf`).
+    const cells = new Set(CHIMNEYS.map(([x, y]) => `${Math.floor(x / 80)}:${Math.floor(y / 80)}`));
+    assert.equal(cells.size, 1);
+    // The stand is the vent family's light at High, and no light at Low: the
+    // layer names a chimney's site only while the view draws a world pass.
+    const layer = new EnvironmentLayer('free-water');
+    const family = (sites: ReturnType<EnvironmentLayer['worldLightSites']>) =>
+      sites.filter((site) => site.family === 'vent').map((site) => [site.xM, site.yM]);
+    assert.deepEqual(family(layer.worldLightSites(terrain)), []);
+    layer.setWorldPass(true);
+    assert.deepEqual(
+      family(layer.worldLightSites(terrain)),
+      CHIMNEYS.map(([x, y]) => [x, y])
+    );
+    layer.destroy();
+
+    // §5 prints each slot as the constants hold it.
+    const doc = readFileSync(new URL('../../../docs/free-water-slice.md', import.meta.url), 'utf8');
+    const numbers = (text: string) =>
+      [...text.replace(/,(?=\d{3})/g, '').matchAll(/[−-]?\d+/g)].map((m) =>
+        Number(m[0].replace('−', '-'))
+      );
+    for (const [slug, slots] of [
+      ['env-vent-chimney', CHIMNEYS],
+      ['env-vent-basalt', BASALT],
+    ] as const) {
+      const row = doc.split('\n').find((line) => line.startsWith(`| \`${slug}\` |`));
+      assert.ok(row, `§5 lost ${slug}'s slots`);
+      assert.deepEqual(numbers(row.split('|')[2]!), slots.flat());
     }
   });
 

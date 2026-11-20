@@ -330,6 +330,39 @@ describe('vent steam (#1514)', () => {
   });
 });
 
+describe('a vent at work at High (#1837)', () => {
+  it('breathes one plume a stack: smoke in the world pass at High, steam on the canvas at Low', async () => {
+    controlLoads();
+    const vents = { ...terrain(), biomes: Array(64).fill(Biome.ThermalVein) };
+    const all = placeProps(vents);
+    const chimneys = all.filter((p) => p.slug === 'env-vent-chimney');
+    const layer = new EnvironmentLayer();
+    try {
+      layer.setWorldPass(true);
+      layer.rebuild(vents, () => -200, all);
+      await until(() => pending.length === 2);
+      pending.forEach((p) => p.resolve(source()));
+      await until(() => layer.stats().props === all.length);
+      // docs/art-direction.md, "The vents at work": every chimney the map
+      // stands, never both plumes on one stack.
+      assert.equal(layer.smoke.plumes, chimneys.length);
+      assert.equal(layer.plume.plumes, 0);
+      assert.equal(layer.stats().ventPlumes, chimneys.length);
+      assert.ok(layer.group.children.includes(layer.smoke.points));
+      assert.ok(!layer.group.children.includes(layer.plume.points));
+      // Back at Low the steam stands as it always did, and no smoke.
+      layer.setWorldPass(false);
+      layer.rebuild(vents, () => -200, all);
+      assert.equal(layer.plume.plumes, chimneys.length);
+      assert.equal(layer.smoke.plumes, 0);
+      assert.ok(layer.group.children.includes(layer.plume.points));
+      assert.ok(!layer.group.children.includes(layer.smoke.points));
+    } finally {
+      layer.destroy();
+    }
+  });
+});
+
 describe('roster look and palette cache isolation', () => {
   it('holds the requested palette across a pending load and shares only matching templates', async () => {
     controlLoads();

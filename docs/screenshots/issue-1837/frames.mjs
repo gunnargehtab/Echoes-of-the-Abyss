@@ -1,8 +1,9 @@
-// Life in the world's light (#1837), as a run-game steps module: the three
-// cameras docs/screenshots/issue-1799/README.md judges a look at, and gate 6's
-// fourth, in the free-water crater with the HUD on. Low first, as the control,
-// then High at the same four with the fleet at rest, and High once more in the
-// garden, where Low's own fry schools swim and carry their light too.
+// Life and effects (#1837), as a run-game steps module: the schools, and the
+// vent stand at work. The three cameras docs/screenshots/issue-1799/README.md
+// judges a look at, and gate 6's fourth, in the free-water crater with the HUD
+// on. Low first, as the control, then High at the same four with the fleet at
+// rest, and High once more in the garden, where Low's own fry schools swim
+// and carry their light too.
 //
 //   SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
 //     node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
@@ -101,7 +102,11 @@ export default async ({ page, shot }) => {
         // A tree before #1837 reports no lights, which is none: `main`'s Low
         // is taken with this module too.
         const glints = probe.lifeGlints ?? 0;
-        return high ? fry > 144 && glints === fry : fry === 144 && glints === 0;
+        // The vent stand is High's too: its chimneys decode, then breathe.
+        const stacks = probe.fixtureAssets['env-vent-chimney'] ?? 0;
+        return high
+          ? fry > 144 && glints === fry && stacks > 0 && probe.ventPlumes === stacks
+          : fry === 144 && glints === 0 && stacks === 0 && probe.ventPlumes === 0;
       },
       quality === 'high',
       { timeout: 120000 }
@@ -168,6 +173,8 @@ export default async ({ page, shot }) => {
         sway: probe.sway ?? null,
         // What the crater stands at this quality, and the lights its fry carry.
         life: { bodies: probe.fixtureAssets, glints: probe.lifeGlints ?? 0 },
+        // Columns standing over the vent stand's chimneys, and the world's sources.
+        vents: { plumes: probe.ventPlumes, worldLights: probe.graphicsQuality?.worldLights ?? 0 },
         graphicsQuality: probe.graphicsQuality ?? null,
         gpuTimer: probe.gpuTimer,
         avgGpuMs: probe.avgGpuMs,

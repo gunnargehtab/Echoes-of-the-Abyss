@@ -188,8 +188,10 @@ No cloned material may lose its fog, instancing, sway or glow-preservation hooks
 
 The northern pocket is an untended edge, not a city: holdfasts, cut-back stone and a
 water-polished rim. Forty-metre kelp and dim living tips recall the Plateaus. No civic
-lamp, vent chimney, glowing sky or overhead light is licensed here. The bowl remains
-mostly empty, so the forest ends rather than dissolving into props at every depth.
+lamp, vent chimney, glowing sky or overhead light is licensed here. That is Low, and it
+stands. At the High graphics quality the owner licensed one vent stand on the outside rim
+on 20 November 2026 (High's own vents, below). The bowl remains mostly empty, so the
+forest ends rather than dissolving into props at every depth.
 
 | Place / purpose | Retained or commissioned kit | Boundary |
 | --- | --- | --- |
@@ -374,6 +376,28 @@ no collision, no tell, the same loop for every client, held still under reduced 
 The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`)
 until the owner accepts a frame. How a body is lit there, and the one light a fry
 carries, are [art-direction.md](art-direction.md#life-in-the-worlds-light)'s.
+
+**High's own vents (#1837).** *In development with the same look step, and not accepted.
+The owner chose an authored stand on the rim in session on 20 November 2026, against
+frames from another map and against leaving the vents out.* At High the fixture stands
+one vent stand, by authored slots as its plants are: two `env-vent-chimney` and three
+`env-vent-basalt`, the Thermal Veins' retained kit, each at scale 1. Low stands none of
+it.
+
+| Prop | Slots: map x / y, heading |
+| --- | --- |
+| `env-vent-chimney` | 562 / 2,018 at 20 degrees; 582 / 2,042 at −35 |
+| `env-vent-basalt` | 544 / 2,036 at 10 degrees; 598 / 2,016 at −60; 570 / 2,064 at 130 |
+
+Props only. The cells under them stay Coral Ruins at 600 m, so no floor, PF or route
+moves, the rim stays a rim, and a hull passes a chimney as it passes any prop: nothing
+here blocks, hides or tells (§2). The stand is 109 m north-west of the Corvette's start
+and 164 m south of the Light Scout's, on the floor 300 m under both. From the Close eye
+it is 421 m off, in the gap between their two rings.
+[art-direction.md](art-direction.md#the-vents-at-work) has how the slot was found, what
+a chimney breathes at High and how the stand lights the rim. The slots are TUNABLE in
+`FREE_WATER_HIGH_VENTS` (`packages/shared/src/constants.ts`) until the owner accepts a
+frame.
 
 **The wildlife choice is an explicit, narrow extension of the bible.** Keeping only
 the existing stipples would preserve today's presentation but not the requested close

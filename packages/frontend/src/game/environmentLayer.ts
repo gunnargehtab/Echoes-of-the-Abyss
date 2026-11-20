@@ -80,8 +80,9 @@ import type { LandmarkState } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
 import type { MaskLandmarkPart } from './archMask.ts';
 import { setDistanceGradeOn } from './distanceGrade.ts';
-import { VentPlume, plumeSites } from './ventPlume.ts';
+import { VentPlume, plumeSites, type PlumeSite } from './ventPlume.ts';
 import { LifeGlow } from './lifeGlow.ts';
+import { VentSmoke } from './ventSmoke.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
 const TMP_MATRIX = new Matrix4();
@@ -177,6 +178,12 @@ export class EnvironmentLayer {
    * world pass; in the group while the view draws one (lifeGlow.ts, #1837).
    */
   readonly glow = new LifeGlow();
+  /**
+   * What the chimneys breathe at High, one draw in the world pass, in place
+   * of `plume`; in the group while a column stands and the view draws a world
+   * pass (ventSmoke.ts, #1837).
+   */
+  readonly smoke = new VentSmoke();
   /** Where the glinting bodies stood on the last tick, for `glow` to copy. */
   private glintAt = new Float32Array(0);
 
@@ -438,11 +445,28 @@ export class EnvironmentLayer {
       if (top === undefined) return null;
       return groundY(placement.xM, placement.yM) + top * placement.scale;
     });
-    this.plume.build(sites, this.shade);
-    if (sites.length > 0) this.group.add(this.plume.points);
+    this.breathe(sites);
     const hazes = standsFields ? hazeSites(this.fields, terrain, groundY) : [];
     this.haze.build(hazes, this.shade);
     if (hazes.length > 0) this.group.add(this.haze.points);
+  }
+
+  /**
+   * Stand a column on each chimney's mouth: the steam on the canvas at Low
+   * (ventPlume.ts), and at High the same column as lit matter in the world
+   * pass (ventSmoke.ts). One or the other, never both.
+   */
+  private breathe(sites: readonly PlumeSite[]): void {
+    this.group.remove(this.plume.points, this.smoke.points);
+    if (this.worldPass) {
+      this.plume.clear();
+      this.smoke.build(sites, this.shade);
+      if (sites.length > 0) this.group.add(this.smoke.points);
+    } else {
+      this.smoke.clear();
+      this.plume.build(sites, this.shade);
+      if (sites.length > 0) this.group.add(this.plume.points);
+    }
   }
 
   private rebuildFixture(
@@ -453,10 +477,22 @@ export class EnvironmentLayer {
     this.fixtureGround = groundY;
     this.props = this.propTris = 0;
     const bySlug = new Map<string, PropPlacement[]>();
-    for (const p of freeWaterPlacements(terrain, true, this.worldPass)) {
+    const placements = freeWaterPlacements(terrain, true, this.worldPass);
+    for (const p of placements) {
       const list = bySlug.get(p.slug) ?? [];
       list.push(p);
       bySlug.set(p.slug, list);
+    }
+    // Where each standing slug tops out: the chimneys' mouths.
+    const topM = new Map<string, number>();
+    // A slug the list no longer stands, as High's own at Low, goes with its batch.
+    for (const [slug, batch] of this.fixtureBatches) {
+      if (bySlug.has(slug)) continue;
+      for (const mesh of batch.meshes) {
+        this.group.remove(mesh);
+        mesh.dispose();
+      }
+      this.fixtureBatches.delete(slug);
     }
     for (const [slug, list] of bySlug) {
       const spec = propSpec(slug)!;
@@ -508,7 +544,19 @@ export class EnvironmentLayer {
       this.props += list.filter((p) => p.disabled !== true).length;
       // Disabled slots retain zero-scale matrices, but are still submitted.
       this.propTris += list.length * template.trianglesPerInstance;
+      topM.set(slug, template.heightM);
     }
+    // A chimney whose model has not loaded, or whose slot the ground refuses,
+    // stands nothing and breathes nothing.
+    this.breathe(
+      plumeSites(
+        placements.filter((p) => p.disabled !== true),
+        (placement) => {
+          const top = topM.get(placement.slug);
+          return top === undefined ? null : groundY(placement.xM, placement.yM) + top;
+        }
+      )
+    );
     if (this.decorativeDots !== null) this.group.add(this.decorativeDots.points);
     if (this.worldPass) this.group.add(this.glow.points);
     else this.group.remove(this.glow.points);
@@ -658,6 +706,7 @@ export class EnvironmentLayer {
     this.matchMs = matchMs;
     if (this.look === 'free-water') this.tickFixture();
     this.plume.tick(nowMs, waterReachM);
+    this.smoke.tick(nowMs);
     this.haze.tick(nowMs, waterReachM);
     this.tickLandmarks(nowMs);
     if (this.swaying.length === 0) return;
@@ -705,6 +754,7 @@ export class EnvironmentLayer {
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
     this.plume.setReducedMotion(reduced);
+    this.smoke.setReducedMotion(reduced);
     this.haze.setReducedMotion(reduced);
     this.sift.setReducedMotion(reduced);
     if (reduced) {
@@ -742,6 +792,7 @@ export class EnvironmentLayer {
       for (const mesh of meshes) this.applyShade(mesh, list);
     }
     this.plume.setShade(shade);
+    this.smoke.setShade(shade);
     this.haze.setShade(shade);
     this.sift.setShade(shade);
   }
@@ -778,7 +829,8 @@ export class EnvironmentLayer {
     return {
       props: this.props,
       propTris: this.propTris,
-      ventPlumes: this.plume.plumes,
+      // Columns standing, as steam or as smoke: one or the other.
+      ventPlumes: this.plume.plumes + this.smoke.plumes,
       fieldHazes: this.haze.fields,
       landmarks: this.landmarksStanding,
       landmarkTris: this.landmarkTris,
@@ -903,6 +955,7 @@ export class EnvironmentLayer {
   destroy(): void {
     this.reset();
     this.plume.dispose();
+    this.smoke.dispose();
     this.haze.dispose();
     this.sift.dispose();
     this.cloud.dispose();
@@ -921,6 +974,7 @@ export class EnvironmentLayer {
     // is not emptied here: a rebuild mid-sequence (a second delta in the 14 s)
     // leaves it settling, and the group it is re-added to is this one.
     this.plume.clear();
+    this.smoke.clear();
     this.haze.clear();
     this.sift.clear();
     this.lit = [];

@@ -215,7 +215,8 @@ Built so far:
   and the ground does not. The grade puts a little weight into the darks and a little
   chroma back.
 - **The props** draw in the world pass under the shared rig. Their additive clouds, the
-  steam, the haze and the sift, stay in the tactical pass.
+  haze and the sift, stay in the tactical pass. So did the steam until #1837: a
+  chimney's breath is now drawn in the world pass ([The vents at work](#the-vents-at-work)).
 - **A navy's cladding wears a surface**
   ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811)), the
   Commune's four materials first. Below.
@@ -226,11 +227,13 @@ Built so far:
 - **The crater's life stands in the world's light, and its fry carry their own**
   ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)). In
   development and not accepted. Below.
+- **A chimney breathes lit smoke, and the crater stands one vent stand** (#1837). In
+  development and not accepted. Below.
 
 Not built yet: a searchlight on a standing prop, a prop's shadow, a hull's shadow on
 another hull, and the work lights and floodlights of the player's own structures. Of
 [#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837), the drifting
-bodies and the vents at work.
+bodies.
 
 #### Step 1's numbers — SPEC
 
@@ -676,6 +679,91 @@ holds Low's list unmoved under High's.
 | Width of a fry's light, metres | `LIFE.GLOW.SIZE_M` | 0.22 |
 | The least a light is drawn, pixels | `LIFE.GLOW.MIN_PX` | 1.6 |
 | How far toward the eye a light is drawn from its body's axis, metres | `LIFE.GLOW.LIFT_M` | 0.15 |
+
+#### The vents at work
+
+*In development with the rest of High, and not accepted
+([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837);
+[issue-1837](screenshots/issue-1837/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.VENT` and `FREE_WATER_HIGH_VENTS` (`packages/shared/src/constants.ts`)
+until a frame of it is accepted. This is the step's second instalment. The owner's call
+of 20 November 2026 put an authored vent stand on the crater's rim. Three more calls were
+taken in the open with the first frames, and wait on the owner: what a chimney breathes
+at High, which chimneys breathe it, and where the crater's stand is.*
+
+At Low a chimney breathes steam as world light: puffs in the vent's own colour on the
+canvas, stepped on the 5 Hz grid ([style-neon-noir.md](style-neon-noir.md) "World
+light"). At High the world is lit, and a column of steam the colour of a lamp stands in
+it as a second light beside the vent's own.
+
+- **A chimney's breath is matter, and shows by the light on it.** Three readings were
+  written. **The steam as Low draws it** keeps the canvas pass untouched, and leaves a
+  column that no searchlight, pool or water reaches. **Lit matter in the world pass** is
+  taken: one draw of soft puffs, scene-referred, so the water takes a column with
+  distance and the bloom and the grade reach it. **Both** draws two columns on one
+  stack. A puff sends on a fourteenth of the light that falls on its centre.
+- **Three lights fall on it.** The vent's own, in `vent-ember`, from the mouth under the
+  puff: strongest where the column leaves the stack and halved 14 m up, so a column is
+  amber at its foot. The Lid's glow, as a face looking half up takes it at that depth: a
+  faint cold grey above. And an own hull's searchlight that crosses it, in the navy's
+  glow, less what the ground and a hull hide of the beam
+  ([An own hull's searchlight](#an-own-hulls-searchlight)). No contact lights one
+  (limit 2).
+- **It rises straight, opens evenly and moves smoothly.** A column climbs up to 130 m
+  in 18 s, fast out of the mouth and slowing, and opens 16 m about its own axis by the
+  top, each puff along the bearing it formed on. It leans nowhere: a column that leaned
+  would state a current ([map-visuals.md](map-visuals.md) §8). The 5 Hz step is released
+  with the grid
+  ([What the world layer may do at High](#what-the-world-layer-may-do-at-high)), and
+  reduced motion holds the clock, so each column stands still.
+- **It answers nothing** (limit 4). A column stands where the map stands a chimney, and
+  a puff's line, phase and bearing are a hash of that placement. The acoustic veil drains
+  it as it drains the steam.
+- **Every chimney breathes it at High, and the steam leaves the canvas there.** Two
+  readings were written. **The crater's stand alone** would leave a vent field on a
+  skirmish map breathing Low's steam into a lit world, behind a rule only the study
+  reads. **Every chimney the map stands** is taken: one plume a stack at either quality,
+  never both. Low is untouched. No frame here shows a Thermal Vein at High, and one is
+  owed before the step is accepted.
+- **The crater's stand is in the gap between two hulls.** The fixture stands two
+  chimneys and three basalt boulders
+  ([free-water-slice.md](free-water-slice.md) §5, "High's own vents"). Both chimneys lie
+  in one 80 m cell of the `vent` family's lattice, so the stand is one source at √2 of a
+  chimney's strength ([Step 1's numbers](#step-1s-numbers--spec)), and that light's
+  volume is the widest thing the step draws. Three readings were written, each measured
+  with the light taken as 60 m in radius. **Among the hulls, 326 m from the Close eye**,
+  was the first cut, of three chimneys: its volume filled the frame and lay 162 px inside
+  the Light Scout's ring, which limit 6 refuses. **By the garden, 1,041 m off**, clears
+  every ring at Home and Close, and draws a chimney 52 px tall at Close. **Between the
+  Light Scout and the Corvette, 421 m off**, is taken: a chimney is 126 px tall at Close,
+  where the stand fills the gap between the two rings, as the target has its chimneys
+  beside its hull, and clears them by 65 and 32 px. At Home it clears the Light Scout's
+  ring by 5 px and lies 8 px inside the Corvette's. A search of the rim on a 10 m grid
+  found 16 slots of 4,173 that clear all three rings at both cameras, none by more than
+  18 px. At Survey the fleet's three rings overlap one another, and the stand lies under
+  them.
+- **A mark over the stand's light is the owner's glance** (limit 6, gate 7). The vent
+  family's strength is step 1's SPEC and was accepted on frames that held no vent: this
+  is the first frame of one. If a ring cannot be read over it, the family's numbers are
+  what turn down, by this doc first.
+- **A chimney stays a prop.** It is lit by the rig, as every standing prop is, and its
+  own emissive mouth is the file's.
+
+`packages/frontend/test/ventSmoke.test.ts` holds the column's shape, its three lights
+and its clock, and `packages/frontend/test/tutorialLoading.test.mjs` holds the one plume
+a stack at each quality.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Puffs a column | `VENT.PUFFS` | 30 |
+| Seconds from the mouth to gone | `VENT.LIFE_S` | 18 |
+| Height a column climbs, metres | `VENT.RISE_M` | 130 |
+| Radius of the mouth a puff forms in, metres | `VENT.MOUTH_M` | 2.5 |
+| How far a column opens about its axis by the top, metres | `VENT.SPREAD_M` | 16 |
+| A puff's width at the mouth and at the top, metres | `VENT.SIZE_M` | 5, 24 |
+| Share of the light on a puff it sends to the eye | `VENT.ALBEDO` | 0.07 |
+| The vent's own light on a puff at the mouth, in the renderer's linear units | `VENT.GLOW` | 6 |
+| Height over the mouth at which that has halved, metres | `VENT.GLOW_REACH_M` | 14 |
 
 #### A mark on the lit world
 
