@@ -95,7 +95,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
-| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes, the rim ray's lobes, tail and eyes, the drift jelly's lappets, manubrium and arms |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes, the rim ray's lobes, tail and eyes, the drift jelly's manubrium, oral lobes and photophore seats |
 | `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
 | `silt-drift` | `#211E15` | 1 | `silt_drift` | Nodule bed's drift, transit arch's sediment |
 | `structure-rib` | `#160F0C` | 0.9 | `structure_rib` | Transit arch's exposed ribs and hung fittings |
@@ -106,7 +106,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
 | `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster, kelp stand (two-sided) |
 | `carapace` | `#2F1F1C` | 0.9 | `carapace` | Rim crab's shell, claws and eyestalks |
-| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats; the drift jelly's bell and its photophore seats |
+| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats; the drift jelly's bell |
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
 | `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, kelp stand, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
@@ -144,9 +144,12 @@ Five rules ride with the table:
   flank a cold pewter at sRGB hue 186°, between the stones' blue and the living coral's green,
   so a fish reads as a body against rock and kelp alike. Under the ceiling rule the crab's
   `stone-dark` legs sit at 0.53 of its shell and a fish's fins at 0.41 of its flank. The
-  drift jelly takes the swimmers' pair and no token of its own: a `fish-flank` bell over
-  `stone-dark` lappets and arms at the same 0.41, so the scalloped margin reads as a dark
-  hem under a pale bell.
+  drift jelly takes the swimmers' pair and no token of its own: a `fish-flank` bell over a
+  `stone-dark` core at the same 0.41, a stalk and five short oral lobes under the bell's
+  middle, a quarter as far out as its margin, so the pale bell is the silhouette and the
+  core a dark tuft under it. Its six photophore seats are the core's `stone-dark`, where
+  the deep fish's are its flank's own: six dark flecks on the pale margin until the
+  runtime lights them, and the bell's material is the bell and nothing else.
 - **A lamp's base is near-black.** The five `-base` tokens sit under the
   [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
   and the base does not compete with it.
