@@ -125,6 +125,26 @@ export const FREE_WATER_HIGH_LIFE = {
     MOTION: { radiusM: 75, periodS: 300, depthM: 430, depthSwingM: 40, axisM: 0.78 },
     STATION: { alongM: 14, acrossM: 6, depthM: 14 },
   },
+  /**
+   * The drifting bodies: `env-drift-jelly`, five of them hanging over the
+   * fleet's start, 110 to 150 m deep, where the Close camera has the water
+   * above the hulls' rings. A slot is a loop's centre in map metres, the
+   * depth its bell hangs at and where it stands when the match starts, in
+   * degrees round its loop. A jelly drifts: one lap of a 14 m loop in 280 s,
+   * a twentieth of a fry's pace, rising and sinking 10 m as it goes. Its
+   * `axisM` is the bell's mid-height over the model's origin, its longest
+   * arm's tip.
+   */
+  JELLIES: {
+    SLOTS: [
+      [305, 2041, 140, 0],
+      [416, 2062, 120, 70],
+      [505, 2122, 150, 140],
+      [509, 1909, 110, 210],
+      [678, 2025, 130, 280],
+    ],
+    MOTION: { radiusM: 14, periodS: 280, depthSwingM: 10, axisM: 8.69 },
+  },
 } as const;
 
 /**
@@ -380,8 +400,10 @@ export const HIGH_GRAPHICS = {
    * ceiling and no higher (rosterModels.ts `CLADDING_CEILING`), so scenery
    * still never out-reads a vessel.
    *
-   * `GLOW` is the light a schooling fry carries of its own (lifeGlow.ts), in
-   * `fry-glint`: `LEVEL` its radiance at the point's centre, in the
+   * `GLOW` is the light a body carries of its own (lifeGlow.ts), in
+   * `life-glint`: a schooling fry's one point, and `LANTERN`, each of the six
+   * a drifting jelly carries round its bell. `LEVEL` is a fry's radiance at
+   * the point's centre, in the
    * renderer's linear units, at the bloom's threshold so a near light
    * spreads a little and no more, and under the lamps of a hull loud enough
    * to throw a beam (gate 3; a quiet hull's lamp is dimmer than a fry, which
@@ -396,7 +418,15 @@ export const HIGH_GRAPHICS = {
     POOL_REACH_M: 80,
     BEAM: 0.5,
     ALBEDO: 0.16,
-    GLOW: { LEVEL: 0.3, SIZE_M: 0.22, MIN_PX: 1.6, LIFT_M: 0.15 },
+    GLOW: {
+      LEVEL: 0.3,
+      SIZE_M: 0.22,
+      MIN_PX: 1.6,
+      LIFT_M: 0.15,
+      // A jelly's seat: wider than a fry's light and brighter, since six of
+      // them are all that says a bell hangs there at 400 m.
+      LANTERN: { LEVEL: 0.6, SIZE_M: 0.55 },
+    },
   },
   /**
    * TUNABLE: a vent at work (docs/art-direction.md, "The vents at work";

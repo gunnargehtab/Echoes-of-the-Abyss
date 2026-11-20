@@ -117,11 +117,13 @@ export interface PropSpec {
    */
   life?: true;
   /**
-   * Carries one point of its own light at High, in `fry-glint`
-   * (lifeGlow.ts): the schooling fry alone. Every other body emits nothing
-   * there, as at Low.
+   * Carries light of its own at High, in `life-glint` (lifeGlow.ts): `axis`
+   * is one point on the body's axis, the schooling fry's, and `seats` one on
+   * each photophore seat its file names, the drifting jelly's six. Every
+   * other body emits nothing there, and the deep fish's seats stay the
+   * stipple channel's, as at Low.
    */
-  glint?: true;
+  glint?: 'axis' | 'seats';
 }
 
 /**
@@ -370,6 +372,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
       ['env-outer-fish', 4, 342],
       ['env-deep-fish', 2, 304],
       ['env-rim-ray', 18, 586],
+      ['env-drift-jelly', 6, 682],
     ] as const
   ).map(([slug, footprintM, triBudget]): PropSpec => ({
     slug,
@@ -384,7 +387,8 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     worldLight: 'none',
     swayM: 0,
     life: true,
-    ...(slug === 'env-shoal-fry' ? { glint: true as const } : {}),
+    ...(slug === 'env-shoal-fry' ? { glint: 'axis' as const } : {}),
+    ...(slug === 'env-drift-jelly' ? { glint: 'seats' as const } : {}),
   })),
 ];
 

@@ -231,9 +231,7 @@ Built so far:
   development and not accepted. Below.
 
 Not built yet: a searchlight on a standing prop, a prop's shadow, a hull's shadow on
-another hull, and the work lights and floodlights of the player's own structures. Of
-[#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837), the drifting
-bodies.
+another hull, and the work lights and floodlights of the player's own structures.
 
 #### Step 1's numbers — SPEC
 
@@ -601,11 +599,10 @@ gives 1.8 face on.
 `HIGH_GRAPHICS.LIFE` and `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`) until
 a frame of it is accepted. The owner took three calls in session on 20 November 2026,
 before any frame: the bodies are the crater's decorative life, the drifting bodies are a
-new jelly model, and the vents are an authored stand on the rim. This is the step's first
-instalment, the schools. The jelly is not built; the vents are the next section. Three
-more calls were
-taken in the open with the first frames, and wait on the owner: a body's register, its
-own light, and where High's life stands.*
+new jelly model, and the vents are an authored stand on the rim. The schools were the
+step's first instalment and the jelly its third; the vents are the section after this.
+Three more calls were taken in the open with the first frames, and wait on the owner: a
+body's register, its own light, and where High's life stands.*
 
 The crater's decorative bodies
 ([free-water-slice.md](free-water-slice.md) §5) were props in the world pass under the
@@ -630,7 +627,7 @@ does, and nothing Low draws is built, patched or keyed differently.
   and loses the fish. **An own hull's cladding ceiling, 0.16**, is taken: a body stands
   no brighter than a vessel's cladding, so scenery still never out-reads one. **A silver
   flank**, 0.4 and up, reads best under the Lid and blooms white in a beam.
-- **A schooling fry carries one light of its own**, in `fry-glint`
+- **A schooling fry carries one light of its own**, in `life-glint`
   ([style-neon-noir.md](style-neon-noir.md) "World light"). Under the Lid alone a school
   at the cladding's register is still only a little paler than the water, and the law
   gives the world layer "the modelled bodies of public life with their light". Three
@@ -647,6 +644,16 @@ does, and nothing Low draws is built, patched or keyed differently.
   body** would make the ray and the outer fish lamps of their own. A light far enough to
   draw under 1.6 pixels is drawn at 1.6 with its level cut by the area gained, so a far
   school fades instead of sparkling.
+- **A drifting jelly carries six.** `env-drift-jelly`
+  ([asset-prompts-3d.md](asset-prompts-3d.md) Block 4) marks six seats round its bell as
+  dark facets, as the deep fish marks its own, and its file emits nothing. At High each
+  seat carries a point of `life-glint`, 0.55 m across and twice a fry's level: six lights
+  are all that says a bell hangs there from 400 m. Its body is at the cladding's register
+  in the world's light, as every body's is. One token serves the fry and the jelly, since
+  the law names the bodies of public life as one kind of source; a hue of the jelly's own
+  was the other reading, and the target's violet is reserved
+  ([style-neon-noir.md](style-neon-noir.md)). At Low a jelly is not stood, and its seats
+  are never the stipple channel's dots.
 - **A fry's light is not the stipple.** Rung 5's stipple is public life's field mark, in
   the palette's fauna colour, on the tactical layer at both qualities
   ([map-visuals.md](map-visuals.md) §8). This is world light, in a world token, and it
@@ -656,11 +663,11 @@ does, and nothing Low draws is built, patched or keyed differently.
   ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
   written. **Add to Low's lists** would move the frame Low draws. **Slots High alone
   stands** is taken: two streams of schools by the fleet's start, 480 fry and 48 outer
-  fish, after Low's list and never among it. A school there keeps a tight station: a
-  ribbon of fry 14 m long with a body about every metre. The first cut spread a school
-  over 52 m, so that a still camera always held fish, and from the Close eye it read as
-  scattered points and not as a school. Five schools a loop keep the frame filled
-  instead.
+  fish, and five jellies over it, after Low's list and never among it. A school there
+  keeps a tight station: a ribbon of fry 14 m long with a body about every metre. The
+  first cut spread a school over 52 m, so that a still camera always held fish, and from
+  the Close eye it read as scattered points and not as a school. Five schools a loop keep
+  the frame filled instead.
 - **No mark, lamp or halo is touched.** A fry's light is a point of the world layer's,
   under every mark, and gate 7's glance at a ring among a school is the owner's, on the
   named GPU.
@@ -680,6 +687,8 @@ holds Low's list unmoved under High's.
 | Width of a fry's light, metres | `LIFE.GLOW.SIZE_M` | 0.22 |
 | The least a light is drawn, pixels | `LIFE.GLOW.MIN_PX` | 1.6 |
 | How far toward the eye a light is drawn from its body's axis, metres | `LIFE.GLOW.LIFT_M` | 0.15 |
+| A jelly's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.LANTERN.LEVEL` | 0.6 |
+| Width of a jelly's seat light, metres | `LIFE.GLOW.LANTERN.SIZE_M` | 0.55 |
 
 #### The vents at work
 

@@ -112,6 +112,7 @@ const BLOCK_4_HEIGHT_M: Record<string, number> = {
   'env-outer-fish': 1.69,
   'env-deep-fish': 0.84,
   'env-rim-ray': 4.05,
+  'env-drift-jelly': 10.97,
 };
 const bankedReach = (p: PropPlacement) => {
   const m = p.motion!;
@@ -670,6 +671,7 @@ describe('authored public decoration', () => {
     assert.deepEqual(counts, {
       'env-shoal-fry': FRY_STREAM.SCHOOLS * FRY_STREAM.COUNT,
       'env-outer-fish': OUTER_STREAM.SCHOOLS * OUTER_STREAM.COUNT,
+      'env-drift-jelly': FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length,
       'env-vent-chimney': FREE_WATER_HIGH_VENTS.CHIMNEYS.length,
       'env-vent-basalt': FREE_WATER_HIGH_VENTS.BASALT.length,
     });
@@ -728,10 +730,37 @@ describe('authored public decoration', () => {
       }
     }
 
+    // The drifting bodies: each jelly alone on its own loop, at its authored
+    // depth and start, over the outside rim.
+    const { JELLIES } = FREE_WATER_HIGH_LIFE;
+    const jellies = own.filter((p) => p.slug === 'env-drift-jelly');
+    assert.deepEqual(
+      jellies.map((p) => [
+        p.xM,
+        p.yM,
+        p.motion!.depthM,
+        Math.round((p.motion!.phase * 180) / Math.PI),
+      ]),
+      JELLIES.SLOTS.map((slot) => [...slot])
+    );
+    for (const p of jellies) {
+      const { phase: _phase, depthM: _depthM, ...motion } = p.motion!;
+      assert.deepEqual(motion, { ...JELLIES.MOTION });
+      const cell =
+        Math.floor(p.yM / terrain.cellM) * terrain.cols + Math.floor(p.xM / terrain.cellM);
+      assert.equal(terrain.floor[cell], 600);
+    }
+
     // §5 prints each stream as the constants hold it.
     const doc = readFileSync(new URL('../../../docs/free-water-slice.md', import.meta.url), 'utf8');
     const numbers = (text: string) =>
       [...text.replace(/,(?=\d{3})/g, '').matchAll(/\d+(?:\.\d+)?/g)].map(Number);
+    // And each jelly's slot, a row a jelly.
+    JELLIES.SLOTS.forEach((slot, i) => {
+      const row = doc.split('\n').find((line) => line.startsWith(`| ${i + 1} | `));
+      assert.ok(row, `§5 lost jelly ${i + 1}`);
+      assert.deepEqual(numbers(row.split('|').slice(2).join(' ')), [...slot]);
+    });
     for (const [slug, stream] of [
       ['env-shoal-fry', FRY_STREAM],
       ['env-outer-fish', OUTER_STREAM],
@@ -831,6 +860,7 @@ describe('authored public decoration', () => {
       'env-outer-fish',
       'env-deep-fish',
       'env-rim-ray',
+      'env-drift-jelly',
     ]) {
       const bytes = readFileSync(
         new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
@@ -846,8 +876,11 @@ describe('authored public decoration', () => {
         assert.ok(material instanceof MeshStandardMaterial);
         if (spec.worldLight === 'none') assert.equal(material.emissive.getHex(), 0);
       }
-      assert.equal(template.photophores!.length, slug === 'env-deep-fish' ? 6 : 0);
-      if (slug === 'env-deep-fish') {
+      // Six named seats on the deep fish and on the jelly (#1837), three a
+      // side on each, and none on any other body.
+      const seated = slug === 'env-deep-fish' || slug === 'env-drift-jelly';
+      assert.equal(template.photophores!.length, seated ? 6 : 0);
+      if (seated) {
         assert.equal(new Set(template.photophores!.map((p) => p.toArray().join(','))).size, 6);
         assert.equal(template.photophores!.filter((p) => p.z > 0).length, 3);
         assert.equal(template.photophores!.filter((p) => p.z < 0).length, 3);

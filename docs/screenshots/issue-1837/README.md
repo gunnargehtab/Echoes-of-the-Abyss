@@ -14,8 +14,8 @@ commands under [Who captures](#who-captures).
 **These are the step's first two instalments: the schools, and the vents at work.** The
 owner took three calls in session on 20 November 2026: the bodies are the crater's
 decorative life, the drifting bodies are a new jelly model, and the vents are an authored
-stand on the rim. The jelly is modelled and not yet in the crater, so no frame here shows
-one.
+stand on the rim. The jelly, the third instalment, stands in the crater at High now; the
+frames below were taken before it and show none.
 
 ## Reproduce
 
@@ -160,7 +160,7 @@ the owner's glance, and a light a mark cannot be read over is turned down at its
 are this step's and TUNABLE; the `vent` family's strength is not.
 
 Limits 2 to 4 hold by construction. A body swims its authored loop on the match's clock
-and answers nothing. The beams a body reads are the own hulls' alone. `fry-glint` is no
+and answers nothing. The beams a body reads are the own hulls' alone. `life-glint` is no
 faction's, interface's or family's hue
 ([style-neon-noir.md](../../style-neon-noir.md#world-light--the-terrain-carve-outs)).
 
@@ -172,7 +172,7 @@ Six, each written with its other readings in
 overturn:
 
 - **A body's register is the cladding's ceiling**, 0.16, over the props' 0.06.
-- **A schooling fry carries one light of its own**, in a new token, `fry-glint`.
+- **A schooling fry carries one light of its own**, in a new token, `life-glint`.
 - **High stands its own life**, two streams by the fleet's start, after Low's list.
 - **A chimney's breath is lit matter in the world pass**, not Low's steam.
 - **The crater's stand alone breathes it.** Every chimney on every map was taken first,

@@ -4,9 +4,10 @@
  *
  * The law gives the world layer "the modelled bodies of public life with
  * their light", each source "in its own token" (limits 3 and 4). A fry of the
- * crater's schools carries one point of it on its flank, in `fry-glint`
+ * crater's schools carries one point of it on its flank, in `life-glint`
  * (docs/style-neon-noir.md "World light"), so a school in unlit water reads as
- * a drift of faint lights and not as holes in it.
+ * a drift of faint lights and not as holes in it. A drifting jelly carries
+ * six, one on each seat its file marks round the bell, wider and brighter.
  *
  * It is world light, not a mark, and it is drawn where world light is: one
  * `Points` in the world pass (highFrame.ts), scene-referred, so the water
@@ -20,10 +21,11 @@
  * (freeWaterDecoration.ts), at one level for every body and every client. It
  * never brightens, scatters or gathers for a hull, a shot or the camera.
  *
- * A point is a soft disc `SIZE_M` across, and never narrower than `MIN_PX`
- * on the screen: a far light that would draw under a pixel is drawn at the
- * floor with its level cut by the area it gained, so a school a kilometre off
- * fades instead of turning into a cloud of full-bright pixels.
+ * A point is a soft disc of its own width in metres and its own level, and
+ * never narrower than `MIN_PX` on the screen: a far light that would draw
+ * under a pixel is drawn at the floor with its level cut by the area it
+ * gained, so a school a kilometre off fades instead of turning into a cloud
+ * of full-bright pixels.
  *
  * TUNABLE until a frame of this step is accepted: `HIGH_GRAPHICS.LIFE.GLOW`
  * in packages/shared/src/constants.ts.
@@ -41,9 +43,18 @@ import {
   ZeroFactor,
 } from 'three';
 import { HIGH_GRAPHICS } from '@echoes/shared';
-import { FRY_GLINT } from './palette.ts';
+import { LIFE_GLINT } from './palette.ts';
 
-const { LEVEL, SIZE_M, MIN_PX, LIFT_M } = HIGH_GRAPHICS.LIFE.GLOW;
+const { LEVEL, SIZE_M, MIN_PX, LIFT_M, LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
+
+/**
+ * A light's width in metres and its level against the token, by what carries
+ * it: a fry's one point, and each of a jelly's six seats.
+ */
+export const LIFE_GLOW_KIND = {
+  axis: [SIZE_M, 1],
+  seats: [LANTERN.SIZE_M, LANTERN.LEVEL / LEVEL],
+} as const;
 
 const glsl = (value: number): string => {
   const text = value.toFixed(6);
@@ -61,7 +72,8 @@ export function patchLifeGlow(shader: { vertexShader: string; fragmentShader: st
   const [vCommon, vProject, vSize] = LIFE_GLOW_ANCHORS.vertex;
   const [fCommon, fColor] = LIFE_GLOW_ANCHORS.fragment;
   shader.vertexShader = shader.vertexShader
-    .replace(vCommon, `${vCommon}\nvarying float vGlowLevel;`)
+    // x: the light's width in metres. y: its level against the material's.
+    .replace(vCommon, `${vCommon}\nattribute vec2 aGlow;\nvarying float vGlowLevel;`)
     .replace(
       vProject,
       // A light stands on its body's axis, inside the body: drawn there, the
@@ -83,9 +95,9 @@ export function patchLifeGlow(shader: { vertexShader: string; fragmentShader: st
       // this depth. three's own attenuation leaves the field of view out, so
       // the material asks for none and this line is the whole of the size.
       [
-        `float glowPx = ${glsl(SIZE_M)} * projectionMatrix[ 1 ][ 1 ] * scale * size / max( 1e-3, - mvPosition.z );`,
+        'float glowPx = aGlow.x * projectionMatrix[ 1 ][ 1 ] * scale * size / max( 1e-3, - mvPosition.z );',
         `gl_PointSize = max( glowPx, ${glsl(MIN_PX)} * size );`,
-        'vGlowLevel = ( glowPx * glowPx ) / ( gl_PointSize * gl_PointSize );',
+        'vGlowLevel = aGlow.y * ( glowPx * glowPx ) / ( gl_PointSize * gl_PointSize );',
       ].join('\n')
     );
   shader.fragmentShader = shader.fragmentShader
@@ -111,7 +123,7 @@ export class LifeGlow {
 
   constructor() {
     this.material = new PointsMaterial({
-      color: new Color(FRY_GLINT).multiplyScalar(LEVEL),
+      color: new Color(LIFE_GLINT).multiplyScalar(LEVEL),
       // The patch sizes a point in metres (`patchLifeGlow`): 1 leaves the
       // `size` uniform the pixel ratio alone, and three attenuates nothing.
       size: 1,
@@ -131,7 +143,7 @@ export class LifeGlow {
       fog: true,
     });
     this.material.onBeforeCompile = (shader) => patchLifeGlow(shader);
-    this.material.customProgramCacheKey = () => 'life-glow-1';
+    this.material.customProgramCacheKey = () => 'life-glow-2';
     this.points = new Points(new BufferGeometry(), this.material);
     this.points.name = 'life_glow';
     // The world pass's, and never the canvas's (PerspectiveView `enterWorldLayer`).
@@ -142,26 +154,34 @@ export class LifeGlow {
   }
 
   /**
-   * Stand `count` lights where `fill` writes them, three floats a light, in
-   * the scene's metres. Called each frame the bodies move; the buffer is
+   * Stand `count` lights where `fill` writes them: three floats a light for
+   * its place, in the scene's metres, and two for its width and its level
+   * (`LIFE_GLOW_KIND`). Called each frame the bodies move; the buffers are
    * kept, and grown only when a rebuild stands more bodies.
    */
-  write(count: number, fill: (positions: Float32Array) => void): void {
+  write(count: number, fill: (positions: Float32Array, glow: Float32Array) => void): void {
     if (count > this.capacity) {
       this.points.geometry.dispose();
       const geometry = new BufferGeometry();
-      const attribute = new BufferAttribute(new Float32Array(count * 3), 3);
-      attribute.setUsage(DynamicDrawUsage);
-      geometry.setAttribute('position', attribute);
+      for (const [name, width] of [
+        ['position', 3],
+        ['aGlow', 2],
+      ] as const) {
+        const attribute = new BufferAttribute(new Float32Array(count * width), width);
+        attribute.setUsage(DynamicDrawUsage);
+        geometry.setAttribute(name, attribute);
+      }
       this.points.geometry = geometry;
       this.capacity = count;
     }
     this.drawn = count;
     this.points.visible = count > 0;
     if (count === 0) return;
-    const attribute = this.points.geometry.getAttribute('position') as BufferAttribute;
-    fill(attribute.array as Float32Array);
-    attribute.needsUpdate = true;
+    const position = this.points.geometry.getAttribute('position') as BufferAttribute;
+    const glow = this.points.geometry.getAttribute('aGlow') as BufferAttribute;
+    fill(position.array as Float32Array, glow.array as Float32Array);
+    position.needsUpdate = true;
+    glow.needsUpdate = true;
     this.points.geometry.setDrawRange(0, count);
   }
 

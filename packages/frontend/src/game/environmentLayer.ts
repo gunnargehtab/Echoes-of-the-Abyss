@@ -81,7 +81,7 @@ import type { WorldLook } from './tutorialLook.ts';
 import type { MaskLandmarkPart } from './archMask.ts';
 import { setDistanceGradeOn } from './distanceGrade.ts';
 import { VentPlume, plumeSites, type PlumeSite } from './ventPlume.ts';
-import { LifeGlow } from './lifeGlow.ts';
+import { LIFE_GLOW_KIND, LifeGlow } from './lifeGlow.ts';
 import { VentSmoke } from './ventSmoke.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
@@ -184,7 +184,10 @@ export class EnvironmentLayer {
    * the view draws a world pass (ventSmoke.ts, #1837).
    */
   readonly smoke = new VentSmoke();
-  /** Where the glinting bodies stood on the last tick, for `glow` to copy. */
+  /**
+   * Where each light a body carries stood on the last tick, and its width
+   * and level beside it, five floats a light, for `glow` to copy.
+   */
   private glintAt = new Float32Array(0);
 
   /** Guards late template loads: a load that finishes after another rebuild
@@ -577,33 +580,52 @@ export class EnvironmentLayer {
 
   private tickFixture(): void {
     const points: Vector3[] = [];
-    // Where each glinting body's axis stands now, three floats a body, in a
-    // buffer kept across frames: the bodies move every frame and their count
-    // only with a rebuild.
+    // Where each light a body carries stands now, in a buffer kept across
+    // frames: the bodies move every frame and their count only with a
+    // rebuild. A fry's is one point on its axis; a jelly's are its seats.
     let glints = 0;
+    const glint = (at: Vector3, [sizeM, level]: readonly [number, number]) => {
+      if (this.glintAt.length < (glints + 1) * 5) {
+        const grown = new Float32Array(Math.max(256, (glints + 1) * 2) * 5);
+        grown.set(this.glintAt);
+        this.glintAt = grown;
+      }
+      at.toArray(this.glintAt, glints * 5);
+      this.glintAt[glints * 5 + 3] = sizeM;
+      this.glintAt[glints * 5 + 4] = level;
+      glints++;
+    };
     for (const [slug, { template, meshes, list }] of this.fixtureBatches) {
       if (template.sway !== null) {
         template.sway.uSwayTime.value = this.reducedMotion ? SWAY_HOLD_S : this.matchMs / 1000;
       }
-      const carries = this.worldPass && propSpec(slug)?.glint === true;
+      const carries = propSpec(slug)?.glint;
       list.forEach((p, i) => {
         if (p.motion === undefined || p.disabled === true) return;
         this.writeFixturePose(meshes, p, i);
+        if (carries === 'seats') {
+          // A jelly's seats are world light at High and nothing at Low: never
+          // the stipple channel's dots, which are the deep fish's alone.
+          if (!this.worldPass) return;
+          for (const seat of template.photophores ?? []) {
+            glint(TMP_POS.copy(seat).applyMatrix4(TMP_MATRIX), LIFE_GLOW_KIND.seats);
+          }
+          return;
+        }
         for (const seat of template.photophores ?? [])
           points.push(seat.clone().applyMatrix4(TMP_MATRIX));
-        if (carries) {
-          if (this.glintAt.length < (glints + 1) * 3) {
-            const grown = new Float32Array(Math.max(list.length, glints + 1) * 6);
-            grown.set(this.glintAt);
-            this.glintAt = grown;
-          }
-          TMP_POS.set(0, p.motion.axisM, 0).applyMatrix4(TMP_MATRIX);
-          TMP_POS.toArray(this.glintAt, glints++ * 3);
+        if (carries === 'axis' && this.worldPass) {
+          glint(TMP_POS.set(0, p.motion.axisM, 0).applyMatrix4(TMP_MATRIX), LIFE_GLOW_KIND.axis);
         }
       });
     }
-    const lit = this.glintAt.subarray(0, glints * 3);
-    this.glow.write(glints, (positions) => positions.set(lit));
+    const lit = this.glintAt;
+    this.glow.write(glints, (positions, glow) => {
+      for (let i = 0; i < glints; i++) {
+        positions.set(lit.subarray(i * 5, i * 5 + 3), i * 3);
+        glow.set(lit.subarray(i * 5 + 3, i * 5 + 5), i * 2);
+      }
+    });
     this.decorativeDots?.write(points.length, (anchor, dot, seed) => {
       dot.fill(0);
       points.forEach((point, i) => {

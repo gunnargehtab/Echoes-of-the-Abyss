@@ -326,6 +326,15 @@ export function freeWaterPlacements(
   };
   stream('env-shoal-fry', FREE_WATER_HIGH_LIFE.FRY_STREAM);
   stream('env-outer-fish', FREE_WATER_HIGH_LIFE.OUTER_STREAM);
+  // The drifting bodies (§5, "High's own life"): each jelly alone on its own
+  // slow loop, hung at an authored depth from an authored start.
+  for (const [x, y, depthM, startDeg] of FREE_WATER_HIGH_LIFE.JELLIES.SLOTS) {
+    add('env-drift-jelly', x, y, {
+      ...FREE_WATER_HIGH_LIFE.JELLIES.MOTION,
+      depthM,
+      phase: (startDeg * Math.PI) / 180,
+    });
+  }
   // And the one vent stand (§5, "High's own vents"): chimneys and the basalt
   // round them, on the rim by the fleet's start.
   for (const [x, y, yawDeg] of FREE_WATER_HIGH_VENTS.CHIMNEYS) {

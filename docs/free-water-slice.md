@@ -200,6 +200,7 @@ forest ends rather than dissolving into props at every depth.
 | Crater / distance | Existing authored-floor relief and water | Bare drop, no illuminated floor, false cave mouth or copy of Sorrowgate's arch |
 | Small life / close inspection | The four small shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
 | Large life / the opening | The ray below, one public decorative body of 18 m (#1777) | The same independence; no silhouette of a classified animal, and nothing of the colossus |
+| Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence; not the Tetherjelly, its stipple figure or the Hollow's crescent; no light in its file |
 
 Two placement options were considered:
 
@@ -362,6 +363,23 @@ at any match time, where one school would pass once a lap.
 | Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 5 of 96 | 7 m, 1.6 m, 5 m |
 | Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 14 m, 6 m, 14 m |
 
+The **drifting bodies** are five `env-drift-jelly`, each alone on its own loop: 14 m
+round in 280 s, a twentieth of a fry's pace, rising and sinking 10 m as it goes. Each
+hangs by its bell's mid-height, 8.69 m over its longest arm's tip, at an authored depth
+from an authored start.
+
+| Jelly | Loop centre, map x / y | Depth | Start, degrees round its loop |
+| --- | --- | --- | --- |
+| 1 | 305 / 2,041 | 140 m | 0 |
+| 2 | 416 / 2,062 | 120 m | 70 |
+| 3 | 505 / 2,122 | 150 m | 140 |
+| 4 | 509 / 1,909 | 110 m | 210 |
+| 5 | 678 / 2,025 | 130 m | 280 |
+
+They hang 180 to 520 m from the Close eye and 80 to 120 m over its own depth, so they
+stand in the water above the hulls' rings, as the target's do. A 6 m bell draws 17 to
+50 px there, and 10 from Home's eye.
+
 The fry's loop passes 50 m in front of the Close eye, 233 m deep at `(178, 2,168)`, where
 a 0.5 m body draws 15 px. A fry school is a ribbon, 14 m long, 3 m across and 2 m deep as
 drawn, a body about every metre; over a lap, 288 to 368 of the 480 fry stand inside the
@@ -416,6 +434,7 @@ water and nothing of a hunter.
 | `env-outer-fish` | 4 m long | 16 / 600 | Open bowl, 700..1,000 m depth, and the garden clearing, 200..300 m; slow closed swimming paths |
 | `env-deep-fish` | 2 m long | 26 / 400 | Deep pocket, 1,900..2,100 m depth; sparse photophore points |
 | `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide, banked 30 degrees into its turn |
+| `env-drift-jelly` | 6 m across its bell | 5 / 700 | Over the outside rim by the start, 100..160 m depth, at the High graphics quality alone; each alone on one slow closed drift |
 
 All motion is deterministic from published placement, a fixed seed and shared match
 time. It never reacts to a hull, a shot, a ping, damage or the camera. Reduced motion
@@ -437,7 +456,8 @@ no body emission, bloom halo, point light or smooth brightness pulse. This adds 
 ground-light family and does not enter the own-agent lamp halo. Other new animals emit
 nothing. The kelp retains `flora-biolight` and its licensed sway. That is Low. At the
 High graphics quality a schooling fry carries one point of world light, in a token of its
-own (High's own life, above), and its body is still no emitter: its GLB is unchanged.
+own (High's own life, above), and its body is still no emitter: its GLB is unchanged. A
+jelly carries six, on the seats its file marks dark.
 
 Gameplay fauna remain unchanged: public Lampfry/Tetherjelly retain their established
 disclosures and stipples; classified animals retain species-shaped dots, with no
@@ -448,7 +468,9 @@ using normal detection; decoration must be byte-for-byte independent of that var
 hidden state. Neither extra participant is exposed by the study entry.
 
 **Shape lane.** The five new slugs were approved in #1711 and #1712 before integration,
-and the ray's answers the same gates in the pull request that places it (#1777).
+and the ray's answers the same gates in the pull request that places it (#1777). So does
+the jelly's (#1837): its designer and its reviewer are separate agents, and the reviewer
+passed the model.
 Environment props have no faction: each shape PR authors
 **ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
 Footprint, Height, Tris and Light, plus its script, GLB, intake report,
@@ -460,10 +482,11 @@ Block 4 currently describes stone, coral, kelp and crystal standing on the seabe
 The #1711 shape PR must first add the scoped public-microfauna variant: the crab may
 stand on the floor, while the three swimming slugs may be suspended in the column.
 Retain its no-faction, low-luminance, material-count and intake constraints; the exception
-is for these five decorative forms, the ray under its own large-body clause, not
-gameplay fauna or other floating props.
-All five rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
-and runtime supplies the separately budgeted rung-5 photophore dots described above.
+is for these six decorative forms, the ray under its own large-body clause and the jelly
+under its drifting-body clause, not gameplay fauna or other floating props.
+All six rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
+and runtime supplies the separately budgeted rung-5 photophore dots described above. The
+jelly's six seats are dark facets too, and are lit at High alone, as world light.
 This preserves the inverted intake light gate. No links to nonexistent exports,
 placeholder primitives passed off as finished assets, or one-off fish loader.
 
