@@ -23,6 +23,7 @@ import { Biome, Faction, ResolutionTier, ResourceKind, TERRAIN_LIFT } from '@ech
 import {
   BIOME_COLOR,
   depthShade,
+  JELLY_LANTERN,
   PALETTE_LABEL,
   PALETTE_NAMES,
   PALETTES,
@@ -230,6 +231,7 @@ describe('the palette tables', () => {
         ['nodule', p.resource[ResourceKind.Nodule]],
         ['crystal', p.resource[ResourceKind.ResonanceCrystal]],
         ['fauna', p.fauna],
+        ['lantern', p.lantern],
         ...Object.entries(p.ui).map(([k, v]): [string, number] => [`ui.${k}`, v]),
       ];
       for (const [what, ink] of inks) {
@@ -289,6 +291,44 @@ describe('what each palette is for', () => {
       }
     });
   }
+
+  // docs/style-neon-noir.md, "Life's own light at High": a drifting jelly's
+  // lantern is world light, and the one world light a palette owns, because
+  // one pink cannot stand clear of every navy for every eye (#1837). To the
+  // eye its palette serves it is no navy's ink, no contact tier and neither
+  // of the chrome's neons, by the floor an information ink keeps.
+  const LANTERN_FLOOR = 25;
+  for (const name of PALETTE_NAMES) {
+    const kind = FOR[name];
+    it(`${name}: a jelly's lantern is no navy's, no contact's and no neon under ${kind}`, () => {
+      const p = PALETTES[name];
+      const agents: Array<[string, number]> = [
+        ...FACTIONS.flatMap((f): Array<[string, number]> => [
+          [`${FACTION_NAME[f]} primary`, p.faction[f].primary],
+          [`${FACTION_NAME[f]} accent`, p.faction[f].accent],
+          [`${FACTION_NAME[f]} glow`, p.faction[f].glow],
+          [`${FACTION_NAME[f]} console accent`, p.faction[f].consoleAccent],
+        ]),
+        ...TIERS.map((t): [string, number] => [`tier ${t}`, p.tier[t].color]),
+        ['neon magenta', p.ui.glassStroke],
+        ['neon cyan', p.ui.accent],
+      ];
+      for (const [what, ink] of agents) {
+        const d = deltaE(p.lantern, ink, kind);
+        assert.ok(
+          d >= LANTERN_FLOOR,
+          `${name}: the lantern is ${d.toFixed(1)} dE from ${what} under ${kind}, needs ${LANTERN_FLOOR}`
+        );
+      }
+    });
+  }
+
+  it('the standard lantern would be the Directorate’s glow to a tritanope', () => {
+    // Why the lantern is a palette's own: the measurement that refused one token.
+    const directorate = PALETTES.tritanopia.faction[Faction.Directorate];
+    assert.ok(deltaE(0xcc7ad4, directorate.glow, 'tritanopia') < 5);
+    assert.ok(deltaE(PALETTES.standard.lantern, directorate.glow, 'tritanopia') < LANTERN_FLOOR);
+  });
 
   for (const name of ['deuteranopia', 'protanopia', 'tritanopia'] as const) {
     it(`${name}: beats the standard palette's worst pair under the same eye`, () => {
@@ -414,9 +454,11 @@ describe('the active palette', () => {
       assert.equal(TIER_STYLE[ResolutionTier.Track].color, PALETTES.tritanopia.tier[4].color);
       assert.equal(sigColor(90), PALETTES.tritanopia.ui.sigHigh);
       assert.equal(sigColor(10), PALETTES.tritanopia.ui.sigLow);
+      assert.equal(JELLY_LANTERN, PALETTES.tritanopia.lantern);
     } finally {
       setActivePalette('standard');
     }
+    assert.equal(JELLY_LANTERN, PALETTES.standard.lantern);
     assert.equal(UI.sigMid, PALETTES.standard.ui.sigMid);
     assert.equal(sigColor(90), PALETTES.standard.ui.sigHigh);
   });

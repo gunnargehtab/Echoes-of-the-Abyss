@@ -82,7 +82,7 @@ import type { MaskLandmarkPart } from './archMask.ts';
 import { setDistanceGradeOn } from './distanceGrade.ts';
 import { VentPlume, plumeSites, type PlumeSite } from './ventPlume.ts';
 import { LIFE_GLOW_KIND, LifeGlow } from './lifeGlow.ts';
-import { writeJellyLights } from './jellyLight.ts';
+import { tintJellyMembrane, writeJellyLights } from './jellyLight.ts';
 import { JELLY_LANTERN } from './palette.ts';
 import { VentSmoke } from './ventSmoke.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
@@ -631,6 +631,8 @@ export class EnvironmentLayer {
       if (template.jelly !== undefined) {
         template.jelly.uniforms.uJellyTime.value = timeS;
         template.jelly.uniforms.uJellyMoves.value = this.reducedMotion ? 0 : 1;
+        // The lantern's hue is the active palette's, read live as a mark's is.
+        for (const part of template.parts) tintJellyMembrane(part.material, JELLY_LANTERN);
       }
       const carries = propSpec(slug)?.glint;
       list.forEach((p, i) => {
@@ -665,6 +667,7 @@ export class EnvironmentLayer {
         glow.set(lit.subarray(i * 5 + 3, i * 5 + 5), i * 2);
       }
     });
+    this.lantern.setToken(JELLY_LANTERN, 1);
     const hung = this.lanternAt;
     this.lantern.write(lanterns, (positions, glow) => {
       for (let i = 0; i < lanterns; i++) {

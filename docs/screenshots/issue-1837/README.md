@@ -41,7 +41,7 @@ frame alike.
 | Camera | Low | High | What High shows now |
 | --- | --- | --- | --- |
 | Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The vent stand in the gap between the three hulls: two chimneys in their own amber light, its pool on the rim and its volume in the water, with a column of smoke over them. The fry's schools are faint knots beside the Harvester, found by looking for them: a fry is 0.5 m and the eye 900 m off, so its light draws at the 1.6 px floor at about a twentieth of its level. The outer fish by the Corvette's beam are specks of a few pixels. Five jellies hang over the fleet, 734 to 945 m off, as orchid lanterns: bells 10 to 12 px across, each over a faint fall of strands. One hangs inside the Harvester's ring, and one is a pale bell in the stand's light. A bead is under the 1.6 px floor from here, and draws at a third of its level or less |
-| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The stand 421 m off, between the Light Scout and the Corvette: two chimneys 126 px tall against their own light, three boulders at their feet, and a column of pale puffs climbing out of the frame's amber into the dark. Three of the fry stream's five schools, at the eye's own depth: one 49 to 57 m off, between the Harvester and the Light Scout, a ribbon of pale points with a dark body through each, and two 209 to 227 m off as knots of fine points. Outer fish, 510 to 680 m off, stand as dark shapes against the edge of the vent's light, and one school swims through the Corvette's cone, lit in its green. Five jellies hang over the fleet, 190 to 526 m off, as lanterns: translucent bells 17 to 48 px across, brightest at the lip and along the edge, each over twenty-two strands of beads that fall 9 to 17 m. The nearest hangs over the fry's stream, one inside the Corvette's ring, and the farthest behind the stand's light |
+| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The stand 421 m off, between the Light Scout and the Corvette: two chimneys 126 px tall against their own light, three boulders at their feet, and a column of pale puffs climbing out of the frame's amber into the dark. Three of the fry stream's five schools, at the eye's own depth: one 49 to 57 m off, between the Harvester and the Light Scout, a ribbon of pale points with a dark body through each, and two 209 to 227 m off as knots of fine points. Outer fish, 510 to 680 m off, stand as dark shapes against the edge of the vent's light, and one school swims through the Corvette's cone, lit in its green. Five jellies hang over the fleet, 190 to 526 m off, as lanterns: translucent bells 17 to 48 px across, brightest at the lip and along the edge, each over eighteen strands of beads that fall 7 to 12 m. The nearest hangs over the fry's stream, one inside the Corvette's ring, and the farthest behind the stand's light |
 | Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | The stand as one amber point among the fleet's three rings, which overlap one another at this dolly. No body draws a pixel from 10 km |
 
 Two more, off the target's three:
@@ -63,13 +63,19 @@ held frame shows.
 ![The target's jelly, and the nearest lantern at Close](software/jelly-beside-target.png)
 
 Left, the target's, from the owner's crop. Right, the lantern 190 m from the Close eye,
-at the same size. What transfers is the form: a translucent bell brightest at its lip,
-and long strands of beads. What does not:
+drawn up until its bell is as wide as the target's: [beside.py](beside.py) composes the
+image and prints both widths. What transfers is the form: a translucent bell brightest
+at its lip, and long strands of beads. What does not:
 
 - **The hue.** The target's brightest pixels are `#BFA6E2`, Hadron's glow within a
-  degree of hue, and violet is reserved. The lantern is `jelly-lantern`, `#CC7AD4`, an
-  orchid pink of its own
+  degree of hue, and violet is reserved. The lantern is `jelly-lantern`, a palette's
+  own: an orchid pink, `#C56BC7`, in the standard palette these frames are taken in,
+  and a violet in each colour-vision palette
   ([style-neon-noir.md](../../style-neon-noir.md#world-light--the-terrain-carve-outs)).
+- **The proportions.** At one bell width, 243 px against 241, the target's strands fall
+  about 1.4 widths and the lantern's about 1.75, up to 2 at the longest; the first cut's
+  fell 2.4. The target's bell is a broad saucer lit across its underside, where the
+  lantern's is a ribbed dome.
 - **The water.** The target's is bright teal, so its strands are soft against it; the
   crater's is dark, and beads stand out of it.
 - **The tilt.** The target's bell is seen from under and leaning. A lantern leans 12
@@ -99,14 +105,14 @@ High at rest.
 
 | Camera | High before: calls, triangles | High now | Fry, outer fish, jellies, fry lights, lantern points, columns |
 | --- | --- | --- | --- |
-| Home | 55, 626,614 | 63, 719,680 | 624, 64, 5, 624, 2,455, 2 |
-| Close | 55, 626,614 | 63, 719,680 | 624, 64, 5, 624, 2,455, 2 |
-| Low | 36, 619,283 | 44, 712,349 | 624, 64, 5, 624, 2,455, 2 |
-| Survey | 55, 627,252 | 63, 720,318 | 624, 64, 5, 624, 2,455, 2 |
+| Home | 55, 626,614 | 63, 719,680 | 624, 64, 5, 624, 1,655, 2 |
+| Close | 55, 626,614 | 63, 719,680 | 624, 64, 5, 624, 1,655, 2 |
+| Low | 36, 619,283 | 44, 712,349 | 624, 64, 5, 624, 1,655, 2 |
+| Survey | 55, 627,252 | 63, 720,318 | 624, 64, 5, 624, 1,655, 2 |
 
 Eight draws and 93,066 triangles more. Two draws are points of the world pass: the fry's
-lights, 624, and the lanterns', 2,455, which is 491 a jelly: one glow, six seats and 22
-strands of 22 beads. Of the triangles, 88,416 are High's own fish, 480 fry of 150 and 48
+lights, 624, and the lanterns', 1,655, which is 331 a jelly: one glow, six seats and 18
+strands of 18 beads. Of the triangles, 88,416 are High's own fish, 480 fry of 150 and 48
 outer fish of 342, in the draws Low's fish already take. Two draws and 2,970 triangles
 are the five jellies, 594 each in two membranes, both sides in one draw. The other four
 draws
@@ -125,20 +131,21 @@ is read on the named GPU.
 [issue-1801](../issue-1801/README.md#low-does-not-move) reads a pair: the mean, over the
 world area, of each pixel's largest channel difference, out of 255.
 
-| Camera | `main` against `main` | `main` against these frames | `main` against a second take of the branch | The branch against itself | Calls and triangles |
+| Camera | `main` against `main` | `main`'s first take against these frames | `main`'s second take against these | These against another take of the branch | Calls and triangles |
 | --- | --- | --- | --- | --- | --- |
-| Home | 0.24 | 0.30 | 0.17 | 0.14 | 44 and 593,684, all |
-| Close | 0.41 | 0.45 | 0.33 | 0.29 | 44 and 593,684, all |
-| Low | 0.47 | 0.60 | 0.33 | 0.28 | 26 and 587,001, all |
+| Home | 0.24 | 0.03 | 0.21 | 0.19 | 44 and 593,684, all |
+| Close | 0.41 | 0.06 | 0.39 | 0.37 | 44 and 593,684, all |
+| Low | 0.47 | 0.06 | 0.42 | 0.39 | 26 and 587,001, all |
 | Survey | 0.00 | 0.00 | 0.00 | 0.00 | 45 and 594,970, all |
-| Garden close | 0.35 | 0.38 | 0.29 | 0.26 | 31 and 591,001, all |
+| Garden close | 0.35 | 0.06 | 0.33 | 0.31 | 31 and 591,001, all |
 
 A take differs from a take by where the marine snow has drifted, and by nothing else.
-These frames stand a little further from `main`'s first take than `main`'s second does;
-a second take of the branch stands nearer to it than either, and `main`'s second take is
-1.02 from these at the Low camera. The earlier sets here read 0.04 to 0.09 and 0.15 to
-0.31 against the same take of `main`. So the reading is the snow's, take by take, and
-no camera tells the branch from `main`.
+These frames happen to fall close to `main`'s first take, and stand as far from `main`'s
+second, and from another take of the branch, as the two takes of `main` stand from each
+other. The four sets this step has shown read 0.04 to 0.09, 0.15 to 0.31, 0.30 to 0.60
+and now 0.03 to 0.06 against the same take of `main`, on a Low path no instalment
+changed. So the reading is the snow's, take by take, and no camera tells the branch from
+`main`.
 [The Close map](software/low-control/diff-close-main-vs-branch.png) is marine snow and
 nothing else, and the other four maps lie beside it. In counted work
 `packages/frontend/test/freeWaterDecoration.test.ts` holds Low's list unmoved under High's
@@ -156,8 +163,8 @@ of 255. A lamp's is its brightest pixel in the navy's green.
 | --- | --- |
 | One fry's light in the near school: the median of 90, and the most | 136, 144 |
 | The near school, where its lights overlap | 160 |
-| A lantern's lip, on the bells 190, 260, 318, 416 and 526 m off | 196, 188, 181, 162, 152 |
-| The brightest bead of the nearest lantern's strands | 161 |
+| A lantern's lip, on the bells 190, 260, 318, 416 and 526 m off | 189, 177, 164, 146, 142 |
+| The brightest bead of the two nearest lanterns' strands | 149 |
 | The target's own jelly, off the owner's crop | 176 |
 | The Corvette's lamp, SIG 28 | 165 |
 | The Harvester's lamp, SIG 18 | 159 |
@@ -172,20 +179,20 @@ stops short of the Light Scout's, and the ring's arc reads among its points on t
 software frame. Gate 7's glance is the owner's, on the named GPU.
 
 A lantern is the brightest life in the frame, and over every lamp beside it. Its first
-take read 218 at the nearest lip; it was turned down toward the target's own 176. Its
-light renders at a hue of 287 to 301 degrees on the four clear of the stand, between
-Hadron's 264 and the interface magenta's 328. From Home the four lanterns clear of the stand read 142, 163, 130 and
-116. The jellies were first drawn as lit bodies with seats held under every lamp, which
+take read 218 at the nearest lip; it was turned down to the target's own 176, which the
+three nearest now stand about. Its light renders at a hue of 289 to 303 degrees on the
+four clear of the stand, between Hadron's 264 and the interface magenta's 328. From Home
+the four lanterns clear of the stand read 119, 150, 114 and 101. The jellies were first drawn as lit bodies with seats held under every lamp, which
 the owner saw and asked to be the target's instead; whether five lanterns over the
 fleet muddy the reading of a hull's lamps is the owner's glance. A wave of light adds
 60% as it passes, and the frames hold it. One lantern hangs inside the Corvette's ring
 at Close and one inside the Harvester's at Home; along every ring's circle the lanterns
-lift the ground by 7 of 255 at most.
+lift the ground by 10 of 255 at most.
 
-**The vent stand is now the brightest thing in the frame.** Its light's core reads 231
-of 255 at Close on this take, and 233 and 234 on the two before, over the Corvette's
+**The vent stand is now the brightest thing in the frame.** Its light's core reads 234
+of 255 at Close on this take, and 231 to 234 on the three before, over the Corvette's
 pool, and the smoke 100 px over
-the stacks reads 156. The 99.9th percentile of the world area's luma is 198 at Home, 188
+the stacks reads 156. The 99.9th percentile of the world area's luma is 197 at Home, 187
 at Close and 162 at Survey; before the lanterns it was 196, 187 and 162, with the
 schools alone 162, 157 and 157, and
 [issue-1836](../issue-1836/README.md#gate-7-and-limit-5) read 169 at Home at rest. The
@@ -200,8 +207,8 @@ median of five neighbouring samples, so a speck of marine snow is not read as li
 | --- | --- | --- | --- |
 | Light Scout's, Close | 35% | 22 | 21, 23 |
 | Corvette's, Close | 37% | 33 | 21, 23 |
-| Light Scout's, Home | 56% | 55 | 22, 25 |
-| Corvette's, Home | 37% | 76 | 19, 25 |
+| Light Scout's, Home | 55% | 55 | 22, 25 |
+| Corvette's, Home | 36% | 76 | 19, 25 |
 
 The Harvester's ring is untouched at both, and at Survey the three rings overlap one
 another and the stand lies under them. So the light reaches a third to a little over
@@ -226,9 +233,12 @@ owner's to overturn:
 
 - **A body's register is the cladding's ceiling**, 0.16, over the props' 0.06.
 - **A schooling fry carries one light of its own**, in a new token, `life-glint`.
-- **A lantern's hue is an orchid pink of its own**, `jelly-lantern`, not the target's
-  violet, which is Hadron's, nor the fry's bone white.
-- **It stands at the target's own level**, over every lamp beside it.
+- **A lantern's hue is its palette's own**, `jelly-lantern`: an orchid pink in the
+  standard palette and a violet in the other three, not the target's violet, which is
+  Hadron's, nor the fry's bone white. One pink for every palette was taken first, and
+  the round's critic overturned it: to a tritanope it was the Directorate's glow.
+- **It stands at the target's own level or a little over**, and over every lamp beside
+  it.
 - **It moves**: a stroke, a sway and a wave of light, on the match's clock, held under
   reduced motion.
 - **Its strands are beads, as the target's are**, beside the Tetherjelly's stipple
@@ -241,6 +251,21 @@ owner's to overturn:
   other map keeps its steam, and #1853 holds the other reading.
 - **The crater's stand is between the Light Scout and the Corvette**, 421 m from the
   Close eye, where its light reaches both their rings.
+
+## Ideas offered, not built
+
+The owner asked for other ideas with the fourth call. None is in this step:
+
+- **A second hue of jelly.** The target has a blue one. Blue is the contact tiers', but
+  the kelp's `flora-biolight` green is licensed already.
+- **Schools as silhouettes.** The target's fish are dark against lit water. A large dark
+  school placed before the vent's glow would read so.
+- **Motes in the beam.** The target's searchlight cone is full of lit particles: marine
+  snow lit inside an own hull's beam.
+- **A lantern's light on what passes it**: its hue on a hull or a school within 30 m.
+- **A far bloom of jellies**: a slow river of small lanterns over the bowl, points only.
+- **A lit wake behind a fast hull.** A mechanic and not scenery, since it would answer a
+  hull: its own issue, and the owner's ruling on limit 4.
 
 ## Who captures
 

@@ -25,7 +25,7 @@ import {
   type Group,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { HIGH_GRAPHICS } from '@echoes/shared';
+import { FREE_WATER_HIGH_LIFE, HIGH_GRAPHICS } from '@echoes/shared';
 import { propSpec } from '../src/game/environment.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
 import {
@@ -37,9 +37,16 @@ import {
   jellyStroke,
   jellyUniforms,
   patchJellyMembrane,
+  tintJellyMembrane,
   writeJellyLights,
 } from '../src/game/jellyLight.ts';
-import { JELLY_LANTERN, LIFE_GLINT, PALETTES, WORLD_LIGHT } from '../src/game/palette.ts';
+import {
+  JELLY_LANTERN,
+  LIFE_GLINT,
+  PALETTES,
+  setActivePalette,
+  WORLD_LIGHT,
+} from '../src/game/palette.ts';
 
 const { BELL, STRANDS, HALO, SWIM, PULSE, STAGGER_S } = HIGH_GRAPHICS.LIFE.JELLY;
 const { LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
@@ -69,20 +76,35 @@ const lights = (index: number, timeS: number, moves: boolean): Light[] => {
 };
 
 describe('a jelly is a lantern (#1837)', () => {
-  it('wears a token of its own, away from every hue that means something', () => {
-    // Limit 3: no family's token, not the fry's, and in no palette the fauna
-    // colour, a navy's ink or glow, a contact tier's or the interface's.
-    assert.ok(!Object.values(WORLD_LIGHT).includes(JELLY_LANTERN));
-    assert.notEqual(JELLY_LANTERN, LIFE_GLINT);
+  it('wears its palette’s own token, and follows the palette the player changes to', () => {
+    // Limit 3: no family's token and not the fry's, in any palette. How far
+    // each stands from a navy, a contact and a neon, as its palette's eye
+    // sees them, is palette.test.ts's, where the simulation lives.
     for (const palette of Object.values(PALETTES)) {
-      assert.notEqual(palette.fauna, JELLY_LANTERN);
-      for (const navy of Object.values(palette.faction)) {
-        assert.ok(![navy.primary, navy.accent, navy.glow].includes(JELLY_LANTERN));
-      }
-      for (const tier of Object.values(palette.tier)) assert.notEqual(tier.color, JELLY_LANTERN);
-      for (const ink of Object.values(palette.ui)) assert.notEqual(ink, JELLY_LANTERN);
-      for (const ink of Object.values(palette.resource)) assert.notEqual(ink, JELLY_LANTERN);
+      assert.ok(!Object.values(WORLD_LIGHT).includes(palette.lantern));
+      assert.notEqual(palette.lantern, LIFE_GLINT);
+      assert.notEqual(palette.lantern, palette.fauna);
     }
+    assert.equal(new Set(Object.values(PALETTES).map((p) => p.lantern)).size, 4);
+    // A membrane is built in the active palette's and re-tinted in another's.
+    const material = jellyMembrane('bell', jellyUniforms(SHAPE));
+    assert.equal(material.color.getHex(), PALETTES.standard.lantern);
+    try {
+      setActivePalette('tritanopia');
+      assert.equal(JELLY_LANTERN, PALETTES.tritanopia.lantern);
+      tintJellyMembrane(material, JELLY_LANTERN);
+      assert.equal(material.color.getHex(), PALETTES.tritanopia.lantern);
+      assert.equal(
+        jellyMembrane('core', jellyUniforms(SHAPE)).color.getHex(),
+        PALETTES.tritanopia.lantern
+      );
+    } finally {
+      setActivePalette('standard');
+    }
+    // And only a membrane: a body's stone is never tinted.
+    const stone = new MeshStandardMaterial({ color: 0x112233 });
+    tintJellyMembrane(stone, JELLY_LANTERN);
+    assert.equal(stone.color.getHex(), 0x112233);
   });
 
   it('draws the file as a membrane at High and leaves Low’s template alone', async () => {
@@ -105,7 +127,7 @@ describe('a jelly is a lantern (#1837)', () => {
     for (const [i, part] of high.parts.entries()) {
       const material = part.material as MeshBasicMaterial;
       assert.ok(material instanceof MeshBasicMaterial);
-      assert.equal(material.color.getHex(), JELLY_LANTERN);
+      assert.equal(material.color.getHex(), PALETTES.standard.lantern);
       // Light that adds and hides nothing, both sides, in the world pass.
       assert.equal(material.blending, CustomBlending);
       assert.deepEqual(
@@ -234,6 +256,40 @@ describe('a jelly’s points of light (#1837)', () => {
     assert.deepEqual(lights(2, 7.5, true), lights(2, 7.5, true));
   });
 
+  it('keeps every pair of the crater’s five out of step, in the stroke, the wave and the sway', () => {
+    // "No two are in step" is a claim about every pair, not about neighbours:
+    // five clocks a stagger apart fold back onto one another inside a period.
+    const jellies = FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length;
+    const apart = (periodS: number): number => {
+      let least = Infinity;
+      for (let i = 0; i < jellies; i++) {
+        for (let j = i + 1; j < jellies; j++) {
+          const gap = ((((j - i) * STAGGER_S) % periodS) + periodS) % periodS;
+          least = Math.min(least, gap, periodS - gap);
+        }
+      }
+      return least;
+    };
+    // The wave: two never pass together. One takes its width over its speed to pass a point.
+    const passS = PULSE.WIDTH_M / PULSE.SPEED_MPS;
+    assert.ok(
+      apart(PULSE.PERIOD_S) >= 2 * passS,
+      `waves ${apart(PULSE.PERIOD_S).toFixed(2)} s apart`
+    );
+    // The stroke and the sway: no pair nearer than four fifths of an even spread.
+    assert.ok(apart(SWIM.PERIOD_S) >= (0.8 * SWIM.PERIOD_S) / jellies);
+    assert.ok(apart(STRANDS.SWAY_PERIOD_S) >= (0.8 * STRANDS.SWAY_PERIOD_S) / jellies);
+    // And the functions agree with the arithmetic: any two jellies' strokes differ.
+    for (let i = 0; i < jellies; i++) {
+      for (let j = i + 1; j < jellies; j++) {
+        const differs = [0.4, 1.9, 3.3].some(
+          (t) => Math.abs(jellyStroke(t, i, true) - jellyStroke(t, j, true)) > 0.02
+        );
+        assert.ok(differs, `jellies ${i} and ${j} stroke together`);
+      }
+    }
+  });
+
   it('strokes and flashes each jelly on its own beat, and neither without motion', () => {
     for (let t = 0; t < 30; t += 0.37) {
       const stroke = jellyStroke(t, 1, true);
@@ -243,11 +299,10 @@ describe('a jelly’s points of light (#1837)', () => {
       assert.equal(jellyStroke(t, 1, false), 0);
       assert.equal(jellyPulse(2, t, 1, false), 0);
     }
-    // A stroke returns after its period, and its neighbour is out of step.
+    // A stroke returns after its period.
     assert.ok(
       Math.abs(jellyStroke(1.2, 0, true) - jellyStroke(1.2 + SWIM.PERIOD_S, 0, true)) < 1e-9
     );
-    assert.ok(Math.abs(jellyStroke(1.2, 0, true) - jellyStroke(1.2, 1, true)) > 1e-3);
     // The wave runs down the body: where it is whole moves away from the crown.
     const head = (t: number) => {
       let best = 0;

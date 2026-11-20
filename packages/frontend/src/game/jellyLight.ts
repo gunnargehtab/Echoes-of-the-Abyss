@@ -35,6 +35,7 @@ import {
   Color,
   CustomBlending,
   DoubleSide,
+  type Material,
   type Matrix4,
   MeshBasicMaterial,
   OneFactor,
@@ -81,7 +82,7 @@ export function jellyShape(template: {
   };
 }
 
-/** A jelly's own clock: the match's, set off by its place in the list. */
+/** A jelly's own clock: the match's, run ahead by its place in the list. */
 const clock = (timeS: number, index: number): number => timeS + index * STAGGER_S;
 
 /** How far the bell's stroke has drawn the lip in, 0 to 1: a quick squeeze and a slow release. */
@@ -162,7 +163,7 @@ export function patchJellyMembrane(shader: { vertexShader: string; fragmentShade
         'float jellyFacing = abs( dot( normalize( vJellyN ), normalize( vJellyV ) ) );',
         `float jellyRim = pow( 1.0 - jellyFacing, ${glsl(BELL.RIM_POWER)} );`,
         // The radial canals, crown to lip, and the lip's own band.
-        `float jellyRib = pow( abs( cos( atan( vJellyP.z, vJellyP.x ) * ${glsl(BELL.RIBS / 2)} ) ), 12.0 );`,
+        `float jellyRib = pow( abs( cos( atan( vJellyP.z, vJellyP.x ) * ${glsl(BELL.RIBS / 2)} ) ), ${glsl(BELL.RIB_POWER)} );`,
         `float jellyLipOff = ( vJellyP.y - uJellyShape.x ) / ${glsl(BELL.LIP_M)};`,
         'float jellyLip = exp( - jellyLipOff * jellyLipOff );',
         // The wave of light (`jellyPulse`), by metres below the crown.
@@ -222,6 +223,13 @@ export function jellyMembrane(part: 'bell' | 'core', uniforms: JellyUniforms): M
   // Blended, and still the world pass's (PerspectiveView `enterWorldLayer`).
   material.userData.worldLayer = true;
   return material;
+}
+
+/** A membrane in another palette's lantern: the layer calls this each frame. */
+export function tintJellyMembrane(material: Material, token: number): void {
+  if (material instanceof MeshBasicMaterial && material.userData.worldLayer === true) {
+    material.color.setHex(token);
+  }
 }
 
 /**
@@ -294,18 +302,21 @@ export function writeJellyLights(
       const downM = lengthM * t;
       // Hung just inside the lip, gathering toward the tip; waving across
       // its own bearing more the further down, and trailing aft.
-      const radiusM = lipR * draw * (0.94 - 0.3 * t);
+      const radiusM = lipR * draw * (STRANDS.ROOT - STRANDS.GATHER * t);
+      // Curve shape, not tuning: a strand bends more toward its tip, holds a
+      // wave and a half along its length, and trails as a hanging line does.
       const waveM = STRANDS.SWAY_M * t ** 1.5 * Math.sin(swayAt - 3 * Math.PI * t + phase);
       const x = cos * radiusM - sin * waveM - STRANDS.TRAIL_M * t * t;
       const z = sin * radiusM + cos * waveM;
       const level =
         STRANDS.LEVEL *
-        (1 - t) ** 0.4 *
+        (1 - t) ** STRANDS.FADE *
+        // No two beads alike: three tenths of a bead's level is its own.
         (0.7 + 0.3 * hash(seed * 31 + j)) *
         (1 + PULSE.GAIN * jellyPulse(bellM + downM, timeS, index, moves));
       light(
         AT.set(x, lipY - downM, z).applyMatrix4(matrix),
-        STRANDS.SIZE_M * (1 - 0.45 * t),
+        STRANDS.SIZE_M * (1 - STRANDS.TAPER * t),
         level
       );
     }

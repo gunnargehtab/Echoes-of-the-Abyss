@@ -400,7 +400,10 @@ Three rules govern all three:
    `neon-magenta`, the text ramp — is identical in every palette. "Cyan tells
    you, magenta asks you" survives every deficiency here: under the red-green
    palettes both sit on the preserved blue axis, and under tritanopia cyan
-   reads cool and magenta reads warm. A bevel is not information.
+   reads cool and magenta reads warm. A bevel is not information. One thing
+   that is not information moves all the same: a jelly's lantern at the High
+   graphics quality ([World light](#world-light--the-terrain-carve-outs)), so
+   that no eye can take it for an ink that is.
 2. **Biome fills and Echo Mark residue do not move either.** The seafloor is
    deliberately desaturated to 5–10 % luminance and carries no hue-only
    meaning — propagation is read from the overlay and the numbers, never from
@@ -437,6 +440,7 @@ difference than that would be decoration.
 | Nodules | `#F2B233` | `#F5C542` | `#FFCF5C` |
 | Resonance Crystal | `#B98CFF` | `#7FA0F5` | `#7FA0F5` |
 | Fauna | `#5FA88A` | `#6E8C84` | `#6E8C84` |
+| Jelly lantern (world light, High) | `#C56BC7` | `#8C1AFF` | `#A83DF5` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F5C542` · `#8C8378` | `#FFCF5C` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#2E9BD6` · `#9BE0FF` | `#2E9BD6` · `#9BE0FF` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#5E3A0F` · `#A8701C` | `#7A5218` · `#C98A2E` |
@@ -487,6 +491,7 @@ both go, save one proposed violet: the Directorate's console accent, under
 | Nodules | `#F2B233` | `#F0E0C8` |
 | Resonance Crystal | `#B98CFF` | `#7FB8FF` |
 | Fauna | `#5FA88A` | `#7A7A88` |
+| Jelly lantern (world light, High) | `#C56BC7` | `#8026D9` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F0E0C8` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#1FA67A` · `#8FE36B` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#A02030` · `#E0566B` |
@@ -643,20 +648,37 @@ no neon's chroma: warmer than every contact tier's blue, greyer than the civic l
 tallow, and no navy's glow, so rule 5 holds. It is not the fauna colour: that is the
 stipple's, on the tactical layer.
 
-`jelly-lantern`, `#CC7AD4`, is a drifting jelly: its bell, its seats and the beads of its
-strands ([art-direction.md](art-direction.md#a-jelly-is-a-lantern)). The owner's target
-shows a jelly as a lantern of pink-violet light, and its brightest pixels are `#BFA6E2`,
-at a hue of 265 degrees: the hue of Hadron's glow, `#C9A6FF`, within a degree. A world
-light takes no agent's token (rule 5), and violet is reserved, so that hue does not
-transfer, as the target's cyan ring did not. The lantern is an orchid pink at 295
-degrees instead, in the gap between the two hues that flank it: 31 degrees pinker than
-Hadron's violet, and 33 degrees bluer than `neon-magenta` at about half its saturation.
-It is not `neon-violet` and stands for nothing unresolved. Whether it reads apart from a
-Hadron lamp and from a panel's bevel is the owner's glance, in all four palettes.
+`jelly-lantern` is a drifting jelly: its bell, its seats and the beads of its strands
+([art-direction.md](art-direction.md#a-jelly-is-a-lantern)). The owner's target shows a
+jelly as a lantern of pink-violet light, and its brightest pixels are `#BFA6E2`, at a hue
+of 265 degrees: the hue of Hadron's glow, `#C9A6FF`, within a degree. A world light takes
+no agent's token (rule 5), and violet is reserved, so that hue does not transfer, as the
+target's cyan ring did not. It is the one world light a palette owns, as a navy's inks
+are:
+
+| Palette | `jelly-lantern` | Nearest of a navy's inks, a contact tier or a chrome neon, to the eye it serves |
+| --- | --- | --- |
+| Standard | `#C56BC7` | Hadron's glow, 25.4 dE |
+| Deuteranopia | `#8C1AFF` | Hadron's console accent, 25.4 dE |
+| Protanopia | `#A83DF5` | Hadron's glow, 25.2 dE |
+| Tritanopia | `#8026D9` | Bathyarch's accent, 31.1 dE |
+
+The standard palette's is an orchid pink at 299 degrees, in the gap between the two hues
+that flank it: 35 degrees pinker than Hadron's violet, and 29 bluer than `neon-magenta`
+at under half its saturation. No one pink holds for every eye. The first cut's
+`#CC7AD4` stood 1.7 dE from the Directorate's glow to a tritanope, 4.2 from a Tier 2
+contact to a deuteranope and 8.2 from Pelagia's primary to a protanope. So the lantern
+moves with the palette, into the violet each colour-vision palette leaves empty, and its
+floor is the one an information ink keeps: 25 dE from every navy's primary, accent, glow
+and console accent, every contact tier and the chrome's two neons, as the eye its
+palette serves sees them. `packages/frontend/test/palette.test.ts` holds it. It carries
+no information: it moves so that it cannot be taken for an ink that does. It is not
+`neon-violet` and stands for nothing unresolved. Whether it reads apart from a lamp and
+from a panel's bevel in play is still the owner's glance.
 
 Both are placed by the fixture's authored loops and answer nothing a match does
-(rule 4). `LIFE_GLINT` and `JELLY_LANTERN` in `packages/frontend/src/game/palette.ts`
-transcribe them.
+(rule 4). `LIFE_GLINT` and each palette's `lantern` in
+`packages/frontend/src/game/palette.ts` transcribe them.
 
 **A vent's breath at High.** *In development with #1837, and not accepted.* The steam
 over a chimney's mouth is world light in `vent-ember`, as the table says, at both

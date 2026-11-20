@@ -103,6 +103,17 @@ export interface Palette {
    * field or a Lampfry shoal, is drawn in it too (faunaStipple.ts).
    */
   fauna: number;
+  /**
+   * A drifting jelly's own light at the High graphics quality
+   * (`jelly-lantern`, docs/style-neon-noir.md "World light", in development
+   * with #1837): its bell, its seats and the beads of its strands
+   * (jellyLight.ts). A palette's own, as a navy's inks are, because one pink
+   * cannot stand clear of every navy for every eye: to a tritanope the
+   * standard palette's orchid is the Directorate's glow. Each stands 25 dE or
+   * more from every navy's inks, every contact tier and the chrome's two
+   * neons, as the eye its palette serves sees them (palette.test.ts).
+   */
+  lantern: number;
   ui: UiInk;
 }
 
@@ -210,6 +221,7 @@ const STANDARD: Palette = {
     [ResourceKind.ResonanceCrystal]: 0xb98cff,
   },
   fauna: 0x5fa88a,
+  lantern: 0xc56bc7,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -269,6 +281,7 @@ const DEUTERANOPIA: Palette = {
     [ResourceKind.ResonanceCrystal]: 0x7fa0f5,
   },
   fauna: 0x6e8c84,
+  lantern: 0x8c1aff,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -327,6 +340,7 @@ const PROTANOPIA: Palette = {
     [ResourceKind.ResonanceCrystal]: 0x7fa0f5,
   },
   fauna: 0x6e8c84,
+  lantern: 0xa83df5,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -387,6 +401,7 @@ const TRITANOPIA: Palette = {
     [ResourceKind.ResonanceCrystal]: 0x7fb8ff,
   },
   fauna: 0x7a7a88,
+  lantern: 0x8026d9,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -451,6 +466,14 @@ export let RESOURCE_COLOR: Record<ResourceKind, number> = STANDARD.resource;
 export let FAUNA_COLOR: number = STANDARD.fauna;
 
 /**
+ * A drifting jelly's own light at the High graphics quality, in the active
+ * palette (`Palette.lantern`). World light, and still a palette's: the
+ * environment layer reads it each frame, so a lantern follows a palette
+ * changed mid-match as a mark does.
+ */
+export let JELLY_LANTERN: number = STANDARD.lantern;
+
+/**
  * HUD chrome — neon-noir, transcribed from docs/style-neon-noir.md.
  * Cyan tells you, magenta asks you, red warns you.
  */
@@ -481,6 +504,7 @@ export function setActivePalette(name: unknown): Palette {
   TIER_STYLE = palette.tier;
   RESOURCE_COLOR = palette.resource;
   FAUNA_COLOR = palette.fauna;
+  JELLY_LANTERN = palette.lantern;
   UI = palette.ui;
   return palette;
 }
@@ -638,16 +662,6 @@ export const WORLD_LIGHT: Record<WorldLightFamily, number> = {
  * greyer than the civic lamp's tallow, and no navy's glow.
  */
 export const LIFE_GLINT = 0xb9bfa2;
-
-/**
- * A drifting jelly's own light at the High graphics quality,
- * docs/style-neon-noir.md "World light" (`jelly-lantern`, in development with
- * #1837): its bell, its seats and the beads of its strands (jellyLight.ts).
- * An orchid pink, as near the target's jelly as the palette's law lets a
- * world light stand: pinker than Hadron's violet, bluer and far greyer than
- * the interface's magenta, and no navy's glow.
- */
-export const JELLY_LANTERN = 0xcc7ad4;
 
 /**
  * The water's hue over each biome at the High graphics quality,

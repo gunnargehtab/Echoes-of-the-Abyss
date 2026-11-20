@@ -200,7 +200,7 @@ forest ends rather than dissolving into props at every depth.
 | Crater / distance | Existing authored-floor relief and water | Bare drop, no illuminated floor, false cave mouth or copy of Sorrowgate's arch |
 | Small life / close inspection | The four small shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
 | Large life / the opening | The ray below, one public decorative body of 18 m (#1777) | The same independence; no silhouette of a classified animal, and nothing of the colossus |
-| Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence. Not the Tetherjelly or its stipple figure: a field's bell is seven times as wide, a figure in dots in the fauna colour with six tentacles, and stands where it is, where a lantern is a lit skin in a hue of its own over twenty-two strands, adrift alone. Not the Hollow's crescent. No light in its file |
+| Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence. Not the Tetherjelly or its stipple figure: a field's bell is seven times as wide, a figure in dots in the fauna colour with six tentacles, and stands where it is, where a lantern is a lit skin in a hue of its own over eighteen strands, adrift alone. Not the Hollow's crescent. No light in its file |
 
 Two placement options were considered:
 

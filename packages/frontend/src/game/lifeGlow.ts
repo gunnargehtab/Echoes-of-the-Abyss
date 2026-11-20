@@ -186,6 +186,11 @@ export class LifeGlow {
     this.points.geometry.setDrawRange(0, count);
   }
 
+  /** Wear another token at another level: a palette changed under the cloud. */
+  setToken(token: number, level: number): void {
+    this.material.color.setHex(token).multiplyScalar(level);
+  }
+
   /** Lights standing, for the probe and the tests. */
   get count(): number {
     return this.drawn;
