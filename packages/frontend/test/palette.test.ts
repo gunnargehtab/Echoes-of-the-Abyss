@@ -295,9 +295,12 @@ describe('what each palette is for', () => {
   // docs/style-neon-noir.md, "Life's own light at High": a drifting jelly's
   // lantern is world light, and the one world light a palette owns, because
   // one pink cannot stand clear of every navy for every eye (#1837). To the
-  // eye its palette serves it is no navy's ink, no contact tier and neither
-  // of the chrome's neons, by the floor an information ink keeps.
+  // eye its palette serves it is no navy's ink, no contact tier, neither of
+  // the chrome's neons and not the violet the doc reserves for the
+  // unresolved, by the floor an information ink keeps.
   const LANTERN_FLOOR = 25;
+  /** `neon-violet`, docs/style-neon-noir.md: the Mouth's, drawn by the menu's CSS token. */
+  const NEON_VIOLET = 0x8b5cf6;
   for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
     it(`${name}: a jelly's lantern is no navy's, no contact's and no neon under ${kind}`, () => {
@@ -312,6 +315,7 @@ describe('what each palette is for', () => {
         ...TIERS.map((t): [string, number] => [`tier ${t}`, p.tier[t].color]),
         ['neon magenta', p.ui.glassStroke],
         ['neon cyan', p.ui.accent],
+        ['neon violet', NEON_VIOLET],
       ];
       for (const [what, ink] of agents) {
         const d = deltaE(p.lantern, ink, kind);

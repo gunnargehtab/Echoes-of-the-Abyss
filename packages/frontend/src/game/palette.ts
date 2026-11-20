@@ -110,8 +110,9 @@ export interface Palette {
    * (jellyLight.ts). A palette's own, as a navy's inks are, because one pink
    * cannot stand clear of every navy for every eye: to a tritanope the
    * standard palette's orchid is the Directorate's glow. Each stands 25 dE or
-   * more from every navy's inks, every contact tier and the chrome's two
-   * neons, as the eye its palette serves sees them (palette.test.ts).
+   * more from every navy's inks, every contact tier, the chrome's two neons
+   * and the reserved `neon-violet`, as the eye its palette serves sees them
+   * (palette.test.ts).
    */
   lantern: number;
   ui: UiInk;
@@ -281,7 +282,7 @@ const DEUTERANOPIA: Palette = {
     [ResourceKind.ResonanceCrystal]: 0x7fa0f5,
   },
   fauna: 0x6e8c84,
-  lantern: 0x8c1aff,
+  lantern: 0x7f00ff,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -340,7 +341,7 @@ const PROTANOPIA: Palette = {
     [ResourceKind.ResonanceCrystal]: 0x7fa0f5,
   },
   fauna: 0x6e8c84,
-  lantern: 0xa83df5,
+  lantern: 0x9900ff,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,

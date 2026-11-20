@@ -221,7 +221,8 @@ are this step's and TUNABLE; the `vent` family's strength is not.
 
 Limits 2 to 4 hold by construction. A body swims its authored loop on the match's clock
 and answers nothing. The beams a body reads are the own hulls' alone. `life-glint` and
-`jelly-lantern` are no faction's, interface's or family's hues
+`jelly-lantern` are no faction's and no family's hue, and the lantern keeps a measured
+floor from the interface's; what that floor leaves out is written with it
 ([style-neon-noir.md](../../style-neon-noir.md#world-light--the-terrain-carve-outs)).
 
 ## Calls taken with these frames

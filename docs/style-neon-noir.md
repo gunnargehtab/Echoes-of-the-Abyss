@@ -440,7 +440,7 @@ difference than that would be decoration.
 | Nodules | `#F2B233` | `#F5C542` | `#FFCF5C` |
 | Resonance Crystal | `#B98CFF` | `#7FA0F5` | `#7FA0F5` |
 | Fauna | `#5FA88A` | `#6E8C84` | `#6E8C84` |
-| Jelly lantern (world light, High) | `#C56BC7` | `#8C1AFF` | `#A83DF5` |
+| Jelly lantern (world light, High) | `#C56BC7` | `#7F00FF` | `#9900FF` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F5C542` · `#8C8378` | `#FFCF5C` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#2E9BD6` · `#9BE0FF` | `#2E9BD6` · `#9BE0FF` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#5E3A0F` · `#A8701C` | `#7A5218` · `#C98A2E` |
@@ -656,11 +656,11 @@ no agent's token (rule 5), and violet is reserved, so that hue does not transfer
 target's cyan ring did not. It is the one world light a palette owns, as a navy's inks
 are:
 
-| Palette | `jelly-lantern` | Nearest of a navy's inks, a contact tier or a chrome neon, to the eye it serves |
+| Palette | `jelly-lantern` | Nearest of a navy's inks, a contact tier, a chrome neon or `neon-violet`, to the eye it serves |
 | --- | --- | --- |
 | Standard | `#C56BC7` | Hadron's glow, 25.4 dE |
-| Deuteranopia | `#8C1AFF` | Hadron's console accent, 25.4 dE |
-| Protanopia | `#A83DF5` | Hadron's glow, 25.2 dE |
+| Deuteranopia | `#7F00FF` | `neon-violet`, 30.5 dE |
+| Protanopia | `#9900FF` | `neon-violet`, 34.3 dE |
 | Tritanopia | `#8026D9` | Bathyarch's accent, 31.1 dE |
 
 The standard palette's is an orchid pink at 299 degrees, in the gap between the two hues
@@ -668,13 +668,23 @@ that flank it: 35 degrees pinker than Hadron's violet, and 29 bluer than `neon-m
 at under half its saturation. No one pink holds for every eye. The first cut's
 `#CC7AD4` stood 1.7 dE from the Directorate's glow to a tritanope, 4.2 from a Tier 2
 contact to a deuteranope and 8.2 from Pelagia's primary to a protanope. So the lantern
-moves with the palette, into the violet each colour-vision palette leaves empty, and its
+moves with the palette, to a saturated violet in each colour-vision palette, and its
 floor is the one an information ink keeps: 25 dE from every navy's primary, accent, glow
-and console accent, every contact tier and the chrome's two neons, as the eye its
-palette serves sees them. `packages/frontend/test/palette.test.ts` holds it. It carries
-no information: it moves so that it cannot be taken for an ink that does. It is not
-`neon-violet` and stands for nothing unresolved. Whether it reads apart from a lamp and
-from a panel's bevel in play is still the owner's glance.
+and console accent, every contact tier, the chrome's two neons and `neon-violet`, as the
+eye its palette serves sees them. `packages/frontend/test/palette.test.ts` holds it.
+
+The floor leaves out the resource inks, the SIG band, the fauna colour and the other
+world lights, because no pink or violet clears all of those at once in a colour-vision
+palette. What that costs, each to the eye its palette serves: the tritanopia lantern
+stands 16.1 dE from that palette's fauna colour and 20.2 from `crystal-seam`, and the
+standard lantern 22.1 from the Resonance Crystal ink. Place and form hold those apart:
+a fauna mark is a figure in dots on the chart, and a crystal's seam and a field's ink
+lie on the ground, where no lantern hangs. The lantern carries no information: it moves
+so that it cannot be taken for an ink that does. It is not `neon-violet`, which is the menu's and
+never shares a frame with it, and it stands for nothing unresolved. Whether it reads
+apart from a lamp and from a panel's bevel in play is still the owner's glance. The five
+families above are held to no such floor in any palette; #1854 asks whether rule 5 binds
+them in the colour-vision palettes.
 
 Both are placed by the fixture's authored loops and answer nothing a match does
 (rule 4). `LIFE_GLINT` and each palette's `lantern` in

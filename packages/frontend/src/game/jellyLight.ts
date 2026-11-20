@@ -85,7 +85,10 @@ export function jellyShape(template: {
 /** A jelly's own clock: the match's, run ahead by its place in the list. */
 const clock = (timeS: number, index: number): number => timeS + index * STAGGER_S;
 
-/** How far the bell's stroke has drawn the lip in, 0 to 1: a quick squeeze and a slow release. */
+/**
+ * How far the bell's stroke has drawn the lip in, 0 to 1: a brief squeeze
+ * and a longer rest, the same in as out.
+ */
 export function jellyStroke(timeS: number, index: number, moves: boolean): number {
   if (!moves) return 0;
   const beat = 0.5 - 0.5 * Math.cos((2 * Math.PI * clock(timeS, index)) / SWIM.PERIOD_S);

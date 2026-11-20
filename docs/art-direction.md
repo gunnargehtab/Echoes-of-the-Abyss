@@ -728,9 +728,11 @@ over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
   overturned it on a measurement: to a tritanope it stood 1.7 dE from the Directorate's
   glow. **A lantern each palette owns** is taken, as a navy's inks are: an orchid pink
   in the standard palette, 35 degrees pinker than Hadron's violet and 29 bluer than the
-  interface's magenta, and a violet in each colour-vision palette, where no ink is one.
-  Each stands 25 dE or more from every navy's inks, every contact tier and both chrome
-  neons, to the eye its palette serves. A lantern follows a palette changed mid-match.
+  interface's magenta, and a saturated violet in each colour-vision palette. Each stands
+  25 dE or more from every navy's inks, every contact tier, both chrome neons and
+  `neon-violet`, to the eye its palette serves; what that floor leaves out is in
+  [style-neon-noir.md](style-neon-noir.md#world-light--the-terrain-carve-outs). A lantern
+  follows a palette changed mid-match.
 - **It moves, and for nothing** (limit 4). Three things run on the shared match time,
   each jelly's clock 19.75 s ahead of the last's. That leaves every pair of the five at
   least 1 s apart in the stroke, 1.75 s in the wave and 1.25 s in the sway, so no two
