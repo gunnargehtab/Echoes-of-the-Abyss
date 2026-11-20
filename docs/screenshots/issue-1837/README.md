@@ -160,8 +160,9 @@ cameras is gate 6's reading. The second records the clip and holds six seconds a
 for the stream to pass. This command does not set reduced motion, so the bodies stand
 where the match's clock has carried them. Over a lap of the stream, 288 to 368 of its 480
 fry stand inside the Close frame at any moment, so no frame there finds open water; which
-school is the near one changes, and between two the nearest is a knot 100 m off.
-`CLIP_HOLD_MS` lengthens the hold.
+school is the near one changes. For about a fifth of the lap no fry inside the frame is
+within 100 m, and at the worst the nearest is 182 m off, a knot of fine points: the two
+schools between stand just past the frame's edges. `CLIP_HOLD_MS` lengthens the hold.
 
 ## Related
 
