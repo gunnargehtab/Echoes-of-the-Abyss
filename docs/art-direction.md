@@ -230,6 +230,9 @@ Built so far:
   development and not accepted. Below.
 - **The crater stands one vent stand, and its chimneys breathe lit smoke** (#1837). In
   development and not accepted. Below.
+- **The fine snow inside an own hull's beam is lit**
+  ([#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855)). In
+  development and not accepted. Below.
 
 Not built yet: a searchlight on a standing prop, a prop's shadow, a hull's shadow on
 another hull, and the work lights and floodlights of the player's own structures.
@@ -891,7 +894,9 @@ chimney's breath another way.
 
 `packages/frontend/test/ventSmoke.test.ts` holds the column's shape, its three lights
 and its clock, and `packages/frontend/test/tutorialLoading.test.mjs` holds the one plume
-a stack at each quality.
+a stack at each quality. The third light has a frame since #1855: a beam staged across
+both columns, beside the same hull silent
+([issue-1855](screenshots/issue-1855/README.md#a-beam-across-the-plume)).
 
 | What | Constant | Value |
 | --- | --- | --- |
@@ -904,6 +909,91 @@ a stack at each quality.
 | Share of the light on a puff it sends to the eye | `VENT.ALBEDO` | 0.07 |
 | The vent's own light on a puff at the mouth, in the renderer's linear units | `VENT.GLOW` | 6 |
 | Height over the mouth at which that has halved, metres | `VENT.GLOW_REACH_M` | 14 |
+
+#### Snow in a beam
+
+*In development with the rest of High, and not accepted
+([#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855);
+[issue-1855](screenshots/issue-1855/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.MOTES` (`packages/shared/src/constants.ts`) until a frame of it is
+accepted. Three calls were taken in the open with the first frames, and wait on the
+owner: which snow a beam lights, how bright a mote may stand, and how a beam is put
+across the vent stand's plume.*
+
+The target frame's searchlight cones are full of lit particles
+([issue-1799](screenshots/issue-1799/README.md)). A beam lit the ground, the cladding,
+the crater's bodies and a chimney's smoke, and scattered in the water as a smooth cone
+([An own hull's searchlight](#an-own-hulls-searchlight)). The marine snow took none of
+it. At High the snow inside an own hull's beam now shows by the beam's light.
+
+- **A beam shows a finer snow than the water draws.** Three readings were written.
+  **The flakes the water already draws** ([Reading the Water](#reading-the-water)) are
+  the issue's own words, and there are too few of them. At the Close camera the cloud
+  that reaches the Corvette stands 7,000 flakes in a slab 500 m square, 42 in a million
+  cubic metres, and that hull's cone holds a fifth of a million cubic metres down to its
+  pool: nine flakes. **A brighter cone and no particulate** is cheaper, and is the haze
+  the cone already is. **A finer snow, which a beam is bright enough to show and the
+  Lid's glow is not**, is taken: 2,604 motes in a million cubic metres, about 560 in that
+  cone. The flakes stay as they are at both qualities, on the canvas and in the water's
+  one blue, and take no beam.
+- **The snow is the world's, and holds still.** It is one lattice, fixed in the world:
+  36,000 motes in a cell 240 m on a side, repeated. A beam draws the copy of each mote
+  nearest a point 86 m down its axis. So a beam that turns, or a hull under way, sweeps
+  over motes that stay where they are, which is the parallax that makes the flakes read
+  as a medium. Every beam reads the one lattice, so a mote in two cones is one mote and
+  takes both lights.
+- **It ends before the beam does.** A mote is whole within 96 m of that point and gone by
+  120 m, half a cell, so none is lit where the lattice wraps. Lit snow reaches about
+  180 m from the lamp, where the beam's own window closes at 520 m: at rest a beam meets
+  the ground 130 m out, and past 200 m it gives a mote under a twentieth of what it gives
+  at the lamp.
+- **It sinks, and only sinks**, at the flakes' own rate, 1.3 m a second, and reduced
+  motion holds it. A drift would state a current
+  ([Reading the Water](#reading-the-water)).
+- **The only light on it is an own hull's** (limit 2), in the navy's glow (limit 3). A
+  mote reads the beams' own uniforms, so the ground and a hull shadow it as they shadow
+  the cone, and a contact lights none. It sends on 7% of the beam's light at its centre,
+  less for a finer mote.
+- **Its strength is the beam's, and so the lamp halo's** (limit 5). A hull through
+  SIG 15 throws no beam and shows no mote, and Silent Running holds a hull under that.
+  Two readings were written of what the limit asks beyond that. **No mote brighter on
+  the screen than the lamp that lights it** caps a mote near the lamp, where the beam is
+  strongest, and leaves the cone dimmest at its source. **A mote as bright as the beam
+  makes it** is taken, as the pool and the cone are: the brightest mote at Close reads
+  221 of 255 where #1837's frame reads the Corvette's lamp at 165, and step 2's accepted
+  frames read 227 under way. If the owner's glance wants it down, `MOTES.ALBEDO` is what
+  turns.
+- **A mote is small, and a far cone fades.** A mote is 0.5 to 1.4 m across and most are
+  fine. One that would draw under 1.5 pixels is drawn at 1.5 with its light cut by the
+  area it gained, so from Home a cone is a fine dust and not a cloud of full pixels.
+- **No mark is touched** (limit 6). The snow is drawn in the world pass, under every
+  mark, and a ring over a cone stands bare as it did. Whether the Corvette's ring still
+  reads over its own cone in under a second is the owner's glance, on the named GPU
+  (gate 7).
+- **A beam across the plume is staged, not placed.** #1837's frames show no beam on the
+  stand's smoke, and the issue asks for one. Two readings were written. **Move the stand,
+  or a hull's start, until the opening frame holds one** reopens the slot #1837 chose
+  against two rings ([The vents at work](#the-vents-at-work)). **Stage it in the
+  capture** is taken: the Corvette is turned on the stand by one order, and the fixture
+  does not move. At the fleet's 300 m a beam looks down at 26 degrees and lights the
+  columns' mouths alone, in the stand's own glare. The order is to 150 m, where the
+  beam's axis meets the nearer column 67 m over the ground and the farther 45 m over it,
+  on mouths 35 m up.
+
+`packages/frontend/test/beamMotes.test.ts` holds the lattice still under a beam that
+moves, the fade inside the cell, the sink and the count, and
+`packages/frontend/test/rendererSmoke.test.ts` counts the snow's one draw at High with a
+loud hull and none at Low or on Silent Running.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Motes in a cell of the lattice, which is what one beam draws | `MOTES.COUNT` | 36000 |
+| A cell's side, metres | `MOTES.CELL_M` | 240 |
+| How far down a beam's axis the cell it draws is centred, metres | `MOTES.AHEAD_M` | 86 |
+| Distance from that centre a mote is whole within, and gone by, metres | `MOTES.FADE_M` | 96, 120 |
+| A mote's width, the finest and the coarsest, metres | `MOTES.SIZE_M` | 0.5, 1.4 |
+| The narrowest a mote is drawn, pixels | `MOTES.MIN_PX` | 1.5 |
+| Share of the beam's light a mote sends to the eye | `MOTES.ALBEDO` | 0.07 |
 
 #### A mark on the lit world
 
