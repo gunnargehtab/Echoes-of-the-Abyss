@@ -88,14 +88,14 @@ palest fill; rims and cliff shadows darken only ([art-direction.md](art-directio
 
 ### The props (the seabed's furniture)
 
-The twenty environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
+The twenty-two environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
 the arch study's landmark in its Block 4b, take their base colours from this table. Each token is named for the glTF material that carries
 it, hyphenated. `basalt` and `coral_stone` each carry two values, so their tokens take a
 suffix saying which. Metalness is 0 on every one; roughness is the material's own:
 
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
-| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes, the rim ray's lobes, tail and eyes |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes, the rim ray's lobes, tail and eyes, the drift jelly's manubrium, oral lobes and photophore seats |
 | `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
 | `silt-drift` | `#211E15` | 1 | `silt_drift` | Nodule bed's drift, transit arch's sediment |
 | `structure-rib` | `#160F0C` | 0.9 | `structure_rib` | Transit arch's exposed ribs and hung fittings |
@@ -106,7 +106,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
 | `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster, kelp stand (two-sided) |
 | `carapace` | `#2F1F1C` | 0.9 | `carapace` | Rim crab's shell, claws and eyestalks |
-| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats |
+| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats; the drift jelly's bell |
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
 | `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, kelp stand, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
@@ -138,12 +138,18 @@ Five rules ride with the table:
   cladding exposes on the transit arch, warm with two centuries of water. At 0.0054 it sits
   at 0.61 of `stone-dark`, so the ribs read darker than the masonry they carry. On the arch
   the ceiling rule puts the masonry at 0.68 of its sediment and the ribs at 0.41.
-- **A body is neither, and is its own colour.** `carapace` and `fish-flank` are the five
-  public decorative bodies' (#1711, #1777, [asset-prompts-3d.md](asset-prompts-3d.md)
+- **A body is neither, and is its own colour.** `carapace` and `fish-flank` are the six
+  public decorative bodies' (#1711, #1777, #1837, [asset-prompts-3d.md](asset-prompts-3d.md)
   Block 4's variant): the carapace a dark russet at sRGB hue 9°, redder than `coral-stone-ruin`; the
   flank a cold pewter at sRGB hue 186°, between the stones' blue and the living coral's green,
   so a fish reads as a body against rock and kelp alike. Under the ceiling rule the crab's
-  `stone-dark` legs sit at 0.53 of its shell and a fish's fins at 0.41 of its flank.
+  `stone-dark` legs sit at 0.53 of its shell and a fish's fins at 0.41 of its flank. The
+  drift jelly takes the swimmers' pair and no token of its own: a `fish-flank` bell over a
+  `stone-dark` core at the same 0.41, a stalk and five short oral lobes under the bell's
+  middle, a quarter as far out as its margin, so the pale bell is the silhouette and the
+  core a dark tuft under it. Its six photophore seats are the core's `stone-dark`, where
+  the deep fish's are its flank's own: six dark flecks on the pale margin until the
+  runtime lights them, and the bell's material is the bell and nothing else.
 - **A lamp's base is near-black.** The five `-base` tokens sit under the
   [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
   and the base does not compete with it.
@@ -394,7 +400,10 @@ Three rules govern all three:
    `neon-magenta`, the text ramp — is identical in every palette. "Cyan tells
    you, magenta asks you" survives every deficiency here: under the red-green
    palettes both sit on the preserved blue axis, and under tritanopia cyan
-   reads cool and magenta reads warm. A bevel is not information.
+   reads cool and magenta reads warm. A bevel is not information. One thing
+   that is not information moves all the same: a jelly's lantern at the High
+   graphics quality ([World light](#world-light--the-terrain-carve-outs)), so
+   that no eye can take it for an ink that is.
 2. **Biome fills and Echo Mark residue do not move either.** The seafloor is
    deliberately desaturated to 5–10 % luminance and carries no hue-only
    meaning — propagation is read from the overlay and the numbers, never from
@@ -431,6 +440,7 @@ difference than that would be decoration.
 | Nodules | `#F2B233` | `#F5C542` | `#FFCF5C` |
 | Resonance Crystal | `#B98CFF` | `#7FA0F5` | `#7FA0F5` |
 | Fauna | `#5FA88A` | `#6E8C84` | `#6E8C84` |
+| Jelly lantern (world light, High) | `#C56BC7` | `#7F00FF` | `#9900FF` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F5C542` · `#8C8378` | `#FFCF5C` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#2E9BD6` · `#9BE0FF` | `#2E9BD6` · `#9BE0FF` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#5E3A0F` · `#A8701C` | `#7A5218` · `#C98A2E` |
@@ -481,6 +491,7 @@ both go, save one proposed violet: the Directorate's console accent, under
 | Nodules | `#F2B233` | `#F0E0C8` |
 | Resonance Crystal | `#B98CFF` | `#7FB8FF` |
 | Fauna | `#5FA88A` | `#7A7A88` |
+| Jelly lantern (world light, High) | `#C56BC7` | `#8026D9` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F0E0C8` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#1FA67A` · `#8FE36B` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#A02030` · `#E0566B` |
@@ -626,6 +637,68 @@ faction and no interface token wears. The owner accepted them with High's first 
 | `water-resonance` | `#443961` | Resonance Fields |
 | `water-coral` | `#334148` | Coral Ruins |
 
+**Life's own light at High.** *In development with
+[#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837), and not
+accepted.* Two more world-owned sources at the High graphics quality, each the light a
+body of the free-water crater's decorative life carries of its own
+([art-direction.md](art-direction.md#life-in-the-worlds-light)).
+
+`life-glint`, `#B9BFA2`, is one point on a schooling fry's flank. A pale bone white with
+no neon's chroma: warmer than every contact tier's blue, greyer than the civic lamp's
+tallow, and no navy's glow, so rule 5 holds. It is not the fauna colour: that is the
+stipple's, on the tactical layer.
+
+`jelly-lantern` is a drifting jelly: its bell, its seats and the beads of its strands
+([art-direction.md](art-direction.md#a-jelly-is-a-lantern)). The owner's target shows a
+jelly as a lantern of pink-violet light, and its brightest pixels are `#BFA6E2`, at a hue
+of 265 degrees: the hue of Hadron's glow, `#C9A6FF`, within a degree. A world light takes
+no agent's token (rule 5), and violet is reserved, so that hue does not transfer, as the
+target's cyan ring did not. It is the one world light a palette owns, as a navy's inks
+are:
+
+| Palette | `jelly-lantern` | Nearest of a navy's inks, a contact tier, a chrome neon or `neon-violet`, to the eye it serves |
+| --- | --- | --- |
+| Standard | `#C56BC7` | Hadron's glow, 25.4 dE |
+| Deuteranopia | `#7F00FF` | `neon-violet`, 30.5 dE |
+| Protanopia | `#9900FF` | `neon-violet`, 34.3 dE |
+| Tritanopia | `#8026D9` | Bathyarch's accent, 31.1 dE |
+
+The standard palette's is an orchid pink at 299 degrees, in the gap between the two hues
+that flank it: 35 degrees pinker than Hadron's violet, and 29 bluer than `neon-magenta`
+at under half its saturation. No one pink holds for every eye. The first cut's
+`#CC7AD4` stood 1.7 dE from the Directorate's glow to a tritanope, 4.2 from a Tier 2
+contact to a deuteranope and 8.2 from Pelagia's primary to a protanope. So the lantern
+moves with the palette, to a saturated violet in each colour-vision palette, and its
+floor is the one an information ink keeps: 25 dE from every navy's primary, accent, glow
+and console accent, every contact tier, the chrome's two neons and `neon-violet`, as the
+eye its palette serves sees them. `packages/frontend/test/palette.test.ts` holds it.
+
+The floor leaves out the resource inks, the SIG band, the fauna colour and the other
+world lights, because no pink or violet clears all of those at once in a colour-vision
+palette. What that costs, each to the eye its palette serves: the tritanopia lantern
+stands 16.1 dE from that palette's fauna colour and 20.2 from `crystal-seam`, and the
+standard lantern 22.1 from the Resonance Crystal ink. Place and form hold those apart:
+a fauna mark is a figure in dots on the chart, and a crystal's seam and a field's ink
+lie on the ground, where no lantern hangs. The lantern carries no information: it moves
+so that it cannot be taken for an ink that does. It is not `neon-violet`, which is the menu's and
+never shares a frame with it, and it stands for nothing unresolved. Whether it reads
+apart from a lamp and from a panel's bevel in play is still the owner's glance. The five
+families above are held to no such floor in any palette; #1854 asks whether rule 5 binds
+them in the colour-vision palettes.
+
+Both are placed by the fixture's authored loops and answer nothing a match does
+(rule 4). `LIFE_GLINT` and each palette's `lantern` in
+`packages/frontend/src/game/palette.ts` transcribe them.
+
+**A vent's breath at High.** *In development with #1837, and not accepted.* The steam
+over a chimney's mouth is world light in `vent-ember`, as the table says, at both
+qualities. Over the free-water crater's vent stand alone, at High, it is drawn as matter
+and takes no token of its own: a column shows by the light that falls on
+it, which is `vent-ember` from the mouth under it, `lid-glow` above, and an own hull's
+searchlight in its navy's glow where one crosses
+([art-direction.md](art-direction.md#the-vents-at-work)). Rules 4 and 5 hold: it is
+placed by the map's chimneys, and wears no hue but those lights'.
+
 Every family obeys the same five rules, and they are gates, not suggestions:
 
 1. **World light is points and seams, never area glow.** No lit ground, no
@@ -715,7 +788,9 @@ The planned [free-water slice](free-water-slice.md) §5 applies this same public
 point channel to its decorative deep fish, not to a gameplay animal: non-emissive
 bodies with at most six soft photophore dots each, bounded by rung 5. No lit skin,
 halo, new ground-light family or response to a participant is licensed. Its other
-decorative animals carry no emission; this exception remains confined to the study.
+decorative animals carry no emission; this exception remains confined to the study. At
+High a schooling fry carries one point of world light, `life-glint`, and a drifting
+jelly is drawn as a lantern, `jelly-lantern`, both above.
 
 ### The arch study's licence
 

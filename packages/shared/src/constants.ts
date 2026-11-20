@@ -82,6 +82,96 @@ export const FREE_WATER_LIFE = {
 } as const;
 
 /**
+ * TUNABLE — docs/free-water-slice.md §5, "High's own life" (#1837): the life
+ * the crater stands at the High graphics quality alone, where the target's
+ * three cameras read a body. A look step in development, so nothing here is
+ * SPEC until the owner accepts a frame of it (the `dev-loop` skill, "Look
+ * work"); Low's list is `FREE_WATER_LIFE` and does not move.
+ *
+ * A stream is schools sharing one loop, `SCHOOLS` of them evenly round it, so
+ * a still camera beside the loop sees fish pass at any match time rather than
+ * once a lap. `at` is the loop's centre in map metres, `startDeg` where its
+ * first school stands when the match starts, as the loop's own phase (0 east,
+ * 90 south), and `STATION` how far a fish keeps from its school's own point,
+ * as `FRY_SCHOOL` is.
+ */
+export const FREE_WATER_HIGH_LIFE = {
+  /**
+   * Fry past the Close camera's eye, 233 m deep at 178 / 2,168: the loop's
+   * near side crosses its sight line 50 m out, where a 0.5 m body draws
+   * fifteen pixels.
+   */
+  FRY_STREAM: {
+    at: [299, 2098],
+    startDeg: 159,
+    SCHOOLS: 5,
+    COUNT: 96,
+    MOTION: { radiusM: 90, periodS: 380, depthM: 228, depthSwingM: 6, axisM: 0.06 },
+    // A ribbon 14 m long, 3 m across and 2 m deep as drawn, a body about every
+    // metre: looser, and a school reads from the Close eye as scattered points.
+    STATION: { alongM: 7, acrossM: 1.6, depthM: 5 },
+  },
+  /**
+   * Outer fish among the hulls and through the water the Corvette's beam
+   * crosses at rest, between its lamp at 300 m and its pool on the 600 m rim:
+   * a 4 m body draws nine to twelve pixels from the Close eye and six from
+   * Home's.
+   */
+  OUTER_STREAM: {
+    at: [760, 2050],
+    startDeg: 90,
+    SCHOOLS: 4,
+    COUNT: 12,
+    MOTION: { radiusM: 75, periodS: 300, depthM: 430, depthSwingM: 40, axisM: 0.78 },
+    STATION: { alongM: 14, acrossM: 6, depthM: 14 },
+  },
+  /**
+   * The drifting bodies: `env-drift-jelly`, five of them hanging over the
+   * fleet's start, 110 to 150 m deep, where the Close camera has the water
+   * above the hulls' rings. A slot is a loop's centre in map metres, the
+   * depth its bell hangs at and where it stands when the match starts, in
+   * degrees round its loop. A jelly drifts: one lap of a loop 14 m in radius
+   * in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
+   * goes, its bell leaning `bankDeg` into the turn as the target's leans.
+   * Its `axisM` is the bell's mid-height over the model's origin, its lowest
+   * lobe's tip.
+   */
+  JELLIES: {
+    SLOTS: [
+      [305, 2041, 140, 0],
+      [416, 2062, 120, 70],
+      [505, 2122, 150, 140],
+      [509, 1909, 110, 210],
+      [678, 2025, 130, 280],
+    ],
+    MOTION: { radiusM: 14, periodS: 280, depthSwingM: 10, axisM: 2.76, bankDeg: 12 },
+  },
+} as const;
+
+/**
+ * TUNABLE — docs/free-water-slice.md §5, "High's own vents" (#1837): the one
+ * vent stand the crater stands, at the High graphics quality alone, on the
+ * outside rim by the fleet's start, where the target's Close camera has its
+ * chimneys. Props by authored slots, each a plan position in map metres and
+ * a heading in degrees: the rim's cells stay Coral Ruins at 600 m, so no
+ * floor, PF or route moves. Not SPEC until the owner accepts a frame of the
+ * step.
+ */
+export const FREE_WATER_HIGH_VENTS = {
+  // Both inside one 80 m cell of the vent family's lattice, so the stand is
+  // one source and not two (worldLights.ts `worldLightsOf`).
+  CHIMNEYS: [
+    [562, 2018, 20],
+    [582, 2042, -35],
+  ],
+  BASALT: [
+    [544, 2036, 10],
+    [598, 2016, -60],
+    [570, 2064, 130],
+  ],
+} as const;
+
+/**
  * docs/free-water-slice.md §9, Opening view: how the study's orbit opens on the
  * first sight of the force. SPEC: the heading toward mark A, 34 degrees east
  * of north; 15 degrees of pitch; the focus at the hulls' 300 m exercise depth.
@@ -293,6 +383,135 @@ export const HIGH_GRAPHICS = {
     VOLUME: 0.0001,
     VOLUME_STEPS: 16,
     SHADOW: { STEPS: 12, VOLUME_STEPS: 4, LIFT_M: 1.5, SOFT_M: 2, HULL_EDGE: [0.7, 1.4] },
+  },
+  /**
+   * TUNABLE: life in the world's light (docs/art-direction.md, "Life in the
+   * world's light"; #1837), until a frame of it is accepted. The world's
+   * light on a decorative body (lifeLight.ts), added to the rig's as a hull's
+   * is. `LID` is how much of the Lid's glow a face takes of what level ground
+   * takes at its depth, `POOL` how much of a pool a face looking straight
+   * down takes on a body at the ground, and `POOL_REACH_M` the drawn height
+   * over the ground at which that has halved: knobs of a body's own, set to
+   * a hull's three (`HULL_LIGHT`) since a fish beside a hull stands in the
+   * same light, and free to leave them. `BEAM` is how much of an own
+   * hull's searchlight a body takes of what ground would. `ALBEDO` is the
+   * diffuse luminance a body's brightest material is lifted to there, over
+   * the props' 0.06: a body a metre long is a few pixels, and at the props'
+   * register it reads as a hole in the water. It is an own hull's cladding
+   * ceiling and no higher (rosterModels.ts `CLADDING_CEILING`), so scenery
+   * still never out-reads a vessel.
+   *
+   * `GLOW` is the light a body carries of its own, as points of the world
+   * pass (lifeGlow.ts): a schooling fry's one, in `life-glint`, and
+   * `LANTERN`, the point on each of a drifting jelly's six seats, in the
+   * jelly's own token and cloud (`JELLY` below). `LEVEL` is a fry's radiance
+   * at the point's centre, in the
+   * renderer's linear units, at the bloom's threshold so a near light
+   * spreads a little and no more, and under the lamps of a hull loud enough
+   * to throw a beam (gate 3; a quiet hull's lamp is dimmer than a fry, which
+   * the doc leaves to the owner's glance); `SIZE_M` the soft disc's width; `MIN_PX` the least a
+   * point is drawn, in pixels, its level cut by the area that floor adds; and
+   * `LIFT_M` how far toward the eye a light is drawn from its body's axis, so
+   * the body's own flank does not cut it.
+   */
+  LIFE: {
+    LID: 1,
+    POOL: 0.3,
+    POOL_REACH_M: 80,
+    BEAM: 0.5,
+    ALBEDO: 0.16,
+    GLOW: {
+      LEVEL: 0.3,
+      SIZE_M: 0.22,
+      MIN_PX: 1.6,
+      LIFT_M: 0.15,
+      // A jelly's seat: wider than a fry's light and no brighter.
+      LANTERN: { LEVEL: 0.3, SIZE_M: 0.55 },
+    },
+    /**
+     * A drifting jelly as a lantern (jellyLight.ts; docs/art-direction.md, "A
+     * jelly is a lantern"), in `jelly-lantern`: the owner's target shows a
+     * translucent bell lit from within over long strands of beads of light.
+     *
+     * `BELL` is the membrane: `LEVEL` the light a face square to the eye
+     * gives, in the renderer's linear units, `RIM` what a face edge-on adds
+     * and `RIM_POWER` how fast that falls toward the face; `RIBS` the radial
+     * canals round the bell, `RIB` what one adds on its line and
+     * `RIB_POWER` how thin that line is, the exponent on its cosine; `MARGIN`
+     * what the band at the bell's lip adds and `LIP_M` that band's
+     * half-width, and `CORE` the level of the short lobes under it. `STRANDS` hang from the lip: `COUNT` of them,
+     * `BEADS` a strand, the longest `LENGTH_M` and the shortest that times
+     * `SHORTEST`, each hung at `ROOT` of the lip's radius and gathered in by
+     * `GATHER` of it at the tip; a bead is `SIZE_M` wide at the lip, less
+     * `TAPER` of that at the tip, at `LEVEL`, fading to the tip by the
+     * exponent `FADE`; a strand waves `SWAY_M` at its tip, once a `SWAY_PERIOD_S`,
+     * and trails `TRAIL_M` behind the way its jelly drifts. `HALO` is the glow in the water round
+     * the bell, one soft disc. `SWIM` is the bell's stroke: one a
+     * `PERIOD_S`, the lip drawn in by `SQUEEZE` of its radius. `PULSE` is a
+     * wave of light that runs from the crown down the bell and out along the
+     * strands: one a `PERIOD_S`, `SPEED_MPS` along the body, `WIDTH_M` wide,
+     * starting `LEAD` of its widths over the crown so it enters and is not
+     * switched on, and adding `GAIN` of the level it passes. Each jelly's
+     * clock runs `STAGGER_S` ahead of the last's, which leaves every pair of
+     * the crater's five at least 1 s apart in the stroke, 1.75 s in the wave
+     * and 1.25 s in the sway. Reduced motion holds all three.
+     */
+    JELLY: {
+      BELL: {
+        LEVEL: 0.04,
+        RIM: 0.2,
+        RIM_POWER: 2.2,
+        RIBS: 16,
+        RIB: 0.04,
+        RIB_POWER: 12,
+        MARGIN: 0.07,
+        LIP_M: 0.3,
+        CORE: 0.08,
+      },
+      STRANDS: {
+        COUNT: 18,
+        BEADS: 18,
+        LENGTH_M: 12,
+        SHORTEST: 0.6,
+        ROOT: 0.94,
+        GATHER: 0.3,
+        SIZE_M: 0.45,
+        TAPER: 0.45,
+        LEVEL: 0.38,
+        FADE: 0.4,
+        SWAY_M: 1.8,
+        SWAY_PERIOD_S: 7,
+        TRAIL_M: 5,
+      },
+      HALO: { SIZE_M: 15, LEVEL: 0.03 },
+      SWIM: { PERIOD_S: 5.5, SQUEEZE: 0.16 },
+      PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, LEAD: 2, GAIN: 0.6 },
+      STAGGER_S: 19.75,
+    },
+  },
+  /**
+   * TUNABLE: a vent at work (docs/art-direction.md, "The vents at work";
+   * #1837), until a frame of it is accepted. What a chimney breathes at High,
+   * drawn as matter that shows by the light on it (ventSmoke.ts). A column is
+   * `PUFFS` puffs, each `LIFE_S` from the mouth to gone, climbing `RISE_M`
+   * from a mouth `MOUTH_M` in radius and opening `SPREAD_M` about its axis by
+   * the top; a puff is `SIZE_M` across at the mouth and at the top. `ALBEDO`
+   * is the share of the light on a puff it sends to the eye. `GLOW` is the
+   * vent's own light on a puff at the mouth, in `vent-ember` and the
+   * renderer's linear units, and `GLOW_REACH_M` the height over the mouth at
+   * which it has halved: the column is amber where it leaves the stack and
+   * the Lid's colour above.
+   */
+  VENT: {
+    PUFFS: 30,
+    LIFE_S: 18,
+    RISE_M: 130,
+    MOUTH_M: 2.5,
+    SPREAD_M: 16,
+    SIZE_M: [5, 24],
+    ALBEDO: 0.07,
+    GLOW: 6,
+    GLOW_REACH_M: 14,
   },
 } as const;
 

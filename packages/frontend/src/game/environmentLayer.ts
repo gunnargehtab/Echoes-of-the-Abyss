@@ -80,7 +80,11 @@ import type { LandmarkState } from '@echoes/shared';
 import type { WorldLook } from './tutorialLook.ts';
 import type { MaskLandmarkPart } from './archMask.ts';
 import { setDistanceGradeOn } from './distanceGrade.ts';
-import { VentPlume, plumeSites } from './ventPlume.ts';
+import { VentPlume, plumeSites, type PlumeSite } from './ventPlume.ts';
+import { LIFE_GLOW_KIND, LifeGlow } from './lifeGlow.ts';
+import { tintJellyMembrane, writeJellyLights } from './jellyLight.ts';
+import { JELLY_LANTERN } from './palette.ts';
+import { VentSmoke } from './ventSmoke.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
 const TMP_MATRIX = new Matrix4();
@@ -152,6 +156,14 @@ export class EnvironmentLayer {
   >();
   private fixtureGround: ((x: number, y: number) => number) | null = null;
   private matchMs = 0;
+  /**
+   * Whether the view draws a world pass: the High graphics quality
+   * (highFrame.ts). The crater's fixture then stands High's own slots beside
+   * Low's (docs/free-water-slice.md §5, "High's own life") and draws each
+   * body from its High template (lifeLight.ts). The caller rebuilds, as for
+   * every other change to what stands on the ground.
+   */
+  private worldPass = false;
 
   /** Added to the scene once by the view; rebuilt in place. */
   readonly group = new Group();
@@ -163,6 +175,31 @@ export class EnvironmentLayer {
   readonly sift = new LandmarkSift();
   /** The collapse's cloud, one draw, alive for the 14 s after the ground change. */
   readonly cloud = new CollapseCloud();
+  /**
+   * The light the crater's fry carry of their own at High, one draw in the
+   * world pass; in the group while the view draws one (lifeGlow.ts, #1837).
+   */
+  readonly glow = new LifeGlow();
+  /**
+   * The points of light the crater's jellies carry at High, in their own
+   * token: the glow round each bell, its seats and its strands' beads
+   * (jellyLight.ts, #1837). One more draw in the world pass, in the group
+   * while the view draws one. A point's level is its own, so the cloud's is 1.
+   */
+  readonly lantern = new LifeGlow(JELLY_LANTERN, 1, 'jelly_lantern');
+  /**
+   * What the crater's vent stand breathes at High, one draw in the world
+   * pass, in place of `plume`; in the group while a column stands there and
+   * the view draws a world pass (ventSmoke.ts, #1837).
+   */
+  readonly smoke = new VentSmoke();
+  /**
+   * Where each light a body carries stood on the last tick, and its width
+   * and level beside it, five floats a light, for `glow` to copy.
+   */
+  private glintAt = new Float32Array(0);
+  /** The same of each jelly's points, for `lantern`. */
+  private lanternAt = new Float32Array(0);
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
@@ -254,7 +291,7 @@ export class EnvironmentLayer {
   worldLightSites(terrain: TerrainPayload): WorldLightSite[] {
     const placements =
       this.look === 'free-water'
-        ? freeWaterPlacements(terrain, true)
+        ? freeWaterPlacements(terrain, true, this.worldPass)
         : placeAll(terrain, ENVIRONMENT_PROPS, this.look, this.fields, this.landmarks).placements;
     const sites: WorldLightSite[] = [];
     for (const placement of placements) {
@@ -422,11 +459,31 @@ export class EnvironmentLayer {
       if (top === undefined) return null;
       return groundY(placement.xM, placement.yM) + top * placement.scale;
     });
-    this.plume.build(sites, this.shade);
-    if (sites.length > 0) this.group.add(this.plume.points);
+    this.breathe(sites);
     const hazes = standsFields ? hazeSites(this.fields, terrain, groundY) : [];
     this.haze.build(hazes, this.shade);
     if (hazes.length > 0) this.group.add(this.haze.points);
+  }
+
+  /**
+   * Stand a column on each chimney's mouth: the steam on the canvas
+   * (ventPlume.ts), or, over the free-water crater's stand at High, the same
+   * column as lit matter in the world pass (ventSmoke.ts). One or the other,
+   * never both. Every other map keeps the steam at High too: a Thermal Vein
+   * has no frame of the smoke yet, and look work starts from a frame
+   * (docs/art-direction.md, "The vents at work").
+   */
+  private breathe(sites: readonly PlumeSite[]): void {
+    this.group.remove(this.plume.points, this.smoke.points);
+    if (this.worldPass && this.look === 'free-water') {
+      this.plume.clear();
+      this.smoke.build(sites, this.shade);
+      if (sites.length > 0) this.group.add(this.smoke.points);
+    } else {
+      this.smoke.clear();
+      this.plume.build(sites, this.shade);
+      if (sites.length > 0) this.group.add(this.plume.points);
+    }
   }
 
   private rebuildFixture(
@@ -437,10 +494,22 @@ export class EnvironmentLayer {
     this.fixtureGround = groundY;
     this.props = this.propTris = 0;
     const bySlug = new Map<string, PropPlacement[]>();
-    for (const p of freeWaterPlacements(terrain, true)) {
+    const placements = freeWaterPlacements(terrain, true, this.worldPass);
+    for (const p of placements) {
       const list = bySlug.get(p.slug) ?? [];
       list.push(p);
       bySlug.set(p.slug, list);
+    }
+    // Where each standing slug tops out: the chimneys' mouths.
+    const topM = new Map<string, number>();
+    // A slug the list no longer stands, as High's own at Low, goes with its batch.
+    for (const [slug, batch] of this.fixtureBatches) {
+      if (bySlug.has(slug)) continue;
+      for (const mesh of batch.meshes) {
+        this.group.remove(mesh);
+        mesh.dispose();
+      }
+      this.fixtureBatches.delete(slug);
     }
     for (const [slug, list] of bySlug) {
       const spec = propSpec(slug)!;
@@ -451,15 +520,33 @@ export class EnvironmentLayer {
         () => {
           if (generation === this.generation) this.rebuild(terrain, groundY);
         },
-        this.look
+        this.look,
+        // A body in the world's light at High, and the jelly as a lantern.
+        this.worldPass && spec.life === true && (spec.glint === 'lantern' ? 'lantern' : true)
       );
       if (template === null) continue;
       let batch = this.fixtureBatches.get(slug);
+      // A batch is as long as its list was when it was made, and draws the
+      // template it was made from: another quality's is another batch.
+      if (
+        batch !== undefined &&
+        (batch.template !== template || batch.list.length !== list.length)
+      ) {
+        for (const mesh of batch.meshes) {
+          this.group.remove(mesh);
+          mesh.dispose();
+        }
+        this.fixtureBatches.delete(slug);
+        batch = undefined;
+      }
       if (batch === undefined) {
         const meshes = template.parts.map((part) => {
           const mesh = new InstancedMesh(part.geometry, part.material, list.length);
           mesh.name = slug;
           mesh.frustumCulled = false;
+          // A blended part that is still the world pass's names itself, as
+          // a jelly's membrane does (PerspectiveView `enterWorldLayer`).
+          if (part.material.userData.worldLayer === true) mesh.userData.worldLayer = true;
           this.group.add(mesh);
           return mesh;
         });
@@ -478,8 +565,22 @@ export class EnvironmentLayer {
       this.props += list.filter((p) => p.disabled !== true).length;
       // Disabled slots retain zero-scale matrices, but are still submitted.
       this.propTris += list.length * template.trianglesPerInstance;
+      topM.set(slug, template.heightM);
     }
+    // A chimney whose model has not loaded, or whose slot the ground refuses,
+    // stands nothing and breathes nothing.
+    this.breathe(
+      plumeSites(
+        placements.filter((p) => p.disabled !== true),
+        (placement) => {
+          const top = topM.get(placement.slug);
+          return top === undefined ? null : groundY(placement.xM, placement.yM) + top;
+        }
+      )
+    );
     if (this.decorativeDots !== null) this.group.add(this.decorativeDots.points);
+    if (this.worldPass) this.group.add(this.glow.points, this.lantern.points);
+    else this.group.remove(this.glow.points, this.lantern.points);
     this.tickFixture();
   }
 
@@ -494,17 +595,86 @@ export class EnvironmentLayer {
 
   private tickFixture(): void {
     const points: Vector3[] = [];
-    for (const { template, meshes, list } of this.fixtureBatches.values()) {
+    // Where each light a body carries stands now, in a buffer kept across
+    // frames: the bodies move every frame and their count only with a
+    // rebuild. A fry's is one point on its axis, in the fry's cloud; a
+    // jelly's are its own, in the lantern's.
+    let lanterns = 0;
+    const lantern = (at: Vector3, sizeM: number, level: number) => {
+      if (this.lanternAt.length < (lanterns + 1) * 5) {
+        const grown = new Float32Array(Math.max(2048, (lanterns + 1) * 2) * 5);
+        grown.set(this.lanternAt);
+        this.lanternAt = grown;
+      }
+      at.toArray(this.lanternAt, lanterns * 5);
+      this.lanternAt[lanterns * 5 + 3] = sizeM;
+      this.lanternAt[lanterns * 5 + 4] = level;
+      lanterns++;
+    };
+    const timeS = this.matchMs / 1000;
+    let glints = 0;
+    const glint = (at: Vector3, [sizeM, level]: readonly [number, number]) => {
+      if (this.glintAt.length < (glints + 1) * 5) {
+        const grown = new Float32Array(Math.max(256, (glints + 1) * 2) * 5);
+        grown.set(this.glintAt);
+        this.glintAt = grown;
+      }
+      at.toArray(this.glintAt, glints * 5);
+      this.glintAt[glints * 5 + 3] = sizeM;
+      this.glintAt[glints * 5 + 4] = level;
+      glints++;
+    };
+    for (const [slug, { template, meshes, list }] of this.fixtureBatches) {
       if (template.sway !== null) {
         template.sway.uSwayTime.value = this.reducedMotion ? SWAY_HOLD_S : this.matchMs / 1000;
       }
+      if (template.jelly !== undefined) {
+        template.jelly.uniforms.uJellyTime.value = timeS;
+        template.jelly.uniforms.uJellyMoves.value = this.reducedMotion ? 0 : 1;
+        // The lantern's hue is the active palette's, read live as a mark's is.
+        for (const part of template.parts) tintJellyMembrane(part.material, JELLY_LANTERN);
+      }
+      const carries = propSpec(slug)?.glint;
       list.forEach((p, i) => {
         if (p.motion === undefined || p.disabled === true) return;
         this.writeFixturePose(meshes, p, i);
+        if (carries === 'lantern') {
+          // A jelly's seats are world light at High and nothing at Low: never
+          // the stipple channel's dots, which are the deep fish's alone.
+          if (!this.worldPass || template.jelly === undefined) return;
+          writeJellyLights(
+            template.jelly.shape,
+            template.photophores ?? [],
+            TMP_MATRIX,
+            i,
+            timeS,
+            !this.reducedMotion,
+            lantern
+          );
+          return;
+        }
         for (const seat of template.photophores ?? [])
           points.push(seat.clone().applyMatrix4(TMP_MATRIX));
+        if (carries === 'axis' && this.worldPass) {
+          glint(TMP_POS.set(0, p.motion.axisM, 0).applyMatrix4(TMP_MATRIX), LIFE_GLOW_KIND.axis);
+        }
       });
     }
+    const lit = this.glintAt;
+    this.glow.write(glints, (positions, glow) => {
+      for (let i = 0; i < glints; i++) {
+        positions.set(lit.subarray(i * 5, i * 5 + 3), i * 3);
+        glow.set(lit.subarray(i * 5 + 3, i * 5 + 5), i * 2);
+      }
+    });
+    this.lantern.setToken(JELLY_LANTERN, 1);
+    const hung = this.lanternAt;
+    this.lantern.write(lanterns, (positions, glow) => {
+      for (let i = 0; i < lanterns; i++) {
+        positions.set(hung.subarray(i * 5, i * 5 + 3), i * 3);
+        glow.set(hung.subarray(i * 5 + 3, i * 5 + 5), i * 2);
+      }
+    });
     this.decorativeDots?.write(points.length, (anchor, dot, seed) => {
       dot.fill(0);
       points.forEach((point, i) => {
@@ -586,6 +756,14 @@ export class EnvironmentLayer {
   }
 
   /**
+   * Take the view's quality: whether it draws a world pass (above). The
+   * caller rebuilds, as for the fields: the view owns *when*.
+   */
+  setWorldPass(on: boolean): void {
+    this.worldPass = on;
+  }
+
+  /**
    * Take the map's public landmarks. The caller rebuilds, as for the fields:
    * the view owns *when*.
    */
@@ -602,6 +780,7 @@ export class EnvironmentLayer {
     this.matchMs = matchMs;
     if (this.look === 'free-water') this.tickFixture();
     this.plume.tick(nowMs, waterReachM);
+    this.smoke.tick(nowMs);
     this.haze.tick(nowMs, waterReachM);
     this.tickLandmarks(nowMs);
     if (this.swaying.length === 0) return;
@@ -649,6 +828,7 @@ export class EnvironmentLayer {
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
     this.plume.setReducedMotion(reduced);
+    this.smoke.setReducedMotion(reduced);
     this.haze.setReducedMotion(reduced);
     this.sift.setReducedMotion(reduced);
     if (reduced) {
@@ -686,6 +866,7 @@ export class EnvironmentLayer {
       for (const mesh of meshes) this.applyShade(mesh, list);
     }
     this.plume.setShade(shade);
+    this.smoke.setShade(shade);
     this.haze.setShade(shade);
     this.sift.setShade(shade);
   }
@@ -716,18 +897,23 @@ export class EnvironmentLayer {
     siftMotes: number;
     cloudMotes: number;
     decorativePhotophores: number;
+    lifeGlints: number;
+    jellyLights: number;
     fixtureAssets: Record<string, number>;
   } {
     return {
       props: this.props,
       propTris: this.propTris,
-      ventPlumes: this.plume.plumes,
+      // Columns standing, as steam or as smoke: one or the other.
+      ventPlumes: this.plume.plumes + this.smoke.plumes,
       fieldHazes: this.haze.fields,
       landmarks: this.landmarksStanding,
       landmarkTris: this.landmarkTris,
       siftMotes: this.sift.motes,
       cloudMotes: this.cloud.motes,
       decorativePhotophores: this.decorativeDots?.dotCount ?? 0,
+      lifeGlints: this.glow.count,
+      jellyLights: this.lantern.count,
       fixtureAssets: Object.fromEntries(
         [...this.fixtureBatches].map(([slug, batch]) => [
           slug,
@@ -845,9 +1031,12 @@ export class EnvironmentLayer {
   destroy(): void {
     this.reset();
     this.plume.dispose();
+    this.smoke.dispose();
     this.haze.dispose();
     this.sift.dispose();
     this.cloud.dispose();
+    this.glow.dispose();
+    this.lantern.dispose();
     this.decorativeDots?.dispose();
   }
 
@@ -862,6 +1051,7 @@ export class EnvironmentLayer {
     // is not emptied here: a rebuild mid-sequence (a second delta in the 14 s)
     // leaves it settling, and the group it is re-added to is this one.
     this.plume.clear();
+    this.smoke.clear();
     this.haze.clear();
     this.sift.clear();
     this.lit = [];
@@ -877,5 +1067,7 @@ export class EnvironmentLayer {
     this.fixtureGround = null;
     this.matchMs = 0;
     this.decorativeDots?.write(0, () => {});
+    this.glow.write(0, () => {});
+    this.lantern.write(0, () => {});
   }
 }

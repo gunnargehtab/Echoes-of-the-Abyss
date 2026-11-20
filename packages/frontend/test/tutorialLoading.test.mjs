@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { after, afterEach, before, describe, it, mock } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { BoxGeometry, Group, Mesh, MeshStandardMaterial } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createServer } from 'vite';
-import { Biome, Faction, UnitKind } from '@echoes/shared';
+import { Biome, Faction, FREE_WATER_HIGH_LIFE, HIGH_GRAPHICS, UnitKind } from '@echoes/shared';
 
 // The Node asset shim intentionally has no URLs. Vite expands the real manifest;
 // only network/decode completion is controlled, not the cache or its consumers.
@@ -203,6 +204,8 @@ describe('pending prop delivery', () => {
       siftMotes: 0,
       cloudMotes: 0,
       decorativePhotophores: 0,
+      lifeGlints: 0,
+      jellyLights: 0,
       fixtureAssets: {},
     });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');
@@ -329,6 +332,83 @@ describe('vent steam (#1514)', () => {
   });
 });
 
+describe('a vent at work at High (#1837)', () => {
+  // Serve every load as it is asked for, until `done`: High asks for a body's
+  // own template after Low's, so the count is not one number.
+  const settle = async (done) => {
+    let served = 0;
+    await until(() => {
+      while (served < pending.length) pending[served++].resolve(source());
+      return done();
+    });
+  };
+
+  it('keeps the steam on the canvas at High on a map that is not the crater', async () => {
+    controlLoads();
+    const vents = { ...terrain(), biomes: Array(64).fill(Biome.ThermalVein) };
+    const all = placeProps(vents);
+    const chimneys = all.filter((p) => p.slug === 'env-vent-chimney');
+    const layer = new EnvironmentLayer();
+    try {
+      // docs/art-direction.md, "The vents at work": the crater's stand alone
+      // breathes smoke; a Thermal Vein has no frame of it yet.
+      layer.setWorldPass(true);
+      layer.rebuild(vents, () => -200, all);
+      await settle(() => layer.stats().props === all.length);
+      assert.equal(layer.plume.plumes, chimneys.length);
+      assert.equal(layer.smoke.plumes, 0);
+      assert.ok(layer.group.children.includes(layer.plume.points));
+      assert.ok(!layer.group.children.includes(layer.smoke.points));
+    } finally {
+      layer.destroy();
+    }
+  });
+
+  it('breathes lit smoke over the crater’s stand at High, and stands none of it at Low', async () => {
+    controlLoads();
+    // The outside rim's own cells everywhere: Coral Ruins at 600 m, open.
+    const rim = {
+      cols: 16,
+      rows: 16,
+      cellM: 250,
+      floor: Array(256).fill(600),
+      ceiling: Array(256).fill(0),
+      biomes: Array(256).fill(Biome.CoralRuins),
+    };
+    const stacks = () => layer.stats().fixtureAssets['env-vent-chimney'] ?? 0;
+    const chimneyMeshes = () => layer.group.children.filter((c) => c.name === 'env-vent-chimney');
+    const layer = new EnvironmentLayer('free-water');
+    try {
+      layer.rebuild(rim, () => -132);
+      await settle(() => layer.stats().fixtureAssets['env-shoal-fry'] !== undefined);
+      const low = layer.stats().props;
+      assert.equal(stacks(), 0, 'Low stands no vent');
+      assert.equal(layer.stats().ventPlumes, 0);
+
+      layer.setWorldPass(true);
+      layer.rebuild(rim, () => -132);
+      await settle(() => stacks() === 2 && layer.smoke.plumes === 2);
+      // One plume a stack, never both.
+      assert.equal(layer.plume.plumes, 0);
+      assert.ok(layer.group.children.includes(layer.smoke.points));
+      assert.ok(!layer.group.children.includes(layer.plume.points));
+      assert.ok(chimneyMeshes().length > 0);
+
+      // Back at Low the stand goes whole: its meshes, its columns, its count.
+      layer.setWorldPass(false);
+      layer.rebuild(rim, () => -132);
+      assert.equal(chimneyMeshes().length, 0);
+      assert.equal(stacks(), 0);
+      assert.equal(layer.smoke.plumes, 0);
+      assert.equal(layer.stats().ventPlumes, 0);
+      assert.ok(!layer.group.children.includes(layer.smoke.points));
+      assert.equal(layer.stats().props, low);
+    } finally {
+      layer.destroy();
+    }
+  });
+});
+
 describe('roster look and palette cache isolation', () => {
   it('holds the requested palette across a pending load and shares only matching templates', async () => {
     controlLoads();
@@ -365,5 +445,97 @@ describe('roster look and palette cache isolation', () => {
     assert.doesNotMatch(cladding(standard).material.customProgramCacheKey(), /sorrowgate/);
     assert.match(cladding(tutorial).material.customProgramCacheKey(), /sorrowgate/);
     assert.equal(pending.length, 1, 'both looks and palettes reuse the parsed source');
+  });
+});
+
+describe('a body’s own light at High (#1837)', () => {
+  // A seat is a node its file names, so the two bodies that carry seats are
+  // served as their real files and every other load as the stub.
+  const SEATED = ['env-deep-fish', 'env-drift-jelly'];
+  const real = (slug) => {
+    const bytes = readFileSync(
+      new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
+    );
+    return new GLTFLoader().parseAsync(
+      bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+      ''
+    );
+  };
+  let served = 0;
+  const settle = async (done) => {
+    await until(() => {
+      while (served < pending.length) {
+        const load = pending[served++];
+        const slug = SEATED.find((seated) => String(load.url).includes(`${seated}.glb`));
+        if (slug === undefined) load.resolve(source());
+        else real(slug).then(load.resolve, load.reject);
+      }
+      return done();
+    });
+  };
+
+  it('lights a fry’s flank, hangs a jelly’s lantern, and leaves the stipple the deep fish’s', async () => {
+    controlLoads();
+    served = 0;
+    const { terrainFor } = await import('../../backend/src/sim/maps/index.ts');
+    const { FREE_WATER_SLICE } = await import('../../backend/src/sim/maps/freeWaterSlice.ts');
+    const cells = terrainFor(FREE_WATER_SLICE).serialize();
+    const layer = new EnvironmentLayer('free-water');
+    const count = (slug) => layer.stats().fixtureAssets[slug] ?? 0;
+    try {
+      layer.rebuild(cells, () => -132);
+      await settle(() => count('env-shoal-fry') > 0 && layer.stats().decorativePhotophores > 0);
+      layer.tick(0, undefined, 1000);
+      const low = layer.stats();
+      // Low: the deep fish's seats are the stipple's dots, no body is lit and
+      // no jelly stands.
+      const seats = low.decorativePhotophores / count('env-deep-fish');
+      assert.ok(Number.isInteger(seats) && seats >= 1 && seats <= 6, `${seats} seats a deep fish`);
+      assert.equal(low.lifeGlints, 0);
+      assert.equal(low.jellyLights, 0);
+      assert.equal(count('env-drift-jelly'), 0);
+
+      layer.setWorldPass(true);
+      layer.rebuild(cells, () => -132);
+      const jellies = FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length;
+      await settle(
+        () =>
+          count('env-drift-jelly') === jellies &&
+          count('env-shoal-fry') > low.fixtureAssets['env-shoal-fry'] &&
+          layer.stats().lifeGlints > 0 &&
+          layer.stats().jellyLights > 0
+      );
+      layer.tick(0, undefined, 2000);
+      const high = layer.stats();
+      // docs/art-direction.md, "Life in the world's light": one light a fry,
+      // in the fry's cloud, and no other body in it.
+      assert.equal(high.lifeGlints, count('env-shoal-fry'));
+      // "A jelly is a lantern": the glow round its bell, its six seats and
+      // its strands' beads, in a cloud of its own token.
+      const { COUNT, BEADS } = HIGH_GRAPHICS.LIFE.JELLY.STRANDS;
+      assert.equal(high.jellyLights, jellies * (1 + 6 + COUNT * BEADS));
+      assert.ok(layer.group.children.includes(layer.lantern.points));
+      // Its file is drawn as a membrane there, and names itself the world pass's.
+      const bells = layer.group.children.filter((c) => c.name === 'env-drift-jelly');
+      assert.ok(bells.length > 0);
+      for (const bell of bells) {
+        assert.match(bell.material.name, /^jelly_/);
+        assert.equal(bell.userData.worldLayer, true);
+      }
+      // A jelly's seats are world light, never the stipple channel's dots:
+      // those are the deep fish's alone, as at Low.
+      assert.equal(high.decorativePhotophores, low.decorativePhotophores);
+
+      layer.setWorldPass(false);
+      layer.rebuild(cells, () => -132);
+      layer.tick(0, undefined, 3000);
+      assert.equal(layer.stats().lifeGlints, 0);
+      assert.equal(layer.stats().jellyLights, 0);
+      assert.ok(!layer.group.children.includes(layer.lantern.points));
+      assert.equal(count('env-drift-jelly'), 0);
+      assert.equal(layer.stats().decorativePhotophores, low.decorativePhotophores);
+    } finally {
+      layer.destroy();
+    }
   });
 });

@@ -109,6 +109,22 @@ export interface PropSpec {
    * everything that is not a stack — a basalt boulder has no mouth.
    */
   plume?: true;
+  /**
+   * A body of the free-water crater's decorative life
+   * (docs/free-water-slice.md §5). At the High graphics quality its template
+   * is its own and stands in the world's light (lifeLight.ts, #1837); a
+   * standing prop keeps the one template at both qualities.
+   */
+  life?: true;
+  /**
+   * Carries light of its own at High. `axis` is one point on the body's
+   * axis in `life-glint`, the schooling fry's (lifeGlow.ts). `lantern` is
+   * the drifting jelly's: its file drawn as a lit membrane, with its seats
+   * and its strands' beads as points, all in `jelly-lantern` (jellyLight.ts).
+   * Every other body emits nothing there, and the deep fish's seats stay
+   * the stipple channel's, as at Low.
+   */
+  glint?: 'axis' | 'lantern';
 }
 
 /**
@@ -357,6 +373,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
       ['env-outer-fish', 4, 342],
       ['env-deep-fish', 2, 304],
       ['env-rim-ray', 18, 586],
+      ['env-drift-jelly', 6, 594],
     ] as const
   ).map(([slug, footprintM, triBudget]): PropSpec => ({
     slug,
@@ -370,6 +387,9 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     scaleJitter: [1, 1],
     worldLight: 'none',
     swayM: 0,
+    life: true,
+    ...(slug === 'env-shoal-fry' ? { glint: 'axis' as const } : {}),
+    ...(slug === 'env-drift-jelly' ? { glint: 'lantern' as const } : {}),
   })),
 ];
 

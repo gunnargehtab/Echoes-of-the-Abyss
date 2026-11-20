@@ -188,8 +188,10 @@ No cloned material may lose its fog, instancing, sway or glow-preservation hooks
 
 The northern pocket is an untended edge, not a city: holdfasts, cut-back stone and a
 water-polished rim. Forty-metre kelp and dim living tips recall the Plateaus. No civic
-lamp, vent chimney, glowing sky or overhead light is licensed here. The bowl remains
-mostly empty, so the forest ends rather than dissolving into props at every depth.
+lamp, vent chimney, glowing sky or overhead light is licensed here. That is Low, and it
+stands. At the High graphics quality the owner licensed one vent stand on the outside rim
+on 20 November 2026 (High's own vents, below). The bowl remains mostly empty, so the
+forest ends rather than dissolving into props at every depth.
 
 | Place / purpose | Retained or commissioned kit | Boundary |
 | --- | --- | --- |
@@ -198,6 +200,7 @@ mostly empty, so the forest ends rather than dissolving into props at every dept
 | Crater / distance | Existing authored-floor relief and water | Bare drop, no illuminated floor, false cave mouth or copy of Sorrowgate's arch |
 | Small life / close inspection | The four small shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
 | Large life / the opening | The ray below, one public decorative body of 18 m (#1777) | The same independence; no silhouette of a classified animal, and nothing of the colossus |
+| Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence. Not the Tetherjelly or its stipple figure: a field's bell is seven times as wide, a figure in dots in the fauna colour with six tentacles, and stands where it is, where a lantern is a lit skin in a hue of its own over eighteen strands, adrift alone. Not the Hollow's crescent. No light in its file |
 
 Two placement options were considered:
 
@@ -342,6 +345,78 @@ than moved from it, by the owner's calls of that day:
 Life may cross the clearing row although plants may not: a crab, a fry or a fish is
 neither a tall prop nor a blocker (§3).
 
+**High's own life (#1837).** *In development with the High graphics quality's third
+look step, and not accepted. The owner chose the crater's decorative life as that step's
+bodies in session on 20 November 2026.* The list above is Low's, and High draws all of it.
+Behind the Graphics quality setting the fixture stands more, where
+[the target's](screenshots/issue-1799/README.md) Home and Close cameras read a body:
+Home's eye is 840 m and more from the hulls and Close's 350 to 530 m, and #1771's patches
+stand a kilometre off in the garden. High's slots follow Low's in the list and never
+stand among them, so Low's counts, order and frame do not move.
+
+A **stream** is schools sharing one loop, evenly round it, each fish keeping station on
+its school's own point as #1771's do. A camera held beside the loop then sees fish pass
+at any match time, where one school would pass once a lap.
+
+| Stream | Loop centre, radius, period | Depth | Schools and fish | Station: along, across, depth |
+| --- | --- | --- | --- | --- |
+| Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 5 of 96 | 7 m, 1.6 m, 5 m |
+| Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 14 m, 6 m, 14 m |
+
+The **drifting bodies** are five `env-drift-jelly`, each alone on its own loop: a 14 m
+radius and a lap in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
+goes, its bell leaning 12 degrees into the turn. Each hangs by its bell's mid-height,
+2.76 m over its lowest lobe's tip, at an authored depth from an authored start.
+
+| Jelly | Loop centre, map x / y | Depth | Start, degrees round its loop |
+| --- | --- | --- | --- |
+| 1 | 305 / 2,041 | 140 m | 0 |
+| 2 | 416 / 2,062 | 120 m | 70 |
+| 3 | 505 / 2,122 | 150 m | 140 |
+| 4 | 509 / 1,909 | 110 m | 210 |
+| 5 | 678 / 2,025 | 130 m | 280 |
+
+Over a lap they hang 166 to 534 m from the Close eye, 190 to 526 m at its start, and 73
+to 133 m over the eye's own depth, so they stand in the water above the hulls' rings, as
+the target's do. A 6 m bell draws 17 to 56 px there, and 10 to 13 from Home's eye.
+
+The fry's loop passes 50 m in front of the Close eye, 233 m deep at `(178, 2,168)`, where
+a 0.5 m body draws 15 px. A fry school is a ribbon, 14 m long, 3 m across and 2 m deep as
+drawn, a body about every metre; over a lap, 288 to 368 of the 480 fry stand inside the
+Close frame at any moment. The outer fish cross the water between the Corvette's lamp at
+300 m and its pool on the 600 m rim, so at rest a school swims through its beam; 510 to
+680 m from the Close eye a 4 m body draws 9 to 12 px, and 6 from Home's. Where a stream's
+first school stands when the match starts is authored, as the ray's start is, and reduced
+motion holds it there: the fry's at 159 degrees round its loop, 50 m ahead of the Close
+eye, and the outer fish's at 90, south of its centre, in the Corvette's beam. Both loops
+lie over the outside rim's 600 m floor. They are decoration under every rule of this section: no reaction,
+no collision, no tell, the same loop for every client, held still under reduced motion.
+The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`)
+until the owner accepts a frame. How a body is lit there, and the one light a fry
+carries, are [art-direction.md](art-direction.md#life-in-the-worlds-light)'s.
+
+**High's own vents (#1837).** *In development with the same look step, and not accepted.
+The owner chose an authored stand on the rim in session on 20 November 2026, against
+frames from another map and against leaving the vents out.* At High the fixture stands
+one vent stand, by authored slots as its plants are: two `env-vent-chimney` and three
+`env-vent-basalt`, the Thermal Veins' retained kit, each at scale 1. Low stands none of
+it.
+
+| Prop | Slots: map x / y, heading |
+| --- | --- |
+| `env-vent-chimney` | 562 / 2,018 at 20 degrees; 582 / 2,042 at −35 |
+| `env-vent-basalt` | 544 / 2,036 at 10 degrees; 598 / 2,016 at −60; 570 / 2,064 at 130 |
+
+Props only. The cells under them stay Coral Ruins at 600 m, so no floor, PF or route
+moves, the rim stays a rim, and a hull passes a chimney as it passes any prop: nothing
+here blocks, hides or tells (§2). The stand is 109 m north-west of the Corvette's start
+and 164 m south of the Light Scout's, on the floor 300 m under both. From the Close eye
+it is 421 m off, between those two hulls, and its light reaches both their rings.
+[art-direction.md](art-direction.md#the-vents-at-work) has that reading, how the slot was
+found and what a chimney breathes there at High. The slots are TUNABLE in
+`FREE_WATER_HIGH_VENTS` (`packages/shared/src/constants.ts`) until the owner accepts a
+frame.
+
 **The wildlife choice is an explicit, narrow extension of the bible.** Keeping only
 the existing stipples would preserve today's presentation but not the requested close
 wildlife. Converting gameplay fauna into public fish would disclose hidden state and is
@@ -359,6 +434,7 @@ water and nothing of a hunter.
 | `env-outer-fish` | 4 m long | 16 / 600 | Open bowl, 700..1,000 m depth, and the garden clearing, 200..300 m; slow closed swimming paths |
 | `env-deep-fish` | 2 m long | 26 / 400 | Deep pocket, 1,900..2,100 m depth; sparse photophore points |
 | `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide, banked 30 degrees into its turn |
+| `env-drift-jelly` | 6 m across its bell | 5 / 700 | Over the outside rim by the start, 100..160 m depth, at the High graphics quality alone; each alone on one slow closed drift |
 
 All motion is deterministic from published placement, a fixed seed and shared match
 time. It never reacts to a hull, a shot, a ping, damage or the camera. Reduced motion
@@ -378,7 +454,12 @@ The deep fish's photophores use the existing public-life channel: soft additive 
 gain ([style-neon-noir.md](style-neon-noir.md), World light). At most six points per fish,
 no body emission, bloom halo, point light or smooth brightness pulse. This adds no sixth
 ground-light family and does not enter the own-agent lamp halo. Other new animals emit
-nothing. The kelp retains `flora-biolight` and its licensed sway.
+nothing. The kelp retains `flora-biolight` and its licensed sway. That is Low. At the
+High graphics quality a schooling fry carries one point of world light, in a token of its
+own (High's own life, above), and its body is still no emitter: its GLB is unchanged. A
+jelly is drawn there as a lantern, in a token of its own
+([art-direction.md](art-direction.md#a-jelly-is-a-lantern)): a lit membrane over strands
+of beads of light, which are the renderer's and not its file's.
 
 Gameplay fauna remain unchanged: public Lampfry/Tetherjelly retain their established
 disclosures and stipples; classified animals retain species-shaped dots, with no
@@ -389,7 +470,9 @@ using normal detection; decoration must be byte-for-byte independent of that var
 hidden state. Neither extra participant is exposed by the study entry.
 
 **Shape lane.** The five new slugs were approved in #1711 and #1712 before integration,
-and the ray's answers the same gates in the pull request that places it (#1777).
+and the ray's answers the same gates in the pull request that places it (#1777). So does
+the jelly's (#1837): its designer and its reviewer are separate agents, and the reviewer
+passed the model.
 Environment props have no faction: each shape PR authors
 **ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
 Footprint, Height, Tris and Light, plus its script, GLB, intake report,
@@ -401,10 +484,11 @@ Block 4 currently describes stone, coral, kelp and crystal standing on the seabe
 The #1711 shape PR must first add the scoped public-microfauna variant: the crab may
 stand on the floor, while the three swimming slugs may be suspended in the column.
 Retain its no-faction, low-luminance, material-count and intake constraints; the exception
-is for these five decorative forms, the ray under its own large-body clause, not
-gameplay fauna or other floating props.
-All five rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
-and runtime supplies the separately budgeted rung-5 photophore dots described above.
+is for these six decorative forms, the ray under its own large-body clause and the jelly
+under its drifting-body clause, not gameplay fauna or other floating props.
+All six rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
+and runtime supplies the separately budgeted rung-5 photophore dots described above. The
+jelly's six seats are dark facets too, and are lit at High alone, as world light.
 This preserves the inverted intake light gate. No links to nonexistent exports,
 placeholder primitives passed off as finished assets, or one-off fish loader.
 

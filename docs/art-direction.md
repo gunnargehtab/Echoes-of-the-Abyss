@@ -215,7 +215,8 @@ Built so far:
   and the ground does not. The grade puts a little weight into the darks and a little
   chroma back.
 - **The props** draw in the world pass under the shared rig. Their additive clouds, the
-  steam, the haze and the sift, stay in the tactical pass.
+  steam, the haze and the sift, stay in the tactical pass. The free-water crater's vent
+  stand is the one exception, in development ([The vents at work](#the-vents-at-work)).
 - **A navy's cladding wears a surface**
   ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811)), the
   Commune's four materials first. Below.
@@ -223,9 +224,15 @@ Built so far:
   ([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)). Below.
 - **An own hull throws a searchlight, and it casts a shadow**
   ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836)). Below.
+- **The crater's life stands in the world's light, its fry carry their own, and its
+  jellies are lanterns**
+  ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)). In
+  development and not accepted. Below.
+- **The crater stands one vent stand, and its chimneys breathe lit smoke** (#1837). In
+  development and not accepted. Below.
 
-Not built yet: a searchlight on a prop, a prop's shadow, a hull's shadow on another
-hull, and the work lights and floodlights of the player's own structures.
+Not built yet: a searchlight on a standing prop, a prop's shadow, a hull's shadow on
+another hull, and the work lights and floodlights of the player's own structures.
 
 #### Step 1's numbers — SPEC
 
@@ -539,7 +546,9 @@ first light with a direction, so it is the first to cast a shadow.
   hollows take a share of it as they take a share of a pool.
 - **A prop takes none yet.** A stand in a beam is lit by the rig as it was. Props are
   one material at both qualities, and a High prop needs a template of its own first, as
-  a hull's cladding has.
+  a hull's cladding has. A decorative body has one since #1837 and takes a beam
+  ([Life in the world's light](#life-in-the-worlds-light)); a standing prop still takes
+  none.
 - **No mark, lamp or halo is touched.** The lamp a beam leaves is the tactical pass's,
   at the strength its SIG set (gate 3). A mark over a pool stands bare (limit 6), and
   gate 7's glance at one reads in the standard palette and is owed in the other three
@@ -582,6 +591,319 @@ gives 1.8 face on.
 | Height the shadow's line is carried over the ground, so level ground never shadows itself, metres | `SEARCHLIGHT.SHADOW.LIFT_M` | 1.5 |
 | Half-width of a shadow's soft edge, in metres of clearance | `SEARCHLIGHT.SHADOW.SOFT_M` | 2 |
 | Where a hull's shadow is whole and where it is gone, in half-beams from its keel line | `SEARCHLIGHT.SHADOW.HULL_EDGE` | 0.7, 1.4 |
+
+#### Life in the world's light
+
+*In development with the rest of High, and not accepted
+([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837);
+[issue-1837](screenshots/issue-1837/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.LIFE` and `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`) until
+a frame of it is accepted. The owner took three calls in session on 20 November 2026,
+before any frame: the bodies are the crater's decorative life, the drifting bodies are a
+new jelly model, and the vents are an authored stand on the rim. The schools were the
+step's first instalment and the jelly its third. Its own light is the section after this,
+on a fourth call of the owner's, and the vents the one after that. Three more calls were
+taken in the open with the frames, and wait on the owner: a body's register, a fry's own
+light, and where High's life stands.*
+
+The crater's decorative bodies
+([free-water-slice.md](free-water-slice.md) §5) were props in the world pass under the
+shared rig: a fish beside a lit hull stood in none of the light the hull did, and read as
+a hole in the water. Each now draws from a template of its own at High, as an own hull
+does, and nothing Low draws is built, patched or keyed differently.
+
+- **A body takes the light a hull takes.** The rig stays, and beside it a face takes the
+  Lid's glow by how far it looks up and by the water over it, and the pools from below.
+  Its three shares are knobs of its own, set to a hull's
+  ([A model in the world's light](#a-model-in-the-worlds-light)), since a fish beside a
+  hull stands in the same light. An own hull's searchlight lights a body
+  that swims through it, at half of what ground would take, and the ground and a hull
+  shadow it. So a school crossing a beam shows in the navy's glow, and one outside it is
+  lit by the Lid alone.
+- **It answers the light and never the hull** (limit 4). Where a body swims is its
+  authored loop and the shared match time. A beam finds a school or misses it and moves
+  neither. A contact throws no beam, so no body is ever lit by one (limit 2).
+- **Its register is the cladding's ceiling.** A prop's brightest material is held to
+  0.06 linear, under every vessel, and at that a body a few pixels long is darker than
+  the water behind it. Three readings were written. **The props' 0.06** keeps the rule
+  and loses the fish. **An own hull's cladding ceiling, 0.16**, is taken: a body stands
+  no brighter than a vessel's cladding, so scenery still never out-reads one. **A silver
+  flank**, 0.4 and up, reads best under the Lid and blooms white in a beam.
+- **A schooling fry carries one light of its own**, in `life-glint`
+  ([style-neon-noir.md](style-neon-noir.md) "World light"). Under the Lid alone a school
+  at the cladding's register is still only a little paler than the water, and the law
+  gives the world layer "the modelled bodies of public life with their light". Three
+  readings were written. **No light but the deep fish's photophores**, as Low has them,
+  leaves a school dim wherever no beam is. **One point on each schooling fry** is taken:
+  a soft disc 0.22 m across on the flank, drawn in the world pass, so the water takes it
+  with distance and the bloom spreads it a little. One light stands under the lamps of a
+  hull loud enough to throw a beam: on the software frames it peaks at 144 of 255, and the
+  Corvette's lamp, at SIG 28, at 165. Light adds, so where a dense school's lights overlap
+  the peak is 160, level with the Harvester's lamp at SIG 18. A quiet hull's lamp is
+  dimmer than one fry: the Light Scout's, at SIG 6, reads 130. World light is not loudness
+  at High ([What it releases at High](#what-it-releases-at-high)), and whether a school
+  beside a hull muddies gate 3's reading of it is the owner's glance. **A light on every
+  body** would make the ray and the outer fish lamps of their own. A light far enough to
+  draw under 1.6 pixels is drawn at 1.6 with its level cut by the area gained, so a far
+  school fades instead of sparkling.
+- **A drifting jelly is not a lit body.** Its first cut was one: `env-drift-jelly` at
+  the cladding's register, a pewter bell over dark arms, with a point of `life-glint` on
+  each of the six seats its file marks, at a fry's level. A seat 190 m off read 127 of
+  255 at Close, under every lamp, and the bell read by its body. The owner saw that
+  frame on 20 November 2026 and asked for the target's jelly instead:
+  [A jelly is a lantern](#a-jelly-is-a-lantern), below. At Low a jelly is not stood, and
+  its seats are never the stipple channel's dots.
+- **A fry's light is not the stipple.** Rung 5's stipple is public life's field mark, in
+  the palette's fauna colour, on the tactical layer at both qualities
+  ([map-visuals.md](map-visuals.md) §8). This is world light, in a world token, and it
+  never scatters, gathers or brightens for anything a match does. The deep fish's
+  photophores stay the stipple channel's, as at Low, until a step moves them.
+- **High stands more life than Low**, where the target's cameras read a body
+  ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
+  written. **Add to Low's lists** would move the frame Low draws. **Slots High alone
+  stands** is taken: two streams of schools by the fleet's start, 480 fry and 48 outer
+  fish, and five jellies over it, after Low's list and never among it. A school there
+  keeps a tight station: a ribbon of fry 14 m long with a body about every metre. The
+  first cut spread a school over 52 m, so that a still camera always held fish, and from
+  the Close eye it read as scattered points and not as a school. Five schools a loop keep
+  the frame filled instead.
+- **No mark, lamp or halo is touched.** A fry's light is a point of the world layer's,
+  under every mark, and gate 7's glance at a ring among a school is the owner's, on the
+  named GPU.
+
+`packages/frontend/test/lifeLight.test.ts` holds the two templates apart, the patch's
+anchors and the light's pass, and `packages/frontend/test/freeWaterDecoration.test.ts`
+holds Low's list unmoved under High's.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Share of the Lid's glow a face looking straight up takes, of what level ground takes at its depth | `LIFE.LID` | 1 |
+| Share of a pool's light a face looking straight down takes on a body at the ground, of what that ground takes | `LIFE.POOL` | 0.3 |
+| Height over the ground at which that share has halved, drawn metres | `LIFE.POOL_REACH_M` | 80 |
+| Share of a beam a body takes, of what ground would | `LIFE.BEAM` | 0.5 |
+| Linear luminance a body's brightest material is lifted to | `LIFE.ALBEDO` | 0.16 |
+| A fry's light at its centre, in the renderer's linear units | `LIFE.GLOW.LEVEL` | 0.3 |
+| Width of a fry's light, metres | `LIFE.GLOW.SIZE_M` | 0.22 |
+| The least a light is drawn, pixels | `LIFE.GLOW.MIN_PX` | 1.6 |
+| How far toward the eye a light is drawn from its body's axis, metres | `LIFE.GLOW.LIFT_M` | 0.15 |
+| A jelly's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.LANTERN.LEVEL` | 0.3 |
+| Width of a jelly's seat light, metres | `LIFE.GLOW.LANTERN.SIZE_M` | 0.55 |
+
+#### A jelly is a lantern
+
+*In development with the rest of High, and not accepted
+([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837);
+[issue-1837](screenshots/issue-1837/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.LIFE.JELLY` (`packages/shared/src/constants.ts`) until a frame of it is
+accepted. The owner called it in session on 20 November 2026, with a crop of the target
+([target-jelly.jpg](screenshots/issue-1837/target-jelly.jpg)): bring the jellies closer to
+the target's and develop their bioluminescence, in as many rounds as it takes. Four
+calls were taken in the open on the way, and wait on the owner: its hue, how bright it
+stands, what moves, and its strands beside the Tetherjelly's figure. The round's critic
+overturned the first hue, which is now a palette's own.*
+
+The target's jelly is light and not a lit body: a translucent bell glowing from within,
+over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
+
+- **The bell is a membrane.** Each face adds its light to what is behind it and hides
+  nothing, both sides drawn. So the far wall shows through the near one, and the edge,
+  where the eye looks along the skin, is the brightest of it: what a thin lit skin does.
+  Sixteen radial canals and the lip are brighter lines on it, and the short lobes under
+  the bell a plainer light. The file emits nothing and is flat-shaded stone at intake;
+  the renderer gives the membrane one normal a vertex, so the skin curves where the
+  file's facets meet.
+- **Its strands are beads of light, not geometry.** Eighteen hang from the lip, 7 to
+  12 m long and 18 beads each, smaller and dimmer toward the tip. The first cut hung
+  twenty-two of up to 17 m, a curtain 2.4 bell-widths long where the target's strands
+  fall about 1.4. With them go a point on
+  each of the six seats the file marks, and one soft disc 15 m across for the glow in
+  the water round the bell. All are points of the world pass, as a fry's light is, each
+  never narrower than its floor.
+- **Its light is a token of its own, `jelly-lantern`, and a palette's**
+  ([style-neon-noir.md](style-neon-noir.md#world-light--the-terrain-carve-outs)). Four
+  readings were written. **The target's own hue** is Hadron's glow within a degree, and
+  violet is reserved: no world-owned light takes an agent's token. **`life-glint`**, the
+  bone white the first cut wore, keeps one token for all life and is nothing like the
+  target. **One orchid pink for every palette** was taken first, and the round's critic
+  overturned it on a measurement: to a tritanope it stood 1.7 dE from the Directorate's
+  glow. **A lantern each palette owns** is taken, as a navy's inks are: an orchid pink
+  in the standard palette, 35 degrees pinker than Hadron's violet and 29 bluer than the
+  interface's magenta, and a saturated violet in each colour-vision palette. Each stands
+  25 dE or more from every navy's inks, every contact tier, both chrome neons and
+  `neon-violet`, to the eye its palette serves; what that floor leaves out is in
+  [style-neon-noir.md](style-neon-noir.md#world-light--the-terrain-carve-outs). A lantern
+  follows a palette changed mid-match.
+- **It moves, and for nothing** (limit 4). Three things run on the shared match time,
+  each jelly's clock 19.75 s ahead of the last's. That leaves every pair of the five at
+  least 1 s apart in the stroke, 1.75 s in the wave and 1.25 s in the sway, so no two
+  are in step. The first stagger, 2.3 s, folded two of the five onto one another, 0.2 s
+  apart in the wave. The bell strokes: once in
+  5.5 s the lip is drawn in by 16% of its radius and let go. The strands sway 1.8 m at
+  the tip and trail 5 m behind the way the jelly drifts. And a wave of light runs from
+  the crown down the bell and out along the strands once in 9 s, at 5 m/s, adding 60% to
+  what it passes. High lets a world light move smoothly
+  ([What the world layer may do at High](#what-the-world-layer-may-do-at-high)). No
+  hull, shot, ping or camera starts, hurries or brightens any of it, and reduced motion
+  holds all three, with no wave held on the body.
+- **It stands at about the target's own level.** The target's jelly reads 176 of 255 at
+  its brightest. On the Close frame the three nearest lanterns' lips read 189, 177 and
+  164, from 190, 260 and 318 m, the far two 146 and 142, and a bead 149 at most. The
+  first take stood them at 218 and was turned down. A lantern is still the brightest life in
+  the frame, and over every lamp beside it, which read 165, 159 and 130. The first cut
+  held a seat under the lamps; that was the author's bar and not a rule. World light is
+  not loudness at High, and what tells a lantern from a lamp is its hue and its form.
+  The held frames show no wave, which adds 60% as it passes. Whether five lanterns over
+  the fleet muddy gate 3's reading of a hull is the owner's glance, on the named GPU.
+- **It is not the Tetherjelly's figure.** A shallow bell over trailing strands is also
+  what a Tetherjelly field's stipple draws ([map-visuals.md](map-visuals.md) §8), and
+  [free-water-slice.md](free-water-slice.md) §5 keeps the two apart. Three readings were
+  written. **A bell alone** is clear of the figure and is not the target. **Strands as
+  unbroken lines** leave the figure's dots, and the target's beads with them. **Beads, as
+  the target has them** is taken, on the owner's call for the target. What still stands
+  between the two: a lantern is a lit skin and not a figure in dots, in its own hue and
+  not the fauna colour, a seventh as wide, over eighteen strands and not six, alone and
+  adrift where a field's bells stand. Whether one could be read as a field's bell is the
+  owner's glance.
+- **Low draws none of it, and no mark, lamp or halo is touched.** A jelly is not stood
+  at Low, and Low's template of its file is the stone it always was. A lantern hangs
+  inside the Harvester's ring at Home and the Corvette's at Close, and along every
+  ring's circle the lanterns lift the ground by 10 of 255 at most.
+
+`packages/frontend/test/jellyLight.test.ts` holds the two templates apart, the membrane's
+blend and pass, the patch's anchors, the points a jelly hangs and what reduced motion
+holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the crater.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Light a face of the bell square to the eye gives, in the renderer's linear units | `LIFE.JELLY.BELL.LEVEL` | 0.04 |
+| What a face edge-on adds | `LIFE.JELLY.BELL.RIM` | 0.2 |
+| How fast that falls toward the face: the exponent on one less the cosine | `LIFE.JELLY.BELL.RIM_POWER` | 2.2 |
+| Radial canals round the bell | `LIFE.JELLY.BELL.RIBS` | 16 |
+| What a canal adds on its line | `LIFE.JELLY.BELL.RIB` | 0.04 |
+| How thin that line is: the exponent on its cosine | `LIFE.JELLY.BELL.RIB_POWER` | 12 |
+| What the lip's band adds | `LIFE.JELLY.BELL.MARGIN` | 0.07 |
+| Half-width of that band, metres | `LIFE.JELLY.BELL.LIP_M` | 0.3 |
+| Light of the lobes under the bell | `LIFE.JELLY.BELL.CORE` | 0.08 |
+| Strands a jelly hangs | `LIFE.JELLY.STRANDS.COUNT` | 18 |
+| Beads a strand | `LIFE.JELLY.STRANDS.BEADS` | 18 |
+| The longest strand, metres | `LIFE.JELLY.STRANDS.LENGTH_M` | 12 |
+| The shortest, as a share of the longest | `LIFE.JELLY.STRANDS.SHORTEST` | 0.6 |
+| Where a strand hangs, as a share of the lip's radius | `LIFE.JELLY.STRANDS.ROOT` | 0.94 |
+| How much of that radius a strand is gathered in by, at its tip | `LIFE.JELLY.STRANDS.GATHER` | 0.3 |
+| Width of a bead at the lip, metres | `LIFE.JELLY.STRANDS.SIZE_M` | 0.45 |
+| How much narrower the bead at the tip is, as a share | `LIFE.JELLY.STRANDS.TAPER` | 0.45 |
+| A bead's light at its centre, at the lip | `LIFE.JELLY.STRANDS.LEVEL` | 0.38 |
+| How a bead's light falls to the tip: the exponent on what is left of the strand | `LIFE.JELLY.STRANDS.FADE` | 0.4 |
+| How far a strand's tip sways, metres | `LIFE.JELLY.STRANDS.SWAY_M` | 1.8 |
+| Seconds one sway of a strand takes | `LIFE.JELLY.STRANDS.SWAY_PERIOD_S` | 7 |
+| How far its tip trails behind the drift, metres | `LIFE.JELLY.STRANDS.TRAIL_M` | 5 |
+| Width of the glow round the bell, metres | `LIFE.JELLY.HALO.SIZE_M` | 15 |
+| That glow at its centre | `LIFE.JELLY.HALO.LEVEL` | 0.03 |
+| Seconds a stroke of the bell | `LIFE.JELLY.SWIM.PERIOD_S` | 5.5 |
+| Share of its radius a stroke draws the lip in | `LIFE.JELLY.SWIM.SQUEEZE` | 0.16 |
+| Seconds between two waves of light | `LIFE.JELLY.PULSE.PERIOD_S` | 9 |
+| Speed of a wave along the body, metres a second | `LIFE.JELLY.PULSE.SPEED_MPS` | 5 |
+| Width of a wave, metres | `LIFE.JELLY.PULSE.WIDTH_M` | 3.5 |
+| How far over the crown a wave starts, in its widths | `LIFE.JELLY.PULSE.LEAD` | 2 |
+| What a wave adds, as a share of the light it passes | `LIFE.JELLY.PULSE.GAIN` | 0.6 |
+| Seconds one jelly's clock runs ahead of the last's | `LIFE.JELLY.STAGGER_S` | 19.75 |
+
+#### The vents at work
+
+*In development with the rest of High, and not accepted
+([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837);
+[issue-1837](screenshots/issue-1837/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.VENT` and `FREE_WATER_HIGH_VENTS` (`packages/shared/src/constants.ts`)
+until a frame of it is accepted. This is the step's second instalment. The owner's call
+of 20 November 2026 put an authored vent stand on the crater's rim. Three more calls were
+taken in the open with the first frames, and wait on the owner: what a chimney breathes
+at High, which chimneys breathe it, and where the crater's stand is. The second was
+overturned by the round's critic, as written under it.*
+
+A chimney breathes steam as world light: puffs in the vent's own colour on the canvas,
+stepped on the 5 Hz grid ([style-neon-noir.md](style-neon-noir.md) "World light"). At
+High the world round it is lit, and a column of steam the colour of a lamp stands in it
+as a second light beside the vent's own. Over the crater's stand this step draws a
+chimney's breath another way.
+
+- **A chimney's breath is matter, and shows by the light on it.** Three readings were
+  written. **The steam as Low draws it** keeps the canvas pass untouched, and leaves a
+  column that no searchlight, pool or water reaches. **Lit matter in the world pass** is
+  taken: one draw of soft puffs, scene-referred, so the water takes a column with
+  distance and the bloom and the grade reach it. **Both** draws two columns on one
+  stack. A puff sends on a fourteenth of the light that falls on its centre.
+- **Three lights fall on it.** The vent's own, in `vent-ember`, from the mouth under the
+  puff: strongest where the column leaves the stack and halved 14 m up, so a column is
+  amber at its foot. The Lid's glow, as a face looking half up takes it at that depth: a
+  faint cold grey above. And an own hull's searchlight that crosses it, in the navy's
+  glow, less what the ground and a hull hide of the beam
+  ([An own hull's searchlight](#an-own-hulls-searchlight)). No contact lights one
+  (limit 2).
+- **It rises straight, opens evenly and moves smoothly.** A column climbs up to 130 m
+  in 18 s, fast out of the mouth and slowing, and opens 16 m about its own axis by the
+  top, each puff along the bearing it formed on. It leans nowhere: a column that leaned
+  would state a current ([map-visuals.md](map-visuals.md) §8). The 5 Hz step is released
+  with the grid
+  ([What the world layer may do at High](#what-the-world-layer-may-do-at-high)), and
+  reduced motion holds the clock, so each column stands still.
+- **It answers nothing** (limit 4). A column stands where the map stands a chimney, and
+  a puff's line, phase and bearing are a hash of that placement. The acoustic veil drains
+  it as it drains the steam.
+- **The crater's stand alone breathes it.** Two readings were written. **Every chimney
+  the map stands** was taken first, and the round's critic overturned it: it changes
+  every Thermal Vein at High, no frame shows one, and look work starts from a frame. **The
+  crater's stand alone** is taken: at High the stand's two chimneys breathe lit smoke, and
+  every other map's chimneys keep Low's steam on the canvas at both qualities. One plume a
+  stack, never both. The other reading is #1853, which starts from a frame of a vent field.
+- **The crater's stand is between two hulls.** The fixture stands two chimneys and three
+  basalt boulders ([free-water-slice.md](free-water-slice.md) §5, "High's own vents").
+  Both chimneys lie in one 80 m cell of the `vent` family's lattice, so the stand is one
+  source at √2 of a chimney's strength ([Step 1's numbers](#step-1s-numbers--spec)), and
+  that light's volume is the widest thing the step draws. Three readings were written.
+  **Among the hulls, 326 m from the Close eye**, was the first cut, of three chimneys:
+  its volume filled the Close frame, hulls and rings in it. **By the garden, 1,041 m
+  off**, puts the stand's light farthest from every ring, and draws a chimney 52 px tall
+  at Close. **Between the Light Scout and the Corvette, 421 m off**, is taken: a chimney
+  is 126 px tall at Close, where the stand fills the gap between the two hulls, as the
+  target has its chimneys beside its hull.
+- **Its light reaches two rings, and each still stands over it.** Read on the software
+  frames against the same frames without the stand, along each ring's own circle. At
+  Close the light lifts the ground under the Light Scout's ring on 35% of its arc, by 22
+  of 255 at most, and under the Corvette's on 37%, by 33. At Home it is 55% and 55 for
+  the Light Scout's, 36% and 76 for the Corvette's. The Harvester's is untouched. Where
+  the ground is lifted, a ring's stroke stands 19 to 22 of 255 over the ground beside it
+  at the median, where it stood 23 to 25 before. At Survey the fleet's three rings
+  overlap one another, and the stand lies under them. A search of the rim ranked slots
+  by a 60 m radius, where the stand's pool has fallen to a twenty-fifth of its peak: 16
+  of 4,173 cleared every ring at Home and Close by that measure, none by more than
+  18 px, and the frames show the light reaching well past it.
+- **A mark over the stand's light is the owner's glance** (limit 6, gate 7). Nothing
+  holds a mark over a volume by construction, and the limit refuses only a light a mark
+  cannot be read over. The stand is the frame's brightest light, 231 to 234 of 255 at its
+  core over four takes.
+  Two of its numbers are this step's and TUNABLE: both chimneys in one cell, which makes
+  one source of √2 where two cells would make two, and the slot. The third is not: the
+  `vent` family's strength is step 1's SPEC, accepted on frames that held no vent, and
+  this is the first frame of one. If a ring cannot be read over it, that is what turns
+  down, by this doc first.
+- **A chimney stays a prop.** It is lit by the rig, as every standing prop is, and its
+  own emissive mouth is the file's.
+
+`packages/frontend/test/ventSmoke.test.ts` holds the column's shape, its three lights
+and its clock, and `packages/frontend/test/tutorialLoading.test.mjs` holds the one plume
+a stack at each quality.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Puffs a column | `VENT.PUFFS` | 30 |
+| Seconds from the mouth to gone | `VENT.LIFE_S` | 18 |
+| Height a column climbs, metres | `VENT.RISE_M` | 130 |
+| Radius of the mouth a puff forms in, metres | `VENT.MOUTH_M` | 2.5 |
+| How far a column opens about its axis by the top, metres | `VENT.SPREAD_M` | 16 |
+| A puff's width at the mouth and at the top, metres | `VENT.SIZE_M` | 5, 24 |
+| Share of the light on a puff it sends to the eye | `VENT.ALBEDO` | 0.07 |
+| The vent's own light on a puff at the mouth, in the renderer's linear units | `VENT.GLOW` | 6 |
+| Height over the mouth at which that has halved, metres | `VENT.GLOW_REACH_M` | 14 |
 
 #### A mark on the lit world
 
@@ -1648,7 +1970,9 @@ Three further layers of the same texture-not-information rule:
   leave the 5 Hz grid the steam below steps on
   ([Two layers, two laws](#two-layers-two-laws)). Each vent chimney breathes steam in the ember's hue (#1514): soft
   puffs leave its mouth, climb straight up and thin out, each puff dimmer than an ember at its peak.
-  The climb steps on the same 5 Hz grid, and reduced motion holds each column still.
+  The climb steps on the same 5 Hz grid, and reduced motion holds each column still. Over
+  the free-water crater's vent stand, at High alone, the column is lit smoke instead
+  ([The vents at work](#the-vents-at-work)).
 
 #### Silt detail and seated stones — SPEC
 

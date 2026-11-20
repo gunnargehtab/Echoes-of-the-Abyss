@@ -16,6 +16,7 @@ import {
   propSpec,
   type PropPlacement,
 } from '../src/game/environment.ts';
+import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
 import {
   DEPTH_VISUAL_M_PER_M,
@@ -24,7 +25,15 @@ import {
 } from '../src/game/perspectiveTerrain.ts';
 import { seabedSeed } from '../src/game/seabed.ts';
 import { CONN_FOV_DEG } from '../src/game/readability.ts';
-import { Biome, Faction, FaunaSpecies, ResolutionTier, UnitKind } from '@echoes/shared';
+import {
+  Biome,
+  Faction,
+  FaunaSpecies,
+  FREE_WATER_HIGH_LIFE,
+  FREE_WATER_HIGH_VENTS,
+  ResolutionTier,
+  UnitKind,
+} from '@echoes/shared';
 import { Match } from '../../backend/src/sim/match.ts';
 import { spawnFauna, spawnUnit } from '../../backend/src/sim/world.ts';
 
@@ -103,6 +112,7 @@ const BLOCK_4_HEIGHT_M: Record<string, number> = {
   'env-outer-fish': 1.69,
   'env-deep-fish': 0.84,
   'env-rim-ray': 4.05,
+  'env-drift-jelly': 4.11,
 };
 const bankedReach = (p: PropPlacement) => {
   const m = p.motion!;
@@ -299,7 +309,7 @@ describe('authored public decoration', () => {
   });
 
   it('holds whole loops inside their authored patches and places the body axis at depth', () => {
-    for (const p of freeWaterPlacements(ground())) {
+    for (const p of freeWaterPlacements(ground(), false, true)) {
       if (p.motion === undefined) continue;
       const m = p.motion;
       const start = decorationPose(p, 0, () => -88);
@@ -332,7 +342,7 @@ describe('authored public decoration', () => {
     // banked body's low wing reaches under its level origin (`bankedReach`).
     const terrain = ground();
     const groundY = drawnGround(terrain);
-    for (const p of freeWaterPlacements(terrain)) {
+    for (const p of freeWaterPlacements(terrain, false, true)) {
       if (p.motion === undefined || p.motion.depthM === null) continue;
       const half = propSpec(p.slug)!.footprintM / 2;
       const { below } = bankedReach(p);
@@ -646,6 +656,202 @@ describe('authored public decoration', () => {
     }
   });
 
+  it('stands High’s own life after Low’s list, and moves none of it (#1837)', () => {
+    // §5, "High's own life": behind the Graphics quality setting the fixture
+    // stands more, and Low's slots keep their order and their indices, so the
+    // frame Low draws does not move.
+    const terrain = ground();
+    const low = freeWaterPlacements(terrain, true);
+    const high = freeWaterPlacements(terrain, true, true);
+    assert.deepEqual(high.slice(0, low.length), low);
+    const own = high.slice(low.length);
+    const { FRY_STREAM, OUTER_STREAM } = FREE_WATER_HIGH_LIFE;
+    const counts: Record<string, number> = {};
+    for (const p of own) counts[p.slug] = (counts[p.slug] ?? 0) + 1;
+    assert.deepEqual(counts, {
+      'env-shoal-fry': FRY_STREAM.SCHOOLS * FRY_STREAM.COUNT,
+      'env-outer-fish': OUTER_STREAM.SCHOOLS * OUTER_STREAM.COUNT,
+      'env-drift-jelly': FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length,
+      'env-vent-chimney': FREE_WATER_HIGH_VENTS.CHIMNEYS.length,
+      'env-vent-basalt': FREE_WATER_HIGH_VENTS.BASALT.length,
+    });
+    // Slots, not scatter: none is refused by the public ground it stands
+    // over, none is scaled, and a second call draws the same list.
+    for (const p of own) {
+      assert.notEqual(p.disabled, true, `${p.slug} of ${p.xM},${p.yM} is refused`);
+      assert.equal(p.scale, 1);
+    }
+    assert.deepEqual(freeWaterPlacements(terrain, true, true), high);
+
+    for (const [slug, stream] of [
+      ['env-shoal-fry', FRY_STREAM],
+      ['env-outer-fish', OUTER_STREAM],
+    ] as const) {
+      const fish = own.filter((p) => p.slug === slug);
+      const [x, y] = stream.at;
+      // A stream is schools evenly round one loop: every fish keeps within
+      // its school's station of a point `SCHOOLS` of which divide the lap.
+      const lap = (Math.PI * 2) / stream.SCHOOLS;
+      const reach = stream.STATION.alongM / stream.MOTION.radiusM;
+      // Its first school stands at the authored phase when the match starts,
+      // which is where reduced motion holds it.
+      const first = (stream.startDeg * Math.PI) / 180;
+      assert.ok(Math.abs(fish[0]!.motion!.phase - first) <= reach + 1e-9);
+      for (const p of fish) {
+        assert.deepEqual([p.xM, p.yM], [x, y]);
+        const m = p.motion!;
+        assert.ok(Math.abs(m.radiusM - stream.MOTION.radiusM) <= stream.STATION.acrossM);
+        assert.ok(Math.abs(m.depthM! - stream.MOTION.depthM) <= stream.STATION.depthM);
+        assert.equal(m.periodS, stream.MOTION.periodS);
+        const turn = (((m.phase - first) % lap) + lap) % lap;
+        assert.ok(
+          Math.min(turn, lap - turn) <= reach + 1e-9,
+          `${slug}: a fish stands ${turn} rad off every school`
+        );
+      }
+      // Seeded by the school's number, so no two schools are one formation
+      // turned a quarter lap.
+      const shape = (school: number) =>
+        fish
+          .slice(school * stream.COUNT, (school + 1) * stream.COUNT)
+          .map((p) => p.motion!.radiusM.toFixed(3))
+          .join(',');
+      assert.notEqual(shape(0), shape(1));
+      // Over the outside rim alone, clear of the crater's lip: §3's routes
+      // run the rim at 300 m, and no body here is a blocker either way.
+      for (const p of fish) {
+        for (let step = 0; step < 24; step++) {
+          const pose = decorationPose(p, (p.motion!.periodS * 1000 * step) / 24, () => 0);
+          const cell =
+            Math.floor(pose.z / terrain.cellM) * terrain.cols + Math.floor(pose.x / terrain.cellM);
+          assert.equal(terrain.biomes[cell], Biome.CoralRuins);
+          assert.equal(terrain.floor[cell], 600);
+        }
+      }
+    }
+
+    // The drifting bodies: each jelly alone on its own loop, at its authored
+    // depth and start, over the outside rim.
+    const { JELLIES } = FREE_WATER_HIGH_LIFE;
+    const jellies = own.filter((p) => p.slug === 'env-drift-jelly');
+    assert.deepEqual(
+      jellies.map((p) => [
+        p.xM,
+        p.yM,
+        p.motion!.depthM,
+        Math.round((p.motion!.phase * 180) / Math.PI),
+      ]),
+      JELLIES.SLOTS.map((slot) => [...slot])
+    );
+    for (const p of jellies) {
+      const { phase: _phase, depthM: _depthM, ...motion } = p.motion!;
+      assert.deepEqual(motion, { ...JELLIES.MOTION });
+      const cell =
+        Math.floor(p.yM / terrain.cellM) * terrain.cols + Math.floor(p.xM / terrain.cellM);
+      assert.equal(terrain.floor[cell], 600);
+    }
+
+    // §5 prints each stream as the constants hold it.
+    const doc = readFileSync(new URL('../../../docs/free-water-slice.md', import.meta.url), 'utf8');
+    const numbers = (text: string) =>
+      [...text.replace(/,(?=\d{3})/g, '').matchAll(/\d+(?:\.\d+)?/g)].map(Number);
+    // And each jelly's slot, a row a jelly.
+    JELLIES.SLOTS.forEach((slot, i) => {
+      const row = doc.split('\n').find((line) => line.startsWith(`| ${i + 1} | `));
+      assert.ok(row, `§5 lost jelly ${i + 1}`);
+      assert.deepEqual(numbers(row.split('|').slice(2).join(' ')), [...slot]);
+    });
+    for (const [slug, stream] of [
+      ['env-shoal-fry', FRY_STREAM],
+      ['env-outer-fish', OUTER_STREAM],
+    ] as const) {
+      const row = doc.split('\n').find((line) => line.startsWith('| Rim') && line.includes(slug));
+      assert.ok(row, `§5 lost ${slug}'s stream`);
+      const [, , loop, depth, schools, station] = row.split('|').map((cell) => cell.trim());
+      assert.deepEqual(numbers(loop!), [
+        ...stream.at,
+        stream.MOTION.radiusM,
+        stream.MOTION.periodS,
+      ]);
+      assert.deepEqual(numbers(depth!), [stream.MOTION.depthM, stream.MOTION.depthSwingM]);
+      assert.deepEqual(numbers(schools!), [stream.SCHOOLS, stream.COUNT]);
+      assert.deepEqual(numbers(station!), [
+        stream.STATION.alongM,
+        stream.STATION.acrossM,
+        stream.STATION.depthM,
+      ]);
+    }
+  });
+
+  it('stands High’s one vent stand on the outside rim, and none at Low (#1837)', () => {
+    // §5, "High's own vents": props by authored slots on the rim's own cells,
+    // so no floor, PF or route moves; Low stands none of it.
+    const terrain = ground();
+    const vents = (list: readonly PropPlacement[]) =>
+      list.filter((p) => p.slug === 'env-vent-chimney' || p.slug === 'env-vent-basalt');
+    assert.equal(vents(freeWaterPlacements(terrain, true)).length, 0);
+    const stand = vents(freeWaterPlacements(terrain, true, true));
+    const { CHIMNEYS, BASALT } = FREE_WATER_HIGH_VENTS;
+    assert.deepEqual(
+      stand.map((p) => [p.slug, p.xM, p.yM, Math.round((p.yawRad * 180) / Math.PI)]),
+      [
+        ...CHIMNEYS.map(([x, y, yaw]) => ['env-vent-chimney', x, y, yaw]),
+        ...BASALT.map(([x, y, yaw]) => ['env-vent-basalt', x, y, yaw]),
+      ]
+    );
+    for (const p of stand) {
+      assert.notEqual(p.disabled, true, `${p.slug} at ${p.xM},${p.yM} is refused`);
+      assert.equal(p.scale, 1);
+      assert.equal(p.motion, undefined);
+      // Its whole footprint on the rim's cells: Coral Ruins at 600 m, open.
+      const half = propSpec(p.slug)!.footprintM / 2;
+      for (const [dx, dy] of [
+        [-half, -half],
+        [half, -half],
+        [-half, half],
+        [half, half],
+      ] as const) {
+        const cell =
+          Math.floor((p.yM + dy) / terrain.cellM) * terrain.cols +
+          Math.floor((p.xM + dx) / terrain.cellM);
+        assert.equal(terrain.biomes[cell], Biome.CoralRuins);
+        assert.equal(terrain.floor[cell], 600);
+        assert.equal(terrain.ceiling[cell], 0);
+      }
+    }
+    // One source, not two: both chimneys in one cell of the vent family's
+    // 80 m lattice (worldLights.ts `worldLightsOf`).
+    const cells = new Set(CHIMNEYS.map(([x, y]) => `${Math.floor(x / 80)}:${Math.floor(y / 80)}`));
+    assert.equal(cells.size, 1);
+    // The stand is the vent family's light at High, and no light at Low: the
+    // layer names a chimney's site only while the view draws a world pass.
+    const layer = new EnvironmentLayer('free-water');
+    const family = (sites: ReturnType<EnvironmentLayer['worldLightSites']>) =>
+      sites.filter((site) => site.family === 'vent').map((site) => [site.xM, site.yM]);
+    assert.deepEqual(family(layer.worldLightSites(terrain)), []);
+    layer.setWorldPass(true);
+    assert.deepEqual(
+      family(layer.worldLightSites(terrain)),
+      CHIMNEYS.map(([x, y]) => [x, y])
+    );
+    layer.destroy();
+
+    // §5 prints each slot as the constants hold it.
+    const doc = readFileSync(new URL('../../../docs/free-water-slice.md', import.meta.url), 'utf8');
+    const numbers = (text: string) =>
+      [...text.replace(/,(?=\d{3})/g, '').matchAll(/[−-]?\d+/g)].map((m) =>
+        Number(m[0].replace('−', '-'))
+      );
+    for (const [slug, slots] of [
+      ['env-vent-chimney', CHIMNEYS],
+      ['env-vent-basalt', BASALT],
+    ] as const) {
+      const row = doc.split('\n').find((line) => line.startsWith(`| \`${slug}\` |`));
+      assert.ok(row, `§5 lost ${slug}'s slots`);
+      assert.deepEqual(numbers(row.split('|')[2]!), slots.flat());
+    }
+  });
+
   it('loads the approved bodies without emission and preserves six named photophore seats', async () => {
     for (const slug of [
       'env-kelp-stand',
@@ -654,6 +860,7 @@ describe('authored public decoration', () => {
       'env-outer-fish',
       'env-deep-fish',
       'env-rim-ray',
+      'env-drift-jelly',
     ]) {
       const bytes = readFileSync(
         new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
@@ -669,8 +876,11 @@ describe('authored public decoration', () => {
         assert.ok(material instanceof MeshStandardMaterial);
         if (spec.worldLight === 'none') assert.equal(material.emissive.getHex(), 0);
       }
-      assert.equal(template.photophores!.length, slug === 'env-deep-fish' ? 6 : 0);
-      if (slug === 'env-deep-fish') {
+      // Six named seats on the deep fish and on the jelly (#1837), three a
+      // side on each, and none on any other body.
+      const seated = slug === 'env-deep-fish' || slug === 'env-drift-jelly';
+      assert.equal(template.photophores!.length, seated ? 6 : 0);
+      if (seated) {
         assert.equal(new Set(template.photophores!.map((p) => p.toArray().join(','))).size, 6);
         assert.equal(template.photophores!.filter((p) => p.z > 0).length, 3);
         assert.equal(template.photophores!.filter((p) => p.z < 0).length, 3);

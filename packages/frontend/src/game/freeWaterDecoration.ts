@@ -1,5 +1,10 @@
 import { Matrix4, Quaternion, Vector3 } from 'three';
-import { Biome, FREE_WATER_LIFE } from '@echoes/shared';
+import {
+  Biome,
+  FREE_WATER_HIGH_LIFE,
+  FREE_WATER_HIGH_VENTS,
+  FREE_WATER_LIFE,
+} from '@echoes/shared';
 import { propHash, propSpec, type PropPlacement, type TerrainGrid } from './environment.ts';
 import { DEPTH_VISUAL_M_PER_M, depthToWorldY } from './perspectiveTerrain.ts';
 
@@ -98,11 +103,22 @@ const KELP_CLUSTERS = [
   [2741.5, 611.5, -6],
 ] as const;
 
+/** The props that stand on the outside rim's 600 m floor, where a plant stands on the garden's 400. */
+const RIM_STAND = new Set(['env-vent-chimney', 'env-vent-basalt']);
+
 /**
  * docs/free-water-slice.md §5. Slots, not scatter: neither hidden state nor the
  * camera is an input. Every closed path's entire envelope stays in its patch.
+ *
+ * `high` adds the slots the High graphics quality alone stands (§5, "High's
+ * own life", #1837), after Low's list and never among it: Low's slots keep
+ * their order and their indices, so the frame Low draws does not move.
  */
-export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false): PropPlacement[] {
+export function freeWaterPlacements(
+  terrain: TerrainGrid,
+  retainInvalid = false,
+  high = false
+): PropPlacement[] {
   const slots: PropPlacement[] = [];
   const add = (
     slug: string,
@@ -131,9 +147,14 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
             terrain.floor[i]! &&
           motion.depthM - motion.depthSwingM - spec.footprintM / DEPTH_VISUAL_M_PER_M >
             terrain.ceiling[i]!
-        : terrain.biomes[i] === Biome.KelpForest &&
-          terrain.floor[i] === 400 &&
-          terrain.ceiling[i] === 0;
+        : RIM_STAND.has(slug)
+          ? // The vent stand, on the outside rim alone (§5, "High's own vents").
+            terrain.biomes[i] === Biome.CoralRuins &&
+            terrain.floor[i] === 600 &&
+            terrain.ceiling[i] === 0
+          : terrain.biomes[i] === Biome.KelpForest &&
+            terrain.floor[i] === 400 &&
+            terrain.ceiling[i] === 0;
     valid &&= admits(cellIndex);
     // Test the whole swept plan envelope, including neighbouring cells. The
     // footprint's disc holds a turned stand whole: its script fences every
@@ -270,6 +291,58 @@ export function freeWaterPlacements(terrain: TerrainGrid, retainInvalid = false)
   // the rim's edge, for the opening's first minute.
   const { startDeg, ...ray } = RAY;
   add('env-rim-ray', 735, 2210, { ...ray, phase: (startDeg * Math.PI) / 180 });
+  if (!high) return slots;
+  // High's own (#1837): streams where the target's cameras read a body. A
+  // stream is schools sharing one loop, evenly round it, each keeping station
+  // as a school does; the seed takes the school's number, so no two schools
+  // of a stream are one formation turned. Where the first school stands when
+  // the match starts is authored, as the ray's start is: reduced motion holds
+  // every body there, and that is the frame a still capture takes.
+  const stream = (
+    slug: string,
+    {
+      at,
+      startDeg,
+      SCHOOLS,
+      COUNT,
+      MOTION,
+      STATION,
+    }: (typeof FREE_WATER_HIGH_LIFE)['FRY_STREAM' | 'OUTER_STREAM']
+  ) => {
+    const [x, y] = at;
+    const start = (startDeg * Math.PI) / 180;
+    for (let s = 0; s < SCHOOLS; s++) {
+      for (let i = 0; i < COUNT; i++) {
+        const offset = (axis: number) => propHash([FREE_WATER_LIFE.SEED, x, y, s, i, axis]) * 2 - 1;
+        add(slug, x, y, {
+          ...MOTION,
+          radiusM: MOTION.radiusM + offset(1) * STATION.acrossM,
+          phase:
+            start + (s * Math.PI * 2) / SCHOOLS + (offset(2) * STATION.alongM) / MOTION.radiusM,
+          depthM: MOTION.depthM + offset(3) * STATION.depthM,
+        });
+      }
+    }
+  };
+  stream('env-shoal-fry', FREE_WATER_HIGH_LIFE.FRY_STREAM);
+  stream('env-outer-fish', FREE_WATER_HIGH_LIFE.OUTER_STREAM);
+  // The drifting bodies (§5, "High's own life"): each jelly alone on its own
+  // slow loop, hung at an authored depth from an authored start.
+  for (const [x, y, depthM, startDeg] of FREE_WATER_HIGH_LIFE.JELLIES.SLOTS) {
+    add('env-drift-jelly', x, y, {
+      ...FREE_WATER_HIGH_LIFE.JELLIES.MOTION,
+      depthM,
+      phase: (startDeg * Math.PI) / 180,
+    });
+  }
+  // And the one vent stand (§5, "High's own vents"): chimneys and the basalt
+  // round them, on the rim by the fleet's start.
+  for (const [x, y, yawDeg] of FREE_WATER_HIGH_VENTS.CHIMNEYS) {
+    add('env-vent-chimney', x, y, undefined, (yawDeg * Math.PI) / 180);
+  }
+  for (const [x, y, yawDeg] of FREE_WATER_HIGH_VENTS.BASALT) {
+    add('env-vent-basalt', x, y, undefined, (yawDeg * Math.PI) / 180);
+  }
   return slots;
 }
 

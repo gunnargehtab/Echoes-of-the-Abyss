@@ -99,7 +99,7 @@ import { bakeTransform } from './bakeTransform.ts';
  * 0.16 × 0.42 = 0.067 against the props' 0.06 — which is the ordering
  * environmentModels.ts documents and could not previously satisfy.
  */
-const CLADDING_CEILING = 0.16;
+export const CLADDING_CEILING = 0.16;
 
 /**
  * TUNABLE — how far below the ceiling a model's *darkest* cladding may sit, as

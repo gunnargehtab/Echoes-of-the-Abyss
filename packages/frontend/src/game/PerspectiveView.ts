@@ -1598,6 +1598,7 @@ export class PerspectiveView {
     this.backdrop.mesh.visible = !this.high.on;
     if (this.high.on === was) return;
     this.models.setWorldPass(this.high.on);
+    this.environment.setWorldPass(this.high.on);
     if (!this.high.on) this.leaveWorldLayer();
     // The ground is another material under High, over another bake.
     if (this.terrain !== null) this.rebuildTerrain();
@@ -1610,6 +1611,11 @@ export class PerspectiveView {
    */
   private enterWorldLayer(): void {
     this.environment.group.traverse((object) => {
+      // A world light drawn as points names itself (lifeGlow.ts).
+      if (object.userData.worldLayer === true) {
+        object.layers.set(WORLD_LAYER);
+        return;
+      }
       const mesh = object as Mesh;
       if (mesh.isMesh !== true) return;
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];

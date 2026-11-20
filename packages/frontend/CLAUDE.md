@@ -41,7 +41,14 @@ the pools beside the rig (`hullLight.ts`) and wears its navy's surface (#1811,
 `navySurface.ts`). Its lamps, and a contact's whole model, stay in the tactical pass.
 Each loud own hull throws a searchlight (#1836, `searchlights.ts`): one set of uniforms
 for the page, read by the lit ground, the cladding and the scatter pass's cones, with its
-shadow read from the ground's heights rather than rendered.
+shadow read from the ground's heights rather than rendered. The crater's decorative
+bodies draw from a High template too (#1837, `lifeLight.ts`), in the light a hull takes,
+and its fry carry a point of their own in the world pass (`lifeGlow.ts`). A drifting
+jelly is a lantern there and no lit body (`jellyLight.ts`): its file drawn as a membrane
+that adds its light, blended and still the world pass's, over beads of light hung from
+its lip. Over the free-water crater's vent stand, and nowhere else yet, a chimney's steam
+leaves the canvas at High: `ventSmoke.ts` draws it in the world pass as matter lit by the
+vent, the Lid and the beams, one plume a stack.
 
 ## Tests run under a Vite shim
 

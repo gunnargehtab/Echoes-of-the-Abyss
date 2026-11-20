@@ -13,9 +13,10 @@
  * and two of its own, `silt_drift` and `ore_trace` — #1555; the sixteenth,
  * the kelp stand, the cluster's two — #1712; the four microfauna that make
  * twenty, `stone_dark` again under two skins of their own, `carapace` and
- * `fish_flank` — #1711; and the rim ray that makes twenty-one, the same
- * two — #1777), the builders more than one prop needs, and the root every
- * prop stands on.
+ * `fish_flank` — #1711; the rim ray that makes twenty-one, the same
+ * two — #1777; and the drift jelly that makes twenty-two, the same two
+ * again — #1837), the builders more than one prop needs, and the root
+ * every prop stands on.
  *
  * Three things about the fourteen batch files are worth knowing before
  * reading one, and this module is where they are written down:
@@ -70,7 +71,7 @@
 import { THREE, clad, lamp, hex, box, flatShaded, tabled, faceted } from './kit.mjs';
 
 /**
- * The palette, as the twenty Block 4 files and the arch carry it: ten
+ * The palette, as the twenty-two Block 4 files and the arch carry it: ten
  * stones, sediments and growths, two living skins and five lights, each
  * named by its docs/style-neon-noir.md "The props" token.
  * Metalness is 0 on every material in the set — "nothing manufactured"
@@ -146,7 +147,11 @@ export const ground = {
   /**
    * Fish flank, `fish-flank`: the one skin all three swimmers share (#1711),
    * the fry, the outer fish and the deep fish, their photophore seats
-   * included. A cold pewter — sRGB hue 186°, 23 % saturated — between the
+   * included; the rim ray's body since (#1777), and the drift jelly's bell
+   * (#1837), a pale bell over a darker oral core as a flank is over its
+   * fins; its seats are the core's `stone-dark` and not the bell's, since
+   * the owner's oblate dome. A cold pewter — sRGB hue 186°, 23 %
+   * saturated — between the
    * stones' blue (204–212°) and the living coral's green, so a fish reads
    * as a body and not as a chip of the rock it passes; 0.0215 linear
    * luminance, 2.4× `stone-dark`, which the fins and eyes carry at 0.41
@@ -577,8 +582,9 @@ export function bake(root) {
  * The microfauna — env-rim-crab, env-shoal-fry, env-outer-fish and
  * env-deep-fish (#1711), the four public decorative bodies
  * docs/free-water-slice.md §5 commissions under Block 4's public-microfauna
- * variant of ENV STYLE, and env-rim-ray (#1777), the one large body the
- * variant's fifth clause admits. Five files, one grammar: a body is a
+ * variant of ENV STYLE, env-rim-ray (#1777), the one large body the
+ * variant's fifth clause admits, and env-drift-jelly (#1837), the one
+ * drifting body its sixth does. Six files, one grammar: a body is a
  * `shaft`, a closed run of corner rings whose facets are crisp because
  * every corner is drawn with a little jitter from a seeded stream;
  * everything flat on it — a fin, a claw's hand — is a `blade`, a thin
@@ -588,10 +594,16 @@ export function bake(root) {
  * and claw arms are the same shaft along a bent axis, its shell the same
  * shaft stood on end. The ray is the same shaft laid across the span, its
  * rings chord sections rather than girths (`wingBody`), and its lobes and
- * tail the same shaft again. Both builders wind every triangle against a
- * point inside the part it belongs to, so no script here checks a facet's
- * facing after the fact as the nodule bed and the kelp stand do: the wind
- * is the construction.
+ * tail the same shaft again. The jelly's bell is the shaft stood on end as
+ * the crab's shell is, run on round its margin and back in under its lip,
+ * its manubrium the shaft again, its oral lobes the shaft once more with a
+ * folded leaf's section for a ring, and its photophore seats the deep
+ * fish's `seat`, told which way is round the rim. Both builders wind every
+ * triangle against a point inside the part it belongs to, so no script
+ * here checks a facet's facing after the fact as the nodule bed and the
+ * kelp stand do: the wind is the construction. The jelly's bell and lobes
+ * are the two that point cannot serve, and are wound by their rings' order
+ * and checked (`shaft` `wound`, `closedOutward`).
  * ------------------------------------------------------------------------ */
 
 /**
@@ -637,16 +649,32 @@ const middle = (ring) =>
  * across its rings rather than along them (`wingBody`: ring b's mirror is
  * another ring, so a facet's mirror is on another band, cut on the other
  * diagonal).
+ *
+ * `wound` takes the wind from the rings' own order instead of from a point
+ * taken for inside: every ring runs the same way round, so the bands and
+ * both ends are stitched edge against edge by construction, and the whole
+ * is turned outward once by the sign of the volume it encloses. For a skin
+ * the guess is wrong about, both on the drift jelly since the owner's
+ * oblate dome (#1837). Its bell's rings run from under its lip out to the
+ * margin's edge and back in up the dome, and the lip's underside faces
+ * down and toward the axis, away from the body over it: wound against its
+ * own two rings' middles it would face up into the body. Its oral lobes'
+ * rings are a folded leaf's section and no girth, a zigzag strip of eight
+ * corners that is not convex, so a fold's flank passes either side of its
+ * band's middle. An end's flat cap is still a fan from one corner, which
+ * only a convex ring can take, so a ring like that ends on a point.
+ * `closedOutward` below holds any shaft to the result.
  */
 /** Whether band facet `i` of `n` is cut on the (b,i)–(b+1,i+1) diagonal, or on (b,i+1)–(b+1,i). */
 export const splitAC = (n, i) => i < n / 2;
 
-export function shaft(rings, { start = null, end = null, split = null } = {}) {
+export function shaft(rings, { start = null, end = null, split = null, wound = false } = {}) {
   const n = rings[0].length;
   const cut = split ?? ((b, i) => splitAC(n, i));
   const points = rings.flat();
   const tris = [];
   const at = (b, i) => b * n + (i % n);
+  const face = wound ? (tri) => tri : (tri, inside) => facing(points, tri, inside);
   for (let b = 0; b + 1 < rings.length; b++) {
     const lo = middle(rings[b]);
     const hi = middle(rings[b + 1]);
@@ -662,24 +690,35 @@ export function shaft(rings, { start = null, end = null, split = null } = {}) {
             [A, B, D],
             [B, C, D],
           ];
-      tris.push(facing(points, pair[0], inside), facing(points, pair[1], inside));
+      tris.push(face(pair[0], inside), face(pair[1], inside));
     }
   }
+  // A band runs its lower ring forward and its upper ring back, so a wound
+  // skin's first end runs its ring back and its last end forward. An end
+  // wound against a point keeps the order it always had.
   const cap = (b, tip, towards) => {
     const m = middle(rings[b]);
     const back = middle(rings[towards]);
     const inside = m.map((v, i) => v + 0.1 * (back[i] - v));
+    const edge = (i, j) => (wound && b === 0 ? [at(b, j), at(b, i)] : [at(b, i), at(b, j)]);
     if (tip) {
       points.push(tip);
       const t = points.length - 1;
-      for (let i = 0; i < n; i++) tris.push(facing(points, [at(b, i), at(b, i + 1), t], inside));
+      for (let i = 0; i < n; i++) tris.push(face([...edge(i, i + 1), t], inside));
     } else {
-      for (let i = 1; i + 1 < n; i++)
-        tris.push(facing(points, [at(b, 0), at(b, i), at(b, i + 1)], inside));
+      for (let i = 1; i + 1 < n; i++) tris.push(face([at(b, 0), ...edge(i, i + 1)], inside));
     }
   };
   cap(0, start, 1);
   cap(rings.length - 1, end, rings.length - 2);
+  if (wound) {
+    const [a, b, c] = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+    let six = 0;
+    for (const [i, j, k] of tris)
+      six += a.set(...points[i]).dot(b.set(...points[j]).cross(c.set(...points[k])));
+    if (!(Math.abs(six) > 1e-12)) throw new Error('shaft: a wound skin encloses no volume');
+    if (six < 0) for (const tri of tris) tri.reverse();
+  }
   return faceted(points, tris);
 }
 
@@ -749,6 +788,65 @@ export function nearestFacet(geo, target) {
     const d = c.distanceTo(t);
     if (!best || d < best.d)
       best = { d, centroid: c, normal: new THREE.Vector3().fromBufferAttribute(nrm, 3 * f) };
+  }
+  return best;
+}
+
+/**
+ * How far a point stands from a flat-shaded part's skin: the least distance
+ * to any of its triangles, to the triangle itself and not to its plane,
+ * with that triangle's normal and whether the point is on its outward
+ * side. What `nearestFacet` answers only where facets are of a size: it
+ * picks by centroid, and on the drift jelly's lip (#1837) a seat on the
+ * middle of a long facet's diagonal stands nearer the centroid of the
+ * short facet under the margin than either of its own, so its stand-off
+ * read 10 cm into the skin. The closest point is Ericson's, region by
+ * region.
+ */
+export function skinGap(geo, target) {
+  const pos = geo.attributes.position;
+  const nrm = geo.attributes.normal;
+  const p = new THREE.Vector3(...target);
+  const [a, b, c] = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  const [ab, ac, ap, bp, cp] = Array.from({ length: 5 }, () => new THREE.Vector3());
+  const q = new THREE.Vector3();
+  let best = null;
+  for (let t = 0; t < pos.count; t += 3) {
+    a.fromBufferAttribute(pos, t);
+    b.fromBufferAttribute(pos, t + 1);
+    c.fromBufferAttribute(pos, t + 2);
+    ab.subVectors(b, a);
+    ac.subVectors(c, a);
+    ap.subVectors(p, a);
+    const d1 = ab.dot(ap);
+    const d2 = ac.dot(ap);
+    bp.subVectors(p, b);
+    const d3 = ab.dot(bp);
+    const d4 = ac.dot(bp);
+    cp.subVectors(p, c);
+    const d5 = ab.dot(cp);
+    const d6 = ac.dot(cp);
+    const vc = d1 * d4 - d3 * d2;
+    const vb = d5 * d2 - d1 * d6;
+    const va = d3 * d6 - d5 * d4;
+    if (d1 <= 0 && d2 <= 0) q.copy(a);
+    else if (d3 >= 0 && d4 <= d3) q.copy(b);
+    else if (d6 >= 0 && d5 <= d6) q.copy(c);
+    else if (vc <= 0 && d1 >= 0 && d3 <= 0) q.copy(a).addScaledVector(ab, d1 / (d1 - d3));
+    else if (vb <= 0 && d2 >= 0 && d6 <= 0) q.copy(a).addScaledVector(ac, d2 / (d2 - d6));
+    else if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0)
+      q.copy(b).addScaledVector(c.clone().sub(b), (d4 - d3) / (d4 - d3 + (d5 - d6)));
+    else {
+      const sum = va + vb + vc;
+      q.copy(a)
+        .addScaledVector(ab, vb / sum)
+        .addScaledVector(ac, vc / sum);
+    }
+    const gap = q.distanceTo(p);
+    if (!best || gap < best.gap) {
+      const normal = new THREE.Vector3().fromBufferAttribute(nrm, t);
+      best = { gap, normal, outside: p.clone().sub(q).dot(normal) > 0 };
+    }
   }
   return best;
 }
@@ -997,9 +1095,17 @@ export function fin({ root, along, span, outline, thickness }) {
  * with the normal's share taken out), `t2` across it. Built from x rather
  * than from a cross product with up, so a port normal gives the mirror of
  * a starboard basis and a lozenge or a lens ring mirrors with its seat.
+ * `along` replaces x for a body that does not lie along x — the drift
+ * jelly's bell stands on end (#1837), where x runs round the rim on the
+ * facets that face ±z and into the skin on those that face ±x, so each
+ * seat names the way round its own rim instead.
  */
-function tangents(n) {
-  const x = Math.abs(n.x) < 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+function tangents(n, along = null) {
+  const x = along
+    ? new THREE.Vector3(...along)
+    : Math.abs(n.x) < 0.9
+      ? new THREE.Vector3(1, 0, 0)
+      : new THREE.Vector3(0, 1, 0);
   const t1 = x.addScaledVector(n, -x.dot(n)).normalize();
   const t2 = new THREE.Vector3().crossVectors(n, t1).normalize();
   return [t1, t2];
@@ -1042,11 +1148,17 @@ export function lens(facet, radius, { sink = 0.1, proud = 0.25 } = {}) {
  * — the deep fish's photophore seats, dark facets in the body's own
  * material that the runtime lights and the file does not. Returns the
  * geometry and the skin point it stands off.
+ *
+ * Two things a body stood on end asks (the drift jelly's bell, #1837),
+ * both leaving a fish's seat as it was: `u` null stands the seat off the
+ * middle of the quad's cut diagonal, for a bare `bandFacet`, which has no
+ * u of its own; and `along` is the direction `w` runs, projected into the
+ * quad's plane, where the default takes x for it (`tangents`).
  */
-export function seat(facet, u, [w, h], proud) {
-  const on = facet.at(u);
+export function seat(facet, u, [w, h], proud, { along = null } = {}) {
+  const on = u === null ? facet.mid.clone() : facet.at(u);
   const n = facet.normal;
-  const [t1, t2] = tangents(n);
+  const [t1, t2] = tangents(n, along);
   const c = on.clone().addScaledVector(n, proud);
   const points = [
     c.clone().addScaledVector(t1, w / 2).toArray(),
@@ -1101,6 +1213,49 @@ export function insideBody(geo, point) {
     if (e2.dot(qv) / det > 0) hits++;
   }
   return hits % 2 === 1;
+}
+
+/**
+ * Whether a flat-shaded part is a closed skin wound outward: every edge,
+ * its ends welded by position to a hundredth of a millimetre (glb.mjs
+ * `isClosed`'s weld), run once each way by exactly two triangles, and the
+ * volume those triangles enclose positive. `shaft` winds a facet against a
+ * point it takes for inside and never checks the guess, and a `wound` one
+ * trusts its rings to run one way round; this is the check on both, which
+ * the drift jelly's script runs on every part (#1837): its bell turns back
+ * in under its own lip and its oral lobes' rings are folded strips. A
+ * facet turned inward leaves an edge run twice the same way, so one wrong
+ * triangle fails it. It does not look for a skin that passes through
+ * itself. Returns the volume in the part's own units cubed, or throws
+ * naming the fault.
+ */
+export function closedOutward(geo, name = 'part') {
+  const p = geo.attributes.position;
+  const key = (i) =>
+    `${Math.round(p.getX(i) * 1e5)},${Math.round(p.getY(i) * 1e5)},${Math.round(p.getZ(i) * 1e5)}`;
+  const runs = new Map();
+  let six = 0;
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  for (let t = 0; t < p.count; t += 3) {
+    const ks = [key(t), key(t + 1), key(t + 2)];
+    for (let e = 0; e < 3; e++) {
+      const run = `${ks[e]}|${ks[(e + 1) % 3]}`;
+      runs.set(run, (runs.get(run) ?? 0) + 1);
+    }
+    a.fromBufferAttribute(p, t);
+    b.fromBufferAttribute(p, t + 1);
+    c.fromBufferAttribute(p, t + 2);
+    six += a.dot(b.cross(c));
+  }
+  for (const [run, count] of runs) {
+    const [u, v] = run.split('|');
+    if (count !== 1 || runs.get(`${v}|${u}`) !== 1)
+      throw new Error(`${name}: the edge ${u} to ${v} is not run once each way; the skin is torn`);
+  }
+  if (!(six > 0)) throw new Error(`${name}: wound inside out, volume ${(six / 6).toFixed(4)}`);
+  return six / 6;
 }
 
 /**
