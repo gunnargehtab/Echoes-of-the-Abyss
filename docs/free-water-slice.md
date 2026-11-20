@@ -673,7 +673,7 @@ frame cap is 720,000 triangles
 over every pass rather than gate 6's 400,000, by the owner's decision on #1712
 (2 November 2026): the kelp forest is a development slice for map design patterns and may
 spend what a shipped map may not; shipped maps keep 400,000. Reserve at most 30 calls /
-600,000 triangles for all props and decorative life together, raised from 400,000 by
+600,000 triangles for all props and decorative life of the Low list together, raised from 400,000 by
 decision 5 on #1748 (§9). The authored list totals at
 most 569,728 triangles: 56 new kelp stands at at most 9,000 each (504,000), 16 retained
 clusters (6,208), wildlife (59,520: 58,720 since #1771, from 31,680, and the one rim ray's
@@ -684,14 +684,15 @@ batches per template/material; no per-fish draw or further relaxation of this st
 caps, 720,000 at Low and 900,000 at High (below).
 
 **At the High graphics quality the frame cap is 900,000 triangles** over every pass, by
-the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent stand that
-Low does not (§5): its frame stood at up to 720,318 after #1837 and stands at up to
-761,358 with #1856's school. Low keeps 720,000, and gate 6's 8 ms of GPU time still
-binds High's frame. The 600,000 reservation above is read as the Low list's, which is
-what `packages/frontend/test/freeWaterDecoration.test.ts` sums: 551,850 by the
-registry's budgets. High's list sums to 685,954 by the same budgets, and to 644,914
-before #1856, so what High alone stands is counted against the frame's 900,000 and has
-no reservation of its own.
+the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent
+stand that Low does not (§5): its frame stood at up to 720,318 after #1837 and stands at
+up to 761,358 with #1856's school. Low keeps 720,000, and gate 6's 8 ms of GPU time
+still binds High's frame. The 600,000 reservation above binds the Low list alone, by the
+owner's decision the same day, against binding High's list too and against a second
+reservation for High. It is what `packages/frontend/test/freeWaterDecoration.test.ts`
+sums: 551,850 by the registry's budgets. High's list sums to 685,954 by the same
+budgets, and to 644,914 before #1856. What High alone stands is counted against the
+frame's 900,000 and has no reservation of its own.
 
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,
 and gate-6 unpaced/queued GPU timing at DPR 1 and 1.5. Exercise motion, not only stills.

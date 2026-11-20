@@ -109,7 +109,7 @@ and no slot of the mill in it.
 
 ## Calls taken with these frames
 
-Five, each the owner's to overturn. The first is written with its other readings in
+Four, each the owner's to overturn. The first is written with its other readings in
 [art-direction.md](../../art-direction.md#life-in-the-worlds-light), and the second in
 [free-water-slice.md](../../free-water-slice.md) §5.
 
@@ -123,16 +123,17 @@ Five, each the owner's to overturn. The first is written with its other readings
   reads as a mass at 18 to 22 px a body, at 41,040 triangles.
 - **Last in High's list.** Every slot #1837 stood keeps its index, so its frames do not
   move.
-- **What High alone stands has no reservation of its own.**
-  [free-water-slice.md](../../free-water-slice.md) §7 reserves 600,000 triangles for
-  props and life, and its test sums Low's list. High's own life and vents are counted
-  against the frame's cap alone.
 
-One was put to the owner and answered in session on 20 November 2026.
-[free-water-slice.md](../../free-water-slice.md) §7 capped the study's frame at 720,000
-triangles, and #1837's Survey frame already stood at 720,318. **High's cap is 900,000**,
-written into §7 and gate 6's carve-out; Low keeps 720,000. High's frames here stand at
-753,389 to 761,358.
+Two were put to the owner and answered in session on 20 November 2026, and both are
+written into [free-water-slice.md](../../free-water-slice.md) §7 and gate 6's carve-out.
+
+- **High's frame cap is 900,000 triangles.** §7 capped the study's frame at 720,000, and
+  #1837's Survey frame already stood at 720,318. Low keeps 720,000. High's frames here
+  stand at 753,389 to 761,358.
+- **§7's 600,000 reservation for props and life binds Low's list alone**, 551,850 by the
+  registry's budgets. The other readings were that it binds High's list too, which
+  #1837's 644,914 had passed, and a second reservation for High. High's list is 685,954
+  now, counted against the frame's cap alone.
 
 ## Who captures
 
