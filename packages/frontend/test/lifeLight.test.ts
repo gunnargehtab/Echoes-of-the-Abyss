@@ -230,11 +230,11 @@ describe('a fry’s own light (#1837)', () => {
       shader.vertexShader,
       /vGlowLevel = aGlow\.y \* \( glowPx \* glowPx \) \/ \( gl_PointSize \* gl_PointSize \)/
     );
-    // A fry's point is the material's own level; a jelly's seat is wider and
-    // brighter by the constants' ratio.
+    // A fry's point is the material's own level; a jelly's seat is wider, at
+    // its own level by the constants' ratio, and never over a fry's.
     assert.deepEqual([...LIFE_GLOW_KIND.axis], [SIZE_M, 1]);
     assert.deepEqual([...LIFE_GLOW_KIND.seats], [LANTERN.SIZE_M, LANTERN.LEVEL / LEVEL]);
-    assert.ok(LANTERN.SIZE_M > SIZE_M && LANTERN.LEVEL > LEVEL);
+    assert.ok(LANTERN.SIZE_M > SIZE_M && LANTERN.LEVEL <= LEVEL);
     assert.ok(shader.vertexShader.includes(`1.0 - ${LIFT_M.toFixed(6)} /`));
     assert.match(shader.fragmentShader, /diffuseColor\.rgb \*= glowFall \* glowFall \* vGlowLevel/);
   });

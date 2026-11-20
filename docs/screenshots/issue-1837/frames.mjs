@@ -1,9 +1,9 @@
-// Life and effects (#1837), as a run-game steps module: the schools, and the
-// vent stand at work. The three cameras docs/screenshots/issue-1799/README.md
-// judges a look at, and gate 6's fourth, in the free-water crater with the HUD
-// on. Low first, as the control, then High at the same four with the fleet at
-// rest, and High once more in the garden, where Low's own fry schools swim
-// and carry their light too.
+// Life and effects (#1837), as a run-game steps module: the schools, the
+// drifting jellies and the vent stand at work. The three cameras
+// docs/screenshots/issue-1799/README.md judges a look at, and gate 6's fourth,
+// in the free-water crater with the HUD on. Low first, as the control, then
+// High at the same four with the fleet at rest, and High once more in the
+// garden, where Low's own fry schools swim and carry their light too.
 //
 //   SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
 //     node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
@@ -88,7 +88,8 @@ export default async ({ page, shot }) => {
     return page.evaluate(() => window.__perspectiveProbe());
   };
   // High's own bodies decode after the switch: a template a quality. The
-  // crater stands 144 fry at Low and 624 at High, each with its light.
+  // crater stands 144 fry at Low and 624 at High, each with its light, and
+  // five jellies at High alone, six lights a bell.
   const setQuality = async (quality) => {
     const drawn = await page.evaluate((q) => window.__perspectiveQuality(q), quality);
     assert.equal(drawn, quality, `the view draws ${drawn}, asked ${quality}`);
@@ -104,9 +105,11 @@ export default async ({ page, shot }) => {
         const glints = probe.lifeGlints ?? 0;
         // The vent stand is High's too: its chimneys decode, then breathe.
         const stacks = probe.fixtureAssets['env-vent-chimney'] ?? 0;
+        const jellies = probe.fixtureAssets['env-drift-jelly'] ?? 0;
+        const vents = high ? stacks > 0 && probe.ventPlumes === stacks : stacks === 0;
         return high
-          ? fry > 144 && glints === fry && stacks > 0 && probe.ventPlumes === stacks
-          : fry === 144 && glints === 0 && stacks === 0 && probe.ventPlumes === 0;
+          ? fry > 144 && jellies > 0 && glints === fry + 6 * jellies && vents
+          : fry === 144 && jellies === 0 && glints === 0 && vents && probe.ventPlumes === 0;
       },
       quality === 'high',
       { timeout: 120000 }
@@ -171,7 +174,8 @@ export default async ({ page, shot }) => {
         camera: pose.slice(1),
         // Whether the camera's sway and the bodies were held (reduced motion).
         sway: probe.sway ?? null,
-        // What the crater stands at this quality, and the lights its fry carry.
+        // What the crater stands at this quality, and the lights its fry and
+        // its jellies carry.
         life: { bodies: probe.fixtureAssets, glints: probe.lifeGlints ?? 0 },
         // Columns standing over the vent stand's chimneys, and the world's sources.
         vents: { plumes: probe.ventPlumes, worldLights: probe.graphicsQuality?.worldLights ?? 0 },
@@ -203,6 +207,10 @@ export default async ({ page, shot }) => {
     assert.ok(
       high.every((reading) => reading.life.glints > 144),
       'High stands no more fry than Low'
+    );
+    assert.ok(
+      high.every((reading) => (reading.life.bodies['env-drift-jelly'] ?? 0) > 0),
+      'High stands no jelly'
     );
   }
 };

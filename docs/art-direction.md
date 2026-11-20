@@ -224,9 +224,9 @@ Built so far:
   ([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)). Below.
 - **An own hull throws a searchlight, and it casts a shadow**
   ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836)). Below.
-- **The crater's life stands in the world's light, and its fry carry their own**
-  ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)). In
-  development and not accepted. Below.
+- **The crater's life stands in the world's light, and its fry and jellies carry
+  their own** ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)).
+  In development and not accepted. Below.
 - **The crater stands one vent stand, and its chimneys breathe lit smoke** (#1837). In
   development and not accepted. Below.
 
@@ -647,11 +647,16 @@ does, and nothing Low draws is built, patched or keyed differently.
 - **A drifting jelly carries six.** `env-drift-jelly`
   ([asset-prompts-3d.md](asset-prompts-3d.md) Block 4) marks six seats round its bell as
   dark facets, as the deep fish marks its own, and its file emits nothing. At High each
-  seat carries a point of `life-glint`, 0.55 m across and twice a fry's level: six lights
-  are all that says a bell hangs there from 400 m. Its body is at the cladding's register
-  in the world's light, as every body's is. One token serves the fry and the jelly, since
-  the law names the bodies of public life as one kind of source; a hue of the jelly's own
-  was the other reading, and the target's violet is reserved
+  seat carries a point of `life-glint`, 0.55 m across, at a fry's level and never over
+  it. The first cut drew a seat at twice that, so that six lights would say a bell hangs
+  there from 400 m. On the Close frame a seat 190 m off then read 174 of 255, over every
+  lamp beside it: the Corvette's reads 165. At a fry's level the same seat reads 127,
+  under the quiet Light Scout's 130. The bell reads by its body instead. At the
+  cladding's register in the world's light, as every body's is, its crown stands 68 of
+  255 against water of 36 from 190 m and 56 against 33 from 416 m, over arms darker
+  than the water. One token serves the fry and the jelly, since the law names the bodies
+  of public life as one kind of source; a hue of the jelly's own was the other reading,
+  and the target's violet is reserved
   ([style-neon-noir.md](style-neon-noir.md)). At Low a jelly is not stood, and its seats
   are never the stipple channel's dots.
 - **A fry's light is not the stipple.** Rung 5's stipple is public life's field mark, in
@@ -687,7 +692,7 @@ holds Low's list unmoved under High's.
 | Width of a fry's light, metres | `LIFE.GLOW.SIZE_M` | 0.22 |
 | The least a light is drawn, pixels | `LIFE.GLOW.MIN_PX` | 1.6 |
 | How far toward the eye a light is drawn from its body's axis, metres | `LIFE.GLOW.LIFT_M` | 0.15 |
-| A jelly's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.LANTERN.LEVEL` | 0.6 |
+| A jelly's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.LANTERN.LEVEL` | 0.3 |
 | Width of a jelly's seat light, metres | `LIFE.GLOW.LANTERN.SIZE_M` | 0.55 |
 
 #### The vents at work
@@ -751,8 +756,8 @@ chimney's breath another way.
 - **Its light reaches two rings, and each still stands over it.** Read on the software
   frames against the same frames without the stand, along each ring's own circle. At
   Close the light lifts the ground under the Light Scout's ring on 35% of its arc, by 22
-  of 255 at most, and under the Corvette's on 37%, by 34. At Home it is 55% and 55 for
-  the Light Scout's, 36% and 77 for the Corvette's. The Harvester's is untouched. Where
+  of 255 at most, and under the Corvette's on 37%, by 33. At Home it is 56% and 55 for
+  the Light Scout's, 36% and 76 for the Corvette's. The Harvester's is untouched. Where
   the ground is lifted, a ring's stroke stands 19 to 22 of 255 over the ground beside it
   at the median, where it stood 23 to 25 before. At Survey the fleet's three rings
   overlap one another, and the stand lies under them. A search of the rim ranked slots
@@ -761,7 +766,7 @@ chimney's breath another way.
   18 px, and the frames show the light reaching well past it.
 - **A mark over the stand's light is the owner's glance** (limit 6, gate 7). Nothing
   holds a mark over a volume by construction, and the limit refuses only a light a mark
-  cannot be read over. The stand is the frame's brightest light, 233 of 255 at its core.
+  cannot be read over. The stand is the frame's brightest light, 234 of 255 at its core.
   Two of its numbers are this step's and TUNABLE: both chimneys in one cell, which makes
   one source of √2 where two cells would make two, and the slot. The third is not: the
   `vent` family's strength is step 1's SPEC, accepted on frames that held no vent, and

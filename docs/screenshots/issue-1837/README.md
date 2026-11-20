@@ -11,11 +11,10 @@ cloud container that built the step. They guide a round and are not offered for
 acceptance. The frames the owner accepts against are taken on the named GPU, with the
 commands under [Who captures](#who-captures).
 
-**These are the step's first two instalments: the schools, and the vents at work.** The
-owner took three calls in session on 20 November 2026: the bodies are the crater's
-decorative life, the drifting bodies are a new jelly model, and the vents are an authored
-stand on the rim. The jelly, the third instalment, stands in the crater at High now; the
-frames below were taken before it and show none.
+**These are the step's three instalments: the schools, the vents at work and the
+drifting jellies.** The owner took three calls in session on 20 November 2026: the bodies
+are the crater's decorative life, the drifting bodies are a new jelly model, and the
+vents are an authored stand on the rim.
 
 ## Reproduce
 
@@ -28,8 +27,8 @@ SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VI
 [frames.mjs](frames.mjs) takes Low and then High at the target's three cameras, at gate
 6's low camera and at [free-water-slice.md](../../free-water-slice.md) §9's garden close.
 It writes [readings.json](software/readings.json) after every frame: its passes, calls and
-triangles, its camera, the bodies the crater stands, the lights its fry carry, and the
-columns over the vent stand.
+triangles, its camera, the bodies the crater stands, the lights its fry and its jellies
+carry, and the columns over the vent stand.
 Reduced motion holds the camera's sway and every body at its loop's start, so two runs
 frame alike.
 
@@ -39,9 +38,9 @@ frame alike.
 
 | Camera | Low | High | What High shows now |
 | --- | --- | --- | --- |
-| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The vent stand in the gap between the three hulls: two chimneys in their own amber light, its pool on the rim and its volume in the water, with a column of smoke over them. The fry's schools are faint knots beside the Harvester, found by looking for them: a fry is 0.5 m and the eye 900 m off, so its light draws at the 1.6 px floor at about a twentieth of its level. The outer fish by the Corvette's beam are specks of a few pixels |
-| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The stand 421 m off, between the Light Scout and the Corvette: two chimneys 126 px tall against their own light, three boulders at their feet, and a column of pale puffs climbing out of the frame's amber into the dark. Three of the fry stream's five schools, at the eye's own depth: one 49 to 57 m off, between the Harvester and the Light Scout, a ribbon of pale points with a dark body through each, and two 209 to 227 m off as knots of fine points. Outer fish, 510 to 680 m off, stand as dark shapes against the edge of the vent's light, and one school swims through the Corvette's cone, lit in its green |
-| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | The stand as one amber point among the fleet's three rings, which overlap one another at this dolly. No body of either stream draws a pixel from 10 km |
+| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The vent stand in the gap between the three hulls: two chimneys in their own amber light, its pool on the rim and its volume in the water, with a column of smoke over them. The fry's schools are faint knots beside the Harvester, found by looking for them: a fry is 0.5 m and the eye 900 m off, so its light draws at the 1.6 px floor at about a twentieth of its level. The outer fish by the Corvette's beam are specks of a few pixels. Five jellies hang over the fleet, 734 to 945 m off, as pale bells 10 to 12 px across: one stands inside the Harvester's ring, and one is a dark shape against the stand's light. A seat's light is under the 1.6 px floor from here, and draws at a half to a third of its level |
+| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The stand 421 m off, between the Light Scout and the Corvette: two chimneys 126 px tall against their own light, three boulders at their feet, and a column of pale puffs climbing out of the frame's amber into the dark. Three of the fry stream's five schools, at the eye's own depth: one 49 to 57 m off, between the Harvester and the Light Scout, a ribbon of pale points with a dark body through each, and two 209 to 227 m off as knots of fine points. Outer fish, 510 to 680 m off, stand as dark shapes against the edge of the vent's light, and one school swims through the Corvette's cone, lit in its green. Five jellies hang over the fleet, 190 to 526 m off: bells 17 to 48 px across, paler than the water, over arms darker than it, each with its seats as points round the rim. The nearest hangs over the fry's stream, one stands inside the Corvette's ring, and the farthest is behind the stand's light and reads faintly through it |
+| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | The stand as one amber point among the fleet's three rings, which overlap one another at this dolly. No body draws a pixel from 10 km |
 
 Two more, off the target's three:
 
@@ -52,14 +51,18 @@ Two more, off the target's three:
 
 The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camera moved
 from Home to Close at High and held there, at 1280 × 720 and six times the speed the
-rasteriser drew it, so the streams swim six times as fast as they do. It is taken without
-reduced motion: the bodies move, the smoke climbs and the camera sways.
+rasteriser drew it, so the streams swim and the jellies drift six times as fast as they
+do. It is taken without reduced motion: the bodies move, the smoke climbs and the camera
+sways.
 
-What the target shows and these do not: drifting bodies, schools of hundreds as dark
-masses against bright water, any school that reads from Home's distance, a searchlight
-turned on a vent's plume, and chimneys in the foreground at several heights. The
-crater's water is dark, so a body out of every light reads by its own or barely, and a
-school here is a ribbon of points where the target's is a dark ribbon. No hull's beam
+[drift-jelly-inspect.png](drift-jelly-inspect.png) is the jelly's model alone under
+neutral light, six views, as its reviewer read it before it stood in the crater.
+
+What the target shows and these do not: schools of hundreds as dark masses against
+bright water, any school that reads from Home's distance, a searchlight turned on a
+vent's plume, and chimneys in the foreground at several heights. The crater's water is
+dark, so a body out of every light reads by its own or barely, and a school here is a
+ribbon of points where the target's is a dark ribbon. No hull's beam
 crosses the stand's column at the fleet's start, so the smoke's third light is in no
 frame here: `ventSmoke.test.ts` holds it.
 
@@ -72,16 +75,18 @@ was right. A school is now a ribbon 14 m long, and the stream is five schools of
 Read off `readings.json`, against [issue-1836](../issue-1836/README.md#what-the-frame-costs)'s
 High at rest.
 
-| Camera | High before: calls, triangles | High now | Fry, outer fish, lights, columns |
+| Camera | High before: calls, triangles | High now | Fry, outer fish, jellies, lights, columns |
 | --- | --- | --- | --- |
-| Home | 55, 626,614 | 60, 716,710 | 624, 64, 624, 2 |
-| Close | 55, 626,614 | 60, 716,710 | 624, 64, 624, 2 |
-| Low | 36, 619,283 | 41, 709,379 | 624, 64, 624, 2 |
-| Survey | 55, 627,252 | 60, 717,348 | 624, 64, 624, 2 |
+| Home | 55, 626,614 | 62, 720,120 | 624, 64, 5, 654, 2 |
+| Close | 55, 626,614 | 62, 720,120 | 624, 64, 5, 654, 2 |
+| Low | 36, 619,283 | 43, 712,789 | 624, 64, 5, 654, 2 |
+| Survey | 55, 627,252 | 62, 720,758 | 624, 64, 5, 654, 2 |
 
-Five draws and 90,096 triangles more. One draw is the fry's lights, 624 points in the
-world pass, and 88,416 of the triangles are High's own bodies: 480 fry of 150 and 48
-outer fish of 342. The other four draws and 1,680 triangles are the vent stand: two
+Seven draws and 93,506 triangles more. One draw is life's lights, 654 points in the
+world pass: one a fry and six a jelly. Of the triangles, 88,416 are High's own fish, 480
+fry of 150 and 48 outer fish of 342, in the draws Low's fish already take. Two draws and
+3,410 triangles are the five jellies, 682 each in two materials. The other four draws
+and 1,680 triangles are the vent stand: two
 chimneys of 434 in two materials, three boulders of 270 in one, one draw of 60 puffs,
 and the two triangles of its light's quad in the scatter pass. The stand is one more of
 the world's sources, 72 where the crater stood 71. The passes are the six they
@@ -98,17 +103,17 @@ world area, of each pixel's largest channel difference, out of 255.
 
 | Camera | `main` against `main` | `main` against the branch | Calls and triangles |
 | --- | --- | --- | --- |
-| Home | 0.24 | 0.04 | 44 and 593,684, both |
-| Close | 0.41 | 0.09 | 44 and 593,684, both |
-| Low | 0.47 | 0.08 | 26 and 587,001, both |
+| Home | 0.24 | 0.15 | 44 and 593,684, both |
+| Close | 0.41 | 0.31 | 44 and 593,684, both |
+| Low | 0.47 | 0.30 | 26 and 587,001, both |
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
-| Garden close | 0.35 | 0.08 | 31 and 591,001, both |
+| Garden close | 0.35 | 0.27 | 31 and 591,001, both |
 
 The branch differs from `main` by no more than `main` differs from itself.
 [The Close map](software/low-control/diff-close-main-vs-branch.png) is marine snow and
 nothing else, and the other four maps lie beside it. In counted work
 `packages/frontend/test/freeWaterDecoration.test.ts` holds Low's list unmoved under High's
-and no vent in it, `packages/frontend/test/lifeLight.test.ts` holds Low's templates
+and no vent or jelly in it, `packages/frontend/test/lifeLight.test.ts` holds Low's templates
 unpatched, and `packages/frontend/test/tutorialLoading.test.mjs` holds the steam on the
 canvas at Low.
 
@@ -121,6 +126,7 @@ of 255. A lamp's is its brightest pixel in the navy's green.
 | --- | --- |
 | One fry's light in the near school: the median of 90, and the most | 136, 144 |
 | The near school, where its lights overlap | 160 |
+| A jelly's seat light, on the bells 190, 260, 318 and 416 m off | 127, 119, 126, 99 |
 | The Corvette's lamp, SIG 28 | 165 |
 | The Harvester's lamp, SIG 18 | 159 |
 | The Light Scout's lamp, SIG 6 | 130 |
@@ -133,29 +139,37 @@ glance. The near school crosses the upper right of the Harvester's ring in this 
 stops short of the Light Scout's, and the ring's arc reads among its points on the
 software frame. Gate 7's glance is the owner's, on the named GPU.
 
-**The vent stand is now the brightest thing in the frame.** Its light's core reads 233
-of 255 at Close, at (255, 231, 188), over the Corvette's pool, and the smoke 100 px over
+A jelly's seat stands under every lamp in the frame. The first take drew it at twice a
+fry's level, and the nearest then read 174, over the Corvette's lamp; it is at a fry's
+level now. A bell reads by its body: the nearest's crown stands 68 against water of 36,
+and the one 416 m off 56 against 33. One bell hangs inside the Corvette's ring at Close
+and one inside the Harvester's at Home, and neither touches a stroke.
+
+**The vent stand is now the brightest thing in the frame.** Its light's core reads 234
+of 255 at Close, at (255, 232, 189), over the Corvette's pool, and the smoke 100 px over
 the stacks reads 156. The 99.9th percentile of the world area's luma is 196 at Home, 187
 at Close and 162 at Survey; with the schools alone it was 162, 157 and 157, and
 [issue-1836](../issue-1836/README.md#gate-7-and-limit-5) read 169 at Home at rest. The
 `vent` family's strength is step 1's SPEC, accepted on frames that held no vent, and this
 is the first frame of one.
 
-Where the stand's light meets a ring, read along each ring's own circle against the same
-frame without the stand (the set at f92e4568):
+Where the stand's light meets a ring, read by [rings.py](rings.py) along each ring's own
+circle against the same frame without the stand (the set at f92e4568). A lift is the
+median of five neighbouring samples, so a speck of marine snow is not read as light:
 
 | Ring | Arc whose ground the light lifts by more than 10 of 255 | Most | The ring's stroke over the ground beside it there: median now, and before |
 | --- | --- | --- | --- |
 | Light Scout's, Close | 35% | 22 | 21, 23 |
-| Corvette's, Close | 37% | 34 | 21, 23 |
-| Light Scout's, Home | 55% | 55 | 22, 25 |
-| Corvette's, Home | 36% | 77 | 19, 25 |
+| Corvette's, Close | 37% | 33 | 21, 23 |
+| Light Scout's, Home | 56% | 55 | 22, 25 |
+| Corvette's, Home | 36% | 76 | 19, 25 |
 
 The Harvester's ring is untouched at both, and at Survey the three rings overlap one
-another and the stand lies under them. So the light reaches a third to a half of two
-rings, and where it does a ring's stroke keeps three quarters to nine tenths of what it
-stood over the ground. Whether that reads in under a second on the named GPU, in four palettes, is
-the owner's glance, and a light a mark cannot be read over is turned down at its source
+another and the stand lies under them. So the light reaches a third to a little over
+half of two rings, and where it does a ring's stroke keeps three quarters to nine tenths
+of what it stood over the ground. Whether that reads in under a second on the named GPU,
+in four palettes, is the owner's glance, and a light a mark cannot be read over is turned
+down at its source
 (limit 6). Of the stand's light, the slot and the two chimneys sharing one lattice cell
 are this step's and TUNABLE; the `vent` family's strength is not.
 
@@ -166,14 +180,17 @@ faction's, interface's or family's hue
 
 ## Calls taken with these frames
 
-Six, each written with its other readings in
+Seven, each written with its other readings in
 [art-direction.md](../../art-direction.md#life-in-the-worlds-light) and
 [its next section](../../art-direction.md#the-vents-at-work), and each the owner's to
 overturn:
 
 - **A body's register is the cladding's ceiling**, 0.16, over the props' 0.06.
 - **A schooling fry carries one light of its own**, in a new token, `life-glint`.
-- **High stands its own life**, two streams by the fleet's start, after Low's list.
+- **A drifting jelly carries six lights in the fry's token**, at a fry's level, and not
+  a hue of its own.
+- **High stands its own life**, two streams and five jellies by the fleet's start, after
+  Low's list.
 - **A chimney's breath is lit matter in the world pass**, not Low's steam.
 - **The crater's stand alone breathes it.** Every chimney on every map was taken first,
   and the round's critic overturned it: no frame shows a Thermal Vein at High. Every

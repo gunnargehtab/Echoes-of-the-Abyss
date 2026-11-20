@@ -423,9 +423,9 @@ export const HIGH_GRAPHICS = {
       SIZE_M: 0.22,
       MIN_PX: 1.6,
       LIFT_M: 0.15,
-      // A jelly's seat: wider than a fry's light and brighter, since six of
-      // them are all that says a bell hangs there at 400 m.
-      LANTERN: { LEVEL: 0.6, SIZE_M: 0.55 },
+      // A jelly's seat: wider than a fry's light and no brighter. At twice a
+      // fry's level the first frames read a seat over every lamp beside it.
+      LANTERN: { LEVEL: 0.3, SIZE_M: 0.55 },
     },
   },
   /**
