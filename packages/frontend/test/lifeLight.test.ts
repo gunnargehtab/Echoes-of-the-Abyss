@@ -38,6 +38,7 @@ import {
   takesLifeLight,
 } from '../src/game/lifeLight.ts';
 import { FRY_GLINT, PALETTES, WORLD_LIGHT } from '../src/game/palette.ts';
+import { CLADDING_CEILING } from '../src/game/rosterModels.ts';
 
 const parse = async (slug: string): Promise<Group> => {
   const bytes = readFileSync(
@@ -96,7 +97,8 @@ describe('the crater’s life in the world’s light (#1837)', () => {
         Math.abs(brightest(high.parts) - HIGH_GRAPHICS.LIFE.ALBEDO) < 1e-6,
         `${slug} at High`
       );
-      assert.equal(HIGH_GRAPHICS.LIFE.ALBEDO, 0.16, 'an own hull’s `CLADDING_CEILING`');
+      // No brighter than a vessel's cladding, whatever that ceiling becomes.
+      assert.ok(HIGH_GRAPHICS.LIFE.ALBEDO <= CLADDING_CEILING, 'scenery out-reads a vessel');
     }
   });
 

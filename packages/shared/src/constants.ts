@@ -90,8 +90,10 @@ export const FREE_WATER_LIFE = {
  *
  * A stream is schools sharing one loop, `SCHOOLS` of them evenly round it, so
  * a still camera beside the loop sees fish pass at any match time rather than
- * once a lap. `at` is the loop's centre in map metres, and `STATION` how far a
- * fish keeps from its school's own point, as `FRY_SCHOOL` is.
+ * once a lap. `at` is the loop's centre in map metres, `startDeg` where its
+ * first school stands when the match starts, as the loop's own phase (0 east,
+ * 90 south), and `STATION` how far a fish keeps from its school's own point,
+ * as `FRY_SCHOOL` is.
  */
 export const FREE_WATER_HIGH_LIFE = {
   /**
@@ -101,10 +103,13 @@ export const FREE_WATER_HIGH_LIFE = {
    */
   FRY_STREAM: {
     at: [299, 2098],
-    SCHOOLS: 4,
-    COUNT: 80,
+    startDeg: 159,
+    SCHOOLS: 5,
+    COUNT: 96,
     MOTION: { radiusM: 90, periodS: 380, depthM: 228, depthSwingM: 6, axisM: 0.06 },
-    STATION: { alongM: 26, acrossM: 7, depthM: 14 },
+    // A ribbon 14 m long, 3 m across and 2 m deep as drawn, a body about every
+    // metre: looser, and a school reads from the Close eye as scattered points.
+    STATION: { alongM: 7, acrossM: 1.6, depthM: 5 },
   },
   /**
    * Outer fish among the hulls and through the water the Corvette's beam
@@ -114,10 +119,11 @@ export const FREE_WATER_HIGH_LIFE = {
    */
   OUTER_STREAM: {
     at: [760, 2050],
+    startDeg: 90,
     SCHOOLS: 4,
     COUNT: 12,
     MOTION: { radiusM: 75, periodS: 300, depthM: 430, depthSwingM: 40, axisM: 0.78 },
-    STATION: { alongM: 22, acrossM: 9, depthM: 30 },
+    STATION: { alongM: 14, acrossM: 6, depthM: 14 },
   },
 } as const;
 
@@ -341,8 +347,9 @@ export const HIGH_GRAPHICS = {
    * is. `LID` is how much of the Lid's glow a face takes of what level ground
    * takes at its depth, `POOL` how much of a pool a face looking straight
    * down takes on a body at the ground, and `POOL_REACH_M` the drawn height
-   * over the ground at which that has halved: a hull's three, since a fish
-   * beside a hull stands in the same light. `BEAM` is how much of an own
+   * over the ground at which that has halved: knobs of a body's own, set to
+   * a hull's three (`HULL_LIGHT`) since a fish beside a hull stands in the
+   * same light, and free to leave them. `BEAM` is how much of an own
    * hull's searchlight a body takes of what ground would. `ALBEDO` is the
    * diffuse luminance a body's brightest material is lifted to there, over
    * the props' 0.06: a body a metre long is a few pixels, and at the props'

@@ -87,7 +87,7 @@ export default async ({ page, shot }) => {
     return page.evaluate(() => window.__perspectiveProbe());
   };
   // High's own bodies decode after the switch: a template a quality. The
-  // crater stands 144 fry at Low and 464 at High, each with its light.
+  // crater stands 144 fry at Low and 624 at High, each with its light.
   const setQuality = async (quality) => {
     const drawn = await page.evaluate((q) => window.__perspectiveQuality(q), quality);
     assert.equal(drawn, quality, `the view draws ${drawn}, asked ${quality}`);

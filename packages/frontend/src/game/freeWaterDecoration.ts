@@ -282,11 +282,14 @@ export function freeWaterPlacements(
   // High's own (#1837): streams where the target's cameras read a body. A
   // stream is schools sharing one loop, evenly round it, each keeping station
   // as a school does; the seed takes the school's number, so no two schools
-  // of a stream are one formation turned.
+  // of a stream are one formation turned. Where the first school stands when
+  // the match starts is authored, as the ray's start is: reduced motion holds
+  // every body there, and that is the frame a still capture takes.
   const stream = (
     slug: string,
     {
       at,
+      startDeg,
       SCHOOLS,
       COUNT,
       MOTION,
@@ -294,7 +297,7 @@ export function freeWaterPlacements(
     }: (typeof FREE_WATER_HIGH_LIFE)['FRY_STREAM' | 'OUTER_STREAM']
   ) => {
     const [x, y] = at;
-    const start = propHash([FREE_WATER_LIFE.SEED, x, y]) * Math.PI * 2;
+    const start = (startDeg * Math.PI) / 180;
     for (let s = 0; s < SCHOOLS; s++) {
       for (let i = 0; i < COUNT; i++) {
         const offset = (axis: number) => propHash([FREE_WATER_LIFE.SEED, x, y, s, i, axis]) * 2 - 1;

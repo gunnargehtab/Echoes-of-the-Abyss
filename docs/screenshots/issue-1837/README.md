@@ -36,8 +36,8 @@ frame alike.
 
 | Camera | Low | High | What High shows now |
 | --- | --- | --- | --- |
-| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | Step 2's frame, and nothing a glance finds more: a fry is 0.5 m and the eye is 900 m off, so its light draws at the 1.6 px floor at about a twentieth of its level. The outer fish in the Corvette's beam are specks of a few pixels |
-| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | Three of the fry stream's four schools, at the eye's own depth. One is 43 to 77 m off, left of centre: pale points with a dark body through each. One is 160 to 201 m off at the left edge, round the Harvester, and one 218 to 236 m off, right of centre, as finer points. The fourth is past the frame's right edge. Outer fish, 490 to 670 m off, swim through the Corvette's cone, lit in its green |
+| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | Step 2's frame, and nothing a glance finds more. A fry is 0.5 m and the eye is 900 m off, so its light draws at the 1.6 px floor at about a twentieth of its level: the fry's schools are faint knots beside the Harvester, found by looking for them. The outer fish by the Corvette's beam are specks of a few pixels |
+| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | Three of the fry stream's five schools, at the eye's own depth. One is 49 to 57 m off, between the Harvester and the Light Scout: a ribbon of pale points, a dark body through each. Two are 209 to 227 m off, one behind it and one left of the Corvette, as knots of fine points. The other two are past the frame's edges. Outer fish, 510 to 680 m off, stand as dim shapes left of the Corvette, and one school swims through its cone, lit in its green |
 | Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | Nothing moved that reads: no body of either stream draws a pixel from 10 km |
 
 Two more, off the target's three:
@@ -52,9 +52,14 @@ from Home to Close at High and held there, at 1280 × 720 and six times the spee
 rasteriser drew it, so the streams swim six times as fast as they do. It is taken without
 reduced motion: the bodies move and the camera sways.
 
-What the target shows and these do not: drifting bodies, vents at work, schools dense
-enough to read from Home's distance, and a fish as a dark shape against bright water. The
-crater's water is dark, so a body out of every beam reads by its own light or barely.
+What the target shows and these do not: drifting bodies, vents at work, schools of
+hundreds as dark masses against bright water, and any school that reads from Home's
+distance. The crater's water is dark, so a body out of every beam reads by its own light
+or barely, and a school here is a ribbon of points where the target's is a dark ribbon.
+
+The first take spread each school over 52 m, so that the Close frame always held fish.
+The round's critic read that frame as an even scatter of sparks and not as schools, and
+was right. A school is now a ribbon 14 m long, and the stream is five schools of 96.
 
 ## What is new in the frame
 
@@ -63,13 +68,13 @@ High at rest.
 
 | Camera | High before: calls, triangles | High now | Fry, outer fish, lights |
 | --- | --- | --- | --- |
-| Home | 55, 626,614 | 56, 691,030 | 464, 64, 464 |
-| Close | 55, 626,614 | 56, 691,030 | 464, 64, 464 |
-| Low | 36, 619,283 | 37, 683,699 | 464, 64, 464 |
-| Survey | 55, 627,252 | 56, 691,668 | 464, 64, 464 |
+| Home | 55, 626,614 | 56, 715,030 | 624, 64, 624 |
+| Close | 55, 626,614 | 56, 715,030 | 624, 64, 624 |
+| Low | 36, 619,283 | 37, 707,699 | 624, 64, 624 |
+| Survey | 55, 627,252 | 56, 715,668 | 624, 64, 624 |
 
-One draw and 64,416 triangles more. The draw is the fry's lights, 464 points in the world
-pass. The triangles are High's own bodies: 320 fry of 150 and 48 outer fish of 342. The
+One draw and 88,416 triangles more. The draw is the fry's lights, 624 points in the world
+pass. The triangles are High's own bodies: 480 fry of 150 and 48 outer fish of 342. The
 passes are the six they were and the targets hold the 136,145,280 bytes they did. The
 cost not counted here is fragments: a body's fragment inside a cone reads the ground's
 heights twelve times a beam, as lit ground does. Gate 6's 8 ms is read on the named GPU.
@@ -82,11 +87,11 @@ world area, of each pixel's largest channel difference, out of 255.
 
 | Camera | `main` against `main` | `main` against the branch | Calls and triangles |
 | --- | --- | --- | --- |
-| Home | 0.24 | 0.22 | 44 and 593,684, both |
-| Close | 0.41 | 0.39 | 44 and 593,684, both |
-| Low | 0.47 | 0.44 | 26 and 587,001, both |
+| Home | 0.24 | 0.06 | 44 and 593,684, both |
+| Close | 0.41 | 0.14 | 44 and 593,684, both |
+| Low | 0.47 | 0.12 | 26 and 587,001, both |
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
-| Garden close | 0.35 | 0.34 | 31 and 591,001, both |
+| Garden close | 0.35 | 0.13 | 31 and 591,001, both |
 
 The branch differs from `main` by no more than `main` differs from itself.
 [The Close map](software/low-control/diff-close-main-vs-branch.png) is marine snow and
@@ -97,21 +102,25 @@ and `packages/frontend/test/lifeLight.test.ts` holds Low's templates unpatched.
 ## Gate 3, gate 7 and the limits
 
 Read on [Close](software/07-high-close.png), by the brightest pixel of each, in luma out
-of 255:
+of 255. A lamp's is its brightest pixel in the navy's green.
 
 | What | Peak |
 | --- | --- |
-| A fry's light, near the eye | 144 |
+| One fry's light in the near school: the median of 90, and the most | 136, 144 |
+| The near school, where its lights overlap | 160 |
 | The Corvette's lamp, SIG 28 | 165 |
-| The Light Scout's lamp, SIG 6 | 126 |
+| The Harvester's lamp, SIG 18 | 159 |
+| The Light Scout's lamp, SIG 6 | 130 |
 
-A fry's light stands under the lamp of a hull that throws a beam and over a quiet
-hull's. World light is not loudness at High, so that breaks no rule as written; whether a
-school beside a quiet hull muddies the reading of its lamps is the owner's glance. A
-stream crosses the Harvester's ring and the Light Scout's in this frame, and both rings
-read through it on the software frame. Gate 7's glance is the owner's, on the named GPU.
+One fry's light stands under the lamp of either hull that throws a beam and over the
+quiet Light Scout's. Light adds, so a dense school's brightest pixel is level with the
+Harvester's lamp. World light is not loudness at High, so that breaks no rule as
+written; whether a school beside a hull muddies the reading of its lamps is the owner's
+glance. The near school crosses the upper right of the Harvester's ring in this frame and
+stops short of the Light Scout's, and the ring's arc reads among its points on the
+software frame. Gate 7's glance is the owner's, on the named GPU.
 
-The 99.9th percentile of the world area's luma is 162 at Home, 156 at Close and 157 at
+The 99.9th percentile of the world area's luma is 162 at Home, 157 at Close and 157 at
 Survey, where [issue-1836](../issue-1836/README.md#gate-7-and-limit-5) read 169 at Home
 at rest: the lights add no brightest pixel.
 
@@ -149,9 +158,10 @@ CLIP=1 RECORD_VIDEO=docs/screenshots/issue-1837/gpu VIEW_W=1920 VIEW_H=1080 \
 The first writes ten frames and `readings.json`, whose `queued` GPU time at the four
 cameras is gate 6's reading. The second records the clip and holds six seconds at Close,
 for the stream to pass. This command does not set reduced motion, so the bodies stand
-where the match's clock has carried them. Over a lap of the stream, 160 to 252 of its 320
+where the match's clock has carried them. Over a lap of the stream, 288 to 368 of its 480
 fry stand inside the Close frame at any moment, so no frame there finds open water; which
-school is the near one changes. `CLIP_HOLD_MS` lengthens the hold.
+school is the near one changes, and between two the nearest is a knot 100 m off.
+`CLIP_HOLD_MS` lengthens the hold.
 
 ## Related
 

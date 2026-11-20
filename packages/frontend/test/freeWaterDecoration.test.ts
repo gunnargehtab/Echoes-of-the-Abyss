@@ -687,7 +687,10 @@ describe('authored public decoration', () => {
       // its school's station of a point `SCHOOLS` of which divide the lap.
       const lap = (Math.PI * 2) / stream.SCHOOLS;
       const reach = stream.STATION.alongM / stream.MOTION.radiusM;
-      const first = fish[0]!.motion!.phase;
+      // Its first school stands at the authored phase when the match starts,
+      // which is where reduced motion holds it.
+      const first = (stream.startDeg * Math.PI) / 180;
+      assert.ok(Math.abs(fish[0]!.motion!.phase - first) <= reach + 1e-9);
       for (const p of fish) {
         assert.deepEqual([p.xM, p.yM], [x, y]);
         const m = p.motion!;
@@ -696,7 +699,7 @@ describe('authored public decoration', () => {
         assert.equal(m.periodS, stream.MOTION.periodS);
         const turn = (((m.phase - first) % lap) + lap) % lap;
         assert.ok(
-          Math.min(turn, lap - turn) <= 2 * reach + 1e-9,
+          Math.min(turn, lap - turn) <= reach + 1e-9,
           `${slug}: a fish stands ${turn} rad off every school`
         );
       }

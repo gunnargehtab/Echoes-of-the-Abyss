@@ -263,7 +263,7 @@
         "split"
       ],
       "calls": 56,
-      "triangles": 691030,
+      "triangles": 715030,
       "camera": [
         709,
         1710,
@@ -277,13 +277,13 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
+          "env-rim-ray": 1,
           "env-rim-crab": 32,
-          "env-shoal-fry": 464,
+          "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26,
-          "env-rim-ray": 1
+          "env-deep-fish": 26
         },
-        "glints": 464
+        "glints": 624
       },
       "graphicsQuality": {
         "asked": "high",
@@ -317,7 +317,7 @@
         "split"
       ],
       "calls": 56,
-      "triangles": 691030,
+      "triangles": 715030,
       "camera": [
         542,
         1958,
@@ -331,13 +331,13 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
+          "env-rim-ray": 1,
           "env-rim-crab": 32,
-          "env-shoal-fry": 464,
+          "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26,
-          "env-rim-ray": 1
+          "env-deep-fish": 26
         },
-        "glints": 464
+        "glints": 624
       },
       "graphicsQuality": {
         "asked": "high",
@@ -367,7 +367,7 @@
         "split"
       ],
       "calls": 37,
-      "triangles": 683699,
+      "triangles": 707699,
       "camera": [
         2000,
         2000,
@@ -381,13 +381,13 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
+          "env-rim-ray": 1,
           "env-rim-crab": 32,
-          "env-shoal-fry": 464,
+          "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26,
-          "env-rim-ray": 1
+          "env-deep-fish": 26
         },
-        "glints": 464
+        "glints": 624
       },
       "graphicsQuality": {
         "asked": "high",
@@ -421,7 +421,7 @@
         "split"
       ],
       "calls": 56,
-      "triangles": 691668,
+      "triangles": 715668,
       "camera": [
         2000,
         2000,
@@ -435,13 +435,13 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
+          "env-rim-ray": 1,
           "env-rim-crab": 32,
-          "env-shoal-fry": 464,
+          "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26,
-          "env-rim-ray": 1
+          "env-deep-fish": 26
         },
-        "glints": 464
+        "glints": 624
       },
       "graphicsQuality": {
         "asked": "high",
@@ -471,7 +471,7 @@
         "split"
       ],
       "calls": 43,
-      "triangles": 688347,
+      "triangles": 712347,
       "camera": [
         1875,
         1125,
@@ -485,13 +485,13 @@
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
+          "env-rim-ray": 1,
           "env-rim-crab": 32,
-          "env-shoal-fry": 464,
+          "env-shoal-fry": 624,
           "env-outer-fish": 64,
-          "env-deep-fish": 26,
-          "env-rim-ray": 1
+          "env-deep-fish": 26
         },
-        "glints": 464
+        "glints": 624
       },
       "graphicsQuality": {
         "asked": "high",

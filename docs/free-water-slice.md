@@ -357,15 +357,19 @@ at any match time, where one school would pass once a lap.
 
 | Stream | Loop centre, radius, period | Depth | Schools and fish | Station: along, across, depth |
 | --- | --- | --- | --- | --- |
-| Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 4 of 80 | 26 m, 7 m, 14 m |
-| Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 22 m, 9 m, 30 m |
+| Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 5 of 96 | 7 m, 1.6 m, 5 m |
+| Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 14 m, 6 m, 14 m |
 
 The fry's loop passes 50 m in front of the Close eye, 233 m deep at `(178, 2,168)`, where
-a 0.5 m body draws 15 px; over a lap, 160 to 252 of the 320 stand inside that frame at any
-moment. The outer fish cross the water between the Corvette's lamp at 300 m and its pool
-on the 600 m rim, so at rest a school swims through its beam; 490 to 670 m from the Close
-eye a 4 m body draws 9 to 12 px, and 6 from Home's. Both loops lie over the outside rim's
-600 m floor. They are decoration under every rule of this section: no reaction,
+a 0.5 m body draws 15 px. A fry school is a ribbon, 14 m long, 3 m across and 2 m deep as
+drawn, a body about every metre; over a lap, 288 to 368 of the 480 fry stand inside the
+Close frame at any moment. The outer fish cross the water between the Corvette's lamp at
+300 m and its pool on the 600 m rim, so at rest a school swims through its beam; 510 to
+680 m from the Close eye a 4 m body draws 9 to 12 px, and 6 from Home's. Where a stream's
+first school stands when the match starts is authored, as the ray's start is, and reduced
+motion holds it there: the fry's at 159 degrees round its loop, 50 m ahead of the Close
+eye, and the outer fish's at 90, south of its centre, in the Corvette's beam. Both loops
+lie over the outside rim's 600 m floor. They are decoration under every rule of this section: no reaction,
 no collision, no tell, the same loop for every client, held still under reduced motion.
 The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE` (`packages/shared/src/constants.ts`)
 until the owner accepts a frame. How a body is lit there, and the one light a fry

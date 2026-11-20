@@ -610,9 +610,10 @@ a hole in the water. Each now draws from a template of its own at High, as an ow
 does, and nothing Low draws is built, patched or keyed differently.
 
 - **A body takes the light a hull takes.** The rig stays, and beside it a face takes the
-  Lid's glow by how far it looks up and by the water over it, and the pools from below,
-  at a hull's own three shares ([A model in the world's light](#a-model-in-the-worlds-light)):
-  a fish beside a hull stands in the same light. An own hull's searchlight lights a body
+  Lid's glow by how far it looks up and by the water over it, and the pools from below.
+  Its three shares are knobs of its own, set to a hull's
+  ([A model in the world's light](#a-model-in-the-worlds-light)), since a fish beside a
+  hull stands in the same light. An own hull's searchlight lights a body
   that swims through it, at half of what ground would take, and the ground and a hull
   shadow it. So a school crossing a beam shows in the navy's glow, and one outside it is
   lit by the Lid alone.
@@ -632,12 +633,13 @@ does, and nothing Low draws is built, patched or keyed differently.
   readings were written. **No light but the deep fish's photophores**, as Low has them,
   leaves a school dim wherever no beam is. **One point on each schooling fry** is taken:
   a soft disc 0.22 m across on the flank, drawn in the world pass, so the water takes it
-  with distance and the bloom spreads it a little. Its level stands under the lamps of a
-  hull loud enough to throw a beam: on the software frames a near light peaks at 144 of
-  255 and the Corvette's lamp, at SIG 28, at 165. A quiet hull's lamp is dimmer than a
-  fry: the Light Scout's, at SIG 6, reads 126. World light is not loudness at High
-  ([What it releases at High](#what-it-releases-at-high)), and whether a school beside a
-  quiet hull muddies gate 3's reading of it is the owner's glance. **A light on every
+  with distance and the bloom spreads it a little. One light stands under the lamps of a
+  hull loud enough to throw a beam: on the software frames it peaks at 144 of 255, and the
+  Corvette's lamp, at SIG 28, at 165. Light adds, so where a dense school's lights overlap
+  the peak is 160, level with the Harvester's lamp at SIG 18. A quiet hull's lamp is
+  dimmer than one fry: the Light Scout's, at SIG 6, reads 130. World light is not loudness
+  at High ([What it releases at High](#what-it-releases-at-high)), and whether a school
+  beside a hull muddies gate 3's reading of it is the owner's glance. **A light on every
   body** would make the ray and the outer fish lamps of their own. A light far enough to
   draw under 1.6 pixels is drawn at 1.6 with its level cut by the area gained, so a far
   school fades instead of sparkling.
@@ -649,8 +651,12 @@ does, and nothing Low draws is built, patched or keyed differently.
 - **High stands more life than Low**, where the target's cameras read a body
   ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
   written. **Add to Low's lists** would move the frame Low draws. **Slots High alone
-  stands** is taken: two streams of schools by the fleet's start, 320 fry and 48 outer
-  fish, after Low's list and never among it.
+  stands** is taken: two streams of schools by the fleet's start, 480 fry and 48 outer
+  fish, after Low's list and never among it. A school there keeps a tight station: a
+  ribbon of fry 14 m long with a body about every metre. The first cut spread a school
+  over 52 m, so that a still camera always held fish, and from the Close eye it read as
+  scattered points and not as a school. Five schools a loop keep the frame filled
+  instead.
 - **No mark, lamp or halo is touched.** A fry's light is a point of the world layer's,
   under every mark, and gate 7's glance at a ring among a school is the owner's, on the
   named GPU.
