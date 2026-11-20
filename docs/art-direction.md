@@ -952,8 +952,8 @@ it. At High the snow inside an own hull's beam now shows by the beam's light.
   ([Reading the Water](#reading-the-water)).
 - **The only light on it is an own hull's** (limit 2), in the navy's glow (limit 3). A
   mote reads the beams' own uniforms, so the ground and a hull shadow it as they shadow
-  the cone, and a contact lights none. It sends on 7% of the beam's light at its centre,
-  less for a finer mote.
+  the cone, and a contact lights none. The coarsest mote sends on 7% of the beam's light
+  at its centre, and the finest two fifths of that.
 - **Its strength is the beam's, and so the lamp halo's** (limit 5). A hull through
   SIG 15 throws no beam and shows no mote, and Silent Running holds a hull under that.
   Two readings were written of what the limit asks beyond that. **No mote brighter on
@@ -993,7 +993,8 @@ loud hull and none at Low or on Silent Running.
 | Distance from that centre a mote is whole within, and gone by, metres | `MOTES.FADE_M` | 96, 120 |
 | A mote's width, the finest and the coarsest, metres | `MOTES.SIZE_M` | 0.5, 1.4 |
 | The narrowest a mote is drawn, pixels | `MOTES.MIN_PX` | 1.5 |
-| Share of the beam's light a mote sends to the eye | `MOTES.ALBEDO` | 0.07 |
+| Share of the beam's light the coarsest mote sends to the eye | `MOTES.ALBEDO` | 0.07 |
+| What the finest mote sends, as a share of the coarsest's | `MOTES.FINE_SHARE` | 0.4 |
 
 #### A mark on the lit world
 

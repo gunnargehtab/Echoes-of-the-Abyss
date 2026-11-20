@@ -59,7 +59,10 @@ describe('snow in a beam (#1855)', () => {
     // uniforms, less what the ground and a hull hide of it.
     assert.match(v, /echoesSearchBeam\( moteBeam, transformed, moteToLamp \)/);
     assert.match(v, /echoesSearchShadeCoarse\( moteBeam, transformed \)/);
-    assert.ok(v.includes(`* ${SPEC.ALBEDO.toFixed(6)} *`));
+    // The coarsest mote sends on the albedo, the finest a share of it.
+    assert.ok(
+      v.includes(`* ${SPEC.ALBEDO.toFixed(6)} * mix( ${SPEC.FINE_SHARE.toFixed(6)}, 1.0, aMote )`)
+    );
     // It sinks and only sinks: the clock reaches a mote's height alone.
     assert.match(v, /moteCell\.y -= uMoteSinkM;/);
     assert.equal(v.match(/uMoteSinkM/g)!.length, 2, 'declared, and read once');

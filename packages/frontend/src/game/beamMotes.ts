@@ -146,8 +146,9 @@ export function patchBeamMotes(shader: { vertexShader: string; fragmentShader: s
         'vec3 moteBeamLight = echoesSearchBeam( moteBeam, transformed, moteToLamp ) * moteNear;',
         'if ( moteBeamLight.r + moteBeamLight.g + moteBeamLight.b > 0.0 ) {',
         // The beam's light at the mote, less what the ground and a hull hide
-        // of it, and the share a mote this size sends on.
-        `  vMoteLight = moteBeamLight * ( echoesSearchShadeCoarse( moteBeam, transformed ) * moteShare * ${glsl(SPEC.ALBEDO)} * ( 0.4 + 0.6 * aMote ) );`,
+        // of it, and the share a mote this size sends on: the coarsest the
+        // whole albedo, the finest `FINE_SHARE` of it.
+        `  vMoteLight = moteBeamLight * ( echoesSearchShadeCoarse( moteBeam, transformed ) * moteShare * ${glsl(SPEC.ALBEDO)} * mix( ${glsl(SPEC.FINE_SHARE)}, 1.0, aMote ) );`,
         '} else {',
         // In no beam: off the clip volume, and no fragment is paid for it.
         '  vMoteLight = vec3( 0.0 );',

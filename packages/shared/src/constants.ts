@@ -522,8 +522,8 @@ export const HIGH_GRAPHICS = {
    * nearest a point `AHEAD_M` along its axis. A mote is whole within
    * `FADE_M[0]` of that point and gone by `FADE_M[1]`, which is no more than
    * half a cell, so none is lit where it wraps. It is `SIZE_M` across, the
-   * least and the most, never drawn narrower than `MIN_PX`, and sends on
-   * `ALBEDO` of the light on it.
+   * least and the most, never drawn narrower than `MIN_PX`. The coarsest
+   * sends on `ALBEDO` of the light on it, and the finest `FINE_SHARE` of that.
    */
   MOTES: {
     COUNT: 36000,
@@ -533,6 +533,7 @@ export const HIGH_GRAPHICS = {
     SIZE_M: [0.5, 1.4],
     MIN_PX: 1.5,
     ALBEDO: 0.07,
+    FINE_SHARE: 0.4,
   },
 } as const;
 
