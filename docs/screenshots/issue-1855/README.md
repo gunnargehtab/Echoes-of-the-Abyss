@@ -147,8 +147,9 @@ the sink, the same on every client, and answers nothing.
 ## Calls taken with these frames
 
 Three, each written with its other readings in
-[art-direction.md](../../art-direction.md#snow-in-a-beam), and each the owner's to
-overturn:
+[art-direction.md](../../art-direction.md#snow-in-a-beam). **The owner kept all three**
+in session on 20 November 2026, on the frames here. The look is not accepted by that:
+acceptance is on the named GPU's frames.
 
 - **A beam shows a finer snow than the water draws.** The flakes the water already draws
   would put nine in the Corvette's cone at Close. A lattice of fine motes puts about 560

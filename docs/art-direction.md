@@ -916,9 +916,12 @@ both columns, beside the same hull silent
 ([#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855);
 [issue-1855](screenshots/issue-1855/README.md)). Every number is TUNABLE in
 `HIGH_GRAPHICS.MOTES` (`packages/shared/src/constants.ts`) until a frame of it is
-accepted. Three calls were taken in the open with the first frames, and wait on the
-owner: which snow a beam lights, how bright a mote may stand, and how a beam is put
-across the vent stand's plume.*
+accepted. Three calls were taken in the open with the first frames: which snow a beam
+lights, how bright a mote may stand, and how a beam is put across the vent stand's
+plume. **The owner kept all three** in session on 20 November 2026, on the software
+rasteriser's frames. That is not the look's acceptance, which waits on the named GPU's
+frames, gate 6's 8 ms and gate 7's glance. The readings not taken stay written under
+each.*
 
 The target frame's searchlight cones are full of lit particles
 ([issue-1799](screenshots/issue-1799/README.md)). A beam lit the ground, the cladding,
