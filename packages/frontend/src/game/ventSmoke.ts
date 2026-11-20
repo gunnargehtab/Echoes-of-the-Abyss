@@ -11,7 +11,11 @@
  * an own hull's searchlight crosses it, shadowed by the ground and by a hull
  * as anything in a beam is (searchlights.ts).
  *
- * One `Points` for every chimney on the map, in the world pass (highFrame.ts):
+ * Drawn over the free-water crater's vent stand alone (environmentLayer.ts
+ * `breathe`): every other map keeps Low's steam at High until a Thermal Vein
+ * has a frame of this, since look work starts from a frame.
+ *
+ * One `Points` for every chimney it is handed, in the world pass (highFrame.ts):
  * scene-referred, so the water takes it with distance, the bloom spreads what
  * is bright enough and the grade and the curve reach it. Its buffers are
  * written once a rebuild; a frame costs one uniform write. The light on a

@@ -393,9 +393,9 @@ Props only. The cells under them stay Coral Ruins at 600 m, so no floor, PF or r
 moves, the rim stays a rim, and a hull passes a chimney as it passes any prop: nothing
 here blocks, hides or tells (§2). The stand is 109 m north-west of the Corvette's start
 and 164 m south of the Light Scout's, on the floor 300 m under both. From the Close eye
-it is 421 m off, in the gap between their two rings.
-[art-direction.md](art-direction.md#the-vents-at-work) has how the slot was found, what
-a chimney breathes at High and how the stand lights the rim. The slots are TUNABLE in
+it is 421 m off, between those two hulls, and its light reaches both their rings.
+[art-direction.md](art-direction.md#the-vents-at-work) has that reading, how the slot was
+found and what a chimney breathes there at High. The slots are TUNABLE in
 `FREE_WATER_HIGH_VENTS` (`packages/shared/src/constants.ts`) until the owner accepts a
 frame.
 

@@ -40,7 +40,7 @@ frame alike.
 | Camera | Low | High | What High shows now |
 | --- | --- | --- | --- |
 | Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The vent stand in the gap between the three hulls: two chimneys in their own amber light, its pool on the rim and its volume in the water, with a column of smoke over them. The fry's schools are faint knots beside the Harvester, found by looking for them: a fry is 0.5 m and the eye 900 m off, so its light draws at the 1.6 px floor at about a twentieth of its level. The outer fish by the Corvette's beam are specks of a few pixels |
-| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The stand 421 m off, in the gap between the Light Scout's ring and the Corvette's: two chimneys 126 px tall against their own light, three boulders at their feet, and a column of pale puffs climbing out of the frame's amber into the dark. Three of the fry stream's five schools, at the eye's own depth: one 49 to 57 m off, between the Harvester and the Light Scout, a ribbon of pale points with a dark body through each, and two 209 to 227 m off as knots of fine points. Outer fish, 510 to 680 m off, stand as dark shapes against the edge of the vent's light, and one school swims through the Corvette's cone, lit in its green |
+| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The stand 421 m off, between the Light Scout and the Corvette: two chimneys 126 px tall against their own light, three boulders at their feet, and a column of pale puffs climbing out of the frame's amber into the dark. Three of the fry stream's five schools, at the eye's own depth: one 49 to 57 m off, between the Harvester and the Light Scout, a ribbon of pale points with a dark body through each, and two 209 to 227 m off as knots of fine points. Outer fish, 510 to 680 m off, stand as dark shapes against the edge of the vent's light, and one school swims through the Corvette's cone, lit in its green |
 | Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | The stand as one amber point among the fleet's three rings, which overlap one another at this dolly. No body of either stream draws a pixel from 10 km |
 
 Two more, off the target's three:
@@ -141,13 +141,23 @@ at Close and 162 at Survey; with the schools alone it was 162, 157 and 157, and
 `vent` family's strength is step 1's SPEC, accepted on frames that held no vent, and this
 is the first frame of one.
 
-Where the stand's light meets a ring, with the light taken as 60 m in radius: at Close
-it clears the Light Scout's ring by 65 px and the Corvette's by 32; at Home it clears the
-Light Scout's by 5 px and lies 8 px inside the Corvette's; at Survey the three rings
-overlap one another and the stand lies under them. On the software frames each ring's
-arc reads where it meets the light's edge. Whether it does on the named GPU, in four
-palettes, is the owner's glance, and a light a mark cannot be read over is turned down
-at its source (limit 6).
+Where the stand's light meets a ring, read along each ring's own circle against the same
+frame without the stand (the set at f92e4568):
+
+| Ring | Arc whose ground the light lifts by more than 10 of 255 | Most | The ring's stroke over the ground beside it there: median now, and before |
+| --- | --- | --- | --- |
+| Light Scout's, Close | 35% | 22 | 21, 23 |
+| Corvette's, Close | 37% | 34 | 21, 23 |
+| Light Scout's, Home | 55% | 55 | 22, 25 |
+| Corvette's, Home | 36% | 77 | 19, 25 |
+
+The Harvester's ring is untouched at both, and at Survey the three rings overlap one
+another and the stand lies under them. So the light reaches a third to a half of two
+rings, and where it does a ring's stroke keeps three quarters to nine tenths of what it
+stood over the ground. Whether that reads in under a second on the named GPU, in four palettes, is
+the owner's glance, and a light a mark cannot be read over is turned down at its source
+(limit 6). Of the stand's light, the slot and the two chimneys sharing one lattice cell
+are this step's and TUNABLE; the `vent` family's strength is not.
 
 Limits 2 to 4 hold by construction. A body swims its authored loop on the match's clock
 and answers nothing. The beams a body reads are the own hulls' alone. `fry-glint` is no
@@ -165,10 +175,11 @@ overturn:
 - **A schooling fry carries one light of its own**, in a new token, `fry-glint`.
 - **High stands its own life**, two streams by the fleet's start, after Low's list.
 - **A chimney's breath is lit matter in the world pass**, not Low's steam.
-- **Every chimney breathes it at High**, on every map, and the steam leaves the canvas
-  there. No frame here shows a Thermal Vein at High.
-- **The crater's stand is in the gap between the Light Scout and the Corvette**, 421 m
-  from the Close eye.
+- **The crater's stand alone breathes it.** Every chimney on every map was taken first,
+  and the round's critic overturned it: no frame shows a Thermal Vein at High. Every
+  other map keeps its steam.
+- **The crater's stand is between the Light Scout and the Corvette**, 421 m from the
+  Close eye, where its light reaches both their rings.
 
 ## Who captures
 

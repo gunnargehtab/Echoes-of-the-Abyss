@@ -638,9 +638,10 @@ and answers nothing a match does (rule 4). It is not the fauna colour: that is t
 stipple's, on the tactical layer. `FRY_GLINT` in `packages/frontend/src/game/palette.ts`
 transcribes it.
 
-**A vent's breath at High.** *In development with #1837, and not accepted.* At Low the
-steam over a chimney's mouth is world light in `vent-ember`, as the table says. At High
-it is matter and takes no token of its own: a column shows by the light that falls on
+**A vent's breath at High.** *In development with #1837, and not accepted.* The steam
+over a chimney's mouth is world light in `vent-ember`, as the table says, at both
+qualities. Over the free-water crater's vent stand alone, at High, it is drawn as matter
+and takes no token of its own: a column shows by the light that falls on
 it, which is `vent-ember` from the mouth under it, `lid-glow` above, and an own hull's
 searchlight in its navy's glow where one crosses
 ([art-direction.md](art-direction.md#the-vents-at-work)). Rules 4 and 5 hold: it is

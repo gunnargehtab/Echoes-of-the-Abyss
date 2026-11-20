@@ -331,32 +331,76 @@ describe('vent steam (#1514)', () => {
 });
 
 describe('a vent at work at High (#1837)', () => {
-  it('breathes one plume a stack: smoke in the world pass at High, steam on the canvas at Low', async () => {
+  // Serve every load as it is asked for, until `done`: High asks for a body's
+  // own template after Low's, so the count is not one number.
+  const settle = async (done) => {
+    let served = 0;
+    await until(() => {
+      while (served < pending.length) pending[served++].resolve(source());
+      return done();
+    });
+  };
+
+  it('keeps the steam on the canvas at High on a map that is not the crater', async () => {
     controlLoads();
     const vents = { ...terrain(), biomes: Array(64).fill(Biome.ThermalVein) };
     const all = placeProps(vents);
     const chimneys = all.filter((p) => p.slug === 'env-vent-chimney');
     const layer = new EnvironmentLayer();
     try {
+      // docs/art-direction.md, "The vents at work": the crater's stand alone
+      // breathes smoke; a Thermal Vein has no frame of it yet.
       layer.setWorldPass(true);
       layer.rebuild(vents, () => -200, all);
-      await until(() => pending.length === 2);
-      pending.forEach((p) => p.resolve(source()));
-      await until(() => layer.stats().props === all.length);
-      // docs/art-direction.md, "The vents at work": every chimney the map
-      // stands, never both plumes on one stack.
-      assert.equal(layer.smoke.plumes, chimneys.length);
-      assert.equal(layer.plume.plumes, 0);
-      assert.equal(layer.stats().ventPlumes, chimneys.length);
-      assert.ok(layer.group.children.includes(layer.smoke.points));
-      assert.ok(!layer.group.children.includes(layer.plume.points));
-      // Back at Low the steam stands as it always did, and no smoke.
-      layer.setWorldPass(false);
-      layer.rebuild(vents, () => -200, all);
+      await settle(() => layer.stats().props === all.length);
       assert.equal(layer.plume.plumes, chimneys.length);
       assert.equal(layer.smoke.plumes, 0);
       assert.ok(layer.group.children.includes(layer.plume.points));
       assert.ok(!layer.group.children.includes(layer.smoke.points));
+    } finally {
+      layer.destroy();
+    }
+  });
+
+  it('breathes lit smoke over the crater’s stand at High, and stands none of it at Low', async () => {
+    controlLoads();
+    // The outside rim's own cells everywhere: Coral Ruins at 600 m, open.
+    const rim = {
+      cols: 16,
+      rows: 16,
+      cellM: 250,
+      floor: Array(256).fill(600),
+      ceiling: Array(256).fill(0),
+      biomes: Array(256).fill(Biome.CoralRuins),
+    };
+    const stacks = () => layer.stats().fixtureAssets['env-vent-chimney'] ?? 0;
+    const chimneyMeshes = () => layer.group.children.filter((c) => c.name === 'env-vent-chimney');
+    const layer = new EnvironmentLayer('free-water');
+    try {
+      layer.rebuild(rim, () => -132);
+      await settle(() => layer.stats().fixtureAssets['env-shoal-fry'] !== undefined);
+      const low = layer.stats().props;
+      assert.equal(stacks(), 0, 'Low stands no vent');
+      assert.equal(layer.stats().ventPlumes, 0);
+
+      layer.setWorldPass(true);
+      layer.rebuild(rim, () => -132);
+      await settle(() => stacks() === 2 && layer.smoke.plumes === 2);
+      // One plume a stack, never both.
+      assert.equal(layer.plume.plumes, 0);
+      assert.ok(layer.group.children.includes(layer.smoke.points));
+      assert.ok(!layer.group.children.includes(layer.plume.points));
+      assert.ok(chimneyMeshes().length > 0);
+
+      // Back at Low the stand goes whole: its meshes, its columns, its count.
+      layer.setWorldPass(false);
+      layer.rebuild(rim, () => -132);
+      assert.equal(chimneyMeshes().length, 0);
+      assert.equal(stacks(), 0);
+      assert.equal(layer.smoke.plumes, 0);
+      assert.equal(layer.stats().ventPlumes, 0);
+      assert.ok(!layer.group.children.includes(layer.smoke.points));
+      assert.equal(layer.stats().props, low);
     } finally {
       layer.destroy();
     }
