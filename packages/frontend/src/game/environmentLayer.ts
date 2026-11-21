@@ -145,6 +145,8 @@ export class EnvironmentLayer {
   }
 
   private readonly decorativeDots: StippleCloud | null;
+  /** Points of the fry's cloud that stand on a deep fish's seats, at High. */
+  private seatLights = 0;
   private fixtureBatches = new Map<
     string,
     {
@@ -176,8 +178,9 @@ export class EnvironmentLayer {
   /** The collapse's cloud, one draw, alive for the 14 s after the ground change. */
   readonly cloud = new CollapseCloud();
   /**
-   * The light the crater's fry carry of their own at High, one draw in the
-   * world pass; in the group while the view draws one (lifeGlow.ts, #1837).
+   * The light the crater's fry carry of their own at High, and the deep
+   * fish's seats (#1857): one draw in the world pass, in the group while the
+   * view draws one (lifeGlow.ts, #1837).
    */
   readonly glow = new LifeGlow();
   /**
@@ -600,8 +603,9 @@ export class EnvironmentLayer {
     const points: Vector3[] = [];
     // Where each light a body carries stands now, in a buffer kept across
     // frames: the bodies move every frame and their count only with a
-    // rebuild. A fry's is one point on its axis, in the fry's cloud; a
-    // jelly's are its own, in the lantern's.
+    // rebuild. A fry's is one point on its axis, in the fry's cloud, and a
+    // deep fish's six stand on its seats in the same cloud; a jelly's are
+    // its own, in the lantern's.
     let lanterns = 0;
     const lantern = (at: Vector3, sizeM: number, level: number) => {
       if (this.lanternAt.length < (lanterns + 1) * 5) {
@@ -616,6 +620,7 @@ export class EnvironmentLayer {
     };
     const timeS = this.matchMs / 1000;
     let glints = 0;
+    let seats = 0;
     const glint = (at: Vector3, [sizeM, level]: readonly [number, number]) => {
       if (this.glintAt.length < (glints + 1) * 5) {
         const grown = new Float32Array(Math.max(256, (glints + 1) * 2) * 5);
@@ -647,7 +652,7 @@ export class EnvironmentLayer {
         this.writeFixturePose(meshes, p, i);
         if (carries === 'lantern') {
           // A jelly's seats are world light at High and nothing at Low: never
-          // the stipple channel's dots, which are the deep fish's alone.
+          // the stipple channel's dots, which are the deep fish's alone, at Low.
           if (!this.worldPass || template.jelly === undefined) return;
           writeJellyLights(
             template.jelly.shape,
@@ -660,6 +665,16 @@ export class EnvironmentLayer {
           );
           return;
         }
+        if (carries === 'seats' && this.worldPass) {
+          // A deep fish's seats are world light at High, and no dot of the
+          // stipple channel stands on one there (#1857): one light a seat,
+          // or the water would take it and the canvas give it back.
+          for (const seat of template.photophores ?? []) {
+            glint(TMP_POS.copy(seat).applyMatrix4(TMP_MATRIX), LIFE_GLOW_KIND.seat);
+            seats++;
+          }
+          return;
+        }
         for (const seat of template.photophores ?? [])
           points.push(seat.clone().applyMatrix4(TMP_MATRIX));
         if (carries === 'axis' && this.worldPass) {
@@ -667,6 +682,7 @@ export class EnvironmentLayer {
         }
       });
     }
+    this.seatLights = seats;
     const lit = this.glintAt;
     this.glow.write(glints, (positions, glow) => {
       for (let i = 0; i < glints; i++) {
@@ -905,6 +921,7 @@ export class EnvironmentLayer {
     cloudMotes: number;
     decorativePhotophores: number;
     lifeGlints: number;
+    photophoreLights: number;
     jellyLights: number;
     fixtureAssets: Record<string, number>;
   } {
@@ -919,7 +936,9 @@ export class EnvironmentLayer {
       siftMotes: this.sift.motes,
       cloudMotes: this.cloud.motes,
       decorativePhotophores: this.decorativeDots?.dotCount ?? 0,
-      lifeGlints: this.glow.count,
+      // One cloud holds both: a fry's one, and a deep fish's six.
+      lifeGlints: this.glow.count - this.seatLights,
+      photophoreLights: this.seatLights,
       jellyLights: this.lantern.count,
       fixtureAssets: Object.fromEntries(
         [...this.fixtureBatches].map(([slug, batch]) => [
@@ -1075,6 +1094,7 @@ export class EnvironmentLayer {
     this.matchMs = 0;
     this.decorativeDots?.write(0, () => {});
     this.glow.write(0, () => {});
+    this.seatLights = 0;
     this.lantern.write(0, () => {});
   }
 }

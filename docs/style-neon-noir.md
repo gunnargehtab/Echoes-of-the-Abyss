@@ -660,7 +660,8 @@ accepted.* Two more world-owned sources at the High graphics quality, each the l
 body of the free-water crater's decorative life carries of its own
 ([art-direction.md](art-direction.md#life-in-the-worlds-light)).
 
-`life-glint`, `#B9BFA2`, is one point on a schooling fry's flank. A pale bone white with
+`life-glint`, `#B9BFA2`, is one point on a schooling fry's flank, and one on each of a
+deep fish's six photophore seats (#1857). A pale bone white with
 no neon's chroma: warmer than every contact tier's blue, greyer than the civic lamp's
 tallow, and no navy's glow, so rule 5 holds. It is not the fauna colour: that is the
 stipple's, on the tactical layer.
@@ -816,7 +817,8 @@ point channel to its decorative deep fish, not to a gameplay animal: non-emissiv
 bodies with at most six soft photophore dots each, bounded by rung 5. No lit skin,
 halo, new ground-light family or response to a participant is licensed. Its other
 decorative animals carry no emission; this exception remains confined to the study. At
-High a schooling fry carries one point of world light, `life-glint`, and a drifting
+High a schooling fry carries one point of world light, `life-glint`, a deep fish's
+seats carry that token in place of their dots, and a drifting
 jelly is drawn as a lantern, `jelly-lantern`, both above.
 
 ### The arch study's licence

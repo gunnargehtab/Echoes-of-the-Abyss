@@ -661,7 +661,41 @@ does, and nothing Low draws is built, patched or keyed differently.
   the palette's fauna colour, on the tactical layer at both qualities
   ([map-visuals.md](map-visuals.md) §8). This is world light, in a world token, and it
   never scatters, gathers or brightens for anything a match does. The deep fish's
-  photophores stay the stipple channel's, as at Low, until a step moves them.
+  photophores are the stipple channel's at Low alone: the next call moves them.
+- **A deep fish's photophores are world light**
+  ([#1857](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1857);
+  [issue-1857](screenshots/issue-1857/README.md)). *In development, and not accepted.*
+  At High each of the six seats its file marks carries a point of `life-glint` in the
+  fry's cloud, and no dot of the stipple channel stands on one: a seat drawn twice would
+  be taken by the water once and handed back by the canvas. Low keeps its dots and its
+  licence ([free-water-slice.md](free-water-slice.md) §5). Three readings of the token
+  were written. **`life-glint`** is taken, one token for the crater's fish. **A token of
+  its own**, a palette's as `jelly-lantern` is, would be a third hue of life for six
+  points a fish. **Leave them the stipple's** keeps a field mark's colour on a body the
+  world pass lights. The owner took a seat's light in two calls in session on
+  21 November 2026, on the software frames. It was read from two eyes: an orbit focused
+  on a ring of fish at its least dolly, 250 m, where a 2 m fish draws 12 px at
+  1920 × 1080, and NAV's flight, about 60 m from one. The dolly bounds an eye's
+  distance to its focus and not to a fish, so an orbit focused past a ring can stand
+  between the two, and no frame was taken there. Five readings were written. **A fry's point**, 0.22 m at a
+  fry's 0.3, is under the 1.6 px floor at 250 m: a fish peaked at 71 to 111 of 255, a
+  faint dash. **0.5 m at 0.4** peaked at 150 to 195 there, over the Corvette's lamp at
+  165. **0.4 m at a fry's level** was the first call, at 108 to 161, and its flight
+  frame overturned it: a flank's three seats stand 0.22 to 0.24 m apart, so discs that
+  wide merge into one lit patch, lit skin and no photophore. **A fry's width at twice
+  its level, 0.6** is taken: three points that stand apart on the flank, and a fish
+  peaks at 102 to 162 from 250 m. Its cost is the register. A seat's centre is over a
+  fry's and over the bloom's threshold, and from a flight eye about 60 m off a fish
+  peaks at 184, over that lamp, as the patch did at 186. A deep fish swims at 2,000 m
+  and the fixture's hulls start at 300 m, so none stands beside a lamp unless a hull is
+  ordered down, and whether its points muddy gate 3's reading of a hull there is the
+  owner's glance. **Three points
+  held under the lamp**, at a level of about 0.45, was put to the owner with these and
+  not taken. The water takes a seat's light with distance, as it takes a fry's. From
+  gate 6's low camera the three rings Low draws into the pocket, 2 km off, are gone at
+  High, and were under every reading captured there: the widest lifted a ring's pixels
+  by 8 of 255. That is the cost of the move, and the owner took it with the
+  first call.
 - **High stands more life than Low**, where the target's cameras read a body
   ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
   written. **Add to Low's lists** would move the frame Low draws. **Slots High alone

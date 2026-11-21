@@ -45,7 +45,8 @@ shadow read from the ground's heights rather than rendered. The fine snow inside
 is lit by the same uniforms (#1855, `beamMotes.ts`): one instanced cloud of the world
 pass over a lattice fixed in the world, and never the canvas's snow. The crater's decorative
 bodies draw from a High template too (#1837, `lifeLight.ts`), in the light a hull takes,
-and its fry carry a point of their own in the world pass (`lifeGlow.ts`). A drifting
+and its fry carry a point of their own in the world pass (`lifeGlow.ts`), as each
+photophore seat of a deep fish does there in place of its stipple dot (#1857). A drifting
 jelly is a lantern there and no lit body (`jellyLight.ts`): its file drawn as a membrane
 that adds its light, blended and still the world pass's, over beads of light hung from
 its lip. The manta is a lit body with three things more (#1867, `mantaWing.ts`): its

@@ -205,6 +205,7 @@ describe('pending prop delivery', () => {
       cloudMotes: 0,
       decorativePhotophores: 0,
       lifeGlints: 0,
+      photophoreLights: 0,
       jellyLights: 0,
       fixtureAssets: {},
     });
@@ -474,7 +475,7 @@ describe('a body’s own light at High (#1837)', () => {
     });
   };
 
-  it('lights a fry’s flank, hangs a jelly’s lantern, and leaves the stipple the deep fish’s', async () => {
+  it('lights a fry’s flank and a deep fish’s seats, hangs a jelly’s lantern, and leaves Low the stipple', async () => {
     controlLoads();
     served = 0;
     const { terrainFor } = await import('../../backend/src/sim/maps/index.ts');
@@ -492,6 +493,7 @@ describe('a body’s own light at High (#1837)', () => {
       const seats = low.decorativePhotophores / count('env-deep-fish');
       assert.ok(Number.isInteger(seats) && seats >= 1 && seats <= 6, `${seats} seats a deep fish`);
       assert.equal(low.lifeGlints, 0);
+      assert.equal(low.photophoreLights, 0);
       assert.equal(low.jellyLights, 0);
       assert.equal(count('env-drift-jelly'), 0);
 
@@ -507,9 +509,30 @@ describe('a body’s own light at High (#1837)', () => {
       );
       layer.tick(0, undefined, 2000);
       const high = layer.stats();
-      // docs/art-direction.md, "Life in the world's light": one light a fry,
-      // in the fry's cloud, and no other body in it.
+      // docs/art-direction.md, "Life in the world's light": one light a fry
+      // and one a seat of a deep fish, in the fry's cloud, and no other body
+      // in it.
       assert.equal(high.lifeGlints, count('env-shoal-fry'));
+      assert.equal(high.photophoreLights, low.decorativePhotophores);
+      assert.equal(layer.glow.count, high.lifeGlints + high.photophoreLights);
+      // A seat's light is a kind of its own, at its own level against the
+      // cloud's: both kinds are in the cloud, and no other.
+      const glow = layer.glow.points.geometry.getAttribute('aGlow');
+      const kinds = new Map();
+      for (let i = 0; i < layer.glow.count; i++) {
+        const key = `${glow.getX(i)} m at ${glow.getY(i)}`;
+        kinds.set(key, (kinds.get(key) ?? 0) + 1);
+      }
+      const { LEVEL, SIZE_M, SEAT } = HIGH_GRAPHICS.LIFE.GLOW;
+      const kind = (sizeM, level) => `${Math.fround(sizeM)} m at ${Math.fround(level / LEVEL)}`;
+      assert.notEqual(kind(SEAT.SIZE_M, SEAT.LEVEL), kind(SIZE_M, LEVEL));
+      assert.deepEqual(
+        kinds,
+        new Map([
+          [kind(SIZE_M, LEVEL), high.lifeGlints],
+          [kind(SEAT.SIZE_M, SEAT.LEVEL), high.photophoreLights],
+        ])
+      );
       // "A jelly is a lantern": the glow round its bell, its six seats and
       // its strands' beads, in a cloud of its own token.
       const { COUNT, BEADS } = HIGH_GRAPHICS.LIFE.JELLY.STRANDS;
@@ -522,14 +545,16 @@ describe('a body’s own light at High (#1837)', () => {
         assert.match(bell.material.name, /^jelly_/);
         assert.equal(bell.userData.worldLayer, true);
       }
-      // A jelly's seats are world light, never the stipple channel's dots:
-      // those are the deep fish's alone, as at Low.
-      assert.equal(high.decorativePhotophores, low.decorativePhotophores);
+      // A seat that is world light is no dot of the stipple channel: not a
+      // jelly's, which never was one, and not a deep fish's, which is one at
+      // Low alone.
+      assert.equal(high.decorativePhotophores, 0);
 
       layer.setWorldPass(false);
       layer.rebuild(cells, () => -132);
       layer.tick(0, undefined, 3000);
       assert.equal(layer.stats().lifeGlints, 0);
+      assert.equal(layer.stats().photophoreLights, 0);
       assert.equal(layer.stats().jellyLights, 0);
       assert.ok(!layer.group.children.includes(layer.lantern.points));
       assert.equal(count('env-drift-jelly'), 0);
