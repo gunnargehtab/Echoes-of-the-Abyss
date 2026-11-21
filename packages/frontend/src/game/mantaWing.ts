@@ -30,7 +30,7 @@ import type { BufferGeometry, MeshStandardMaterial } from 'three';
 import { Float32BufferAttribute, Vector3 } from 'three';
 import { HIGH_GRAPHICS } from '@echoes/shared';
 
-const { STROKE, CREASE_DEG } = HIGH_GRAPHICS.LIFE.MANTA;
+const { STROKE, CREASE_DEG, BELLY } = HIGH_GRAPHICS.LIFE.MANTA;
 
 /** What a manta's program reads of the stroke; one object a template, driven by the layer. */
 export interface MantaUniforms {
@@ -74,15 +74,16 @@ const glsl = (value: number): string => {
   return text.includes('.') ? text : `${text}.0`;
 };
 
-/** The anchors the patch needs of three's standard vertex program. */
-export const MANTA_WING_ANCHORS = [
-  '#include <common>',
-  '#include <beginnormal_vertex>',
-  '#include <begin_vertex>',
-] as const;
+/** The anchors the patch needs of three's standard program, vertex then fragment. */
+export const MANTA_WING_ANCHORS = {
+  vertex: ['#include <common>', '#include <beginnormal_vertex>', '#include <begin_vertex>'],
+  fragment: ['#include <common>', '#include <lights_fragment_begin>'],
+} as const;
 
 // x: the lift at `z`, metres. y: its slope along z, for the normal.
 const HEAD = `
+attribute float mantaThick;
+varying float vMantaThick;
 uniform float uMantaTime;
 uniform float uMantaMoves;
 uniform float uMantaHalfSpan;
@@ -105,15 +106,34 @@ const NORMAL = `
 objectNormal.z -= echoesMantaStroke( position.z ).y * objectNormal.y;`;
 
 const LIFT = `
-transformed.y += echoesMantaStroke( position.z ).x;`;
+transformed.y += echoesMantaStroke( position.z ).x;
+vMantaThick = mantaThick;`;
+
+const FRAGMENT_HEAD = `
+varying float vMantaThick;`;
+
+// The Lid's glow through the body, onto a face by how far it looks down:
+// what stands on the back over this point, less what the body's thickness
+// here keeps. `echoesLitIrradiance` and `vLifeWorld` are the world's light's
+// (lifeLight.ts), which is installed first.
+const THROUGH = `
+{
+  vec3 mantaFacing = inverseTransformDirection( geometryNormal, viewMatrix );
+  irradiance += echoesLitIrradiance( vec3( 0.0, 1.0, 0.0 ), vLifeWorld.y )
+    * ( ${glsl(BELLY.THROUGH)} * max( 0.0, - mantaFacing.y ) * exp( - vMantaThick / ${glsl(BELLY.THROUGH_M)} ) );
+}`;
 
 /** The program with the stroke read into it. Exported for the test that holds the anchors. */
-export function patchMantaWing(shader: { vertexShader: string }): void {
-  const [common, normal, begin] = MANTA_WING_ANCHORS;
+export function patchMantaWing(shader: { vertexShader: string; fragmentShader: string }): void {
+  const [common, normal, begin] = MANTA_WING_ANCHORS.vertex;
+  const [fCommon, fLight] = MANTA_WING_ANCHORS.fragment;
   shader.vertexShader = shader.vertexShader
     .replace(common, `${common}${HEAD}`)
     .replace(normal, `${normal}${NORMAL}`)
     .replace(begin, `${begin}${LIFT}`);
+  shader.fragmentShader = shader.fragmentShader
+    .replace(fCommon, `${fCommon}${FRAGMENT_HEAD}`)
+    .replace(fLight, `${fLight}${THROUGH}`);
 }
 
 const MANTA_WING_KEY = ':manta-wing-1';
@@ -214,4 +234,82 @@ export function smoothSkin(parts: readonly BufferGeometry[]): void {
     }
     target.setAttribute('normal', new Float32BufferAttribute(normals, 3));
   });
+}
+
+/**
+ * How thick the body is over and under every vertex of `parts`, metres,
+ * written into each part's `mantaThick`: the span between the highest and
+ * the lowest face a plumb line through the vertex meets, over all the parts
+ * together. It is what `BELLY.THROUGH_M` is measured against. Read at the
+ * file's still pose; the stroke shears the wing and leaves its thickness.
+ */
+export function wingThickness(parts: readonly BufferGeometry[]): void {
+  const CELL_M = 0.5;
+  const cells = new Map<string, number[]>();
+  const corners: number[] = [];
+  for (const part of parts) {
+    const at = part.getAttribute('position');
+    const index = part.index;
+    const count = index === null ? at.count : index.count;
+    for (let i = 0; i + 2 < count; i += 3) {
+      const face = corners.length / 9;
+      let x0 = Infinity;
+      let x1 = -Infinity;
+      let z0 = Infinity;
+      let z1 = -Infinity;
+      for (let c = 0; c < 3; c++) {
+        A.fromBufferAttribute(at, index === null ? i + c : index.getX(i + c));
+        corners.push(A.x, A.y, A.z);
+        x0 = Math.min(x0, A.x);
+        x1 = Math.max(x1, A.x);
+        z0 = Math.min(z0, A.z);
+        z1 = Math.max(z1, A.z);
+      }
+      for (let cx = Math.floor(x0 / CELL_M); cx <= Math.floor(x1 / CELL_M); cx++) {
+        for (let cz = Math.floor(z0 / CELL_M); cz <= Math.floor(z1 / CELL_M); cz++) {
+          const k = `${cx},${cz}`;
+          const list = cells.get(k);
+          if (list === undefined) cells.set(k, [face]);
+          else list.push(face);
+        }
+      }
+    }
+  }
+  // A vertex is a corner of the faces round it, so the line through it runs
+  // along their edges: a hair of slack takes them in.
+  const SLACK = 1e-5;
+  for (const part of parts) {
+    const at = part.getAttribute('position');
+    const thick = new Float32Array(at.count);
+    for (let v = 0; v < at.count; v++) {
+      const x = at.getX(v);
+      const z = at.getZ(v);
+      let low = at.getY(v);
+      let high = low;
+      for (const face of cells.get(`${Math.floor(x / CELL_M)},${Math.floor(z / CELL_M)}`) ?? []) {
+        const o = face * 9;
+        const [ax, ay, az, bx, by, bz, cx, cy, cz] = corners.slice(o, o + 9) as [
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+        ];
+        const det = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
+        if (Math.abs(det) < 1e-12) continue;
+        const u = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / det;
+        const w = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / det;
+        if (u < -SLACK || w < -SLACK || u + w > 1 + SLACK) continue;
+        const y = u * ay + w * by + (1 - u - w) * cy;
+        low = Math.min(low, y);
+        high = Math.max(high, y);
+      }
+      thick[v] = high - low;
+    }
+    part.setAttribute('mantaThick', new Float32BufferAttribute(thick, 1));
+  }
 }

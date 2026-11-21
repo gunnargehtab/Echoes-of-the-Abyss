@@ -211,6 +211,13 @@ describe('prop placement', () => {
   });
 
   it('holds every registry row to the documented contracts', () => {
+    // The two rows Block 4's table lets over 800: the kelp stand, by the
+    // owner's decision on #1712, and the manta, one body near the eye that
+    // High alone stands (#1867).
+    const TRI_ALLOWANCE: Record<string, number> = {
+      'env-kelp-stand': 9000,
+      'env-rim-manta': 4000,
+    };
     // Block 4's table is the source: env- slugs, ≤ 800 triangles, sane
     // density and jitter (the field-stood bed aside), and one row per slug. The GLBs themselves are
     // checked by hull-intake; the backend's environmentBudget test sums
@@ -222,7 +229,7 @@ describe('prop placement', () => {
       assert.ok(!seen.has(spec.slug), `${spec.slug} is registered twice`);
       seen.add(spec.slug);
       assert.ok(
-        spec.triBudget > 0 && spec.triBudget <= (spec.slug === 'env-kelp-stand' ? 9000 : 800),
+        spec.triBudget > 0 && spec.triBudget <= (TRI_ALLOWANCE[spec.slug] ?? 800),
         `${spec.slug} triangle budget`
       );
       // A row stood by the fields alone names no biome and scatters at no

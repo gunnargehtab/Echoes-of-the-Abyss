@@ -529,10 +529,21 @@ export const HIGH_GRAPHICS = {
      * across: two faces that meet at more keep their own normals, which
      * keeps the wing's thin trailing edge an edge. Reduced motion holds the
      * stroke.
+     *
+     * `BELLY` is what makes the underside pale. `ALBEDO` is the linear
+     * luminance the belly's material is lifted to, over every other body's
+     * `ALBEDO` above: the target's belly is the palest thing in its frame,
+     * and a face that looks down takes only the Lid's `HORIZON` share. The
+     * back and the marks keep the file's ratio to it. `THROUGH` is the share
+     * of the Lid's glow on the back that a skin of no thickness lets through
+     * to a face looking straight down, and `THROUGH_M` the thickness of body
+     * at which that has fallen to 1/e: the wing's thin margin is the palest
+     * of the belly, as the target's is.
      */
     MANTA: {
       STROKE: { PERIOD_S: 7, LIFT_M: 1.6, ROOT_M: 2.3, POWER: 1.7, LAG: 1.2 },
       CREASE_DEG: 60,
+      BELLY: { ALBEDO: 0.7, THROUGH: 1, THROUGH_M: 0.5 },
     },
   },
   /**

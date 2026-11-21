@@ -50,7 +50,13 @@ import { installPropVeil } from './veilShading.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
 import { installDistanceGrade } from './distanceGrade.ts';
 import { installLifeLight } from './lifeLight.ts';
-import { installMantaWing, mantaUniforms, smoothSkin, type MantaUniforms } from './mantaWing.ts';
+import {
+  installMantaWing,
+  mantaUniforms,
+  smoothSkin,
+  wingThickness,
+  type MantaUniforms,
+} from './mantaWing.ts';
 import {
   jellyMembrane,
   jellyShape,
@@ -254,7 +260,13 @@ export function buildTemplate(
   });
   normaliseLuminance(
     materialClones.values(),
-    worldLit ? HIGH_GRAPHICS.LIFE.ALBEDO : ENV_LUMINANCE_CEILING
+    // The manta's belly is the one skin of the crater's life over a body's
+    // register (mantaWing.ts): its back and its marks keep the file's ratio.
+    worldLit === 'wing'
+      ? HIGH_GRAPHICS.LIFE.MANTA.BELLY.ALBEDO
+      : worldLit
+        ? HIGH_GRAPHICS.LIFE.ALBEDO
+        : ENV_LUMINANCE_CEILING
   );
 
   // Scale first, on the parts as delivered: the larger horizontal axis to
@@ -354,7 +366,11 @@ export function buildTemplate(
     parts.push({ geometry, material });
   });
   // Belly and back are two parts and one skin: smoothed together.
-  if (manta !== undefined) smoothSkin(parts.map((part) => part.geometry));
+  if (manta !== undefined) {
+    const skins = parts.map((part) => part.geometry);
+    smoothSkin(skins);
+    wingThickness(skins);
+  }
   return { parts, trianglesPerInstance: triangles, sway, heightM, photophores, jelly, manta };
 }
 

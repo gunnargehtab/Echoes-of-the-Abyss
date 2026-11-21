@@ -67,10 +67,11 @@ const LIFE = [
   'env-deep-fish',
   'env-rim-ray',
   'env-drift-jelly',
+  'env-rim-manta',
 ];
 
 describe('the crater’s life in the world’s light (#1837)', () => {
-  it('names the six decorative bodies as life, and which of them carry a light', () => {
+  it('names the seven decorative bodies as life, and which of them carry a light', () => {
     assert.deepEqual(
       ENVIRONMENT_PROPS.filter((spec) => spec.life === true).map((spec) => spec.slug),
       LIFE
@@ -91,8 +92,11 @@ describe('the crater’s life in the world’s light (#1837)', () => {
 
   it('builds a body’s High template apart from Low’s, at the cladding’s register', async () => {
     // Every body but the jelly, which is a lantern at High and no lit body
-    // (jellyLight.test.ts).
-    for (const slug of LIFE.filter((body) => propSpec(body)!.glint !== 'lantern')) {
+    // (jellyLight.test.ts), and the manta, whose belly has a register of its
+    // own (mantaWing.test.ts).
+    for (const slug of LIFE.filter(
+      (body) => propSpec(body)!.glint !== 'lantern' && propSpec(body)!.wing !== true
+    )) {
       const spec = propSpec(slug)!;
       const scene = await parse(slug);
       const low = buildTemplate(scene, spec.footprintM, spec.swayM, 'free-water');

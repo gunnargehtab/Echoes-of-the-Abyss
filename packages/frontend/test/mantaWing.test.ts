@@ -32,9 +32,10 @@ import {
   patchMantaWing,
   smoothSkin,
   strokesMantaWing,
+  wingThickness,
 } from '../src/game/mantaWing.ts';
 
-const { STROKE, CREASE_DEG } = HIGH_GRAPHICS.LIFE.MANTA;
+const { STROKE, CREASE_DEG, BELLY } = HIGH_GRAPHICS.LIFE.MANTA;
 const SLUG = 'env-rim-manta';
 
 const parse = async (slug: string): Promise<Group> => {
@@ -84,11 +85,17 @@ describe('the manta at High (#1867)', () => {
       assert.equal(takesLifeLight(material), false);
       assert.equal(strokesMantaWing(material), false);
     }
-    // The belly at the cladding's register, the back darker by the file's ratio.
+    // The belly at its own register, over every other body's, and the back
+    // and the marks darker by the file's ratio: under a body's own.
     const belly = luminance(lit.get('fish_belly')!);
     const back = luminance(lit.get('fish_flank')!);
-    assert.ok(Math.abs(belly - HIGH_GRAPHICS.LIFE.ALBEDO) < 1e-6);
-    assert.ok(back < belly * 0.35, `the back stands at ${(back / belly).toFixed(2)} of the belly`);
+    assert.ok(Math.abs(belly - BELLY.ALBEDO) < 1e-6);
+    assert.ok(BELLY.ALBEDO > HIGH_GRAPHICS.LIFE.ALBEDO && BELLY.ALBEDO <= 1);
+    assert.ok(Math.abs(back / belly - 0.2) < 0.01, `the back at ${(back / belly).toFixed(3)}`);
+    assert.ok(back <= HIGH_GRAPHICS.LIFE.ALBEDO, 'the back out-reads a fish');
+    // Low's is a prop at the props' register, as every body's is there.
+    const dull = Math.max(...[...named(low.parts).values()].map(luminance));
+    assert.ok(Math.abs(dull - 0.06) < 1e-6);
   });
 
   it('smooths the skin across belly and back, and keeps the file’s place for every vertex', async () => {
@@ -123,6 +130,66 @@ describe('the manta at High (#1867)', () => {
     // belly's looks up by more than a thin edge's turn.
     const n = part(high, 'fish_belly').getAttribute('normal');
     for (let i = 0; i < n.count; i++) assert.ok(n.getY(i) < 0.6, `belly normal ${i} looks up`);
+  });
+
+  it('measures the body over every vertex: thin at the wing’s margin, thick at the centre', async () => {
+    const spec = propSpec(SLUG)!;
+    const scene = await parse(SLUG);
+    const high = buildTemplate(scene, spec.footprintM, spec.swayM, 'free-water', 'wing');
+    const low = buildTemplate(scene, spec.footprintM, spec.swayM, 'free-water');
+    for (const part of low.parts) assert.equal(part.geometry.getAttribute('mantaThick'), undefined);
+    const belly = high.parts.find((p) => p.material.name === 'fish_belly')!.geometry;
+    const at = belly.getAttribute('position');
+    const thick = belly.getAttribute('mantaThick');
+    assert.equal(thick.count, at.count);
+    let centre = 0;
+    let tip = Infinity;
+    let most = 0;
+    for (let i = 0; i < at.count; i++) {
+      const t = thick.getX(i);
+      assert.ok(t >= 0 && t < 2.1, `${t} m of body`);
+      most = Math.max(most, t);
+      if (Math.abs(at.getZ(i)) < 0.5) centre = Math.max(centre, t);
+      if (Math.abs(at.getZ(i)) > 8) tip = Math.min(tip, t);
+    }
+    // Block 4: the centre section stands 1.5 m thick, and a tip a few cm.
+    assert.ok(centre > 1.3 && centre <= 1.6, `${centre} m at the centre`);
+    assert.ok(tip < 0.1, `${tip} m at a tip`);
+    assert.ok(most <= 1.6);
+    // So the margin lets through most of what the centre keeps.
+    const through = (m: number) => Math.exp(-m / BELLY.THROUGH_M);
+    assert.ok(through(tip) > 0.8 && through(centre) < 0.1);
+  });
+
+  it('measures thickness along a plumb line through each vertex, over all the parts', () => {
+    const tri = (points: number[][]) => {
+      const geometry = new BufferGeometry();
+      geometry.setAttribute('position', new Float32BufferAttribute(points.flat(), 3));
+      return geometry;
+    };
+    // A floor at y 0 and a roof 0.5 m over it at x 0, 1 m over it at x 1.
+    const floor = tri([
+      [0, 0, 0],
+      [0, 0, 1],
+      [1, 0, 0],
+    ]);
+    const roof = tri([
+      [0, 0.5, 0],
+      [1, 1, 0],
+      [0, 0.5, 1],
+    ]);
+    // And a sheet beside them that nothing stands over.
+    const alone = tri([
+      [5, 0, 5],
+      [5, 0, 6],
+      [6, 0, 5],
+    ]);
+    wingThickness([floor, roof, alone]);
+    const read = (g: BufferGeometry) =>
+      [...g.getAttribute('mantaThick').array].map((v) => +v.toFixed(4));
+    assert.deepEqual(read(floor), [0.5, 0.5, 1]);
+    assert.deepEqual(read(roof), [0.5, 1, 0.5]);
+    assert.deepEqual(read(alone), [0, 0, 0]);
   });
 
   it('shares a normal across two parts at one corner, and leaves a sharp edge sharp', () => {
@@ -202,9 +269,14 @@ describe('the manta at High (#1867)', () => {
   });
 
   it("finds every anchor it patches in three's own standard program", () => {
-    const shader = { vertexShader: ShaderLib.physical.vertexShader };
-    for (const anchor of MANTA_WING_ANCHORS)
-      assert.ok(shader.vertexShader.includes(anchor), anchor);
+    const shader = {
+      vertexShader: ShaderLib.physical.vertexShader,
+      fragmentShader: ShaderLib.physical.fragmentShader,
+    };
+    for (const anchor of MANTA_WING_ANCHORS.vertex)
+      assert.ok(shader.vertexShader.includes(anchor), `vertex: ${anchor}`);
+    for (const anchor of MANTA_WING_ANCHORS.fragment)
+      assert.ok(shader.fragmentShader.includes(anchor), `fragment: ${anchor}`);
     patchMantaWing(shader);
     // The lift is written straight after the anchor, so whatever reads
     // `transformed` after it, the world's light among them, reads the lifted wing.
@@ -218,6 +290,17 @@ describe('the manta at High (#1867)', () => {
     for (const value of [STROKE.PERIOD_S, STROKE.LIFT_M, STROKE.ROOT_M, STROKE.POWER, STROKE.LAG]) {
       assert.ok(shader.vertexShader.includes(value.toFixed(6)), `the program lost ${value}`);
     }
+    // The Lid's glow through the body: on a face by how far it looks down,
+    // less what the thickness keeps, and never on one that looks up.
+    assert.match(
+      shader.fragmentShader,
+      /max\( 0\.0, - mantaFacing\.y \) \* exp\( - vMantaThick \//
+    );
+    for (const value of [BELLY.THROUGH, BELLY.THROUGH_M]) {
+      assert.ok(shader.fragmentShader.includes(value.toFixed(6)), `the program lost ${value}`);
+    }
+    // It is the Lid's own light and no token of its own.
+    assert.ok(shader.fragmentShader.includes('echoesLitIrradiance( vec3( 0.0, 1.0, 0.0 )'));
     const uniforms = mantaUniforms(9);
     assert.deepEqual(
       [uniforms.uMantaTime.value, uniforms.uMantaMoves.value, uniforms.uMantaHalfSpan.value],

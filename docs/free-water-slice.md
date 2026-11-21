@@ -727,13 +727,14 @@ caps, 720,000 at Low and 900,000 at High (below).
 
 **At the High graphics quality the frame cap is 900,000 triangles** over every pass, by
 the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent
-stand that Low does not (§5): its frame stood at up to 720,318 after #1837 and stands at
-up to 761,358 with #1856's school. Low keeps 720,000, and gate 6's 8 ms of GPU time
+stand that Low does not (§5): its frame stood at up to 720,318 after #1837 and at up to
+761,358 with #1856's school, and stands at up to 764,047 with #1867's manta. Low keeps
+720,000, and gate 6's 8 ms of GPU time
 still binds High's frame. The 600,000 reservation above binds the Low list alone, by the
 owner's decision the same day, against binding High's list too and against a second
 reservation for High. It is what `packages/frontend/test/freeWaterDecoration.test.ts`
-sums: 551,850 by the registry's budgets. High's list sums to 685,954 by the same
-budgets, and to 644,914 before #1856. What High alone stands is counted against the
+sums: 551,850 by the registry's budgets. High's list sums to 688,643 by the same
+budgets, to 685,954 before #1867 and to 644,914 before #1856. What High alone stands is counted against the
 frame's 900,000 and has no reservation of its own.
 
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,
