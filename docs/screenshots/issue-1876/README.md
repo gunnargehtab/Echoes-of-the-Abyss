@@ -123,7 +123,7 @@ its dots and no light.
 fix. The camera goes at High from gate 6's low eye down to the pocket eye and holds
 there. The move is its first 19 s, at twelve times the speed the rasteriser drew it, and
 the hold its last 7 s, at five times: the ring's fish as pale points 250 m off, the
-brightest of them at 95 to 127 of 255 across five frames sampled. It is the middle
+brightest of them at 100 to 127 of 255 across four frames sampled. It is the middle
 1280 × 720 of a 1920 × 1080 recording, taken without reduced motion, and spans
 260 s of the match, a lap of the ring and a twelfth.
 
