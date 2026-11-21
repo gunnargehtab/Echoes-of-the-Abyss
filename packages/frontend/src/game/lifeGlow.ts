@@ -51,13 +51,17 @@ import { LIFE_GLINT } from './palette.ts';
 
 const { LEVEL, SIZE_M, MIN_PX, LIFT_M, SEAT } = HIGH_GRAPHICS.LIFE.GLOW;
 
+/** How far toward the eye a light is drawn, unless its kind says otherwise. */
+export const LIFE_GLOW_LIFT_M = LIFT_M;
+
 /**
- * A light's width in metres, and its level against its cloud's: a fry's one,
- * and the one on each photophore seat of a deep fish.
+ * A light's width in metres, its level against its cloud's, and how far
+ * toward the eye it is drawn: a fry's one, and the one on each photophore
+ * seat of a deep fish.
  */
 export const LIFE_GLOW_KIND = {
-  axis: [SIZE_M, 1],
-  seat: [SEAT.SIZE_M, SEAT.LEVEL / LEVEL],
+  axis: [SIZE_M, 1, LIFT_M],
+  seat: [SEAT.SIZE_M, SEAT.LEVEL / LEVEL, SEAT.LIFT_M],
 } as const;
 
 const glsl = (value: number): string => {
@@ -77,22 +81,23 @@ export function patchLifeGlow(shader: { vertexShader: string; fragmentShader: st
   const [fCommon, fColor] = LIFE_GLOW_ANCHORS.fragment;
   shader.vertexShader = shader.vertexShader
     // x: the light's width in metres. y: its level against the material's.
-    .replace(vCommon, `${vCommon}\nattribute vec2 aGlow;\nvarying float vGlowLevel;`)
+    // z: how far toward the eye it is drawn, in metres.
+    .replace(vCommon, `${vCommon}\nattribute vec3 aGlow;\nvarying float vGlowLevel;`)
     .replace(
       vProject,
       // A fry's light stands on its body's axis, inside the body: drawn
       // there, the body's own near flank would cut the disc in two. It is
       // drawn `LIFT_M` nearer the eye along its own sight line, which moves it
       // nowhere on the screen and clear of a body that thin. A seat's light
-      // stands 2 cm off a deep fish's flank already, and the lift leaves a
-      // near flank's where it was on the screen. The body is 0.20, 0.16 and
-      // 0.12 m wide at its three seats: from abeam the far flank's fore and
-      // mid lights, lifted, are still inside it and hidden, and its aft one
-      // comes about 1 cm clear of the near flank and adds to the near aft
-      // seat's light. A lift of a seat's own would hide it; none is built.
+      // stands 2 cm off a deep fish's flank already and is lifted less, by a
+      // lift of its own (#1876): enough that the sprite's one depth clears
+      // the flank's bulge under its disc, and too little to carry a far
+      // flank's light through a body 0.12 m wide at its aft seats. At a fry's
+      // lift the far aft light stood 1 cm clear of the near flank from abeam
+      // and added to the near one.
       [
         vProject,
-        `mvPosition.xyz *= max( 0.0, 1.0 - ${glsl(LIFT_M)} / max( 1e-3, length( mvPosition.xyz ) ) );`,
+        'mvPosition.xyz *= max( 0.0, 1.0 - aGlow.z / max( 1e-3, length( mvPosition.xyz ) ) );',
         'gl_Position = projectionMatrix * mvPosition;',
       ].join('\n')
     )
@@ -157,7 +162,7 @@ export class LifeGlow {
       fog: true,
     });
     this.material.onBeforeCompile = (shader) => patchLifeGlow(shader);
-    this.material.customProgramCacheKey = () => 'life-glow-2';
+    this.material.customProgramCacheKey = () => 'life-glow-3';
     this.points = new Points(new BufferGeometry(), this.material);
     this.points.name = name;
     // The world pass's, and never the canvas's (PerspectiveView `enterWorldLayer`).
@@ -169,8 +174,8 @@ export class LifeGlow {
 
   /**
    * Stand `count` lights where `fill` writes them: three floats a light for
-   * its place, in the scene's metres, and two for its width and its level
-   * (`LIFE_GLOW_KIND`). Called each frame the bodies move; the buffers are
+   * its place, in the scene's metres, and three for its width, its level and
+   * its lift (`LIFE_GLOW_KIND`). Called each frame the bodies move; the buffers are
    * kept, and grown only when a rebuild stands more bodies.
    */
   write(count: number, fill: (positions: Float32Array, glow: Float32Array) => void): void {
@@ -179,7 +184,7 @@ export class LifeGlow {
       const geometry = new BufferGeometry();
       for (const [name, width] of [
         ['position', 3],
-        ['aGlow', 2],
+        ['aGlow', 3],
       ] as const) {
         const attribute = new BufferAttribute(new Float32Array(count * width), width);
         attribute.setUsage(DynamicDrawUsage);

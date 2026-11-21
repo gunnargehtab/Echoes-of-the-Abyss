@@ -446,9 +446,7 @@ export const HIGH_GRAPHICS = {
    * point is drawn, in pixels, its level cut by the area that floor adds; and
    * `LIFT_M` how far toward the eye a light is drawn from where it stands,
    * so the body's own flank does not cut a light on its axis; a seat's
-   * stands 2 cm off the flank already, and from abeam the far flank's
-   * fore and mid lights, lifted, are still inside the body; its aft one
-   * comes about 1 cm clear of the near flank (lifeGlow.ts).
+   * stands 2 cm off the flank already and takes `SEAT.LIFT_M` instead.
    */
   LIFE: {
     LID: 1,
@@ -465,7 +463,10 @@ export const HIGH_GRAPHICS = {
       // 0.24 m apart and a wider disc merges a flank's three into one lit
       // patch, at twice a fry's level, since from 250 m, the orbit's least
       // dolly from a focus on the pocket's fish, a fry's own is a faint dash.
-      SEAT: { LEVEL: 0.6, SIZE_M: 0.22 },
+      // Its lift is its own (#1876): from abeam a seat's light clears the
+      // flank under its disc past 0.006 m and comes through the body, 0.12 m
+      // wide at its aft seats, past 0.137 m, which a fry's 0.15 did.
+      SEAT: { LEVEL: 0.6, SIZE_M: 0.22, LIFT_M: 0.04 },
       // A jelly's seat: wider than a fry's light and no brighter.
       LANTERN: { LEVEL: 0.3, SIZE_M: 0.55 },
     },
