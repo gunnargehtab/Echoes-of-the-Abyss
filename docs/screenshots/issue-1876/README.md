@@ -82,15 +82,52 @@ four source files the fix touches, four of those tests fail; on the fix all 21 p
 
 ## The other cameras
 
-TEN_TABLE
+The program every light of the two clouds draws with changed, a fry's and a lantern's
+with a seat's, so the ten frames of [frames.mjs](../issue-1837/frames.mjs) are retaken
+and read against [#1857's](../issue-1857/README.md), which is `main`: the mean, over the
+world area, of each pixel's largest channel difference, out of 255
+([diff.py](../issue-1801/low-control/diff.py)).
+
+| Camera | Low | High | Calls and triangles at High, before and now |
+| --- | --- | --- | --- |
+| Home | [0.17](software/01-low-home.png) | [0.09](software/06-high-home.png) | 65 and 763,409, both |
+| Close | [0.33](software/02-low-close.png) | [0.20](software/07-high-close.png) | 65 and 763,409, both |
+| Low, gate 6's | [0.34](software/03-low-low.png) | [0.18](software/08-high-low.png) | 46 and 756,078, both |
+| Survey | [0.00](software/04-low-survey.png) | [0.00](software/09-high-survey.png) | 65 and 764,047, both |
+| Garden close | [0.29](software/05-low-garden.png) | [0.18](software/10-high-garden.png) | 52 and 760,726, both |
+| Pocket | [0.09](software/pocket/01-low-pocket.png) | [0.09](software/pocket/02-high-pocket.png) | 44 and 755,430, both |
+| Flight | not taken | [0.02](software/pocket/03-high-flight.png) | 44 and 755,430, both |
+
+No draw, triangle or pass more: the fix is one attribute of three floats a light, and a
+dot product a point in the vertex program. That is no pass and no per-fragment work, so
+no timing run from the named GPU is owed with it (`dev-loop`, "Look work"). The 624 fry
+lights, the 156 seat lights and the 1,655 lantern points stand as they did. High's
+readings are marine snow, and at the pocket eye the six fish besides.
+[issue-1857](../issue-1857/README.md)'s first take of the same five read 0.14 to 0.28
+against `main`'s before it, on frames no deep fish shows in.
 
 ## Low does not move
 
-LOW_TABLE
+The Low column above is the control. Two takes of `main` set its floor on
+[issue-1837](../issue-1837/README.md#low-does-not-move): 0.24 at Home, 0.41 at Close,
+0.47 at Low, 0.00 at Survey and 0.35 at the garden close, and each reading here is at or
+under it. The pocket's Low reads 0.09 against a floor of 0.06 on
+[issue-1857](../issue-1857/README.md#low-does-not-move), which is snow: `seats.py`
+reads the same six peaks off it, 133 to 236, and the frame reports the same 156 dots.
+Low draws neither cloud, and `packages/frontend/test/tutorialLoading.test.mjs` holds
+its dots and no light.
 
 ## The clip
 
-CLIP_PROSE
+[clip-low-to-pocket.mp4](software/clip-low-to-pocket.mp4): #1857's move, retaken on the
+fix. The camera goes at High from gate 6's low eye down to the pocket eye and holds
+there. The move is its first 19 s, at twelve times the speed the rasteriser drew it, and
+the hold its last 7 s, at five times: the ring's fish as pale points 250 m off, the
+brightest of them at 95 to 127 of 255 across five frames sampled. It is the middle
+1280 × 720 of a 1920 × 1080 recording, taken without reduced motion, and spans
+260 s of the match, a lap of the ring and a twelfth.
+
+The target's Home-to-Close clip is not retaken: no deep fish is in either frame.
 
 ## Calls taken with these frames
 
