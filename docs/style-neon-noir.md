@@ -151,7 +151,10 @@ Five rules ride with the table:
   core a dark tuft under it. Its six photophore seats are the core's `stone-dark`, where
   the deep fish's are its flank's own: six dark flecks on the pale margin until the
   runtime lights them, and the bell's material is the bell and nothing else. `fish-belly`
-  is the rim manta's underside and nothing else, a cool grey at sRGB hue 195°, 12%
+  is the rim manta's underside and nothing else. Two readings were written. **The whole
+  body in `fish-flank`**, the renderer paling the faces that look down, is a pattern the
+  file does not carry, and the belly's marks would have nothing to stand dark against in
+  the file. **A token for the underside alone** is taken. It is a cool grey at sRGB hue 195°, 12%
   saturated, the flank's cold cast with half its colour out. It is the one pale hex in
   this table, and pale is a ratio here and not a level: at 0.1080 linear luminance it is
   five times `fish-flank`, and the runtime sets the level. Under the ceiling rule a prop's

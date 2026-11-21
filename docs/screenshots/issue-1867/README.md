@@ -29,15 +29,18 @@ round the target's manta are about a thirtieth of its span, and the crater's fry
   tail, dark blotches between and behind them, and a grey that deepens toward the wings'
   trailing margin and tips.
 - **The tail.** A thin whip about as long as the disc.
-- **Where it is seen from.** Below, the belly to the eye and the light behind it, so the
-  body is a mid tone against brighter water and its thin edges are the palest of it.
+- **Where it is seen from.** Below, the belly to the eye.
 - **The school.** Small fish all round it, a thirtieth of its span and smaller.
 
 ## What does not
 
-- **The sun.** There is none below the Lid, so no shafts and no caustics
-  ([art-direction.md](../../art-direction.md#two-layers-two-laws), limit 1). The light
-  behind the manta is the Lid's glow.
+- **The sun, and the figure it makes.** There is none below the Lid, so no shafts and
+  no caustics ([art-direction.md](../../art-direction.md#two-layers-two-laws), limit 1).
+  The target's manta is a mid tone against brighter water, the light behind it. The
+  Lid's glow lights no water behind a body brighter than a pale belly under it, so the
+  crater's manta is the reverse: a pale belly on darker water
+  ([art-direction.md](../../art-direction.md#a-manta-shows-its-belly), on the belly's
+  register).
 - **The reef.** The coral at the frame's foot is the photograph's place and not the
   crater's.
 - **The camera as a station of play.** Play is commanded from above and behind the fleet.
@@ -78,8 +81,8 @@ The target, and the Close frame's manta at three times its size ([belly.py](bell
 
 | Camera | Low | High | What High shows now |
 | --- | --- | --- | --- |
-| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The manta as a pale fleck about 20 px across at the frame's foot, 650 m off: under the Harvester's ring and just over the controls' hint line. That eye is over the Lid and sees a quarter of the belly past the bank. It reads as a body by its paleness and not by its plan. Nothing else moved |
-| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The manta in the upper middle of the frame, 100 m off and 14 m of drawn height over the eye, 270 px from lobe to wingtip: its belly to the eye, pale against the water, the gill slits in two rows and the blotches dark on it, the two lobes ahead and the whip tail behind. It stands over the jellies and clear of every ring, panel and lamp. Nothing else moved |
+| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The manta as a pale fleck about 20 px across at the frame's foot, 650 m off: under the Harvester's ring and just over the controls' hint line. That eye is over the Lid and sees a quarter of the belly past the bank. It reads as a body by its paleness and not by its plan. The snow in the Corvette's beam is #1855's (below) |
+| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The manta in the upper middle of the frame, 100 m off and 14 m of drawn height over the eye, 270 px from lobe to wingtip: its belly to the eye, pale against the water, the gill slits in two rows and the blotches dark on it, the two lobes ahead and the whip tail behind. It stands over the jellies and clear of every ring, panel and lamp. The snow in the Corvette's beam is #1855's (below) |
 | Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | Unchanged but for the clock: no body draws from 10 km |
 
 Gate 6's low camera and the garden close show no manta, at either quality.
@@ -115,17 +118,22 @@ belly had its own, it read 13 against the water's 38: a silhouette
 
 ## What is new in the frame
 
-Read off `readings.json` against [#1856's](../issue-1856/software/readings.json).
+Read off `readings.json` against [#1856's](../issue-1856/software/readings.json). That
+capture was taken before #1855 merged, and this one after: the snow lit in the
+Corvette's beam is #1855's, one call, and is in these frames at Home and Close and not
+in that step's.
 
-| Camera | High before: calls, triangles | High now |
+| Camera | #1856's High: calls, triangles | High now |
 | --- | --- | --- |
 | Home | 63, 760,720 | 66, 763,409 |
 | Close | 63, 760,720 | 66, 763,409 |
 | Low | 44, 753,389 | 47, 756,078 |
 | Survey | 63, 761,358 | 66, 764,047 |
 
-The manta is 2,689 triangles at every camera: its batch is not culled. It is two parts,
-belly and the rest, and High draws three more calls with it. The third is not traced. Low's calls and
+The manta is 2,689 triangles at every camera: its batch is not culled. It is two calls,
+one a material, belly and the rest. The third call over #1856's capture is #1855's beam
+snow: [its own readings](../issue-1855/software/readings.json) hold 64 calls at Close
+where #1837's held 63, at the same 719,680 triangles. Low's calls and
 triangles are those of #1856 at all five cameras, to the triangle, and Low's frames
 differ from that step's by marine snow and the clock alone.
 
@@ -135,18 +143,38 @@ differ from that step's by marine snow and the clock alone.
   manta 200 m off, where a stroke of 1.6 m is a few pixels.
   `packages/frontend/test/mantaWing.test.ts` holds its shape, and the near pass moving
   is owed with the named GPU's frames, where the match's first minute is on screen.
+- **The target's figure.** A mid tone against brighter water; here a pale belly on
+  darker water ("What does not", above).
 - **A school round it.** The fry's ribbon passes 63 m of depth under the manta and reads
   as its own thing, left of it. The target's fish are all round the body.
 - **The target's light.** The sun behind the target's manta is not the crater's to have.
 
+## Owed before this merges
+
+`mantaWing.ts` adds per-fragment work, the Lid's glow through the wing, so by
+`dev-loop`'s "Look work" this increment carries one unpaced, queued timing run from the
+named GPU in its pull request. This container has a software rasteriser and cannot take
+it. With the dev servers up, on the owner's desktop:
+
+```bash
+UNPACED=1 VIEW_W=1920 VIEW_H=1080 node .claude/skills/run-game/scripts/drive.mjs \
+  --headed --channel msedge --url 'http://localhost:5173/?study=free-water' \
+  --out docs/screenshots/issue-1867/gpu --steps docs/screenshots/issue-1837/frames.mjs
+```
+
+`readings.json`'s `queued` GPU time at High is the reading. It is a reading and not
+acceptance.
+
 ## Open for the owner
 
-Seven calls wait, each written with its options in
+Eight calls wait, each written with its options in
 [art-direction.md](../../art-direction.md#a-manta-shows-its-belly),
 [free-water-slice.md](../../free-water-slice.md) §5 or
 [asset-prompts-3d.md](../../asset-prompts-3d.md) Block 4: the belly's register over a
-vessel's cladding, the light through the wings, the stroke, the 4,000-triangle row, the
-`fish-belly` token, the 40 degree bank, and the fine unpushed facets.
+vessel's cladding, the light through the wings, the smoothed skin, the stroke, the
+4,000-triangle row, the `fish-belly` token in
+[style-neon-noir.md](../../style-neon-noir.md), the 40 degree bank, and the fine
+unpushed facets.
 
 ## Related
 

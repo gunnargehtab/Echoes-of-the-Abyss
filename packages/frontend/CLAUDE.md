@@ -48,8 +48,9 @@ bodies draw from a High template too (#1837, `lifeLight.ts`), in the light a hul
 and its fry carry a point of their own in the world pass (`lifeGlow.ts`). A drifting
 jelly is a lantern there and no lit body (`jellyLight.ts`): its file drawn as a membrane
 that adds its light, blended and still the world pass's, over beads of light hung from
-its lip. The manta is a lit body with two things more (#1867, `mantaWing.ts`): its skin
-is smoothed across its belly and back, and its wings stroke in the vertex program. Over
+its lip. The manta is a lit body with three things more (#1867, `mantaWing.ts`): its
+skin is smoothed across its belly and back, its wings stroke in the vertex program, and
+a face that looks down takes the Lid's glow through the body by its thickness there. Over
 the free-water crater's vent stand, and nowhere else yet, a chimney's steam leaves the
 canvas at High: `ventSmoke.ts` draws it in the world pass as matter lit by the vent, the
 Lid and the beams, one plume a stack.

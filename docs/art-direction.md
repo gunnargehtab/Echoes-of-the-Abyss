@@ -881,14 +881,23 @@ things a fish has not. Where it glides is
   water. It is the Lid's own light in the Lid's token, on a face only by how far it looks down. No
   source is new, and nothing answers a hull (limits 3 and 4). The thickness is read off
   the file once, a plumb line through each vertex, when the template is built.
-- **Its skin is smooth**, the fifth call that waits on the owner, with the fine
-  unpushed facets Block 4 lets its file have for it. The file is flat-shaded, as the kit
-  writes every prop, and 95 m from the eye each facet of a body 18 m across drew as a
-  plate. The renderer
+- **Its skin is smooth**, a call that waits on the owner, with the fine unpushed
+  facets Block 4 lets its file have for it. Three readings were written. **Flat facets
+  under 800 triangles**, as every prop's, are plates on a body 280 px across. **Normals
+  authored in the file** would leave the kit's one way of writing a prop, flat and
+  unindexed (`tools/hull-models/kit.mjs` `faceted`). **Fine facets with no
+  corner pushed, smoothed by the renderer** is taken, as a jelly's bell is. The file is
+  flat-shaded, as the kit writes every prop, and 95 m from the eye each facet of a body
+  18 m across drew as a plate. The renderer
   gives every vertex one normal across the faces that meet at it, belly and back
   together, as it does [a jelly's bell](#a-jelly-is-a-lantern), and leaves an edge
   sharper than 60 degrees an edge, which keeps the wing's trailing edge. No vertex moves.
-- **Its wings stroke, and for nothing** (limit 4). A wave runs out along each wing from
+- **Its wings stroke, and for nothing** (limit 4). Three readings were written. **A
+  still glide in the file's pose**, as the rim ray's, is a model towed across the frame
+  at 95 m. **The whole body bobbing** moves a manta as a
+  float moves. **A wave out along each wing** is taken: High lets the world move
+  smoothly ([What the world layer may do at High](#what-the-world-layer-may-do-at-high)).
+  A wave runs out along each wing from
   the body's edge, 2.3 m from the centreline, to the tip, once in 7 s: the tip swings
   1.6 m either way about the file's pose, 1.2 radians behind the root. The centre body
   is still, and the head, the mouth, the gill slits and the tail's root with it. It runs
@@ -903,7 +912,13 @@ things a fish has not. Where it glides is
   plates once it is 280 px across. **One body near the eye, High alone** is taken, as
   the kelp stand's 9,000 were for a forest. High's frame stands at up to 764,047 of its
   900,000 with it ([free-water-slice.md](free-water-slice.md) §9).
-- **What the target shows and this does not.** The target's lobes and pelvic fins are
+- **What the target shows and this does not.** The target's manta is a mid tone
+  against brighter water, the light behind it. Here it is the reverse, a pale belly on
+  darker water: on the software frames 81 of 255 against the water's 42. There is no sun
+  below the Lid (limit 1), and the Lid's glow at 170 m lights no water behind the manta
+  brighter than its belly; the belly's register, above, is where that was decided. The
+  target's wingtips curl, and the file's are rounded off in plan and rise 0.39 m in
+  their last tenth. The target's lobes and pelvic fins are
   pale underneath, and the file builds each whole in the back's material, so from below
   they are dark. The target's belly greys toward the wings' trailing margin and tips,
   and here the margin is the palest of it, by the light through it. Its blotches are

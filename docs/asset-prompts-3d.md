@@ -1990,7 +1990,10 @@ for this body alone, and the clause names both: "desaturated, dark, low-luminanc
 materials" for the belly, whose hex is 3.9 times the next palest in the props' table,
 and "low-poly with crisp facets" for a skin of 1,880 unpushed triangles meant to be
 smoothed. Both are the author's calls, taken in the open on #1867 for the owner's
-target, and wait on the owner. So does a third, which is the runtime's: at the High
+target, and wait on the owner. The readings each was taken against are written where
+the call falls: the token's in [style-neon-noir.md](style-neon-noir.md) "The props",
+and the facets' in [art-direction.md](art-direction.md#a-manta-shows-its-belly), "Its
+skin is smooth". So does a third, which is the runtime's: at the High
 graphics quality the belly is lifted to a register of its own, over a body's and over a
 vessel's cladding ([art-direction.md](art-direction.md#a-manta-shows-its-belly)), so
 of this block's checklist the manta's belly does not answer "darker and quieter than any
