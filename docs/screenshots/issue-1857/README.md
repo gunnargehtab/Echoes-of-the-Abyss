@@ -194,7 +194,8 @@ both read as #1867's.
   0.16 and 0.12 m wide at its three seats, so from abeam the far flank's aft light comes
   about 1 cm clear of the near flank and adds to the near aft seat's. The round's critic
   measured it off the file. A lift of a seat's own would hide it and was not built here:
-  it would change these frames. [issue-1876](../issue-1876/README.md) builds it.
+  it would change these frames. [issue-1876](../issue-1876/README.md) tried it, and hides
+  the light by the way its seat faces instead.
 - **One cloud.** A seat's light is a point of the fry's cloud at a level of its own, so
   the move adds no draw.
 

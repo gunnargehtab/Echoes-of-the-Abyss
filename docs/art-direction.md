@@ -695,15 +695,22 @@ does, and nothing Low draws is built, patched or keyed differently.
   gate 6's low camera the three rings Low draws into the pocket, 2 km off, are gone at
   High, and were under every reading captured there: the widest lifted a ring's pixels
   by 8 of 255. That is the cost of the move, and the owner took it with the
-  first call. A seat's light is drawn toward the eye by a lift of its own
+  first call. A seat's light is lit by the way its seat faces
   ([#1876](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1876);
-  [issue-1876](screenshots/issue-1876/README.md)). At a fry's 0.15 m the far flank's
-  aft light came 1.3 cm through a body 0.12 m wide there, from abeam, and added to the
-  near one. Three readings were written. **A lift of 0.04 m** is taken, on the owner's
-  word in session on 21 November 2026: from abeam a lift over 0.006 m clears the flank
-  under a seat's disc and one under 0.137 m stays inside the body. **No lift** lets the
-  flank cut the disc. **A fry's lift** leaves one point of three doubled from one
-  bearing.
+  [issue-1876](screenshots/issue-1876/README.md)). The lift that keeps a body's flank
+  from cutting a light's disc, a fry's 0.15 m, carried the far flank's aft light 1.3 cm
+  through a body 0.12 m wide there, from abeam, where it added to the near one. Three
+  readings were written, and the owner took two calls in session on 21 November 2026.
+  **A lift of a seat's own, 0.04 m** was the first, and its flight frame overturned it:
+  it hid a far flank's light from every bearing, and seen off square the flank cut the
+  near discs into ovals. **Lit by its facing** is taken: a
+  seat's light is whole while its seat faces the eye, within 60 degrees of square, and
+  gone edge on, on its facet's own normal in the file. A far flank's light is then dark
+  from every bearing, and the lift is a fry's again. Its cost is a fish seen end on,
+  where both flanks' seats stand near edge on to the eye. From 250 m the ring's six
+  peak at 64 to 113 where they peaked at 102 to 162: the two seen end on lost 42 and
+  49, and the other four lost 5 to 29, which was a far flank's light showing. **A
+  fry's lift and no more** leaves one point of three doubled from abeam.
 - **High stands more life than Low**, where the target's cameras read a body
   ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
   written. **Add to Low's lists** would move the frame Low draws. **Slots High alone
