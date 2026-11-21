@@ -162,6 +162,20 @@ export const FREE_WATER_HIGH_LIFE = {
     ],
     MOTION: { radiusM: 14, periodS: 280, depthSwingM: 10, axisM: 2.76, bankDeg: 12 },
   },
+  /**
+   * The manta (#1867): `env-rim-manta`, one body 18 m across on one loop
+   * before the Close camera's eye, over the fry's stream. The eye is outside
+   * the loop and under it, and a body banked into its turn shows the outside
+   * of that turn its belly, so the loop's near side is where the eye has the
+   * target's view: 95 m out and 14 m of drawn height over the eye, the belly
+   * turned `bankDeg` toward it. `startDeg` stands it 16 degrees short of that
+   * point when the match starts, coming on.
+   */
+  MANTA: {
+    at: [315, 2075],
+    startDeg: 130,
+    MOTION: { radiusM: 70, periodS: 300, depthM: 165, depthSwingM: 8, axisM: 0.76, bankDeg: 40 },
+  },
 } as const;
 
 /**
@@ -503,6 +517,22 @@ export const HIGH_GRAPHICS = {
       SWIM: { PERIOD_S: 5.5, SQUEEZE: 0.16 },
       PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, LEAD: 2, GAIN: 0.6 },
       STAGGER_S: 19.75,
+    },
+    /**
+     * The manta (mantaWing.ts; docs/art-direction.md, "A manta shows its
+     * belly"; #1867): the owner's target is one seen from below, a smooth
+     * pale belly on wings at work. `STROKE` is the wings' beat about the
+     * file's still pose: one a `PERIOD_S`, a wave from the body's edge,
+     * `ROOT_M` from the centreline, out to the tip, lifting the tip `LIFT_M`
+     * either way, growing as `POWER` of the way out, the tip `LAG` radians
+     * behind the root. `CREASE_DEG` is the sharpest edge its skin is smoothed
+     * across: two faces that meet at more keep their own normals, which
+     * keeps the wing's thin trailing edge an edge. Reduced motion holds the
+     * stroke.
+     */
+    MANTA: {
+      STROKE: { PERIOD_S: 7, LIFT_M: 1.6, ROOT_M: 2.3, POWER: 1.7, LAG: 1.2 },
+      CREASE_DEG: 60,
     },
   },
   /**

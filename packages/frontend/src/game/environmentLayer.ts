@@ -522,7 +522,10 @@ export class EnvironmentLayer {
         },
         this.look,
         // A body in the world's light at High, and the jelly as a lantern.
-        this.worldPass && spec.life === true && (spec.glint === 'lantern' ? 'lantern' : true)
+        // The manta as a smooth body whose wings stroke.
+        this.worldPass &&
+          spec.life === true &&
+          (spec.glint === 'lantern' ? 'lantern' : spec.wing === true ? 'wing' : true)
       );
       if (template === null) continue;
       let batch = this.fixtureBatches.get(slug);
@@ -633,6 +636,10 @@ export class EnvironmentLayer {
         template.jelly.uniforms.uJellyMoves.value = this.reducedMotion ? 0 : 1;
         // The lantern's hue is the active palette's, read live as a mark's is.
         for (const part of template.parts) tintJellyMembrane(part.material, JELLY_LANTERN);
+      }
+      if (template.manta !== undefined) {
+        template.manta.uniforms.uMantaTime.value = timeS;
+        template.manta.uniforms.uMantaMoves.value = this.reducedMotion ? 0 : 1;
       }
       const carries = propSpec(slug)?.glint;
       list.forEach((p, i) => {

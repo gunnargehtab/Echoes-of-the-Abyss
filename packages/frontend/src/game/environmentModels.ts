@@ -50,6 +50,7 @@ import { installPropVeil } from './veilShading.ts';
 import { ARCH_STUDY_ON } from './archStudy.ts';
 import { installDistanceGrade } from './distanceGrade.ts';
 import { installLifeLight } from './lifeLight.ts';
+import { installMantaWing, mantaUniforms, smoothSkin, type MantaUniforms } from './mantaWing.ts';
 import {
   jellyMembrane,
   jellyShape,
@@ -105,6 +106,8 @@ export interface EnvTemplate {
   photophores?: readonly Vector3[];
   /** Present only on a jelly's High template: what its membrane reads, and where its lip is. */
   jelly?: { uniforms: JellyUniforms; shape: JellyShape };
+  /** Present only on the manta's High template: what its wings' stroke reads. */
+  manta?: { uniforms: MantaUniforms };
 }
 
 const loader = new GLTFLoader();
@@ -209,6 +212,9 @@ export function propFootprint(root: Object3D): number {
   return Math.max(size.x, size.z);
 }
 
+/** Which High template a body draws from; false is Low's, and every standing prop's. */
+export type WorldLit = boolean | 'lantern' | 'wing';
+
 /**
  * One prop's template from its parsed file; exported for the test that holds
  * it to intake. `worldLit` builds the High graphics quality's template for a
@@ -216,14 +222,16 @@ export function propFootprint(root: Object3D): number {
  * #1837): its register is a body's own and it takes the world's light
  * (lifeLight.ts). Low's template is built without it, as it always was.
  * `'lantern'` is the drifting jelly's High template instead: every part a
- * lit membrane and none of it stone (jellyLight.ts).
+ * lit membrane and none of it stone (jellyLight.ts). `'wing'` is the
+ * manta's: a body in the world's light whose skin is smoothed and whose
+ * wings stroke (mantaWing.ts, #1867).
  */
 export function buildTemplate(
   scene: Group,
   footprintM: number,
   swayM: number,
   look: WorldLook = 'standard',
-  worldLit: boolean | 'lantern' = false
+  worldLit: WorldLit = false
 ): EnvTemplate {
   // Clone materials through an identity map (rosterModels' argument: shared
   // materials must keep sharing their clone or the merge silently fails).
@@ -288,6 +296,8 @@ export function buildTemplate(
   // drawn as a body in the world's light, and never as a membrane with no lip.
   const shape = worldLit === 'lantern' ? jellyShape({ heightM, photophores }) : null;
   const jelly = shape === null ? undefined : { uniforms: jellyUniforms(shape), shape };
+  // The footprint is a manta's span, so half of it is where a tip stands.
+  const manta = worldLit === 'wing' ? { uniforms: mantaUniforms(footprintM / 2) } : undefined;
 
   const parts: EnvTemplate['parts'] = [];
   let triangles = 0;
@@ -333,6 +343,8 @@ export function buildTemplate(
       material.blending === NormalBlending
     ) {
       installLifeLight(material);
+      // After the light, so the light reads where the stroke lifted the wing.
+      if (manta !== undefined) installMantaWing(material, manta.uniforms);
     }
     // Last: it wraps the glow's surface term (veilShading.ts).
     installPropVeil(material);
@@ -341,7 +353,9 @@ export function buildTemplate(
     if (look === 'sorrowgate' && ARCH_STUDY_ON) installDistanceGrade(material);
     parts.push({ geometry, material });
   });
-  return { parts, trianglesPerInstance: triangles, sway, heightM, photophores, jelly };
+  // Belly and back are two parts and one skin: smoothed together.
+  if (manta !== undefined) smoothSkin(parts.map((part) => part.geometry));
+  return { parts, trianglesPerInstance: triangles, sway, heightM, photophores, jelly, manta };
 }
 
 /**
@@ -357,7 +371,7 @@ export function envTemplate(
   swayM: number,
   onReady: () => void,
   look: WorldLook = 'standard',
-  worldLit: boolean | 'lantern' = false
+  worldLit: WorldLit = false
 ): EnvTemplate | null {
   // The High template of a body is another object under another key, so
   // Low's is never patched and a view at either quality finds its own.

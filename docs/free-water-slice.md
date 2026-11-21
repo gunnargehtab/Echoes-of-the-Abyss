@@ -201,6 +201,7 @@ forest ends rather than dissolving into props at every depth.
 | Small life / close inspection | The four small shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
 | Large life / the opening | The ray below, one public decorative body of 18 m (#1777) | The same independence; no silhouette of a classified animal, and nothing of the colossus |
 | Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence. Not the Tetherjelly or its stipple figure: a field's bell is seven times as wide, a figure in dots in the fauna colour with six tentacles, and stands where it is, where a lantern is a lit skin in a hue of its own over eighteen strands, adrift alone. Not the Hollow's crescent. No light in its file |
+| Large life / before the Close eye, High alone | The manta below, a public decorative body of 18 m (#1867) | The same independence; no silhouette of a classified animal, nothing of a hunter and nothing of the colossus. It is not the rim ray reshaped: that file and its glide stand as they did |
 
 Two placement options were considered:
 
@@ -425,6 +426,44 @@ and the Corvette's, and reaches neither. From Home's eye it is 760 to 825 m off,
 body draws 7 to 8 px. Placement only: no model, material or light is new. The numbers are
 TUNABLE in `FREE_WATER_HIGH_LIFE.BACKLIT_STREAM` until the owner accepts a frame.
 
+**A manta before the Close eye (#1867).** *In development, and not accepted. The owner
+named [its target](screenshots/issue-1867/README.md) in session on 21 November 2026, a
+manta seen from below, and took three calls the same day: the manta is a new model that
+High alone stands, it keeps the rim ray's 18 m, and the photograph is committed.* The rim
+ray glides where the opening's far eye reads a plan from above, and from the Close eye it
+is a chip 900 m off. The target's view is a belly, so the manta glides where the one low
+eye of [the three](screenshots/issue-1799/README.md) is under it and close.
+
+| Body | Loop centre, radius, period | Depth | Bank | Start, degrees round its loop |
+| --- | --- | --- | --- | --- |
+| `env-rim-manta` | `(315, 2,075)`, 70 m, 300 s | 165 ± 8 m | 40 degrees | 130 |
+
+A body banked into its turn shows the outside of that turn its belly, and every loop
+here runs clockwise with its centre to starboard. So the loop's centre lies beyond the
+manta as the Close eye sees it: 165 m from that eye, so the manta's near side passes
+95 m out, over the fry's ribbon 50 m out. There it swims 170 m deep, 14 m of drawn height
+over the eye's 233 m, and the eye looks up 8 degrees at a belly turned 40 toward it: it
+sees 0.75 of the plan, where a level body would show 0.15. Three shapes were written for
+the loop. **The rim ray's bank, 30 degrees** shows 0.62 there. **A level body straight
+over the eye** shows a whole belly and is out of the frame: the Close frame's top is 16
+degrees over its horizon. **A steeper bank on a loop beyond the body** is taken. The
+manta starts 16 degrees short of its near point, 100 m out and coming on, which is where
+reduced motion holds it and where a still frame finds it. The eye sees half its plan or
+more for 52 s of each 300 s lap. For the rest it turns away, edge on and then back to the
+eye, 235 m off at its farthest. From Home's eye it is 643 to 770 m off, and its span
+draws 35 to 42 px.
+
+At that bank a wingtip stands 5.8 m of drawn height off the axis, so its whole body
+spans 131 to 199 m deep over the lap, over the outside rim's 600 m floor. Its path
+passes 32 m and more from every jelly's loop centre, 18 m clear of a jelly's own 14 m
+loop, and 63 m of depth over the fry. It is decoration under
+every rule of this section: no reaction, no collision, no tell, the same loop for every
+client, held still under reduced motion. Its slot is the last in High's list, so every
+slot before it keeps its index. The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE.MANTA`
+until the owner accepts a frame, and [glide.mjs](screenshots/issue-1867/glide.mjs)
+prints every figure here from them. How it is lit, its skin and its stroke are
+[art-direction.md](art-direction.md#a-manta-shows-its-belly)'s.
+
 **High's own vents (#1837).** *In development with the same look step, and not accepted.
 The owner chose an authored stand on the rim in session on 20 November 2026, against
 frames from another map and against leaving the vents out.* At High the fixture stands
@@ -453,9 +492,10 @@ wildlife. Converting gameplay fauna into public fish would disclose hidden state
 not an option. The chosen alternative is public microfauna decoration, only in this
 opt-in fixture, independent of the bestiary's simulated roster. These are descriptive
 asset names, not new gameplay species; no statistics or ecological powers are implied.
-The ray is the one large body, added on #1777 when the opening frame could read none of
-the four small ones: 18 m across, under a third of the smallest Sounder, a grazer of the
-water and nothing of a hunter.
+The ray is the one large body of Low's list, added on #1777 when the opening frame could
+read none of the four small ones: 18 m across, under a third of the smallest Sounder, a
+grazer of the water and nothing of a hunter. The manta (#1867) is High's, at the same
+18 m and under the same line.
 
 | New asset slug | Canonical rendered size | Maximum instances / triangles per instance | Placement and motion |
 | --- | --- | --- | --- |
@@ -465,6 +505,7 @@ water and nothing of a hunter.
 | `env-deep-fish` | 2 m long | 26 / 400 | Deep pocket, 1,900..2,100 m depth; sparse photophore points |
 | `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide, banked 30 degrees into its turn |
 | `env-drift-jelly` | 6 m across its bell | 5 / 700 | Over the outside rim by the start, 100..160 m depth, at the High graphics quality alone; each alone on one slow closed drift |
+| `env-rim-manta` | 18 m across | 1 / 4,000 | Over the outside rim before the Close eye, 150..180 m depth, at the High graphics quality alone; one slow closed glide, banked 40 degrees into its turn |
 
 All motion is deterministic from published placement, a fixed seed and shared match
 time. It never reacts to a hull, a shot, a ping, damage or the camera. Reduced motion
@@ -502,7 +543,7 @@ hidden state. Neither extra participant is exposed by the study entry.
 **Shape lane.** The five new slugs were approved in #1711 and #1712 before integration,
 and the ray's answers the same gates in the pull request that places it (#1777). So does
 the jelly's (#1837): its designer and its reviewer are separate agents, and the reviewer
-passed the model.
+passed the model. The manta's (#1867) answers them the same way.
 Environment props have no faction: each shape PR authors
 **ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
 Footprint, Height, Tris and Light, plus its script, GLB, intake report,
@@ -514,9 +555,10 @@ Block 4 currently describes stone, coral, kelp and crystal standing on the seabe
 The #1711 shape PR must first add the scoped public-microfauna variant: the crab may
 stand on the floor, while the three swimming slugs may be suspended in the column.
 Retain its no-faction, low-luminance, material-count and intake constraints; the exception
-is for these six decorative forms, the ray under its own large-body clause and the jelly
-under its drifting-body clause, not gameplay fauna or other floating props.
-All six rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
+is for these seven decorative forms, the ray under its own large-body clause, the jelly
+under its drifting-body clause and the manta under its own, not gameplay fauna or other
+floating props.
+All seven rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
 and runtime supplies the separately budgeted rung-5 photophore dots described above. The
 jelly's six seats are dark facets too, and are lit at High alone, as world light.
 This preserves the inverted intake light gate. No links to nonexistent exports,

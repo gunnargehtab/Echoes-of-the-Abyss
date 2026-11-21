@@ -125,6 +125,12 @@ export interface PropSpec {
    * the stipple channel's, as at Low.
    */
   glint?: 'axis' | 'lantern';
+  /**
+   * The manta's (#1867): at High its skin is one normal a vertex and its
+   * wings stroke about the file's pose (mantaWing.ts). A body in the world's
+   * light as a fish is, and it carries no light.
+   */
+  wing?: true;
 }
 
 /**
@@ -374,6 +380,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
       ['env-deep-fish', 2, 304],
       ['env-rim-ray', 18, 586],
       ['env-drift-jelly', 6, 594],
+      ['env-rim-manta', 18, 4000],
     ] as const
   ).map(([slug, footprintM, triBudget]): PropSpec => ({
     slug,
@@ -390,6 +397,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     life: true,
     ...(slug === 'env-shoal-fry' ? { glint: 'axis' as const } : {}),
     ...(slug === 'env-drift-jelly' ? { glint: 'lantern' as const } : {}),
+    ...(slug === 'env-rim-manta' ? { wing: true as const } : {}),
   })),
 ];
 

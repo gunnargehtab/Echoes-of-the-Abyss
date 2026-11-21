@@ -103,6 +103,9 @@ const KELP_CLUSTERS = [
   [2741.5, 611.5, -6],
 ] as const;
 
+// TEMP stand-in until the model lands.
+const MANTA_SLUG = 'env-rim-ray';
+
 /** The props that stand on the outside rim's 600 m floor, where a plant stands on the garden's 400. */
 const RIM_STAND = new Set(['env-vent-chimney', 'env-vent-basalt']);
 
@@ -346,6 +349,10 @@ export function freeWaterPlacements(
   // The school before the vent's light (#1856), last in the list: every slot
   // #1837 stood keeps its index, and the frames that step showed do not move.
   stream('env-outer-fish', FREE_WATER_HIGH_LIFE.BACKLIT_STREAM);
+  // The manta (#1867), last again: one body on one loop before the Close
+  // eye, its start authored as the ray's is.
+  const { at: mantaAt, startDeg: mantaStart, MOTION: manta } = FREE_WATER_HIGH_LIFE.MANTA;
+  add(MANTA_SLUG, mantaAt[0], mantaAt[1], { ...manta, phase: (mantaStart * Math.PI) / 180 });
   return slots;
 }
 
