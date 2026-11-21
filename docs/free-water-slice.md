@@ -317,7 +317,9 @@ than moved from it, by the owner's calls of that day:
   floor shows above the console, where a crab is a speck.
 - **Low** looks into the pocket over the southern wall, and only its northern part
   clears the console, so its three new deep-fish patches stand along the north edge, as
-  rings of photophore pinpricks.
+  rings of photophore pinpricks. That is Low's frame. At High the seats are world light
+  and the water takes them from this eye, 2 km off (#1857): the rings read from the
+  pocket itself, and from here the pocket is dark.
 - **Opening** gets the ray, the one body large enough to project there (#1777, the
   owner's call of 6 November 2026). Its eye stands above the Lid, so no water in the
   frame is nearer than about 550 m, at the console's edge, where a 4 m fish would draw
@@ -528,7 +530,10 @@ no body emission, bloom halo, point light or smooth brightness pulse. This adds 
 ground-light family and does not enter the own-agent lamp halo. Other new animals emit
 nothing. The kelp retains `flora-biolight` and its licensed sway. That is Low. At the
 High graphics quality a schooling fry carries one point of world light, in a token of its
-own (High's own life, above), and its body is still no emitter: its GLB is unchanged. A
+own (High's own life, above), and its body is still no emitter: its GLB is unchanged. Each
+of a deep fish's six seats carries a point of that token there, 0.4 m wide, and no dot of
+the public-life channel
+([art-direction.md](art-direction.md#life-in-the-worlds-light), #1857). A
 jelly is drawn there as a lantern, in a token of its own
 ([art-direction.md](art-direction.md#a-jelly-is-a-lantern)): a lit membrane over strands
 of beads of light, which are the renderer's and not its file's.
@@ -560,7 +565,8 @@ is for these seven decorative forms, the ray under its own large-body clause, th
 under its drifting-body clause and the manta under its own, not gameplay fauna or other
 floating props.
 All seven rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
-and runtime supplies the separately budgeted rung-5 photophore dots described above. The
+and runtime supplies the separately budgeted rung-5 photophore dots described above, or
+at High a point of world light a seat. The
 jelly's six seats are dark facets too, and are lit at High alone, as world light.
 This preserves the inverted intake light gate. No links to nonexistent exports,
 placeholder primitives passed off as finished assets, or one-off fish loader.

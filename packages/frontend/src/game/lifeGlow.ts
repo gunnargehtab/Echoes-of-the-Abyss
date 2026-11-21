@@ -6,16 +6,19 @@
  * their light", each source "in its own token" (limits 3 and 4). A fry of the
  * crater's schools carries one point of it on its flank, in `life-glint`
  * (docs/style-neon-noir.md "World light"), so a school in unlit water reads as
- * a drift of faint lights and not as holes in it. A drifting jelly's seats
- * and the beads of its strands are points of the same kind in a cloud of
- * their own, in the jelly's token (jellyLight.ts).
+ * a drift of faint lights and not as holes in it. A deep fish carries six in
+ * the same cloud, one on each photophore seat its file marks (#1857): at Low
+ * those seats are the stipple channel's dots, and at High no dot is drawn for
+ * one. A drifting jelly's seats and the beads of its strands are points of
+ * the same kind in a cloud of their own, in the jelly's token (jellyLight.ts).
  *
  * It is world light, not a mark, and it is drawn where world light is: one
  * `Points` in the world pass (highFrame.ts), scene-referred, so the water
  * takes it with distance, the bloom spreads it and the grade and the curve
  * reach it. Nothing draws it at Low, and nothing of it is on the canvas at
  * either quality: rung 5's stipple is another thing, in another colour, and
- * is still the tactical layer's (faunaStipple.ts).
+ * is still the tactical layer's (faunaStipple.ts), where Low keeps the deep
+ * fish's seats.
  *
  * World-owned, so it tells nothing (limit 4): a light stands where its body
  * swims, on the fixture's authored loop and the shared match time
@@ -46,11 +49,15 @@ import {
 import { HIGH_GRAPHICS } from '@echoes/shared';
 import { LIFE_GLINT } from './palette.ts';
 
-const { LEVEL, SIZE_M, MIN_PX, LIFT_M } = HIGH_GRAPHICS.LIFE.GLOW;
+const { LEVEL, SIZE_M, MIN_PX, LIFT_M, SEAT } = HIGH_GRAPHICS.LIFE.GLOW;
 
-/** A fry's light: its width in metres, and its level against its cloud's. */
+/**
+ * A light's width in metres, and its level against its cloud's: a fry's one,
+ * and the one on each photophore seat of a deep fish.
+ */
 export const LIFE_GLOW_KIND = {
   axis: [SIZE_M, 1],
+  seat: [SEAT.SIZE_M, SEAT.LEVEL / LEVEL],
 } as const;
 
 const glsl = (value: number): string => {

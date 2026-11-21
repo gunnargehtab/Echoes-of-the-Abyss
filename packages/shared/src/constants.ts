@@ -433,7 +433,9 @@ export const HIGH_GRAPHICS = {
    * below).
    *
    * `GLOW` is the light a body carries of its own, as points of the world
-   * pass (lifeGlow.ts): a schooling fry's one, in `life-glint`, and
+   * pass (lifeGlow.ts): a schooling fry's one, in `life-glint`; `SEAT`, the
+   * point on each of the deep fish's six photophore seats, in the fry's
+   * token and cloud (#1857); and
    * `LANTERN`, the point on each of a drifting jelly's six seats, in the
    * jelly's own token and cloud (`JELLY` below). `LEVEL` is a fry's radiance
    * at the point's centre, in the
@@ -456,6 +458,10 @@ export const HIGH_GRAPHICS = {
       SIZE_M: 0.22,
       MIN_PX: 1.6,
       LIFT_M: 0.15,
+      // A deep fish's seat: no brighter than a fry's light and wider, since
+      // no orbit comes nearer the pocket's fish than 250 m, where a fry's
+      // 0.22 m is under the floor and reads as a faint dash.
+      SEAT: { LEVEL: 0.3, SIZE_M: 0.4 },
       // A jelly's seat: wider than a fry's light and no brighter.
       LANTERN: { LEVEL: 0.3, SIZE_M: 0.55 },
     },

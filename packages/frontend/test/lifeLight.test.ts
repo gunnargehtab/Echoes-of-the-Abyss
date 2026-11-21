@@ -76,8 +76,8 @@ describe('the crater’s life in the world’s light (#1837)', () => {
       ENVIRONMENT_PROPS.filter((spec) => spec.life === true).map((spec) => spec.slug),
       LIFE
     );
-    // A fry carries one point on its axis and a jelly is a lantern; the deep
-    // fish's seats stay the stipple channel's, and no other body emits.
+    // A fry carries one point on its axis, a deep fish one on each seat its
+    // file marks, and a jelly is a lantern; no other body emits.
     assert.deepEqual(
       ENVIRONMENT_PROPS.filter((spec) => spec.glint !== undefined).map((spec) => [
         spec.slug,
@@ -85,6 +85,7 @@ describe('the crater’s life in the world’s light (#1837)', () => {
       ]),
       [
         ['env-shoal-fry', 'axis'],
+        ['env-deep-fish', 'seats'],
         ['env-drift-jelly', 'lantern'],
       ]
     );

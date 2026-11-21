@@ -118,13 +118,14 @@ export interface PropSpec {
   life?: true;
   /**
    * Carries light of its own at High. `axis` is one point on the body's
-   * axis in `life-glint`, the schooling fry's (lifeGlow.ts). `lantern` is
-   * the drifting jelly's: its file drawn as a lit membrane, with its seats
-   * and its strands' beads as points, all in `jelly-lantern` (jellyLight.ts).
-   * Every other body emits nothing there, and the deep fish's seats stay
-   * the stipple channel's, as at Low.
+   * axis in `life-glint`, the schooling fry's (lifeGlow.ts). `seats` is the
+   * deep fish's: a point of the same token on each photophore seat its file
+   * marks, which at Low are the stipple channel's dots and at High are not
+   * (#1857). `lantern` is the drifting jelly's: its file drawn as a lit
+   * membrane, with its seats and its strands' beads as points, all in
+   * `jelly-lantern` (jellyLight.ts). Every other body emits nothing there.
    */
-  glint?: 'axis' | 'lantern';
+  glint?: 'axis' | 'seats' | 'lantern';
   /**
    * The manta's (#1867): at High its skin is one normal a vertex and its
    * wings stroke about the file's pose (mantaWing.ts). A body in the world's
@@ -396,6 +397,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     swayM: 0,
     life: true,
     ...(slug === 'env-shoal-fry' ? { glint: 'axis' as const } : {}),
+    ...(slug === 'env-deep-fish' ? { glint: 'seats' as const } : {}),
     ...(slug === 'env-drift-jelly' ? { glint: 'lantern' as const } : {}),
     ...(slug === 'env-rim-manta' ? { wing: true as const } : {}),
   })),

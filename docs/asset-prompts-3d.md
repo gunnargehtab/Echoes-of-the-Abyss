@@ -2003,7 +2003,8 @@ gameplay fauna — and the rest of ENV STYLE
 binds them as it binds a crag. All seven rows carry Light `none`, the deep fish and the
 drift jelly included. The deep fish's
 photophores are the runtime's, at most six soft rung-5 dots on the public-life channel
-([style-neon-noir.md](style-neon-noir.md) "World light"), and its file marks where they sit
+([style-neon-noir.md](style-neon-noir.md) "World light") or, at the High graphics quality,
+six points of world light, and its file marks where they sit
 with six named `photophore_NN` facets in the body's own material, 2 cm proud and
 non-emissive, so #1713 reads the seats off the file rather than inventing them (the
 owner's call, 3 November 2026). The drift jelly's file marks six the same way, under the

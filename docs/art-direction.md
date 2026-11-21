@@ -661,7 +661,28 @@ does, and nothing Low draws is built, patched or keyed differently.
   the palette's fauna colour, on the tactical layer at both qualities
   ([map-visuals.md](map-visuals.md) §8). This is world light, in a world token, and it
   never scatters, gathers or brightens for anything a match does. The deep fish's
-  photophores stay the stipple channel's, as at Low, until a step moves them.
+  photophores are the stipple channel's at Low alone: the next call moves them.
+- **A deep fish's photophores are world light**
+  ([#1857](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1857);
+  [issue-1857](screenshots/issue-1857/README.md)). *In development, and not accepted.*
+  At High each of the six seats its file marks carries a point of `life-glint` in the
+  fry's cloud, and no dot of the stipple channel stands on one: a seat drawn twice would
+  be taken by the water once and handed back by the canvas. Low keeps its dots and its
+  licence ([free-water-slice.md](free-water-slice.md) §5). Three readings of the token
+  were written. **`life-glint`** is taken, one token for the crater's fish. **A token of
+  its own**, a palette's as `jelly-lantern` is, would be a third hue of life for six
+  points a fish. **Leave them the stipple's** keeps a field mark's colour on a body the
+  world pass lights. The owner took a seat's width in session on 21 November 2026, on
+  the software frames, at the 250 m the orbit's dolly stops at, where a 2 m fish draws
+  12 px. Three readings were written. **A fry's point**, 0.22 m at a fry's level, is
+  under the 1.6 px floor there: a fish peaked at 71 to 111 of 255, a faint dash.
+  **0.5 m at 0.4** peaked at 150 to 195, over the Corvette's lamp at 165. **0.4 m at a
+  fry's level** is taken: a fish peaks at 108 to 161, pale pinpricks along a dark body,
+  under that lamp and level with a dense school's 160. The water takes them with
+  distance, as it takes a fry's. From gate 6's low camera the three rings Low draws
+  into the pocket, 2 km off, are gone at High, and were under every reading: the widest
+  lifted a ring's pixels by about 10 of 255. That is the cost of the move, and the owner
+  took it with the width.
 - **High stands more life than Low**, where the target's cameras read a body
   ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
   written. **Add to Low's lists** would move the frame Low draws. **Slots High alone
