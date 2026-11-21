@@ -212,7 +212,7 @@ it**:
   firing may apply;
 - this section's instruction to invoke `dev-loop`, `loop-critic`'s separation from
   the author (its file, its missing edit tools) and §8's rounds line;
-- `dev-loop`'s three-round cap and the verification pass that is not a round;
+- `dev-loop`'s five-round cap and the verification pass that is not a round;
 - §7's `decision-proposed` scope and its 24 hours, and §6's `automerge` conditions
   with `steward` §9's and the list in `tools/automerge-guard/lib/rules.mjs`.
 
@@ -377,7 +377,7 @@ nothing, or stood down at once. Under 100 words:
 
 > **HH:MM — took #n** / **filed #a, #b** / **stopped on #n** / **nothing to do**
 > The branch and pull request, or the epic and its boxes, or why no pull request.
-> Rounds: how many and the critic's last verdict, **at the cap** when the third
+> Rounds: how many and the critic's last verdict, **at the cap** when the fifth
 > was the last — or **no rounds** and why, or **critic unavailable** and what
 > happened.
 > Decided: each call taken, the option and the pull request — or "nothing".
@@ -390,7 +390,7 @@ nothing, or stood down at once. Under 100 words:
 **The rounds line is never omitted.** When the critic cannot run, `dev-loop`
 degrades to self-review with no error: the gates pass and the pull request reads
 like a reviewed one. This line is the only place that shows it. **At the cap** is
-the only record of how often the three-round cap binds.
+the only record of how often the five-round cap binds.
 
 **When the pull request merges, edit your entry** — append "Merged as `<sha>`" —
 rather than posting a second comment.

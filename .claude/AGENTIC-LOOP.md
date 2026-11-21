@@ -89,7 +89,7 @@ through a correctness review while `CLAUDE.md`'s balance freeze is in force.
 
 | #709 guardrail | Here |
 | --- | --- |
-| Max cycles per task | Three rounds, hard, in `dev-loop`, whose one exception is five for #1748 to #1754 until #1694 closes, set by the owner on 4 November 2026 — reaching it is a stall, and the pull request stays open with what is left written in its body. Only a **blocking** finding buys a round; a **minor** one is fixed and checked by the verification pass |
+| Max cycles per task | Five rounds, hard, in `dev-loop`, set by the owner on 21 November 2026 (#1782) — reaching it is a stall, and the pull request stays open with what is left written in its body. Only a **blocking** finding buys a round; a **minor** one is fixed and checked by the verification pass |
 | Max patch size | Not a line count: one increment per round, and a round whose diff outgrows its target is a finding `loop-critic` raises |
 | Schema validation for patches | `npm run gates` — type-check, lint, format, the model round-trip, all three doc gates |
 | Crash detection | The suites, and the evidence step: a harness run that does not reproduce is `evidence-missing` |
@@ -244,8 +244,9 @@ it is allowed to select.
   What changes for a run shaped like #738's is the ending rather than the work:
   it stops on round three with its pull request open and the findings still open
   written in the body, instead of refining to round five. `dev-loop`'s "The cap:
-  three rounds" says how to stop there. The Routine itself needed no edit, for the
-  reason the paragraph below gives.
+  five rounds" says how to stop there. The Routine itself needed no edit, for the
+  reason the paragraph below gives. **It is five rounds since 21 November** (#1782):
+  the owner made the free-water pass's five-round exception the cap for every change.
 
   **It runs `claude-opus-5-5` at high effort since 22 October**, set by the
   repository owner; it ran at medium from 22 September, and on `claude-opus-5`
