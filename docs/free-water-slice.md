@@ -1099,8 +1099,9 @@ replaces it. #1754 follows that re-acceptance, and #1694 closes only when both a
 
 The owner set this pass's cap at **five rounds per change, for every loop**: each
 `dev-loop` round with its critic, art-direction reviews, and hull-designer and
-hull-reviewer passes. It binds #1748 to #1754, attended or not, until #1694 closes. The
-number is held in `dev-loop` itself, so editing this section does not move it.
+hull-reviewer passes. It bound #1748 to #1754, attended or not. Since 21 November it is
+the cap for every change (#1782), so this pass no longer carries an exception of its own.
+The number is held in `dev-loop` itself, so editing this section does not move it.
 
 ## Related
 

@@ -192,7 +192,7 @@ Three bind a session whether or not it loaded the skill. The loop never tunes fo
 docs/code disagreement silently: it writes the options and a recommendation, takes it
 unattended with both in the pull request, and asks the person at the keyboard otherwise.
 The critic has no `Edit` and no `Write`: **a generator that also grades itself is not a
-gate** (#540). And **a change gets three rounds, a cap a person sets**: reaching it is a
+gate** (#540). And **a change gets five rounds, a cap a person sets**: reaching it is a
 stall, and the pull request stays open with its findings listed in the body.
 
 Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `docs/README.md` ·
