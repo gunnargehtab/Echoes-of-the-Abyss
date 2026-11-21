@@ -458,10 +458,11 @@ export const HIGH_GRAPHICS = {
       SIZE_M: 0.22,
       MIN_PX: 1.6,
       LIFT_M: 0.15,
-      // A deep fish's seat: no brighter than a fry's light and wider, since
-      // no orbit comes nearer the pocket's fish than 250 m, where a fry's
-      // 0.22 m is under the floor and reads as a faint dash.
-      SEAT: { LEVEL: 0.3, SIZE_M: 0.4 },
+      // A deep fish's seat: a fry's width, since its seats stand 0.22 to
+      // 0.24 m apart and a wider disc merges a flank's three into one lit
+      // patch, at twice a fry's level, since no orbit comes nearer the
+      // pocket's fish than 250 m, where a fry's own is a faint dash.
+      SEAT: { LEVEL: 0.6, SIZE_M: 0.22 },
       // A jelly's seat: wider than a fry's light and no brighter.
       LANTERN: { LEVEL: 0.3, SIZE_M: 0.55 },
     },

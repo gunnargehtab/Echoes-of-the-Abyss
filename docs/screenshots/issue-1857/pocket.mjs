@@ -4,7 +4,9 @@
 // which looks into the deep fish's pocket from 2 km, and the garden close,
 // where none swims. This one stands in the pocket, at the orbit's least dolly
 // from a ring of six: Low first, as the control, then High, in the free-water
-// crater with the HUD on.
+// crater with the HUD on. Then one frame more at High, in NAV's flight, which
+// no dolly bounds: the eye flown forward from the pocket eye until it stands
+// within 50 m of the ring's centre, where a flank's three seats read apart.
 //
 //   SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
 //     node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
@@ -29,6 +31,9 @@ import { dirname, join } from 'node:path';
 const LOW = ['low', 2000, 2000, 1600, 0, 12, 850];
 const POCKET = ['pocket', 2150, 1630, 250, 0, 10, 2000];
 const POSES = [POCKET];
+// The ring's centre, in plan, and how near it the flight frame's eye stops.
+const RING = [2150, 1630];
+const FLIGHT_STOP_M = 50;
 const SEATS = 6;
 
 const aim = (page, [, x, z, distance, yawDeg, pitchDeg, focusDepthM]) =>
@@ -168,5 +173,38 @@ export default async ({ page, shot }) => {
   if (qualities.includes('high')) {
     await setQuality('high');
     await take('high');
+    // NAV's flight keeps the orbit's eye and its heading (docs/free-camera.md
+    // §4), so forward from the pocket eye is toward the ring. The key is held
+    // until the probe reports the eye near enough: how far a frame carries it
+    // is the rasteriser's, so the stop is read and never timed.
+    const range = async () => {
+      const { eye } = await page.evaluate(() => window.__perspectiveProbe());
+      return Math.hypot(eye.xM - RING[0], eye.zM - RING[1]);
+    };
+    await page.mouse.move(viewport.width / 2, viewport.height / 2);
+    await page.keyboard.press('F9');
+    await page.waitForTimeout(2000);
+    await page.keyboard.down('KeyW');
+    const started = Date.now();
+    while ((await range()) > FLIGHT_STOP_M && Date.now() - started < 240000) {
+      await page.waitForTimeout(250);
+    }
+    await page.keyboard.up('KeyW');
+    await page.waitForTimeout(3000);
+    const probe = await page.evaluate(() => window.__perspectiveProbe());
+    await shot('high-flight');
+    readings.push({
+      name: 'flight',
+      quality: 'high',
+      calls: probe.drawCalls,
+      triangles: probe.triangles,
+      eye: probe.eye,
+      // Metres in plan from the eye to the ring's centre; a fish swims 20 m
+      // from that.
+      toRingM: Math.round(await range()),
+      flight: probe.flight ?? null,
+    });
+    write();
+    await page.keyboard.press('F9');
   }
 };

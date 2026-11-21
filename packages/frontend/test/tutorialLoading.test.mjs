@@ -515,22 +515,23 @@ describe('a body’s own light at High (#1837)', () => {
       assert.equal(high.lifeGlints, count('env-shoal-fry'));
       assert.equal(high.photophoreLights, low.decorativePhotophores);
       assert.equal(layer.glow.count, high.lifeGlints + high.photophoreLights);
-      // A seat's light has a width of its own: both kinds are in the cloud.
-      const widths = layer.glow.points.geometry.getAttribute('aGlow');
+      // A seat's light is a kind of its own, at its own level against the
+      // cloud's: both kinds are in the cloud, and no other.
+      const glow = layer.glow.points.geometry.getAttribute('aGlow');
       const kinds = new Map();
       for (let i = 0; i < layer.glow.count; i++) {
-        kinds.set(widths.getX(i), (kinds.get(widths.getX(i)) ?? 0) + 1);
+        const key = `${glow.getX(i)} m at ${glow.getY(i)}`;
+        kinds.set(key, (kinds.get(key) ?? 0) + 1);
       }
-      const { SIZE_M, SEAT } = HIGH_GRAPHICS.LIFE.GLOW;
-      assert.notEqual(SEAT.SIZE_M, SIZE_M);
+      const { LEVEL, SIZE_M, SEAT } = HIGH_GRAPHICS.LIFE.GLOW;
+      const kind = (sizeM, level) => `${Math.fround(sizeM)} m at ${Math.fround(level / LEVEL)}`;
+      assert.notEqual(kind(SEAT.SIZE_M, SEAT.LEVEL), kind(SIZE_M, LEVEL));
       assert.deepEqual(
-        new Map([...kinds].sort(([a], [b]) => a - b)),
-        new Map(
-          [
-            [Math.fround(SIZE_M), high.lifeGlints],
-            [Math.fround(SEAT.SIZE_M), high.photophoreLights],
-          ].sort(([a], [b]) => a - b)
-        )
+        kinds,
+        new Map([
+          [kind(SIZE_M, LEVEL), high.lifeGlints],
+          [kind(SEAT.SIZE_M, SEAT.LEVEL), high.photophoreLights],
+        ])
       );
       // "A jelly is a lantern": the glow round its bell, its six seats and
       // its strands' beads, in a cloud of its own token.
