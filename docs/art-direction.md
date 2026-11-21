@@ -912,7 +912,7 @@ bowl ([free-water-slice.md](free-water-slice.md) §5, "A far bloom over the bowl
   centre** shows that eye 151 of the 260, in the last 190 px of the frame.
   **A circle in the bowl's north-west** shows it 207, in the last 385 px: a hook at the
   frame's edge. **An ellipse along the north half** is taken: 204, across 475 px, its
-  west end the nearest of it and both its sides running off east into the dark. It is
+  west end toward that eye and both its sides running off east into the dark. It is
   the one loop of the fixture that is no circle. The river fills 230 degrees of it,
   thickest at its middle and thinning to both ends: a river with a head and a tail,
   where a full loop would read from Survey as a ring, and a ring there is a hull's.
@@ -923,8 +923,8 @@ bowl ([free-water-slice.md](free-water-slice.md) §5, "A far bloom over the bowl
   nothing else.
 - **It moves, and for nothing** (limit 4). The list is drawn once from the fixture's
   seed and is the same for every client. It drifts on the shared match time, a lap of
-  its loop in 13,500 s: 0.44 m/s along the loop's long sides, against a drifting
-  jelly's 0.31 on its own. No hull, shot, ping or camera starts, hurries, gathers or
+  its loop in 13,500 s: 0.32 m/s on the average and 0.44 along the loop's long sides,
+  against a drifting jelly's 0.31 on its own. No hull, shot, ping or camera starts, hurries, gathers or
   brightens it, and reduced motion holds it where the match's start stands it.
 - **From near it is a drift of soft discs.** A point is a disc at any distance. From
   400 m a lantern of the river draws up to 24 px across, with no bell and no strands,

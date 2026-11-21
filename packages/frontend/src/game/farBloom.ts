@@ -7,7 +7,7 @@
  * From Home's eye the bowl beyond the fleet was empty water, and the five
  * lanterns hung over the fleet's start alone. A full lantern is 594
  * triangles of membrane and 331 points, and from a kilometre and a half its
- * strands are under a pixel. So a lantern of the bloom is no body: no file,
+ * beads are under a pixel. So a lantern of the bloom is no body: no file,
  * no membrane, no strands. It is two points of the lantern's own cloud
  * (lifeGlow.ts, jellyLight.ts), the soft disc that stands for its lit bell
  * and the glow in the water round it, in `jelly-lantern`. The cloud is the
@@ -19,8 +19,7 @@
  * client, and it drifts on the shared match time alone. Nothing a hull, a
  * shot or the camera does moves, gathers or brightens it. A lantern keeps
  * one level: the near lanterns' stroke and wave are not carried out here,
- * where two hundred points flashing each on its own beat would be a busy
- * frame. Reduced motion holds the river where the match's start stands it.
+ * where 260 points flashing each on its own beat would be a busy frame. Reduced motion holds the river where the match's start stands it.
  *
  * TUNABLE until a frame of this step is accepted: `FREE_WATER_HIGH_LIFE.BLOOM`
  * and `HIGH_GRAPHICS.LIFE.JELLY.FAR` in packages/shared/src/constants.ts.
@@ -87,7 +86,7 @@ export function farLanternAt(slot: FarLantern, timeS: number, out: Vector3): Vec
 /**
  * Whether the ground lets the river stand: open water under the whole band
  * it sweeps in a lap, deeper than its deepest lantern. The loop is walked a
- * degree at a time, 17 m at its longest step, on the band's two edges and
+ * degree at a time, 18 m at its longest step, on the band's two edges and
  * its middle, against cells 250 m across.
  */
 export function farBloomAdmitted(terrain: TerrainGrid): boolean {

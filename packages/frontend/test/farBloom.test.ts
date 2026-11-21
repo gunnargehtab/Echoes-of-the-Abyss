@@ -91,7 +91,7 @@ describe('the far bloom (#1859)', () => {
     assert.ok(thirds[0]! > 0 && thirds[2]! > 0, `${thirds}`);
   });
 
-  it('starts with its middle at the loop’s west end, the nearest of it to Home’s eye', () => {
+  it('starts with its middle at the loop’s west end, the end nearer Home’s eye', () => {
     const [x, y] = farBloomPlan((startDeg * Math.PI) / 180, 0);
     assert.ok(Math.abs(x - (at[0] - RADII_M[0])) < 1e-6);
     assert.ok(Math.abs(y - at[1]) < 1e-6);

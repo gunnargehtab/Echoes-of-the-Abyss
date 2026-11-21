@@ -495,10 +495,11 @@ A lantern keeps station on the loop as a schooling fish does: a fixed seeded pla
 the river, up to 60 m across its line and 60 m of depth off it, and a width of its own,
 3 to 6 m. Where it stands along the river is the sum of two draws, so the river is
 thickest at its middle and thins to nothing at its head and its tail, 115 degrees of
-phase either way. Its middle starts at the loop's west end, `(1,200, 1,930)`, the nearest
-of it to Home's eye, which is where reduced motion holds it and where a still frame
-finds it. The loop is 4,261 m round, so a lap in 13,500 s is 0.44 m/s along its long
-sides and 0.15 m/s round its ends, against a drifting jelly's 0.31 m/s on its own loop.
+phase either way. Its middle starts at the loop's west end, `(1,200, 1,930)`, the end
+nearer Home's eye, which is where reduced motion holds it and where a still frame finds
+it. The loop is 4,261 m round, so a lap in 13,500 s is 0.32 m/s on the average: 0.44 m/s
+along its long sides and 0.15 m/s round its ends, against a drifting jelly's 0.31 m/s on
+its own loop.
 
 What each camera holds of it when the match starts
 ([river.mjs](screenshots/issue-1859/river.mjs) prints every figure here):
@@ -512,7 +513,7 @@ What each camera holds of it when the match starts
 
 It drifts and Home's eye does not: after 10 minutes that eye holds 218 of them, after 30
 minutes 232, and after an hour 171, the river's middle by then on the loop's far north
-side, 2,166 m off at the median. It is decoration under every rule of this section: no
+side and the lanterns that eye holds 2,166 m off at the median. It is decoration under every rule of this section: no
 reaction, no collision, no tell, the same river for every client, held still under
 reduced motion. The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE.BLOOM` until the owner
 accepts a frame.

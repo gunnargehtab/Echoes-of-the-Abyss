@@ -24,9 +24,9 @@ node --import tsx --import ./packages/frontend/test/support/viteAssets.mjs \
   docs/screenshots/issue-1859/river.mjs
 ```
 
-[frames.mjs](frames.mjs) is #1837's module with one camera changed: Low and then High at
-the target's three cameras, at gate 6's low camera, and 400 m from the river's west end
-in place of the garden close. It writes [readings.json](software/readings.json) after
+[frames.mjs](frames.mjs) is #1837's module with one camera and the clip's move changed:
+Low and then High at the target's three cameras, at gate 6's low camera, and 400 m from
+the river's west end in place of the garden close. It writes [readings.json](software/readings.json) after
 every frame. Reduced motion holds the river where the match's start stands it, so two
 runs frame alike. [bloom.py](bloom.py) reads the High frames against
 [main-high](software/main-high), the same cameras taken on `main` at ba9b6ba0 with the
@@ -176,7 +176,7 @@ to overturn:
 
 Three more are numbers, TUNABLE until a frame is accepted: 260 lanterns, a disc's light
 at 0.3, as a near lantern's seat, and a lap in 13,500 s, which is a drifting jelly's
-pace.
+pace on the average.
 
 ## Who captures
 

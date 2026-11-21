@@ -187,8 +187,9 @@ export const FREE_WATER_HIGH_LIFE = {
    * `SPAN_DEG` of its phase, thickest at the middle and thinning to both
    * ends, so it is a river with a head and a tail and no ring. `startDeg` is
    * where its middle stands when the match starts, as the loop's own phase (0
-   * east, 90 south): the west end, the nearest of it to Home's eye. A lap is
-   * `periodS`, which along the long sides is a drifting jelly's own pace.
+   * east, 90 south): the west end, the end nearer Home's eye. A lap is
+   * `periodS`, which is a drifting jelly's own pace on the average, 0.32 m/s
+   * against its 0.31, and 0.44 along the loop's long sides.
    * `STATION` is how far a lantern keeps from the river's own line, across
    * it and in depth about `depthM`, over the hulls' 300 m.
    */
