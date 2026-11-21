@@ -95,7 +95,8 @@ and spans T+00:03 to T+06:04 of the match. The rasteriser reaches Close at about
 T+03:30, with the manta on the far side of its loop, a pale body turning over the
 stand's glow. The hold then runs through its second lap's near pass: it comes on from
 the right, its belly opens to the eye at about T+05:08, its wings at two ends of a
-stroke in frames a few seconds apart, and it leaves the frame's left by T+05:40.
+stroke in frames a few seconds apart, and from about T+05:26 it turns away behind the
+ORDERS panel, which is drawn over it.
 
 ## How the belly reads
 
