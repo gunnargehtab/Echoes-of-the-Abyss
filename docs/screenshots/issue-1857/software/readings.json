@@ -274,6 +274,318 @@
       "avgGpuMs": null,
       "queued": null,
       "insideBudget": null
+    },
+    {
+      "name": "home",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 65,
+      "triangles": 763409,
+      "camera": [
+        709,
+        1710,
+        1200,
+        -34,
+        15,
+        300
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-drift-jelly": 5,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3,
+          "env-rim-manta": 1
+        },
+        "glints": 624,
+        "jellyLights": 1655
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
+      },
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 72,
+        "searchlights": 2,
+        "beamMotes": 72000,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
+    },
+    {
+      "name": "close",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 65,
+      "triangles": 763409,
+      "camera": [
+        542,
+        1958,
+        420,
+        -60,
+        2,
+        300
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-drift-jelly": 5,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3,
+          "env-rim-manta": 1
+        },
+        "glints": 624,
+        "jellyLights": 1655
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
+      },
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 72,
+        "searchlights": 2,
+        "beamMotes": 72000,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
+    },
+    {
+      "name": "low",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "split-copy",
+        "split"
+      ],
+      "calls": 46,
+      "triangles": 756078,
+      "camera": [
+        2000,
+        2000,
+        1600,
+        0,
+        12,
+        850
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-drift-jelly": 5,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3,
+          "env-rim-manta": 1
+        },
+        "glints": 624,
+        "jellyLights": 1655
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
+      },
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 72,
+        "searchlights": 2,
+        "beamMotes": 72000,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
+    },
+    {
+      "name": "survey",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 65,
+      "triangles": 764047,
+      "camera": [
+        2000,
+        2000,
+        10000,
+        0,
+        88,
+        null
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-drift-jelly": 5,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3,
+          "env-rim-manta": 1
+        },
+        "glints": 624,
+        "jellyLights": 1655
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
+      },
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 72,
+        "searchlights": 2,
+        "beamMotes": 72000,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
+    },
+    {
+      "name": "garden",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "split-copy",
+        "split"
+      ],
+      "calls": 52,
+      "triangles": 760726,
+      "camera": [
+        1875,
+        1125,
+        250,
+        90,
+        12,
+        275
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-drift-jelly": 5,
+          "env-vent-chimney": 2,
+          "env-vent-basalt": 3,
+          "env-rim-manta": 1
+        },
+        "glints": 624,
+        "jellyLights": 1655
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
+      },
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 72,
+        "searchlights": 2,
+        "beamMotes": 72000,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
     }
   ]
 }

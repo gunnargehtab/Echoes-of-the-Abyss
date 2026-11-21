@@ -657,8 +657,8 @@ export const WORLD_LIGHT: Record<WorldLightFamily, number> = {
 /**
  * Life's own light at the High graphics quality, docs/style-neon-noir.md
  * "World light" (`life-glint`, in development with #1837): the one point a
- * schooling fry of the crater's decorative life carries, and the six round a
- * drifting jelly's bell (lifeGlow.ts). A pale
+ * schooling fry of the crater's decorative life carries, and the one on each
+ * of a deep fish's six photophore seats (lifeGlow.ts, #1857). A pale
  * bone white with no neon's chroma: warmer than every contact tier's blue,
  * greyer than the civic lamp's tallow, and no navy's glow.
  */

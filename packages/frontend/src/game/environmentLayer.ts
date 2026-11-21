@@ -178,8 +178,9 @@ export class EnvironmentLayer {
   /** The collapse's cloud, one draw, alive for the 14 s after the ground change. */
   readonly cloud = new CollapseCloud();
   /**
-   * The light the crater's fry carry of their own at High, one draw in the
-   * world pass; in the group while the view draws one (lifeGlow.ts, #1837).
+   * The light the crater's fry carry of their own at High, and the deep
+   * fish's seats (#1857): one draw in the world pass, in the group while the
+   * view draws one (lifeGlow.ts, #1837).
    */
   readonly glow = new LifeGlow();
   /**
@@ -651,7 +652,7 @@ export class EnvironmentLayer {
         this.writeFixturePose(meshes, p, i);
         if (carries === 'lantern') {
           // A jelly's seats are world light at High and nothing at Low: never
-          // the stipple channel's dots, which are the deep fish's alone.
+          // the stipple channel's dots, which are the deep fish's alone, at Low.
           if (!this.worldPass || template.jelly === undefined) return;
           writeJellyLights(
             template.jelly.shape,
