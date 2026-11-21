@@ -111,8 +111,8 @@ at Low and 14 as built. A fry's point read 14 too, 0.4 m at 0.3 read 16 and 0.5 
 Calls and triangles are read off `readings.json` against
 [#1867's](../issue-1867/software/readings.json), which is `main`. The dots and the seat
 lights are the crater's, one count whatever the camera:
-[pocket/readings.json](software/pocket/readings.json) records both at each quality, and
-#1837's module, which took the other five cameras, records neither.
+[pocket/readings.json](software/pocket/readings.json) records both at each quality. The
+module of #1837, which took the other five cameras, records neither.
 
 | Camera | High before: calls, triangles | High now | Stipple dots before, now | Seat lights before, now |
 | --- | --- | --- | --- | --- |
