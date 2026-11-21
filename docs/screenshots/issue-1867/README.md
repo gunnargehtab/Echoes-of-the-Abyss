@@ -21,13 +21,12 @@ round the target's manta are about a thirtieth of its span, and the crater's fry
 ## What transfers
 
 - **The plan.** A disc about 2.3 times as wide as it is long: a leading edge that runs
-  nearly straight from the head and sweeps back, wings drawn out to narrow tips that curl,
-  and a trailing edge concave toward each tip.
+  nearly straight from the head and sweeps back, wings drawn out to narrow tips, and a
+  trailing edge concave toward each tip.
 - **The head.** A wide mouth across the front, between two cephalic lobes held forward
   like paddles and toed in.
 - **The belly.** Pale, with five gill slits a side in two rows that close toward the
-  tail, dark blotches between and behind them, and a grey that deepens toward the wings'
-  trailing margin and tips.
+  tail, and dark blotches between and behind them.
 - **The tail.** A thin whip about as long as the disc.
 - **Where it is seen from.** Below, the belly to the eye.
 - **The school.** Small fish all round it, a thirtieth of its span and smaller.
@@ -41,6 +40,12 @@ round the target's manta are about a thirtieth of its span, and the crater's fry
   crater's manta is the reverse: a pale belly on darker water
   ([art-direction.md](../../art-direction.md#a-manta-shows-its-belly), on the belly's
   register).
+- **Three things of the body.** The target's wingtips curl, its belly greys toward the
+  wings' trailing margin and tips, and its lobes are pale underneath. The file's tips
+  are rounded off, its margin is the palest of its belly by the light through it, and
+  its lobes are dark from below
+  ([art-direction.md](../../art-direction.md#a-manta-shows-its-belly), "What the target
+  shows and this does not").
 - **The reef.** The coral at the frame's foot is the photograph's place and not the
   crater's.
 - **The camera as a station of play.** Play is commanded from above and behind the fleet.
@@ -91,8 +96,8 @@ The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camer
 from Home to Close at High and held there, at 1280 × 720 and six times the speed the
 rasteriser drew it, so the manta glides and strokes six times as fast as it does. It is
 taken without reduced motion, with #1837's module, `CLIP=1` and `CLIP_HOLD_MS=150000`,
-and spans T+00:03 to T+06:04 of the match. The rasteriser reaches Close at about
-T+03:30, with the manta on the far side of its loop, a pale body turning over the
+and spans T+00:02 to T+06:09 of the match. The rasteriser reaches Close at about
+T+02:50, with the manta on the far side of its loop, a pale body turning over the
 stand's glow. The hold then runs through its second lap's near pass: it comes on from
 the right, its belly opens to the eye at about T+05:08, its wings at two ends of a
 stroke in frames a few seconds apart, and from about T+05:26 it turns away behind the
