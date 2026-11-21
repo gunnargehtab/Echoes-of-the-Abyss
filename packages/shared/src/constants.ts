@@ -176,6 +176,32 @@ export const FREE_WATER_HIGH_LIFE = {
     startDeg: 130,
     MOTION: { radiusM: 70, periodS: 300, depthM: 165, depthSwingM: 8, axisM: 0.79, bankDeg: 40 },
   },
+  /**
+   * The far bloom (#1859): a slow river of small lanterns far out over the
+   * bowl, where Home's eye had empty water beyond the fleet. No body stands
+   * for one: each is points of the lantern's cloud and nothing else
+   * (farBloom.ts). The river's loop is an ellipse along the bowl's north
+   * half, `RADII_M` east-west and north-south about `at`, and the one loop
+   * here that is no circle: a circle the bowl holds whole shows Home's eye a
+   * hook at the frame's edge. `COUNT` lanterns keep station on it over
+   * `SPAN_DEG` of its phase, thickest at the middle and thinning to both
+   * ends, so it is a river with a head and a tail and no ring. `startDeg` is
+   * where its middle stands when the match starts, as the loop's own phase (0
+   * east, 90 south): the west end, the nearest of it to Home's eye. A lap is
+   * `periodS`, which along the long sides is a drifting jelly's own pace.
+   * `STATION` is how far a lantern keeps from the river's own line, across
+   * it and in depth about `depthM`, over the hulls' 300 m.
+   */
+  BLOOM: {
+    at: [2150, 1930],
+    RADII_M: [950, 330],
+    startDeg: 180,
+    SPAN_DEG: 230,
+    COUNT: 260,
+    periodS: 13500,
+    depthM: 160,
+    STATION: { acrossM: 60, depthM: 60 },
+  },
 } as const;
 
 /**
@@ -528,6 +554,16 @@ export const HIGH_GRAPHICS = {
       SWIM: { PERIOD_S: 5.5, SQUEEZE: 0.16 },
       PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, LEAD: 2, GAIN: 0.6 },
       STAGGER_S: 19.75,
+      /**
+       * A lantern of the far bloom (farBloom.ts; docs/art-direction.md, "A
+       * far bloom of lanterns"; #1859): no membrane and no strands, two
+       * points of the lantern's cloud. `SIZE_M` is the width of the soft
+       * disc that stands for its lit bell, the widest; the narrowest is that
+       * times `SMALLEST`. `LEVEL` is that disc's light at its centre, in the
+       * renderer's linear units. `HALO` is the glow in the water round it,
+       * as a near lantern's is.
+       */
+      FAR: { SIZE_M: 6, SMALLEST: 0.5, LEVEL: 0.3, HALO: { SIZE_M: 16, LEVEL: 0.03 } },
     },
     /**
      * The manta (mantaWing.ts; docs/art-direction.md, "A manta shows its

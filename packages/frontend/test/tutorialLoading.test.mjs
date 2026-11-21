@@ -207,6 +207,8 @@ describe('pending prop delivery', () => {
       lifeGlints: 0,
       photophoreLights: 0,
       jellyLights: 0,
+      farLanterns: 0,
+      bloomLights: 0,
       fixtureAssets: {},
     });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');
@@ -495,6 +497,8 @@ describe('a body’s own light at High (#1837)', () => {
       assert.equal(low.lifeGlints, 0);
       assert.equal(low.photophoreLights, 0);
       assert.equal(low.jellyLights, 0);
+      assert.equal(low.farLanterns, 0);
+      assert.equal(low.bloomLights, 0);
       assert.equal(count('env-drift-jelly'), 0);
 
       layer.setWorldPass(true);
@@ -538,6 +542,38 @@ describe('a body’s own light at High (#1837)', () => {
       const { COUNT, BEADS } = HIGH_GRAPHICS.LIFE.JELLY.STRANDS;
       assert.equal(high.jellyLights, jellies * (1 + 6 + COUNT * BEADS));
       assert.ok(layer.group.children.includes(layer.lantern.points));
+      // "A far bloom of lanterns" (#1859): the river over the bowl is two
+      // points a lantern in that same cloud, after the jellies' own, and no
+      // body and no draw of its own.
+      const bloom = FREE_WATER_HIGH_LIFE.BLOOM.COUNT;
+      assert.equal(high.farLanterns, bloom);
+      assert.equal(high.bloomLights, bloom * 2);
+      assert.equal(layer.lantern.count, high.jellyLights + high.bloomLights);
+      assert.equal(count('env-far-lantern'), 0);
+      assert.deepEqual(
+        new Set(layer.group.children.filter((c) => c.isPoints && c.userData.worldLayer)),
+        new Set([layer.glow.points, layer.lantern.points, layer.smoke.points]),
+        'the fry’s cloud, the lantern’s and the vent’s smoke, and no cloud of the river’s own'
+      );
+      // It drifts on the match's clock, and reduced motion holds it where the
+      // match's start stands it.
+      const river = () => {
+        const at = layer.lantern.points.geometry.getAttribute('position');
+        return Array.from(at.array.subarray(high.jellyLights * 3, layer.lantern.count * 3));
+      };
+      const at2s = river();
+      layer.tick(0, undefined, 902000);
+      const at902s = river();
+      assert.notDeepEqual(at902s, at2s);
+      layer.setReducedMotion(true);
+      layer.tick(0, undefined, 2000);
+      const held = river();
+      layer.tick(0, undefined, 902000);
+      assert.deepEqual(river(), held);
+      assert.notDeepEqual(held, at2s);
+      layer.setReducedMotion(false);
+      layer.tick(0, undefined, 2000);
+      assert.deepEqual(river(), at2s);
       // Its file is drawn as a membrane there, and names itself the world pass's.
       const bells = layer.group.children.filter((c) => c.name === 'env-drift-jelly');
       assert.ok(bells.length > 0);
@@ -556,6 +592,9 @@ describe('a body’s own light at High (#1837)', () => {
       assert.equal(layer.stats().lifeGlints, 0);
       assert.equal(layer.stats().photophoreLights, 0);
       assert.equal(layer.stats().jellyLights, 0);
+      assert.equal(layer.stats().farLanterns, 0);
+      assert.equal(layer.stats().bloomLights, 0);
+      assert.equal(layer.lantern.count, 0);
       assert.ok(!layer.group.children.includes(layer.lantern.points));
       assert.equal(count('env-drift-jelly'), 0);
       assert.equal(layer.stats().decorativePhotophores, low.decorativePhotophores);
