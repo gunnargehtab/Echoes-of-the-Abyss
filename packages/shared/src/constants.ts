@@ -429,7 +429,8 @@ export const HIGH_GRAPHICS = {
    * the props' 0.06: a body a metre long is a few pixels, and at the props'
    * register it reads as a hole in the water. It is an own hull's cladding
    * ceiling and no higher (rosterModels.ts `CLADDING_CEILING`), so scenery
-   * still never out-reads a vessel.
+   * still never out-reads a vessel, but for the manta's belly (`MANTA.BELLY`
+   * below).
    *
    * `GLOW` is the light a body carries of its own, as points of the world
    * pass (lifeGlow.ts): a schooling fry's one, in `life-glint`, and
@@ -538,7 +539,8 @@ export const HIGH_GRAPHICS = {
      * of the Lid's glow on the back that a skin of no thickness lets through
      * to a face looking straight down, and `THROUGH_M` the thickness of body
      * at which that has fallen to 1/e: the wing's thin margin is the palest
-     * of the belly, as the target's is.
+     * of the belly, which is the target's backlit edge and the reverse of
+     * its grey, deepest at the margin and the tips.
      */
     MANTA: {
       STROKE: { PERIOD_S: 7, LIFT_M: 1.6, ROOT_M: 2.3, POWER: 1.7, LAG: 1.2 },
