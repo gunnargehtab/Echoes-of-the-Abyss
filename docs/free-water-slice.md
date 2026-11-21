@@ -340,9 +340,10 @@ than moved from it, by the owner's calls of that day:
   thinner than the level ray drew there
   ([issue-1780](screenshots/issue-1780/README.md)). The pocket
   shows only at the frame's right edge, where two of the low pose's deep-fish patches
-  read as photophore pinpricks 2.2 to 2.5 km out. That is Low's frame: at High the
-  water takes a seat's light over that distance (#1857). A nearer opening is §9's
-  call, not taken.
+  read as photophore pinpricks 2.2 to 2.5 km out. That is Low's frame. No Opening frame
+  was taken at High for #1857: from gate 6's low camera, 2 km off, the water takes a
+  seat's light there, so none is expected from farther. A nearer opening is §9's call,
+  not taken.
 - **Survey** keeps decoration below tactical ink; the new deep-fish patches add faint
   pinpricks along the pocket's north edge. That is Low's frame too: at High no seat's
   light reaches an eye 10 km off, and the pocket shows none (#1857).

@@ -84,10 +84,12 @@ export function patchLifeGlow(shader: { vertexShader: string; fragmentShader: st
       // there, the body's own near flank would cut the disc in two. It is
       // drawn `LIFT_M` nearer the eye along its own sight line, which moves it
       // nowhere on the screen and clear of a body that thin. A seat's light
-      // stands 2 cm off a deep fish's flank already: the lift leaves a near
-      // flank's where it was on the screen, and a far flank's, lifted from the
-      // other side of a body 0.3 m wide there, is still inside it and hidden
-      // from abeam.
+      // stands 2 cm off a deep fish's flank already, and the lift leaves a
+      // near flank's where it was on the screen. The body is 0.20, 0.16 and
+      // 0.12 m wide at its three seats: from abeam the far flank's fore and
+      // mid lights, lifted, are still inside it and hidden, and its aft one
+      // comes about 1 cm clear of the near flank and adds to the near aft
+      // seat's light. A lift of a seat's own would hide it; none is built.
       [
         vProject,
         `mvPosition.xyz *= max( 0.0, 1.0 - ${glsl(LIFT_M)} / max( 1e-3, length( mvPosition.xyz ) ) );`,

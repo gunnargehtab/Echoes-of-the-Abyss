@@ -447,7 +447,8 @@ export const HIGH_GRAPHICS = {
    * `LIFT_M` how far toward the eye a light is drawn from where it stands,
    * so the body's own flank does not cut a light on its axis; a seat's
    * stands 2 cm off the flank already, and from abeam the far flank's
-   * three, lifted, are still inside the body.
+   * fore and mid lights, lifted, are still inside the body; its aft one
+   * comes about 1 cm clear of the near flank (lifeGlow.ts).
    */
   LIFE: {
     LID: 1,

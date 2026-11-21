@@ -190,7 +190,12 @@ both read as #1867's.
 - **Three points: a fry's width at twice its level.** The owner's second call, the same
   day, on the flight frame, which overturned the first. Against keeping 0.4 m, and
   against three points held under the Corvette's lamp at about 0.45.
-- **One cloud.** A seat's light is a point of the fry's cloud with a width of its own, so
+- **A seat's light is lifted as a fry's is**, 0.15 m toward the eye. The body is 0.20,
+  0.16 and 0.12 m wide at its three seats, so from abeam the far flank's aft light comes
+  about 1 cm clear of the near flank and adds to the near aft seat's. The round's critic
+  measured it off the file. A lift of a seat's own would hide it and is not built: it
+  would change these frames.
+- **One cloud.** A seat's light is a point of the fry's cloud at a level of its own, so
   the move adds no draw.
 
 ## Who captures
