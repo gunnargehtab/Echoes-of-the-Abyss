@@ -209,7 +209,8 @@ Caddy, under one host name. `deploy/compose.playtest.yml` is the override that
 makes compose's local shape a public one:
 
 ```bash
-docker compose -f docker-compose.yml -f deploy/compose.playtest.yml up -d
+ECHOES_BUILD=$(git rev-parse --short HEAD) \
+  docker compose -f docker-compose.yml -f deploy/compose.playtest.yml up -d
 ```
 
 - **One name, two ports.** The client is built with `VITE_SERVER_URL` empty, so
@@ -218,6 +219,9 @@ docker compose -f docker-compose.yml -f deploy/compose.playtest.yml up -d
   the game server. Neither app container publishes a port of its own.
 - **`CORS_ORIGIN` is `https://<host>`**, from `ECHOES_DOMAIN` in the host's
   `.env`. Compose refuses to start without it.
+- **`ECHOES_BUILD` is required too**, so no hosted report reads `dev` (#1576).
+  The deploy job sets it to the short commit sha and writes it beside
+  `ECHOES_DOMAIN`.
 - **The host needs** Docker with Compose 2.24 or newer (for `!reset`), a DNS
   record pointing the name at it, and ports 80, 443 and 3000 open.
 
