@@ -24,6 +24,7 @@ import {
   HADRON,
   HARVEST_THROTTLE,
   HarvestThrottle,
+  RefitKind,
   ResourceKind,
   SIM,
   StructureKind,
@@ -934,6 +935,61 @@ describe('a draw says how close it came (#223)', () => {
     assert.match(markdown, /\| Harvester \| 1\.0 \/ 0\.0 \|/, 'built one, lost none');
     assert.match(markdown, /## Structures commissioned per match/);
     assert.match(markdown, /\| Nodule Refinery \| 1\.0 \|/);
+  });
+
+  it('counts a refit once, at the tick it arrived (#1785)', () => {
+    // The Order's Pressure Refit, because it is struck at the Bastion and
+    // lands at once: no yard to raise and no line to wait on, so the tick the
+    // purchase is noticed is the first Echo tick after it. Bought ten seconds
+    // in, after the opening observation, and then seen in every snapshot to
+    // the end, which is what a count on the list rather than on the rise
+    // would credit fifty times over.
+    const map = mapById(DEFAULT_MAP_ID)!;
+    const match = new Match(map, { seed: 909, fauna: false });
+    const roster = [{ slot: 0, faction: Faction.Hadron }];
+    match.addPlayer(0, Faction.Hadron);
+
+    const telemetry = new MatchTelemetry(909, map.id, roster);
+    const stepMs = 1000 / SIM.TICK_HZ;
+    let boughtAt: number | null = null;
+    let seen = 0;
+
+    for (let tick = 0; tick < SIM.TICK_HZ * 20; tick++) {
+      // The opening bank holds no crystal, and mining it is not what this
+      // measures.
+      if (tick === SIM.TICK_HZ * 10) match.world.economies.get(0)!.crystal = 500;
+      const snapshots = match.update(stepMs);
+      if (snapshots === null) continue;
+      const own = snapshots.get(0)!;
+      if (
+        tick >= SIM.TICK_HZ * 10 &&
+        boughtAt === null &&
+        !own.refits.includes(RefitKind.Pressure)
+      ) {
+        const bastion = own.structures.find((st) => st.kind === StructureKind.Bastion)!;
+        assert.ok(match.refit(0, bastion.id, RefitKind.Pressure), 'the Order strikes it');
+      }
+      if (own.refits.includes(RefitKind.Pressure)) {
+        seen++;
+        boughtAt ??= match.tick;
+      }
+      telemetry.observe(match.tick, snapshots);
+    }
+
+    assert.ok(boughtAt !== null && seen > 10, `the premise: held for ${seen} observations`);
+    const result = telemetry.finish(match.tick, null, true);
+    assert.deepEqual(
+      result.players[0]!.refitsBoughtAtTick,
+      { [RefitKind.Pressure]: boughtAt },
+      'one purchase, at the tick it was first seen'
+    );
+
+    const summary = summarise([result]);
+    const order = summary.factions.find((f) => f.faction === Faction.Hadron)!;
+    assert.equal(order.refitsBought[RefitKind.Pressure]?.share, 1, 'bought in one match of one');
+    const markdown = toMarkdown(summary, 'refits');
+    assert.match(markdown, /## Refits bought/);
+    assert.match(markdown, /\| Pressure Refit \| 1\.0 at 0\.\d min \|/);
   });
 
   it('records the bank as a high-water mark, not as what was left (#518)', () => {

@@ -24,11 +24,13 @@ import {
   DRIFT,
   Faction,
   SIM,
+  REFIT_STATS,
   STRUCTURE_STATS,
   ThermoclineZone,
   UNIT_STATS,
   faunaStatsFor,
   type FaunaSpecies,
+  type RefitKind,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
@@ -142,6 +144,19 @@ export interface FactionSummary {
    * reached, that says what it spent.
    */
   structuresPerMatchByKind: Partial<Record<StructureKind, number>>;
+  /**
+   * Each refit this navy bought, as the share of its matches it was bought in
+   * and the median minute it arrived (#1785).
+   *
+   * A share rather than a rate because a refit is bought once: "0.4" is two
+   * matches in five, and the median is taken over those two only, so a refit
+   * never bought reports no minute rather than a confident zero. Read beside
+   * the structures table: every refit but the Order's Pressure Refit is bought
+   * on the Slipway's line, so a navy whose yard never rose cannot have one, and
+   * a navy whose yard rose and bought none made a decision this column is the
+   * only record of.
+   */
+  refitsBought: Partial<Record<RefitKind, { share: number; medianMinute: number }>>;
   /**
    * Why this navy's ordnance hull was or was not bought, summed over the batch
    * (#698).
@@ -603,6 +618,28 @@ function perMatchByKind<Kind extends number>(
   return out;
 }
 
+/** `FactionSummary.refitsBought`, from one navy's matches. */
+function refitsBought(
+  perMatch: readonly Record<number, number>[]
+): Partial<Record<RefitKind, { share: number; medianMinute: number }>> {
+  const ticks = new Map<RefitKind, number[]>();
+  for (const bought of perMatch) {
+    for (const [kind, tick] of Object.entries(bought)) {
+      const k = Number(kind) as RefitKind;
+      ticks.set(k, [...(ticks.get(k) ?? []), tick]);
+    }
+  }
+  const out: Partial<Record<RefitKind, { share: number; medianMinute: number }>> = {};
+  for (const kind of [...ticks.keys()].sort((a, b) => a - b)) {
+    const at = ticks.get(kind)!;
+    out[kind] = {
+      share: at.length / perMatch.length,
+      medianMinute: distribution(at.map((t) => t / SIM.TICK_HZ / 60)).median,
+    };
+  }
+  return out;
+}
+
 const mean = (values: number[]): number =>
   values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
 
@@ -736,6 +773,9 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
         rows.map((r) => r.player),
         (p) => p.structuresBuiltByKind
       ),
+      // `?? {}` for `ordnanceWant`'s reason below: a stored result from before
+      // this column arrives without it.
+      refitsBought: refitsBought(rows.map((r) => r.player.refitsBoughtAtTick ?? {})),
       // `?? empty` is load-bearing rather than defensive. `batch.ts` casts a
       // worker's JSON straight to `MatchTelemetryResult`, which is where the
       // type checker stops protecting these fields, so a result written before
@@ -1245,6 +1285,30 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     lines.push(
       '_The opening Bastion and Foundry are not counted: they are a gift, not a decision._'
     );
+    lines.push('');
+  }
+  // What each navy bought on the line besides hulls (#1785), under what it
+  // raised, because every refit but the Order's Pressure Refit needs the yard
+  // the table above says rose. Printed
+  // only when somebody bought one: a batch with no refit would print a table
+  // of dashes that reads as a finding about refits rather than as no data.
+  const refitKinds = [
+    ...new Set(summary.factions.flatMap((f) => Object.keys(f.refitsBought).map(Number))),
+  ].sort((a, b) => a - b) as RefitKind[];
+  if (refitKinds.length > 0) {
+    lines.push('## Refits bought — share of matches, median minute');
+    lines.push('');
+    lines.push(`| Refit | ${summary.factions.map((f) => FACTION_NAME[f.faction]).join(' | ')} |`);
+    lines.push(`| --- |${summary.factions.map(() => ' --- |').join('')}`);
+    for (const kind of refitKinds) {
+      const cells = summary.factions.map((f) => {
+        const bought = f.refitsBought[kind];
+        return bought === undefined
+          ? '0.0'
+          : `${bought.share.toFixed(1)} at ${bought.medianMinute.toFixed(1)} min`;
+      });
+      lines.push(`| ${REFIT_STATS[kind].name} | ${cells.join(' | ')} |`);
+    }
     lines.push('');
   }
   // Why the ordnance hull is or is not in the water (#698). Placed directly
