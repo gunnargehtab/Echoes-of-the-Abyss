@@ -21,10 +21,10 @@ generated from this kit is:
 Nothing here weakens the Asymmetric Fidelity Law: full-detail unit and structure models
 describe *own-force* rendering only, and no prompt in this kit generates fauna — animals
 are contacts, drawn at earned fidelity, never world meshes
-([bestiary.md](bestiary.md) §3) — but for the six public decorative bodies Block 4's
+([bestiary.md](bestiary.md) §3) — but for the seven public decorative bodies Block 4's
 public-microfauna variant scopes under that section's own licence (#1711, #1777 for
-the one large body and #1837 for the one drifting body), environment geometry that is no
-animal of the roster.
+the one large body, #1837 for the one drifting body and #1867 for the manta the High
+graphics quality alone stands), environment geometry that is no animal of the roster.
 
 ## Workflow rules
 
@@ -1903,11 +1903,12 @@ surface — this stands on the seabed, deep underwater.
 ```
 
 ```text
-ENV STYLE, public-microfauna variant (for exactly six models of the
+ENV STYLE, public-microfauna variant (for exactly seven models of the
 "Echoes of the Abyss" environment set, the decorative bodies
 docs/free-water-slice.md section 5 commissions: env-rim-crab,
 env-shoal-fry, env-outer-fish, env-deep-fish, the one large body,
-env-rim-ray, and the one drifting body, env-drift-jelly): everything in
+env-rim-ray, the one drifting body, env-drift-jelly, and the one body
+the High graphics quality alone stands, env-rim-manta): everything in
 ENV STYLE holds — no faction, nothing manufactured, desaturated dark
 low-luminance materials, at most two, crisp low-poly facets, no lights
 and no emissive — with two lines changed. The natural form is a living
@@ -1915,7 +1916,7 @@ body rather than stone, coral, kelp or crystal: a crab standing on its
 own legs on the seabed, a fish in one still swimming pose, or a medusa
 hanging in one still pose, with nothing under it — no base, no rock, no
 stand, no water. "This stands on the seabed" holds for the crab alone;
-the four swimmers and the medusa hang free in the column, built with
+the five swimmers and the medusa hang free in the column, built with
 their lowest vertex on the ground plane like every prop, and the runtime
 hangs each at an authored depth. Decoration, not an animal of the
 bestiary: no silhouette borrowed from a classified predator — nothing
@@ -1936,7 +1937,33 @@ middle a short core of a few frilled oral lobes hung from one stalk,
 well inside the margin, so the bell is the silhouette; no arm, no
 tentacle of any length, no open hollow bell, nothing coiled, nothing
 ending on a barb — and regular enough about its own vertical axis that
-a slow turn about it reads as drifting.
+a slow turn about it reads as drifting. The one body the High graphics
+quality alone stands, the rim manta, is held to every line above at 18 m
+of span, beside the rim ray and never in its place, with two lines more
+changed for it alone, its belly's material and its facets, each named
+where it falls below: a manta as it is
+seen from below, a grazer of the water and not a hunter — a disc about
+2.3 times as wide as it is long, its leading edge nearly straight across
+the head and swept back in a gentle convex curve, its wings drawn out to
+narrow tips that are rounded off, its trailing edge concave toward each
+tip and convex toward the body, thin at every edge; a wide mouth slot
+across the front of the head, a dark band and no opening, between two
+cephalic lobes held forward like paddles and toed in; a thin whip tail
+most of the disc's length again, two small pelvic fins and one low
+dorsal fin at its root; small dark eyes on the sides of the head. Its
+two materials are a dark back and a pale belly, the one pale material
+of the set where every other is dark, pale by its ratio to its own
+back, its level in the water the runtime's to set; on the belly, five
+gill slits a side in two
+rows that close toward the tail and a scatter of dark blotches between
+and behind them, not mirrored port to starboard, every mark geometry in
+the back's material lying a few centimetres proud of the skin. A level
+glide with the wings in a shallow upstroke; its file flat-faceted as
+every prop's is, but in fine facets with no corner pushed where every
+other body's are few and crisp, so that the runtime may draw the skin
+with one normal a vertex. No tooth, no jaw, no spine
+or barb on the tail, no armour, no photophore seat, and nothing of the
+colossus, under a third of the smallest Sounder.
 ```
 
 The variant is the scoped amendment [free-water-slice.md](free-water-slice.md) §5 asks of
@@ -1951,10 +1978,29 @@ High graphics quality's life, which the owner commissioned in session on 20 Nove
 every line, a bell taller than a hemisphere over lappets and thick arms. The owner's
 target of the same day is a shallow dome over a plain margin, which the stipple bell also
 is, so the clause now names that shape and what still stands between the two: its size,
-its closed underside, its oral core, and that its file carries nothing that trails. It
-covers those six slugs and nothing else — no other floating prop, no
+its closed underside, its oral core, and that its file carries nothing that trails. The
+seventh is the rim manta (#1867), the one body the High graphics quality alone stands,
+for the look #1637 is building. The owner named its target in session on 21 November 2026, a photograph of a manta's belly
+against the light ([issue-1867](screenshots/issue-1867/README.md)), and took three calls
+with it: the photograph is committed as the target, the manta is a new model and the rim
+ray's file does not change, and it keeps the ray's 18 m. So its clause is written from
+that frame, the plan, the head, the belly and the tail, and it is the one clause that
+asks for a pale material and for marks on a skin. That changes two lines of ENV STYLE
+for this body alone, and the clause names both: "desaturated, dark, low-luminance
+materials" for the belly, whose hex is 3.9 times the next palest in the props' table,
+and "low-poly with crisp facets" for a skin of 1,880 unpushed triangles meant to be
+smoothed. Both are the author's calls, taken in the open on #1867 for the owner's
+target, and wait on the owner. The readings each was taken against are written where
+the call falls: the token's in [style-neon-noir.md](style-neon-noir.md) "The props",
+and the facets' in [art-direction.md](art-direction.md#a-manta-shows-its-belly), "Its
+skin is smooth". So does a third, which is the runtime's: at the High
+graphics quality the belly is lifted to a register of its own, over a body's and over a
+vessel's cladding ([art-direction.md](art-direction.md#a-manta-shows-its-belly)), so
+of this block's checklist the manta's belly does not answer "darker and quieter than any
+vessel", and whether it may not is the owner's glance at the frame. The variant
+covers those seven slugs and nothing else — no other floating prop, no
 gameplay fauna — and the rest of ENV STYLE
-binds them as it binds a crag. All six rows carry Light `none`, the deep fish and the
+binds them as it binds a crag. All seven rows carry Light `none`, the deep fish and the
 drift jelly included. The deep fish's
 photophores are the runtime's, at most six soft rung-5 dots on the public-life channel
 ([style-neon-noir.md](style-neon-noir.md) "World light"), and its file marks where they sit
@@ -1969,15 +2015,15 @@ the medusa are built as every prop is, lowest vertex on
 y = 0 (`seabed.mjs` `stand`), and the fixture hangs each at its listed depth; nothing in
 the file says where in the column it belongs (the owner's call of 3 November 2026 too). Their
 footprint is the body's length, the slice's canonical size; the crab's is its spread
-across the legs, the ray's its wingspan, and the jelly's the width of its bell across its
-margin.
+across the legs, the ray's and the manta's their wingspan, and the jelly's the width of
+its bell across its margin.
 
 The prop table — one row per asset, with the numbers intake and the registry check.
 `Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`) and the
 runtime draws at, taken over the parts' own boxes rather than their vertices (#876);
 `Height` is the vertical silhouette the 55° camera actually reads, by intake's measure
 (`sizeM.height`) at the row's footprint — a single figure is the approved model's to the
-metre (to the centimetre for the six decorative bodies), a range the band a generated one lands in; `Tris` is the per-instance budget;
+metre (to the centimetre for the seven decorative bodies), a range the band a generated one lands in; `Tris` is the per-instance budget;
 `Light` names the licensed world-light family, `none` meaning any emissive fails intake:
 
 | Biome | Slug | Footprint | Height | Tris | Light |
@@ -2003,6 +2049,7 @@ metre (to the centimetre for the six decorative bodies), a range the band a gene
 | Crater deep pocket, suspended | `env-deep-fish` | 2 m | 0.84 m | ≤ 400 | none |
 | Crater rim approach, suspended | `env-rim-ray` | 18 m | 4.05 m | ≤ 800 | none |
 | Crater open water, suspended | `env-drift-jelly` | 6 m | 4.11 m | ≤ 700 | none |
+| Crater rim approach, suspended, High alone | `env-rim-manta` | 18 m | 2.04 m | ≤ 4,000 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
@@ -2049,15 +2096,17 @@ authored list places it; intake takes `--max-tris 9000` for this row, over its d
 `env-rim-crab`, `env-shoal-fry`, `env-outer-fish` and `env-deep-fish` are the four public
 decorative bodies [free-water-slice.md](free-water-slice.md) §5 commissions for the crater
 fixture (#1711), `env-rim-ray` the fifth, the one large body #1777 adds for the
-opening frame, and `env-drift-jelly` the sixth, the one drifting body #1837 adds for the
-High graphics quality's life, under the variant above and nothing else; the Footprint
+opening frame, `env-drift-jelly` the sixth, the one drifting body #1837 adds for the
+High graphics quality's life, and `env-rim-manta` the seventh, the manta #1867 adds for
+the same quality's Close camera, under the variant above and nothing else; the Footprint
 column is the slice's canonical size for each, the crab's its spread across the legs, a
-fish's its length, the ray's its wingspan and the jelly's the width of its bell, every
-row's Light is `none`, and their Height is the file's to the centimetre.
-All six are one grammar in `seabed.mjs` ("The microfauna"): a body is a `shaft`, a closed
-run of corner rings each corner of which is pushed and slipped a little by a seeded stream,
-so the skin is crisp facets and not a lathe, and whose band quads are cut on mirrored
-diagonals; everything flat on it is a `blade`, a thin closed slab on a convex outline,
+fish's its length, the ray's and the manta's their wingspan and the jelly's the width of
+its bell, every row's Light is `none`, and their Height is the file's to the centimetre.
+All seven are one grammar in `seabed.mjs` ("The microfauna"): a body is a `shaft`, a closed
+run of corner rings whose band quads are cut on mirrored diagonals, and on six of the
+seven each corner is pushed and slipped a little by a seeded stream, so the skin is crisp
+facets and not a lathe. The manta's corners are not pushed: its skin is fine facets for
+the runtime to smooth (its own paragraphs, below). Everything flat on a body is a `blade`, a thin closed slab on a convex outline,
 rooted through the skin the way the kelp stand's fronds root through their stalk — a
 dorsal or anal fin is a `median`, its plane yawed to its own root chord so it follows a
 body that bends and tapers under it, and each script samples every median root along its
@@ -2073,11 +2122,17 @@ standing where a body has a girth, and having no port and starboard it mirrors a
 nothing: its band quads are all cut the same way round. Those two skins are the two a
 point taken for inside cannot wind, so they are stitched by their rings' order
 (`shaft` `wound`), and the script holds every part to a closed skin facing out.
-Every one of the six is authored as a seeded formula in its script with no export behind
-it, as the nodule bed and the kelp stand are. Two tokens were added for the kit,
-`carapace` and `fish-flank` ([style-neon-noir.md](style-neon-noir.md) "The props"); the
-second material on each is `stone_dark`. The jelly adds no third: its bell wears
-`fish-flank` and the rest of it `stone_dark`.
+The manta is the ray's `wingBody` again at four times the facets, each station's section
+its own, and it adds the two things its belly asks: its closed skin goes out as two
+meshes, the bottom facets and the top (`cleave`), and its marks are flat outlines thrown
+onto the belly's facets and cut along every facet edge they cross (`drape`), where a
+`seat` is one lozenge on one quad.
+Every one of the seven is authored as a seeded formula in its script with no export behind
+it, as the nodule bed and the kelp stand are. Three tokens were added for the kit,
+`carapace`, `fish-flank` and, for the manta's underside alone, `fish-belly`
+([style-neon-noir.md](style-neon-noir.md) "The props"); the second material on each of
+the first six is `stone_dark`. The jelly adds no third: its bell wears `fish-flank` and
+the rest of it `stone_dark`. The manta wears no stone: `fish-belly` under `fish-flank`.
 
 `env-rim-crab` is the one that stands. A shell of three ten-cornered rings stood on end —
 0.73 m long by 0.97 m across at its widest in the file, wider across than long, knuckled by
@@ -2256,6 +2311,82 @@ mid-height, half way from its margin to its apex, is y 2.76. Intake takes
 `--footprint-m 6 --max-tris 700` for this row, under its default of 800, and no
 `--world-light`. Authored in `tools/hull-models/props/drift-jelly.mjs`.
 
+`env-rim-manta` is the one body the High graphics quality alone stands, a manta gliding
+over the crater's rim for that quality's low Close camera, the eye that sees a belly
+([issue-1867](screenshots/issue-1867/README.md)). It stands beside `env-rim-ray`, which
+keeps the opening frame and every frame Low draws, and it is the target photograph's
+animal where the ray is a ray's plan at 26–30 px: the same `wingBody` across the same
+18 m, forty-seven twenty-cornered chord sections where the ray has nineteen of twelve,
+each station's section a blend of a blunt head's and a thin wing's, and no corner pushed,
+since the runtime draws this skin with one normal a vertex and a pushed corner would
+smooth into a lump. Its budget is 4,000 rather than the 800 the registry fences, as the
+kelp stand's is 9,000: one body, stood by the High quality alone and near the eye, whose
+facets are all the curvature it has. The stand's figure is the owner's decision on #1712;
+this one is the author's call, taken in the open on #1867 and waiting on the owner's
+word.
+
+The plan is a disc 2.28 times as wide as it is long, a 7.90 m chord at the centreline
+under 18 m of span. The leading edge is straight across the head to within 3 cm as far as
+±1.2 m and swept back from there, bowed at most 0.49 m forward of the straight line from
+the head's corner to the tip. The chord is 5.38 m at ±3.4 m, 2.77 at ±5.7, 0.88 at ±8.05
+and 0.20 at the last ring, a drawn-out tip rounded off through five stations in its last
+0.95 m. The trailing edge runs forward from the tail's root to its forward-most point at
+±7.65 m and 0.28 m back again to the tip's last ring, so it is convex toward the body and
+concave toward each tip. The body is 1.50 m thick at the centreline, a hump 0.90 m over
+the chord line and a belly 0.60 m under it that is flat from 0.18 to 0.40 of the chord,
+1.12 m at ±2.0, 0.57 at ±3.4, 0.13 at ±8.05 and 4.5 cm at the last ring, and every
+trailing edge is a knife. The still pose is a level glide in a shallow upstroke: the
+chord line is level from the centreline to ±2.3 m, 0.12 m up at ±4, 0.46 at ±6, 0.98 at
+±8 and 1.40 at the tip points, 0.39 m of that in the last tenth of the half-span where
+the tenth before climbs 0.26. The head, the mouth, the gills, the eyes and the tail's
+root all stand on the level centre body, inside the ±2.3 m where the runtime's stroke
+starts, but for the outer centimetre of each eye, which reaches ±2.31 and which the
+stroke lifts by under a tenth of a millimetre.
+
+Two cephalic lobes are held forward either side of the mouth, each a shaft of seven
+eight-cornered rings from a root inside the head to a small ring fanned shut: 1.90 m ahead
+of the mouth's line, a paddle 0.74 m across and 0.20 m deep at its widest, toed in 0.37 m
+at its end. The tail is a whip of six six-cornered rings fanned to a point, 6.20 m of it
+past the trailing edge, 0.78 of the chord, a plain taper from 0.12 m in radius with no
+spine and no barb. Two small pelvic fins lie flat either side of its root, rounded blades
+1.01 m long that end 0.46 m aft of the trailing edge, and one low dorsal fin stands on
+the back over it, 0.27 to 0.35 m over the skin. The eyes are two lenses 0.15 m in radius
+on the sides of the head just outboard of the lobes' roots, at z ±2.17 m, on the facet
+under the leading edge, which is the belly's, so each reads dark on pale.
+
+The closed skin goes out as two meshes parted along its leading and trailing edges,
+`back` in `fish_flank` and `belly` in `fish_belly`, 940 triangles each, and everything
+dark on the belly is geometry in `fish_flank` laid on the belly's own facets, cut along
+every facet edge it crosses and drawn 4 cm back off the skin, no less than 3.86 cm from
+it anywhere. The mouth is a slot 2.40 m wide and 0.28 m tall across the front of the
+head between the lobes, on the facets under the leading edge: a dark band and no opening.
+Five gill slits a side stand in two rows that close toward the tail, 1.24 m apart at the
+first pair's inner ends and 0.72 at the fifth's: bands 1.30, 1.24, 1.17, 1.09 and 1.00 m
+long and 14 to 11 cm wide at the middle, each bowed 7 cm forward with its outer end swept
+12° aft, and each port slit its starboard one's mirror. Seventeen blotches of 0.25 to
+0.70 m lie between the rows and behind them, three between the slits, nine on the belly
+aft of them, three under the starboard wing's root and two under the port's, drawn from
+the script's seeded stream and not mirrored, as the target's are not. The script asserts
+the eyes and the gills mirror, no blotch is another's mirror, every mark landed whole on
+the belly and stands off it, every root lies inside the closed body, the skin is closed
+and faces out, and nothing is emissive.
+
+No tooth, no jaw, no spine or barb, no armour, no lure, no eye that glows, no photophore
+seat, and under a third of the smallest Sounder. `fish_belly` on the underside's skin,
+`fish_flank` on the back, lobes, tail, fins, eyes and marks, the flank at 0.199 of the
+belly's linear luminance; 2,689 triangles; 2.04 m tall at its 18 m, the tip points its
+top; 16.00 m long from the lobes' ends to the tail's, so the span is the footprint and
+what the runtime scales by. A mark on the flat of the belly is the lowest point, on
+y = 0, the belly itself is at y 0.04, and the body's mid-plane stands 0.79 m over the
+origin. Intake takes `--footprint-m 18 --max-tris 4000` for this row, over its default of
+800, and no `--world-light`. What the target shows that the file does not carry: the
+grey that deepens toward the wings' trailing margin and tips, which is shading and no
+shape; the pale undersides of the lobes and the pelvic fins, which the file builds whole
+in `fish_flank`, so from below the lobes are two dark paddles ahead of a pale head and
+the pelvic fins two dark tabs at the tail's root; and the light behind the body. What the runtime does about each, and what it leaves, is
+[art-direction.md](art-direction.md#a-manta-shows-its-belly)'s to say. Authored in
+`tools/hull-models/props/rim-manta.mjs`.
+
 Shape cues, so the prompts land in each biome's materials brief
 ([environments.md](environments.md)): vent props are basalt and magma glass, cracked
 and heat-scorched; kelp props are the forty-metre columns of
@@ -2294,14 +2425,14 @@ roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
-Every row of this table but the nodule bed's, the kelp stand's and the six microfauna's was filled by a Claude Design model from
+Every row of this table but the nodule bed's, the kelp stand's and the seven microfauna's was filled by a Claude Design model from
 the Block 4 batch; the deterministic generator that stood in for the batch was retired
 when the last row landed ([graphics-standards.md](graphics-standards.md), "The
 environment branch"). Each file is now written by a script under
 `tools/hull-models/props/` (#869) that ports that model part for part — or, for the
-dome shard, replaces it (#883), and for the nodule bed, the kelp stand and the six
+dome shard, replaces it (#883), and for the nodule bed, the kelp stand and the seven
 microfauna authors it from a seeded formula with no export behind it (#1555, #1712, and
-the microfauna's #1711, #1777 and #1837) — composed from `tools/hull-models/seabed.mjs`, and
+the microfauna's #1711, #1777, #1837 and #1867) — composed from `tools/hull-models/seabed.mjs`, and
 held at the row's footprint. A model generated from the prompts above replaces its row through that
 script: port the export into it, run it, run intake with the row's footprint, cap and
 light, commit the GLB with the script, and update the registry row's triangle count from

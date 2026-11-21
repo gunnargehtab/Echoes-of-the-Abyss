@@ -88,7 +88,7 @@ palest fill; rims and cliff shadows darken only ([art-direction.md](art-directio
 
 ### The props (the seabed's furniture)
 
-The twenty-two environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
+The twenty-three environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
 the arch study's landmark in its Block 4b, take their base colours from this table. Each token is named for the glTF material that carries
 it, hyphenated. `basalt` and `coral_stone` each carry two values, so their tokens take a
 suffix saying which. Metalness is 0 on every one; roughness is the material's own:
@@ -106,7 +106,8 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
 | `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster, kelp stand (two-sided) |
 | `carapace` | `#2F1F1C` | 0.9 | `carapace` | Rim crab's shell, claws and eyestalks |
-| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats; the drift jelly's bell |
+| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats; the drift jelly's bell; the rim manta's back, lobes, tail, fins, eyes and every mark on its belly |
+| `fish-belly` | `#555E61` | 0.8 | `fish_belly` | Rim manta's underside skin |
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
 | `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, kelp stand, coral growth, under `flora-biolight` |
 | `violet-seam-base` | `#06050A` | 0.9 | `violet_seam` | Resonance crystal, under `crystal-seam` |
@@ -138,9 +139,9 @@ Five rules ride with the table:
   cladding exposes on the transit arch, warm with two centuries of water. At 0.0054 it sits
   at 0.61 of `stone-dark`, so the ribs read darker than the masonry they carry. On the arch
   the ceiling rule puts the masonry at 0.68 of its sediment and the ribs at 0.41.
-- **A body is neither, and is its own colour.** `carapace` and `fish-flank` are the six
-  public decorative bodies' (#1711, #1777, #1837, [asset-prompts-3d.md](asset-prompts-3d.md)
-  Block 4's variant): the carapace a dark russet at sRGB hue 9°, redder than `coral-stone-ruin`; the
+- **A body is neither, and is its own colour.** `carapace`, `fish-flank` and `fish-belly`
+  are the seven public decorative bodies' (#1711, #1777, #1837, #1867,
+  [asset-prompts-3d.md](asset-prompts-3d.md) Block 4's variant): the carapace a dark russet at sRGB hue 9°, redder than `coral-stone-ruin`; the
   flank a cold pewter at sRGB hue 186°, between the stones' blue and the living coral's green,
   so a fish reads as a body against rock and kelp alike. Under the ceiling rule the crab's
   `stone-dark` legs sit at 0.53 of its shell and a fish's fins at 0.41 of its flank. The
@@ -149,7 +150,23 @@ Five rules ride with the table:
   middle, a quarter as far out as its margin, so the pale bell is the silhouette and the
   core a dark tuft under it. Its six photophore seats are the core's `stone-dark`, where
   the deep fish's are its flank's own: six dark flecks on the pale margin until the
-  runtime lights them, and the bell's material is the bell and nothing else.
+  runtime lights them, and the bell's material is the bell and nothing else. `fish-belly`
+  is the rim manta's underside and nothing else. Two readings were written. **The whole
+  body in `fish-flank`**, the renderer paling the faces that look down, is a pattern the
+  file does not carry, and the belly's marks would have nothing to stand dark against in
+  the file. **A token for the underside alone** is taken. It is a cool grey at sRGB hue 195°, 12%
+  saturated, the flank's cold cast with half its colour out. It is the one pale hex in
+  this table, and pale is a ratio here and not a level: at 0.1080 linear luminance it is
+  five times `fish-flank`, and the runtime sets the level. Under the ceiling rule a prop's
+  brightest material takes the props' level, so the file's belly would stand where a
+  fish's flank does. No frame draws it there: High alone stands the manta, and lifts its
+  belly to a register of its own, 0.7, over a body's 0.16 and over a vessel's cladding
+  ([art-direction.md](art-direction.md#a-manta-shows-its-belly)), the author's call on
+  #1867, waiting on the owner. Its back, lobes, tail and fins sit at 0.199 of the belly,
+  darker against their own body than any other body's second material. The gill slits, the blotches and the mouth on that belly are geometry in
+  `fish-flank`, so they read at the back's level on the pale skin. Intake fences no base
+  colour, only emissive, triangles, the count of materials and their vertex attributes, so
+  nothing but this rule holds a token's lightness.
 - **A lamp's base is near-black.** The five `-base` tokens sit under the
   [World light](#world-light--the-terrain-carve-outs) families. The emissive is what reads,
   and the base does not compete with it.

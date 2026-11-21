@@ -14,9 +14,10 @@
  * the kelp stand, the cluster's two — #1712; the four microfauna that make
  * twenty, `stone_dark` again under two skins of their own, `carapace` and
  * `fish_flank` — #1711; the rim ray that makes twenty-one, the same
- * two — #1777; and the drift jelly that makes twenty-two, the same two
- * again — #1837), the builders more than one prop needs, and the root
- * every prop stands on.
+ * two — #1777; the drift jelly that makes twenty-two, the same two
+ * again — #1837; and the rim manta that makes twenty-three, the swimmers'
+ * `fish_flank` over a belly skin of its own, `fish_belly` — #1867), the
+ * builders more than one prop needs, and the root every prop stands on.
  *
  * Three things about the fourteen batch files are worth knowing before
  * reading one, and this module is where they are written down:
@@ -71,8 +72,8 @@
 import { THREE, clad, lamp, hex, box, flatShaded, tabled, faceted } from './kit.mjs';
 
 /**
- * The palette, as the twenty-two Block 4 files and the arch carry it: ten
- * stones, sediments and growths, two living skins and five lights, each
+ * The palette, as the twenty-three Block 4 files and the arch carry it: ten
+ * stones, sediments and growths, three living skins and five lights, each
  * named by its docs/style-neon-noir.md "The props" token.
  * Metalness is 0 on every material in the set — "nothing manufactured"
  * (ENV STYLE) — and roughness the file's own. A lamp is kit.mjs `lamp`:
@@ -150,7 +151,9 @@ export const ground = {
    * included; the rim ray's body since (#1777), and the drift jelly's bell
    * (#1837), a pale bell over a darker oral core as a flank is over its
    * fins; its seats are the core's `stone-dark` and not the bell's, since
-   * the owner's oblate dome. A cold pewter — sRGB hue 186°, 23 %
+   * the owner's oblate dome. On the rim manta (#1867) it is the dark of
+   * the two: the back, lobes, tail, fins, eyes and belly marks, over
+   * `fish-belly`. A cold pewter — sRGB hue 186°, 23 %
    * saturated — between the
    * stones' blue (204–212°) and the living coral's green, so a fish reads
    * as a body and not as a chip of the rock it passes; 0.0215 linear
@@ -158,6 +161,20 @@ export const ground = {
    * of it: a pale flank under darker fins. Roughness 0.8, a wet scale.
    */
   fishFlank: () => clad('fish_flank', hex('#212A2B'), 0, 0.8),
+  /**
+   * Fish belly, `fish-belly`: the rim manta's underside and nothing else
+   * (#1867), the one skin in the set that is pale. A cool grey — sRGB hue
+   * 195°, 12 % saturated, the flank's cold cast (186°) with half the
+   * colour out of it — at 0.1080 linear luminance, five times
+   * `fish-flank`, which the manta's back, lobes, tail and belly marks
+   * carry at 0.199 of it: a dark back over a pale belly, and gill slits
+   * and blotches that read dark on it. The hex is the palest in the table
+   * by that ratio's arithmetic and is not what draws: the runtime puts a
+   * prop's brightest material on its ceiling and keeps the ratio
+   * (environmentModels.ts `normaliseLuminance`), and intake fences no base
+   * colour. Roughness 0.8, the flank's.
+   */
+  fishBelly: () => clad('fish_belly', hex('#555E61'), 0, 0.8),
   /** `vent-ember` at 0.7 over `ember-base`, the chimney's mouth. */
   ember: () => lamp('ember', hex('#E06A2B'), hex('#0B0806'), 1, 0.7),
   /** `flora-biolight` at 0.55 over `biolight-base`, the kelp cluster's and the kelp stand's tips. */
@@ -583,8 +600,10 @@ export function bake(root) {
  * env-deep-fish (#1711), the four public decorative bodies
  * docs/free-water-slice.md §5 commissions under Block 4's public-microfauna
  * variant of ENV STYLE, env-rim-ray (#1777), the one large body the
- * variant's fifth clause admits, and env-drift-jelly (#1837), the one
- * drifting body its sixth does. Six files, one grammar: a body is a
+ * variant's fifth clause admits, env-drift-jelly (#1837), the one
+ * drifting body its sixth does, and env-rim-manta (#1867), the one body
+ * the High graphics quality alone stands, which its seventh does. Seven
+ * files, one grammar: a body is a
  * `shaft`, a closed run of corner rings whose facets are crisp because
  * every corner is drawn with a little jitter from a seeded stream;
  * everything flat on it — a fin, a claw's hand — is a `blade`, a thin
@@ -603,7 +622,12 @@ export function bake(root) {
  * here checks a facet's facing after the fact as the nodule bed and the
  * kelp stand do: the wind is the construction. The jelly's bell and lobes
  * are the two that point cannot serve, and are wound by their rings' order
- * and checked (`shaft` `wound`, `closedOutward`).
+ * and checked (`shaft` `wound`, `closedOutward`). The manta is the ray's
+ * `wingBody` again, each station's section its own and no corner
+ * jittered, since the runtime draws that skin with one normal a vertex;
+ * its plan, thickness and pose are `faired` curves along the span, its
+ * closed skin goes out as a belly and a back (`cleave`), and the marks on
+ * its belly are outlines thrown onto the skin's own facets (`drape`).
  * ------------------------------------------------------------------------ */
 
 /**
@@ -1018,6 +1042,15 @@ export function bandFacet(rings, b, i, ac, inside) {
  * rings, `facetAt(k, i, side)` for the band quad between starboard
  * stations k and k + 1 at corner i, or its port mirror (side −1), and
  * `section(k)` for the nominal station.
+ *
+ * Two things the manta asks (#1867), both leaving the ray's file as it
+ * was. A station may carry a section of its own, `profile` and `top` (its
+ * top's share), in place of the body's, so a blunt head with a flat belly
+ * runs out into a thin wing along the span; every station's `s` keeps its
+ * trailing edge on the same corner. And `under(t)` says whether triangle
+ * `t` of the geometry is on the section's bottom side, trailing edge
+ * round to the leading edge, which is what `cleave` takes to part a
+ * belly's skin from a back's.
  */
 export function wingBody(
   draw,
@@ -1028,10 +1061,12 @@ export function wingBody(
   if (n !== profile.f.length) throw new Error('wingBody: profile s and f differ in length');
   const K = stations.length;
   const corner = (st, k, j) => {
+    const pr = st.profile ?? profile;
+    const over = st.top ?? topShare;
     const chord = st.le - st.te;
-    const top = j <= profile.s.indexOf(1);
-    const share = top ? topShare : -(1 - topShare);
-    return [st.le - profile.s[j] * chord, st.y + share * st.t * profile.f[j], st.z];
+    const top = j <= pr.s.indexOf(1);
+    const share = top ? over : -(1 - over);
+    return [st.le - pr.s[j] * chord, st.y + share * st.t * pr.f[j], st.z];
   };
   const drawn = stations.map((st, k) =>
     Array.from({ length: n }, (_, j) => {
@@ -1065,7 +1100,14 @@ export function wingBody(
     const inside = middle(rings[b]).map((v, c) => (v + middle(rings[b + 1])[c]) / 2);
     return bandFacet(rings, b, i, split(b, i), inside);
   };
-  return { geo, rings, facetAt, section: (k) => stations[k], halfSpan };
+  // `shaft` writes a band's facets in order, two triangles each, then the
+  // port tip's fan and the starboard's, a triangle a facet; facet i runs
+  // from corner i to corner i + 1, so the facets from the trailing edge's
+  // corner on are the ones back along the bottom.
+  const aft = profile.s.indexOf(1);
+  const banded = 2 * n * (rings.length - 1);
+  const under = (t) => (t < banded ? Math.floor(t / 2) % n : (t - banded) % n) >= aft;
+  return { geo, rings, facetAt, under, section: (k) => stations[k], halfSpan };
 }
 
 /**
@@ -1305,6 +1347,163 @@ export function median(body, { u0, u1, sign = 1, inset, tops, thickness, samples
     geo: fin({ root: r0.toArray(), along: a.toArray(), span: b.toArray(), outline, thickness }),
     root: [r0, r1],
   };
+}
+
+/**
+ * A fair curve through a table: `[x, value]` rows in rising x, joined by a
+ * monotone cubic (Fritsch and Carlson's), so the curve passes through
+ * every row, turns no corner, and never overshoots one — a run of equal
+ * values stays flat, which a spline through the same rows would not. The
+ * manta's plan, thickness and pose are each one of these along its span
+ * (#1867), sampled where its stations stand. Outside the table it holds
+ * the end rows' values.
+ */
+export function faired(table) {
+  const n = table.length;
+  const x = table.map((r) => r[0]);
+  const y = table.map((r) => r[1]);
+  for (let i = 0; i + 1 < n; i++)
+    if (!(x[i + 1] > x[i])) throw new Error(`faired: row ${i + 1} does not rise in x`);
+  const h = x.slice(1).map((v, i) => v - x[i]);
+  const d = h.map((w, i) => (y[i + 1] - y[i]) / w);
+  const m = y.map((_, i) => {
+    if (i === 0) return d[0];
+    if (i === n - 1) return d[n - 2];
+    if (d[i - 1] * d[i] <= 0) return 0;
+    const w1 = 2 * h[i] + h[i - 1];
+    const w2 = h[i] + 2 * h[i - 1];
+    return (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]);
+  });
+  return (at) => {
+    if (at <= x[0]) return y[0];
+    if (at >= x[n - 1]) return y[n - 1];
+    let i = 0;
+    while (at > x[i + 1]) i++;
+    const t = (at - x[i]) / h[i];
+    const t2 = t * t;
+    const t3 = t2 * t;
+    return (
+      (2 * t3 - 3 * t2 + 1) * y[i] +
+      (t3 - 2 * t2 + t) * h[i] * m[i] +
+      (-2 * t3 + 3 * t2) * y[i + 1] +
+      (t3 - t2) * h[i] * m[i + 1]
+    );
+  };
+}
+
+/**
+ * A skin parted in two: the triangles `pick(t)` holds true of, by their
+ * index in the buffer, and the rest, each a flat buffer of its own in the
+ * order the skin had them. One closed body wearing two materials goes out
+ * as two meshes — the manta's belly and its back (#1867), parted by
+ * `wingBody` `under` — and neither half is closed, so a root is tested
+ * against the whole skin (`insideBody`) and a mark is laid on the half it
+ * belongs to (`drape`).
+ */
+export function cleave(geo, pick) {
+  const p = geo.attributes.position;
+  const halves = [[], []];
+  for (let t = 0; t < p.count / 3; t++) {
+    const into = halves[pick(t) ? 0 : 1];
+    for (let k = 0; k < 3; k++) into.push(p.getX(3 * t + k), p.getY(3 * t + k), p.getZ(3 * t + k));
+  }
+  return halves.map((v) => {
+    const half = new THREE.BufferGeometry();
+    half.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+    half.computeVertexNormals();
+    return half;
+  });
+}
+
+/** Twice the signed area of a polygon of `[a, b]` pairs. */
+const area2 = (o) =>
+  o.reduce((sum, p, i) => {
+    const q = o[(i + 1) % o.length];
+    return sum + p[0] * q[1] - q[0] * p[1];
+  }, 0);
+
+/**
+ * A mark laid on a skin: flat outlines thrown onto a flat-shaded part
+ * along `toward` and cut along every facet edge they cross, so each piece
+ * lies in its own facet's plane and the mark follows the skin facet for
+ * facet — the manta's gill slits, belly blotches and mouth (#1867). A
+ * `seat` is one lozenge in one quad's plane; laid over a convex edge it
+ * would sink under the skin by its sagitta, and a slit a metre long
+ * crosses three bands.
+ *
+ * `origin` and `along` set the frame the outlines are drawn in: `a` runs
+ * along `along` (made square to `toward`) and `b` along `toward` × `a`,
+ * both from `origin`. `outlines` is a list of convex polygons of `[a, b]`
+ * pairs, either way round — a curved mark is a run of them. Only facets
+ * that face the throw take a mark (their normal against `toward`), so a
+ * mark thrown up from under a belly lands on the belly and not on the
+ * back over it. Every piece is then drawn back `proud` against `toward`:
+ * pieces either side of a facet edge keep that edge in common, and a
+ * piece stands `proud` times its facet's cosine to the throw off the
+ * skin. Returns the geometry, wound to face the throw; `area`, what
+ * landed, measured in the frame; and `whole`, the outlines' own area. A
+ * script holds the two equal: less is a mark hanging off the skin's edge,
+ * more a mark that fell on two skins.
+ */
+export function drape(geo, { origin, along, toward, outlines, proud }) {
+  const T = new THREE.Vector3(...toward).normalize();
+  const A = new THREE.Vector3(...along);
+  A.addScaledVector(T, -A.dot(T)).normalize();
+  const B = new THREE.Vector3().crossVectors(T, A);
+  const O = new THREE.Vector3(...origin);
+  const p = geo.attributes.position;
+  const ccw = (o) => (area2(o) < 0 ? [...o].reverse() : o);
+  const marks = outlines.map(ccw);
+  const [P, Q, R] = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  const n = new THREE.Vector3();
+  const points = [];
+  const tris = [];
+  let area = 0;
+  for (let t = 0; t < p.count; t += 3) {
+    P.fromBufferAttribute(p, t);
+    Q.fromBufferAttribute(p, t + 1);
+    R.fromBufferAttribute(p, t + 2);
+    n.subVectors(Q, P).cross(new THREE.Vector3().subVectors(R, P)).normalize();
+    const cos = -n.dot(T);
+    if (!(cos > 1e-6)) continue;
+    const clip = ccw([P, Q, R].map((c) => [c.clone().sub(O).dot(A), c.clone().sub(O).dot(B)]));
+    for (const mark of marks) {
+      // Sutherland and Hodgman's: the outline cut back to the facet, an edge at a time.
+      let piece = mark;
+      for (let e = 0; e < 3 && piece.length; e++) {
+        const [c1, c2] = [clip[e], clip[(e + 1) % 3]];
+        const side = (q) => (c2[0] - c1[0]) * (q[1] - c1[1]) - (c2[1] - c1[1]) * (q[0] - c1[0]);
+        const kept = [];
+        piece.forEach((cur, i) => {
+          const prev = piece[(i + piece.length - 1) % piece.length];
+          const [sc, sp] = [side(cur), side(prev)];
+          if (sc >= 0 !== sp >= 0) {
+            const f = sp / (sp - sc);
+            kept.push([prev[0] + f * (cur[0] - prev[0]), prev[1] + f * (cur[1] - prev[1])]);
+          }
+          if (sc >= 0) kept.push(cur);
+        });
+        piece = kept;
+      }
+      piece = piece.filter((q, i) => {
+        const r = piece[(i + 1) % piece.length];
+        return Math.hypot(q[0] - r[0], q[1] - r[1]) > 1e-9;
+      });
+      if (piece.length < 3 || !(area2(piece) > 2e-8)) continue;
+      area += area2(piece) / 2;
+      const first = points.length;
+      for (const [a, b] of piece) {
+        // Up the throw to the facet's plane, then back off it.
+        const at = O.clone().addScaledVector(A, a).addScaledVector(B, b);
+        at.addScaledVector(T, n.dot(P.clone().sub(at)) / n.dot(T) - proud);
+        points.push(at.toArray());
+      }
+      // Counter-clockwise about `toward` in the frame, so turned to face the throw.
+      for (let i = 1; i + 1 < piece.length; i++) tris.push([first, first + i + 1, first + i]);
+    }
+  }
+  if (!tris.length) throw new Error('drape: the mark landed on no facet');
+  return { geo: faceted(points, tris), area, whole: marks.reduce((s, o) => s + area2(o) / 2, 0) };
 }
 
 /**

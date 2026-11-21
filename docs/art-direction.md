@@ -630,7 +630,8 @@ does, and nothing Low draws is built, patched or keyed differently.
   0.06 linear, under every vessel, and at that a body a few pixels long is darker than
   the water behind it. Three readings were written. **The props' 0.06** keeps the rule
   and loses the fish. **An own hull's cladding ceiling, 0.16**, is taken: a body stands
-  no brighter than a vessel's cladding, so scenery still never out-reads one. **A silver
+  no brighter than a vessel's cladding, so scenery still never out-reads one, but for
+  the manta's belly ([A manta shows its belly](#a-manta-shows-its-belly)). **A silver
   flank**, 0.4 and up, reads best under the Lid and blooms white in a beam.
 - **A schooling fry carries one light of its own**, in `life-glint`
   ([style-neon-noir.md](style-neon-noir.md) "World light"). Under the Lid alone a school
@@ -829,6 +830,122 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 | How far over the crown a wave starts, in its widths | `LIFE.JELLY.PULSE.LEAD` | 2 |
 | What a wave adds, as a share of the light it passes | `LIFE.JELLY.PULSE.GAIN` | 0.6 |
 | Seconds one jelly's clock runs ahead of the last's | `LIFE.JELLY.STAGGER_S` | 19.75 |
+
+#### A manta shows its belly
+
+*In development with the rest of High, and not accepted
+([#1867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1867);
+[issue-1867](screenshots/issue-1867/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.LIFE.MANTA` (`packages/shared/src/constants.ts`) until a frame of it is
+accepted. The owner named its target in session on 21 November 2026
+([target-manta.jpg](screenshots/issue-1867/target-manta.jpg)), a manta seen from below,
+and took three calls before any frame: the photograph is committed, the manta is a new
+model that High alone stands, and it keeps the rim ray's 18 m. Five more were taken in
+the open on the way, and wait on the owner: its belly's register, the light through its
+wings, its smoothed skin, its stroke, and its triangles.*
+
+The target's manta is a pale belly over the eye, its gill slits and blotches dark on it
+and its thin margins the palest of it. At High `env-rim-manta` is a body in the world's
+light, as a fish is ([Life in the world's light](#life-in-the-worlds-light)), with four
+things a fish has not. Where it glides is
+[free-water-slice.md](free-water-slice.md) §5's.
+
+- **Its belly has a register of its own.** A face that looks down takes the Lid's glow
+  at its horizon share, 0.3 of what a face looking up takes, and from 95 m of drawn
+  height over the rim an eighth of whatever pool lies under it. At a body's 0.16 the
+  belly drew as a silhouette darker than the water behind it, on the software frames 13
+  of 255 against the water's 38. Three
+  readings were written. **A body's 0.16** keeps
+  [the cladding's ceiling](#life-in-the-worlds-light) and loses the target. **A light
+  under the manta** would be a source the map does not place, there for one body.
+  **The belly's own albedo, 0.7** is taken: a manta's underside is white, and it is the
+  one skin of the crater's life over a vessel's cladding. Its back and its marks keep
+  the file's ratio, 0.2 of the belly, so the back stands at 0.14, under a fish's flank.
+  Whether a belly that pale beside a hull muddies gate 3's reading of the hull is the
+  owner's glance: it is paler than a hull's cladding and it is no lamp, with no glow, no
+  halo and no ring. A silver flank at 0.4 was turned down for a fish because it blooms
+  white in a beam. A beam is thrown down off a hull's bow and the manta swims 131 to
+  199 m deep, over the hulls' 300 m, so at rest none reaches it. A hull ordered above it
+  can put it in one, where a belly at 0.7 takes half the beam, and no frame of that is
+  taken.
+- **The Lid's glow comes through its wings.** A wing is centimetres thick at its margin
+  and the body 1.5 m at its centre. A face that looks down takes, beside the rest, the
+  Lid's glow that stands on the back over it, less what the body between keeps: all of
+  it through a skin of no thickness, 1/e of it through 0.5 m. So the margins and the
+  tips are the palest of the belly and the centre the darkest. That is the target's
+  backlit edge and the reverse of its grey: the target's belly is palest at its centre
+  and greys toward its trailing margin and tips. Three readings were written. **No light
+  through the wing** leaves the whole belly at one level, under the Lid's horizon share
+  alone; no frame of it at this register was taken. **A grey margin painted by the renderer** is a pattern the file
+  does not carry. **The light through the wing** is taken, for a thin thing in lit
+  water. It is the Lid's own light in the Lid's token, on a face only by how far it looks down. No
+  source is new, and nothing answers a hull (limits 3 and 4). The thickness is read off
+  the file once, a plumb line through each vertex, when the template is built.
+- **Its skin is smooth**, a call that waits on the owner, with the fine unpushed
+  facets Block 4 lets its file have for it. Three readings were written. **Flat facets
+  under 800 triangles**, as every prop's, are plates on a body 280 px across. **Normals
+  authored in the file** would leave the kit's one way of writing a prop, flat and
+  unindexed (`tools/hull-models/kit.mjs` `faceted`). **Fine facets with no
+  corner pushed, smoothed by the renderer** is taken, as a jelly's bell is. The file is
+  flat-shaded, as the kit writes every prop, and 95 m from the eye each facet of a body
+  18 m across drew as a plate. The renderer
+  gives every vertex one normal across the faces that meet at it, belly and back
+  together, as it does [a jelly's bell](#a-jelly-is-a-lantern), and leaves an edge
+  sharper than 60 degrees an edge, which keeps the wing's trailing edge. No vertex moves.
+- **Its wings stroke, and for nothing** (limit 4). Three readings were written. **A
+  still glide in the file's pose**, as the rim ray's, is a model towed across the frame
+  at 95 m. **The whole body bobbing** moves a manta as a
+  float moves. **A wave out along each wing** is taken: High lets the world move
+  smoothly ([What the world layer may do at High](#what-the-world-layer-may-do-at-high)).
+  A wave runs out along each wing from
+  the body's edge, 2.3 m from the centreline, to the tip, once in 7 s: the tip swings
+  1.6 m either way about the file's pose, 1.2 radians behind the root. The centre body
+  is still, and the head, the mouth, the gill slits and the tail's root with it. It runs
+  on the shared match time. No hull, shot, ping or camera starts, hurries or stills it,
+  and reduced motion holds the file's pose.
+- **Its marks are the file's.** The gill slits, the blotches and the mouth are geometry
+  in the back's material, 4 cm proud of the belly
+  ([asset-prompts-3d.md](asset-prompts-3d.md), Block 4). The renderer draws no pattern
+  of its own. The blotches are not mirrored port to starboard, as the target's are not.
+- **It is 2,689 triangles**, over the 800 Block 4 fences a prop at, in a row allowed
+  4,000. Two readings were written. **Under 800**, as the rim ray is, is a body of
+  plates once it is 280 px across. **One body near the eye, High alone** is taken, as
+  the kelp stand's 9,000 were for a forest. High's frame stands at up to 764,047 of its
+  900,000 with it ([free-water-slice.md](free-water-slice.md) §9).
+- **What the target shows and this does not.** The target's manta is a mid tone
+  against brighter water, the light behind it. Here it is the reverse, a pale belly on
+  darker water: on the software frames 81 of 255 against the water's 42. There is no sun
+  below the Lid (limit 1), and the Lid's glow at 170 m lights no water behind the manta
+  brighter than its belly; the belly's register, above, is where that was decided. The
+  target's wingtips curl, and the file's are rounded off in plan and rise 0.39 m in
+  their last tenth. The target's lobes and pelvic fins are
+  pale underneath, and the file builds each whole in the back's material, so from below
+  they are dark. The target's belly greys toward the wings' trailing margin and tips,
+  and here the margin is the palest of it, by the light through it. Its blotches are
+  many small round dots and broad smudges, and the file's are seventeen angular ones.
+  A gill slit is 0.11 to 0.14 m wide, about 2 px at the loop's near side and under one
+  at its far side, so the marks read on the near part of the lap alone. None is built,
+  and each is the owner's to ask for.
+- **It carries no light, and no mark, lamp or halo is touched.** Low never builds this
+  template: the manta is not stood there, and its file under the shared rig is the dark
+  prop every body's is.
+
+`packages/frontend/test/mantaWing.test.ts` holds the two templates apart, the belly's
+register and the back's ratio, the skin, the thickness, the stroke and what reduced
+motion holds, and the patch's anchors. `packages/frontend/test/freeWaterDecoration.test.ts`
+holds its glide and what the Close eye sees of it.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Linear luminance the belly's material is lifted to | `LIFE.MANTA.BELLY.ALBEDO` | 0.7 |
+| Share of the Lid's glow on the back that a skin of no thickness lets through to a face looking straight down | `LIFE.MANTA.BELLY.THROUGH` | 1 |
+| Thickness of body at which that has fallen to 1/e, metres | `LIFE.MANTA.BELLY.THROUGH_M` | 0.5 |
+| The sharpest edge the skin is smoothed across, degrees | `LIFE.MANTA.CREASE_DEG` | 60 |
+| Seconds a stroke of the wings | `LIFE.MANTA.STROKE.PERIOD_S` | 7 |
+| How far a tip swings either way, metres | `LIFE.MANTA.STROKE.LIFT_M` | 1.6 |
+| Where the stroke starts, metres from the centreline | `LIFE.MANTA.STROKE.ROOT_M` | 2.3 |
+| How the swing grows out along the wing: the exponent on the way out | `LIFE.MANTA.STROKE.POWER` | 1.7 |
+| How far the tip runs behind the root, radians | `LIFE.MANTA.STROKE.LAG` | 1.2 |
 
 #### The vents at work
 

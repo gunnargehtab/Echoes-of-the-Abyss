@@ -20,6 +20,7 @@ import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
 import {
   DEPTH_VISUAL_M_PER_M,
+  depthToWorldY,
   rockTopDepthM,
   seabedDepthAtM,
 } from '../src/game/perspectiveTerrain.ts';
@@ -114,6 +115,7 @@ const BLOCK_4_HEIGHT_M: Record<string, number> = {
   'env-deep-fish': 0.84,
   'env-rim-ray': 4.05,
   'env-drift-jelly': 4.11,
+  'env-rim-manta': 2.04,
 };
 const bankedReach = (p: PropPlacement) => {
   const m = p.motion!;
@@ -682,6 +684,7 @@ describe('authored public decoration', () => {
       'env-drift-jelly': FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length,
       'env-vent-chimney': FREE_WATER_HIGH_VENTS.CHIMNEYS.length,
       'env-vent-basalt': FREE_WATER_HIGH_VENTS.BASALT.length,
+      'env-rim-manta': 1,
     });
     // Slots, not scatter: none is refused by the public ground it stands
     // over, none is scaled, and a second call draws the same list.
@@ -787,6 +790,120 @@ describe('authored public decoration', () => {
     }
   });
 
+  it('glides High’s manta before the Close eye, its belly turned to it (#1867)', () => {
+    // §5, "A manta before the Close eye": one body on one loop whose centre
+    // lies beyond it as the target's Close camera sees it, so its bank turns
+    // its belly to that eye on the loop's near side.
+    const terrain = ground();
+    const low = freeWaterPlacements(terrain, true);
+    const high = freeWaterPlacements(terrain, true, true);
+    const { MANTA } = FREE_WATER_HIGH_LIFE;
+    // High alone stands it, once, in the list's last slot: every slot before
+    // it keeps its index, and Low's list has none.
+    assert.equal(low.filter((p) => p.slug === 'env-rim-manta').length, 0);
+    assert.equal(high.filter((p) => p.slug === 'env-rim-manta').length, 1);
+    const manta = high.at(-1)!;
+    assert.equal(manta.slug, 'env-rim-manta');
+    assert.notEqual(manta.disabled, true);
+    assert.equal(manta.scale, 1);
+    assert.deepEqual([manta.xM, manta.yM], [...MANTA.at]);
+    const { phase, ...motion } = manta.motion!;
+    assert.deepEqual(motion, { ...MANTA.MOTION });
+    assert.ok(Math.abs(phase - (MANTA.startDeg * Math.PI) / 180) < 1e-12);
+    // The rim ray is not it, and did not move.
+    assert.deepEqual(
+      high.find((p) => p.slug === 'env-rim-ray'),
+      low.find((p) => p.slug === 'env-rim-ray')
+    );
+
+    // docs/screenshots/issue-1799/README.md, Cameras: the Close eye, 420 m
+    // back from its focus at 2 degrees of pitch.
+    const yaw = (-60 * Math.PI) / 180;
+    const pitch = (2 * Math.PI) / 180;
+    const eye = {
+      x: 542 + Math.sin(yaw) * 420 * Math.cos(pitch),
+      y: depthToWorldY(300) + 420 * Math.sin(pitch),
+      z: 1958 + Math.cos(yaw) * 420 * Math.cos(pitch),
+    };
+    // What that eye sees of the belly: the cosine between the belly's own
+    // normal, as the pose's matrix turns it, and the line to the eye.
+    const matrix = new Matrix4();
+    const seen = (matchMs: number) => {
+      const pose = decorationPose(manta, matchMs, () => 0);
+      decorationMatrix(pose, manta.motion!.axisM, 1, matrix);
+      const belly = new Vector3(0, -1, 0).transformDirection(matrix);
+      const axis = new Vector3(0, manta.motion!.axisM, 0).applyMatrix4(matrix);
+      const to = new Vector3(eye.x, eye.y, eye.z).sub(axis);
+      const flatM = Math.hypot(to.x, to.z);
+      return { share: belly.dot(to.clone().normalize()), flatM, upM: -to.y, pose };
+    };
+    const laps = MANTA.MOTION.periodS;
+    const lap = Array.from({ length: laps }, (_, s) => seen(s * 1000));
+    // The eye is outside the loop and under the body, all lap long.
+    const centreM = Math.hypot(MANTA.at[0] - eye.x, MANTA.at[1] - eye.z);
+    assert.ok(centreM > MANTA.MOTION.radiusM + 80);
+    for (const at of lap) assert.ok(at.upM > 10 && at.upM < 20, `${at.upM} m over the eye`);
+    // Its near side passes 95 m out, and there the eye has 0.75 of its plan,
+    // where a level body would show 0.15.
+    const near = lap.reduce((a, b) => (b.flatM < a.flatM ? b : a));
+    assert.ok(Math.abs(near.flatM - 95) < 1, `${near.flatM} m at its nearest`);
+    assert.ok(Math.abs(near.share - 0.75) < 0.01, `${near.share} of its plan`);
+    assert.ok(Math.sin(Math.atan2(near.upM, near.flatM)) < 0.16);
+    // It starts short of that point and coming on, 100 m out.
+    const start = lap[0]!;
+    assert.ok(Math.abs(start.flatM - 100) < 1 && start.share > 0.65);
+    assert.ok(lap[5]!.flatM < start.flatM);
+    // The eye sees half its plan or more for 52 s of the lap, and at the
+    // far side its back.
+    assert.equal(lap.filter((at) => at.share >= 0.5).length, 52);
+    const far = lap.reduce((a, b) => (b.flatM > a.flatM ? b : a));
+    assert.ok(Math.abs(far.flatM - 235) < 1 && far.share < 0);
+    // Over the outside rim alone, clear of every jelly's loop by a span.
+    for (const at of lap) {
+      const cell =
+        Math.floor(at.pose.z / terrain.cellM) * terrain.cols +
+        Math.floor(at.pose.x / terrain.cellM);
+      assert.equal(terrain.biomes[cell], Biome.CoralRuins);
+      assert.equal(terrain.floor[cell], 600);
+    }
+    for (const [x, y] of FREE_WATER_HIGH_LIFE.JELLIES.SLOTS) {
+      const pathM = Math.abs(Math.hypot(MANTA.at[0] - x, MANTA.at[1] - y) - MANTA.MOTION.radiusM);
+      assert.ok(
+        pathM - FREE_WATER_HIGH_LIFE.JELLIES.MOTION.radiusM >= 17.5,
+        `the manta's path passes ${pathM} m from a jelly's loop centre`
+      );
+    }
+    // Banked, its whole body spans 131 to 199 m deep.
+    const reach = bankedReach(manta);
+    const tipM = (propSpec('env-rim-manta')!.footprintM / 2) * Math.sin((40 * Math.PI) / 180);
+    assert.ok(Math.abs(tipM - 5.8) < 0.05);
+    assert.ok(reach.above < tipM + 1 && reach.below < tipM + 1);
+    assert.equal(
+      Math.round(MANTA.MOTION.depthM - MANTA.MOTION.depthSwingM - tipM / DEPTH_VISUAL_M_PER_M),
+      131
+    );
+    assert.equal(
+      Math.round(MANTA.MOTION.depthM + MANTA.MOTION.depthSwingM + tipM / DEPTH_VISUAL_M_PER_M),
+      199
+    );
+
+    // §5 prints its row as the constants hold it.
+    const doc = readFileSync(new URL('../../../docs/free-water-slice.md', import.meta.url), 'utf8');
+    const numbers = (text: string) =>
+      [...text.replace(/,(?=\d{3})/g, '').matchAll(/\d+(?:\.\d+)?/g)].map(Number);
+    const row = doc.split('\n').find((line) => line.startsWith('| `env-rim-manta` | `('));
+    assert.ok(row, '§5 lost the manta’s row');
+    assert.deepEqual(numbers(row.split('|').slice(2).join(' ')), [
+      ...MANTA.at,
+      MANTA.MOTION.radiusM,
+      MANTA.MOTION.periodS,
+      MANTA.MOTION.depthM,
+      MANTA.MOTION.depthSwingM,
+      MANTA.MOTION.bankDeg,
+      MANTA.startDeg,
+    ]);
+  });
+
   it('mills High’s backlit school between the Close eye and the vent stand’s light (#1856)', () => {
     // §5, "A school before the vent's light": every body of the third stream
     // stands before the stand's light as the target's Close camera sees it,
@@ -797,8 +914,9 @@ describe('authored public decoration', () => {
     const { BACKLIT_STREAM } = FREE_WATER_HIGH_LIFE;
     const { MOTION, STATION } = BACKLIT_STREAM;
     const count = BACKLIT_STREAM.SCHOOLS * BACKLIT_STREAM.COUNT;
-    // The list's last slots, so every slot #1837 stood keeps its place in it.
-    const fish = high.slice(-count);
+    // The last slots #1856 stood, so every slot #1837 stood keeps its place
+    // in the list; the one after them is the manta's (#1867).
+    const fish = high.slice(-count - 1, -1);
     for (const p of fish) {
       assert.equal(p.slug, 'env-outer-fish');
       assert.deepEqual([p.xM, p.yM], [...BACKLIT_STREAM.at]);
@@ -978,6 +1096,7 @@ describe('authored public decoration', () => {
       'env-deep-fish',
       'env-rim-ray',
       'env-drift-jelly',
+      'env-rim-manta',
     ]) {
       const bytes = readFileSync(
         new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
