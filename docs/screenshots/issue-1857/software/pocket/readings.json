@@ -99,6 +99,28 @@
       },
       "gpuTimer": "software",
       "avgGpuMs": null
+    },
+    {
+      "name": "flight",
+      "quality": "high",
+      "calls": 44,
+      "triangles": 755430,
+      "eye": {
+        "xM": 2150,
+        "zM": 1660,
+        "depthM": 1976
+      },
+      "toRingM": 30,
+      "flight": {
+        "flying": true,
+        "navigating": false,
+        "depthM": 1976,
+        "bearingDeg": 0,
+        "upX": 0,
+        "upY": -0.9848077530122081,
+        "inverted": false,
+        "blocked": false
+      }
     }
   ]
 }
