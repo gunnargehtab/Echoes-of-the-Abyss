@@ -630,7 +630,8 @@ does, and nothing Low draws is built, patched or keyed differently.
   0.06 linear, under every vessel, and at that a body a few pixels long is darker than
   the water behind it. Three readings were written. **The props' 0.06** keeps the rule
   and loses the fish. **An own hull's cladding ceiling, 0.16**, is taken: a body stands
-  no brighter than a vessel's cladding, so scenery still never out-reads one. **A silver
+  no brighter than a vessel's cladding, so scenery still never out-reads one, but for
+  the manta's belly ([A manta shows its belly](#a-manta-shows-its-belly)). **A silver
   flank**, 0.4 and up, reads best under the Lid and blooms white in a beam.
 - **A schooling fry carries one light of its own**, in `life-glint`
   ([style-neon-noir.md](style-neon-noir.md) "World light"). Under the Lid alone a school
@@ -839,9 +840,9 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 accepted. The owner named its target in session on 21 November 2026
 ([target-manta.jpg](screenshots/issue-1867/target-manta.jpg)), a manta seen from below,
 and took three calls before any frame: the photograph is committed, the manta is a new
-model that High alone stands, and it keeps the rim ray's 18 m. Four more were taken in
+model that High alone stands, and it keeps the rim ray's 18 m. Five more were taken in
 the open on the way, and wait on the owner: its belly's register, the light through its
-wings, its stroke, and its triangles.*
+wings, its smoothed skin, its stroke, and its triangles.*
 
 The target's manta is a pale belly over the eye, its gill slits and blotches dark on it
 and its thin margins the palest of it. At High `env-rim-manta` is a body in the world's
@@ -862,17 +863,28 @@ things a fish has not. Where it glides is
   the file's ratio, 0.2 of the belly, so the back stands at 0.14, under a fish's flank.
   Whether a belly that pale beside a hull muddies gate 3's reading of the hull is the
   owner's glance: it is paler than a hull's cladding and it is no lamp, with no glow, no
-  halo and no ring.
+  halo and no ring. A silver flank at 0.4 was turned down for a fish because it blooms
+  white in a beam. A beam is thrown down off a hull's bow and the manta swims 131 to
+  199 m deep, over the hulls' 300 m, so at rest none reaches it. A hull ordered above it
+  can put it in one, where a belly at 0.7 takes half the beam, and no frame of that is
+  taken.
 - **The Lid's glow comes through its wings.** A wing is centimetres thick at its margin
   and the body 1.5 m at its centre. A face that looks down takes, beside the rest, the
   Lid's glow that stands on the back over it, less what the body between keeps: all of
   it through a skin of no thickness, 1/e of it through 0.5 m. So the margins and the
-  tips are the palest of the belly and the centre the darkest, as the target's are. It
-  is the Lid's own light in the Lid's token, on a face only by how far it looks down. No
+  tips are the palest of the belly and the centre the darkest. That is the target's
+  backlit edge and the reverse of its grey: the target's belly is palest at its centre
+  and greys toward its trailing margin and tips. Three readings were written. **No light
+  through the wing** leaves the whole belly at one level, under the Lid's horizon share
+  alone; no frame of it at this register was taken. **A grey margin painted by the renderer** is a pattern the file
+  does not carry. **The light through the wing** is taken, for a thin thing in lit
+  water. It is the Lid's own light in the Lid's token, on a face only by how far it looks down. No
   source is new, and nothing answers a hull (limits 3 and 4). The thickness is read off
   the file once, a plumb line through each vertex, when the template is built.
-- **Its skin is smooth.** The file is flat-shaded, as the kit writes every prop, and
-  95 m from the eye each facet of a body 18 m across drew as a plate. The renderer
+- **Its skin is smooth**, the fifth call that waits on the owner, with the fine
+  unpushed facets Block 4 lets its file have for it. The file is flat-shaded, as the kit
+  writes every prop, and 95 m from the eye each facet of a body 18 m across drew as a
+  plate. The renderer
   gives every vertex one normal across the faces that meet at it, belly and back
   together, as it does [a jelly's bell](#a-jelly-is-a-lantern), and leaves an edge
   sharper than 60 degrees an edge, which keeps the wing's trailing edge. No vertex moves.

@@ -2379,8 +2379,8 @@ origin. Intake takes `--footprint-m 18 --max-tris 4000` for this row, over its d
 800, and no `--world-light`. What the target shows that the file does not carry: the
 grey that deepens toward the wings' trailing margin and tips, which is shading and no
 shape; the pale undersides of the lobes and the pelvic fins, which the file builds whole
-in `fish_flank`, so from below they are two dark paddles ahead of a pale head; and the
-light behind the body. What the runtime does about each, and what it leaves, is
+in `fish_flank`, so from below the lobes are two dark paddles ahead of a pale head and
+the pelvic fins two dark tabs at the tail's root; and the light behind the body. What the runtime does about each, and what it leaves, is
 [art-direction.md](art-direction.md#a-manta-shows-its-belly)'s to say. Authored in
 `tools/hull-models/props/rim-manta.mjs`.
 
