@@ -26,7 +26,10 @@ SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VI
 ```
 
 [frames.mjs](../issue-1837/frames.mjs) is #1837's module, unchanged: Low and then High at
-the target's three cameras, at gate 6's low camera and at the garden close.
+the target's three cameras, at gate 6's low camera and at the garden close. This
+container's rasteriser took longer than Playwright's 30 s to hand over a High frame at
+Home, so the High five are a second run of the same module, `QUALITY=high`, with that
+limit raised to 240 s, and `readings.json` holds both runs.
 [pocket.mjs](pocket.mjs) is new, for the one eye those cameras have not got: 250 m from
 the middle ring of six along the pocket's north edge, looking north at the deep fish's
 2,000 m. 250 m is where the orbit's dolly stops, so no orbit stands nearer a deep fish.
@@ -40,7 +43,7 @@ Reduced motion holds every body at its loop's start, so two runs frame alike.
 | --- | --- | --- | --- |
 | Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | Nothing moved: no deep fish is in the frame |
 | Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | Nothing moved |
-| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | HIGH_SURVEY |
+| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | 22 pixels moved and no other: the pinpricks the stipple laid over the pocket, three along its north edge and the rest among #1713's patches, are gone. From 10 km no seat's light reaches the eye |
 | Low, gate 6's | [low](software/03-low-low.png) | [high](software/08-high-low.png) | The three rings of white pinpricks Low draws into the pocket are gone. The eye is 2 km from them, and the water takes a seat's light on the way. The pocket is dark |
 | Garden close | [low](software/05-low-garden.png) | [high](software/10-high-garden.png) | Nothing moved: no deep fish swims in the garden, and the fry's lights are #1837's |
 | Pocket | [low](software/pocket/01-low-pocket.png) | [high](software/pocket/02-high-pocket.png) | Six fish 250 m off, each a dark body 12 px long with pale points along its flank, where Low draws the stipple's dots in the fauna colour |
@@ -81,12 +84,30 @@ point by nothing.
 Read off `readings.json` against [#1867's](../issue-1867/software/readings.json), which
 is `main`.
 
-NEW_TABLE
+| Camera | High before: calls, triangles | High now | Stipple dots before, now | Seat lights before, now |
+| --- | --- | --- | --- | --- |
+| Home | 66, 763,409 | 65, 763,409 | 156, 0 | 0, 156 |
+| Close | 66, 763,409 | 65, 763,409 | 156, 0 | 0, 156 |
+| Low | 47, 756,078 | 46, 756,078 | 156, 0 | 0, 156 |
+| Survey | 66, 764,047 | 65, 764,047 | 156, 0 | 0, 156 |
+| Garden close | 53, 760,726 | 52, 760,726 | 156, 0 | 0, 156 |
+| Pocket | not taken | 44, 755,430 | 156, 0 | 0, 156 |
 
-No draw, no triangle and no pass: 156 points more in the fry's cloud, which is one draw
-already, and the stipple cloud's draw submits no dot. So placement alone, and no timing
-run from the named GPU is owed with it
-(`dev-loop`, "Look work"). Gate 6's 8 ms is read on the named GPU with the rest of #1637.
+One draw fewer and no triangle more. The 156 lights are points of the fry's cloud, one
+draw already, and the stipple cloud with no dot to draw submits none. The eight or
+twelve passes, the 72 world sources, the 624 fry lights and the 1,655 lantern points are
+`main`'s. #1867's `readings.json` holds no dot count: 156 before is what
+`packages/frontend/test/tutorialLoading.test.mjs` counted there, and what these Low
+frames report.
+
+Against #1867's own High frames, read as
+[issue-1801](../issue-1801/README.md#low-does-not-move) reads a pair, Home differs by
+0.14, Close by 0.28, Low by 0.28, Garden close by 0.25 and Survey by 0.00: marine snow,
+the rings at Low and 22 pixels at Survey.
+
+The move adds no pass and no per-fragment work, so it is placement, and no timing run
+from the named GPU is owed with it (`dev-loop`, "Look work"). Gate 6's 8 ms is read on
+the named GPU with the rest of #1637.
 
 ## Low does not move
 
