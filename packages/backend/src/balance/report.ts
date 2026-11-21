@@ -149,11 +149,12 @@ export interface FactionSummary {
    * and the median minute it arrived (#1785).
    *
    * A share rather than a rate because a refit is bought once: "0.4" is two
-   * matches in five, and the minute is meaned over those two only, so a refit
+   * matches in five, and the median is taken over those two only, so a refit
    * never bought reports no minute rather than a confident zero. Read beside
-   * the structures table: a refit is bought on the Slipway's line, so a navy
-   * whose yard never rose cannot have one, and a navy whose yard rose and
-   * bought none made a decision this column is the only record of.
+   * the structures table: every refit but the Order's Pressure Refit is bought
+   * on the Slipway's line, so a navy whose yard never rose cannot have one, and
+   * a navy whose yard rose and bought none made a decision this column is the
+   * only record of.
    */
   refitsBought: Partial<Record<RefitKind, { share: number; medianMinute: number }>>;
   /**
@@ -1287,7 +1288,8 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     lines.push('');
   }
   // What each navy bought on the line besides hulls (#1785), under what it
-  // raised, because a refit needs the yard the table above says rose. Printed
+  // raised, because every refit but the Order's Pressure Refit needs the yard
+  // the table above says rose. Printed
   // only when somebody bought one: a batch with no refit would print a table
   // of dashes that reads as a finding about refits rather than as no data.
   const refitKinds = [

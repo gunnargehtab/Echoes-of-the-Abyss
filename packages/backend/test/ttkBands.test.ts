@@ -576,8 +576,9 @@ describe('§4 — every band at rank 3 against rank 0', () => {
   });
 
   // §9's gun rows that this file holds at rank 0, with the same multipliers
-  // the rank-0 tests above put in them. The flight row is not here because
-  // this file does not hold it at rank 0 either.
+  // the rank-0 tests above put in them. The siege rows have their own test
+  // below, in the cycles the siege test counts them in. The flight row is not
+  // here because this file does not hold it at rank 0 either.
   const BANDS: readonly Band[] = [
     { name: 'Corvette kills Light Scout', ...gun(corvette), hp: scout.maxHp },
     { name: 'Corvette vs Corvette', ...gun(corvette), hp: corvette.maxHp },
@@ -677,6 +678,57 @@ describe('§4 — every band at rank 3 against rank 0', () => {
     );
     assert.ok(Math.abs(kills - 12.6) < 1e-6, `kills in ${kills.toFixed(2)} s`);
     assert.ok(Math.abs(dies - 18) < 1e-6, `dies in ${dies.toFixed(2)} s`);
+  });
+
+  it('moves no siege band by more than a third, and records the floors a veteran crosses', () => {
+    // §9's siege table, in the cycles the rank-0 siege test above counts it
+    // in. A structure has no rank, so a wall row moves only by the shooter's
+    // gun; the Furnace's hull row moves from both sides. The Tocsin's row is
+    // on a turret, so it is the same at rank 3 by construction and held anyway.
+    const cycles = (hp: number, damage: number, s: ReturnType<typeof statsFor>) =>
+      Math.ceil(hp / damage) * s.attackCooldownS;
+    const r3 = rankGunFactor(3);
+    const within = (name: string, r0: number, moved: number) =>
+      assert.ok(
+        moved >= r0 * (1 - THIRD) - EPS && moved <= r0 * (1 + THIRD) + EPS,
+        `${name}: ${r0} s at rank 0, ${moved} s at rank 3`
+      );
+
+    const wall = cycles(refinery.maxHp, furnace.attackDamageStructure!, furnace);
+    within(
+      'Furnace kills a Refinery',
+      wall,
+      cycles(refinery.maxHp, furnace.attackDamageStructure! * r3, furnace)
+    );
+    const bell = cycles(turret.maxHp, tocsin.attackDamageStructure!, tocsin);
+    within(
+      'Tocsin kills a Sentinel Turret',
+      bell,
+      cycles(turret.maxHp, tocsin.attackDamageStructure! * r3, tocsin)
+    );
+    const cutter = cycles(corvette.maxHp, furnace.attackDamage, furnace);
+    const veteranCutter = cycles(corvette.maxHp, furnace.attackDamage * r3, furnace);
+    within('Furnace vs Corvette, rank-3 Furnace', cutter, veteranCutter);
+    within(
+      'Furnace vs Corvette, rank-3 Corvette',
+      cutter,
+      cycles(rankedHull(corvette.maxHp, 3), furnace.attackDamage, furnace)
+    );
+
+    // Inside the third and still across a floor §9 states as "never": a
+    // rank-3 cutter reads as a gun for 8 s of its 90, and a rank-3 Corvette
+    // brings an anchor down a second inside 37. Recorded, as the four above
+    // are, and left while balance is frozen.
+    assert.equal(
+      veteranCutter,
+      82,
+      'a rank-3 Furnace kills a Corvette in 82 s, under the 90 s floor'
+    );
+    const chip = ttkS(cruiser.maxHp, corvette.attackDamage * r3, corvette.attackCooldownS);
+    assert.ok(
+      Math.abs(chip - 36) < 1e-6,
+      `a rank-3 Corvette kills a Cruiser in ${chip} s, under 37`
+    );
   });
 
   it('leaves the hit-count rows where they were, or one hit further', () => {
