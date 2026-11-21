@@ -340,10 +340,12 @@ than moved from it, by the owner's calls of that day:
   thinner than the level ray drew there
   ([issue-1780](screenshots/issue-1780/README.md)). The pocket
   shows only at the frame's right edge, where two of the low pose's deep-fish patches
-  read as photophore pinpricks 2.2 to 2.5 km out. A nearer opening is §9's call, not
-  taken.
+  read as photophore pinpricks 2.2 to 2.5 km out. That is Low's frame: at High the
+  water takes a seat's light over that distance (#1857). A nearer opening is §9's
+  call, not taken.
 - **Survey** keeps decoration below tactical ink; the new deep-fish patches add faint
-  pinpricks along the pocket's north edge.
+  pinpricks along the pocket's north edge. That is Low's frame too: at High no seat's
+  light reaches an eye 10 km off, and the pocket shows none (#1857).
 
 Life may cross the clearing row although plants may not: a crab, a fry or a fish is
 neither a tall prop nor a blocker (§3).
@@ -531,8 +533,8 @@ ground-light family and does not enter the own-agent lamp halo. Other new animal
 nothing. The kelp retains `flora-biolight` and its licensed sway. That is Low. At the
 High graphics quality a schooling fry carries one point of world light, in a token of its
 own (High's own life, above), and its body is still no emitter: its GLB is unchanged. Each
-of a deep fish's six seats carries a point of that token there, a fry's 0.22 m wide at
-twice a fry's level, and no dot of the public-life channel
+of a deep fish's six seats carries a point of that token there, and no dot of the
+public-life channel
 ([art-direction.md](art-direction.md#life-in-the-worlds-light), #1857). A
 jelly is drawn there as a lantern, in a token of its own
 ([art-direction.md](art-direction.md#a-jelly-is-a-lantern)): a lit membrane over strands

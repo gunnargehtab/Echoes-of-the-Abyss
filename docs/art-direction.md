@@ -673,9 +673,11 @@ does, and nothing Low draws is built, patched or keyed differently.
   its own**, a palette's as `jelly-lantern` is, would be a third hue of life for six
   points a fish. **Leave them the stipple's** keeps a field mark's colour on a body the
   world pass lights. The owner took a seat's light in two calls in session on
-  21 November 2026, on the software frames. It is read from two eyes: the 250 m the
-  orbit's dolly stops at, where a 2 m fish draws 12 px at 1920 × 1080, and NAV's flight,
-  which no dolly bounds. Five readings were written. **A fry's point**, 0.22 m at a
+  21 November 2026, on the software frames. It was read from two eyes: an orbit focused
+  on a ring of fish at its least dolly, 250 m, where a 2 m fish draws 12 px at
+  1920 × 1080, and NAV's flight, about 60 m from one. The dolly bounds an eye's
+  distance to its focus and not to a fish, so an orbit focused past a ring can stand
+  between the two, and no frame was taken there. Five readings were written. **A fry's point**, 0.22 m at a
   fry's 0.3, is under the 1.6 px floor at 250 m: a fish peaked at 71 to 111 of 255, a
   faint dash. **0.5 m at 0.4** peaked at 150 to 195 there, over the Corvette's lamp at
   165. **0.4 m at a fry's level** was the first call, at 108 to 161, and its flight

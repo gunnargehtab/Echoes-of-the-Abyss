@@ -444,8 +444,10 @@ export const HIGH_GRAPHICS = {
    * to throw a beam (gate 3; a quiet hull's lamp is dimmer than a fry, which
    * the doc leaves to the owner's glance); `SIZE_M` the soft disc's width; `MIN_PX` the least a
    * point is drawn, in pixels, its level cut by the area that floor adds; and
-   * `LIFT_M` how far toward the eye a light is drawn from its body's axis, so
-   * the body's own flank does not cut it.
+   * `LIFT_M` how far toward the eye a light is drawn from where it stands,
+   * so the body's own flank does not cut a light on its axis; a seat's
+   * stands 2 cm off the flank already, and from abeam the far flank's
+   * three, lifted, are still inside the body.
    */
   LIFE: {
     LID: 1,
@@ -460,8 +462,8 @@ export const HIGH_GRAPHICS = {
       LIFT_M: 0.15,
       // A deep fish's seat: a fry's width, since its seats stand 0.22 to
       // 0.24 m apart and a wider disc merges a flank's three into one lit
-      // patch, at twice a fry's level, since no orbit comes nearer the
-      // pocket's fish than 250 m, where a fry's own is a faint dash.
+      // patch, at twice a fry's level, since from 250 m, the orbit's least
+      // dolly from a focus on the pocket's fish, a fry's own is a faint dash.
       SEAT: { LEVEL: 0.6, SIZE_M: 0.22 },
       // A jelly's seat: wider than a fry's light and no brighter.
       LANTERN: { LEVEL: 0.3, SIZE_M: 0.55 },

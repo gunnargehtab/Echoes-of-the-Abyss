@@ -32,8 +32,10 @@ Home, so the High five are a second run of the same module, `QUALITY=high`, with
 limit raised to 240 s, and `readings.json` holds both runs.
 [pocket.mjs](pocket.mjs) is new, for the one eye those cameras have not got: 250 m from
 the middle ring of six along the pocket's north edge, looking north at the deep fish's
-2,000 m. 250 m is where the orbit's dolly stops, so no orbit stands nearer a deep fish.
-NAV's flight does: the module's last frame is the eye flown forward from there until the
+2,000 m. 250 m is the least the orbit's dolly stands from its focus, and the focus here
+is the ring. It is not the nearest an eye comes to a fish: an orbit focused past a ring
+can stand nearer one, and so does NAV's flight. No frame is taken between the two eyes
+here. The module's last frame is the eye flown forward from the pocket eye until the
 probe reports it within 50 m of the ring's centre. Reduced motion holds every body at its
 loop's start, so two runs frame alike, but where the flight stops is read and not timed,
 and it stopped 30 m from the centre in both takes here. The Low five were taken before
@@ -47,7 +49,7 @@ the owner's second call changed a seat's light, which Low does not draw.
 | --- | --- | --- | --- |
 | Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | Nothing moved: no deep fish is in the frame |
 | Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | Nothing moved |
-| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | 22 pixels moved and no other: the pinpricks the stipple laid over the pocket, three along its north edge and the rest among #1713's patches, are gone. From 10 km no seat's light reaches the eye |
+| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | 22 pixels of the world area moved, 20 of them by more than 2, and no other: the pinpricks the stipple laid over the pocket, along its north edge and among #1713's patches, are gone. From 10 km no seat's light reaches the eye. The match clock in the top strip moved too |
 | Low, gate 6's | [low](software/03-low-low.png) | [high](software/08-high-low.png) | The three rings of white pinpricks Low draws into the pocket are gone. The eye is 2 km from them, and the water takes a seat's light on the way. The pocket is dark |
 | Garden close | [low](software/05-low-garden.png) | [high](software/10-high-garden.png) | Nothing moved: no deep fish swims in the garden, and the fry's lights are #1837's |
 | Pocket | [low](software/pocket/01-low-pocket.png) | [high](software/pocket/02-high-pocket.png) | Six fish 250 m off, each a dark body 12 px long with a pale point on its flank, where Low draws the stipple's dots in the fauna colour |
@@ -106,8 +108,11 @@ at Low and 14 as built. A fry's point read 14 too, 0.4 m at 0.3 read 16 and 0.5 
 
 ## What is new in the frame
 
-Read off `readings.json` against [#1867's](../issue-1867/software/readings.json), which
-is `main`.
+Calls and triangles are read off `readings.json` against
+[#1867's](../issue-1867/software/readings.json), which is `main`. The dots and the seat
+lights are the crater's, one count whatever the camera:
+[pocket/readings.json](software/pocket/readings.json) records both at each quality, and
+#1837's module, which took the other five cameras, records neither.
 
 | Camera | High before: calls, triangles | High now | Stipple dots before, now | Seat lights before, now |
 | --- | --- | --- | --- | --- |
@@ -122,9 +127,8 @@ is `main`.
 One draw fewer and no triangle more. The 156 lights are points of the fry's cloud, one
 draw already, and the stipple cloud with no dot to draw submits none. The eight or
 twelve passes, the 72 world sources, the 624 fry lights and the 1,655 lantern points are
-`main`'s. #1867's `readings.json` holds no dot count: 156 before is what
-`packages/frontend/test/tutorialLoading.test.mjs` counted there, and what these Low
-frames report.
+`main`'s. 156 dots before is what `packages/frontend/test/tutorialLoading.test.mjs`
+counted on `main` at both qualities, and what the pocket's Low frame reports.
 
 Against #1867's own High frames, read as
 [issue-1801](../issue-1801/README.md#low-does-not-move) reads a pair, Home and Low differ
@@ -152,8 +156,8 @@ over the world area, of each pixel's largest channel difference, out of 255
 | Garden close | 0.16 | 0.35 | 31 and 591,001, both |
 | Pocket | 0.08, against `main` taken for it | 0.06, the branch against the branch | 23 and 585,705, both |
 
-Each reading is under the floor two takes of one tree set, but the pocket's, which
-stands 0.02 over its own floor: the snow of a later take. No frame of `main` existed at
+Each reading is at or under the floor two takes of one tree set, but the pocket's,
+which stands 0.02 over its own floor: the snow of a later take. No frame of `main` existed at
 the pocket eye, so `main`'s own files were checked out over the branch's seven under
 `packages/` and [pocket.mjs](pocket.mjs) run with `QUALITY=low`: it reports the same 156
 dots, and [seats.py](seats.py) reads the same six peaks off it, 133 to 236.
@@ -180,7 +184,7 @@ both read as #1867's.
 - **`life-glint`, the fry's token.** The issue's recommendation, against a token of its
   own and against leaving the seats the stipple's.
 - **A seat lit wider than a fry's point, and not left the stipple's.** The owner's first
-  call, in session on 21 November 2026, on the pocket frames: 0.4 m at a fry's level.
+  call, in session on 21 November 2026, on the frames from 250 m: 0.4 m at a fry's level.
 - **The low camera's rings go dark at High.** The owner's, with that call: no reading
   kept them, and Low's frame keeps its rings.
 - **Three points: a fry's width at twice its level.** The owner's second call, the same
