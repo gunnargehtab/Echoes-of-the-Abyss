@@ -891,6 +891,14 @@ things a fish has not. Where it glides is
   plates once it is 280 px across. **One body near the eye, High alone** is taken, as
   the kelp stand's 9,000 were for a forest. High's frame stands at up to 764,047 of its
   900,000 with it ([free-water-slice.md](free-water-slice.md) §9).
+- **What the target shows and this does not.** The target's lobes and pelvic fins are
+  pale underneath, and the file builds each whole in the back's material, so from below
+  they are dark. The target's belly greys toward the wings' trailing margin and tips,
+  and here the margin is the palest of it, by the light through it. Its blotches are
+  many small round dots and broad smudges, and the file's are seventeen angular ones.
+  A gill slit is 0.11 to 0.14 m wide, about 2 px at the loop's near side and under one
+  at its far side, so the marks read on the near part of the lap alone. None is built,
+  and each is the owner's to ask for.
 - **It carries no light, and no mark, lamp or halo is touched.** Low never builds this
   template: the manta is not stood there, and its file under the shared rig is the dark
   prop every body's is.

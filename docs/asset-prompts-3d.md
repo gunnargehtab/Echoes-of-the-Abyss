@@ -1939,7 +1939,9 @@ tentacle of any length, no open hollow bell, nothing coiled, nothing
 ending on a barb — and regular enough about its own vertical axis that
 a slow turn about it reads as drifting. The one body the High graphics
 quality alone stands, the rim manta, is held to every line above at 18 m
-of span, beside the rim ray and never in its place: a manta as it is
+of span, beside the rim ray and never in its place, with two lines more
+changed for it alone, its belly's material and its facets, each named
+where it falls below: a manta as it is
 seen from below, a grazer of the water and not a hunter — a disc about
 2.3 times as wide as it is long, its leading edge nearly straight across
 the head and swept back in a gentle convex curve, its wings drawn out to
@@ -1949,15 +1951,17 @@ across the front of the head, a dark band and no opening, between two
 cephalic lobes held forward like paddles and toed in; a thin whip tail
 most of the disc's length again, two small pelvic fins and one low
 dorsal fin at its root; small dark eyes on the sides of the head. Its
-two materials are a dark back and a pale belly, pale against its own
-back and no brighter in the water than any other body, since the
-runtime sets a body's level; on the belly, five gill slits a side in two
+two materials are a dark back and a pale belly, the one pale material
+of the set where every other is dark, pale by its ratio to its own
+back, its level in the water the runtime's to set; on the belly, five
+gill slits a side in two
 rows that close toward the tail and a scatter of dark blotches between
 and behind them, not mirrored port to starboard, every mark geometry in
 the back's material lying a few centimetres proud of the skin. A level
 glide with the wings in a shallow upstroke; its file flat-faceted as
-every prop's is, with no corner pushed, and fine enough that the runtime
-may draw the skin with one normal a vertex. No tooth, no jaw, no spine
+every prop's is, but in fine facets with no corner pushed where every
+other body's are few and crisp, so that the runtime may draw the skin
+with one normal a vertex. No tooth, no jaw, no spine
 or barb on the tail, no armour, no photophore seat, and nothing of the
 colossus, under a third of the smallest Sounder.
 ```
@@ -1981,7 +1985,16 @@ against the light ([issue-1867](screenshots/issue-1867/README.md)), and took thr
 with it: the photograph is committed as the target, the manta is a new model and the rim
 ray's file does not change, and it keeps the ray's 18 m. So its clause is written from
 that frame, the plan, the head, the belly and the tail, and it is the one clause that
-asks for a pale material and for marks on a skin. The variant
+asks for a pale material and for marks on a skin. That changes two lines of ENV STYLE
+for this body alone, and the clause names both: "desaturated, dark, low-luminance
+materials" for the belly, whose hex is 3.9 times the next palest in the props' table,
+and "low-poly with crisp facets" for a skin of 1,880 unpushed triangles meant to be
+smoothed. Both are the author's calls, taken in the open on #1867 for the owner's
+target, and wait on the owner. So does a third, which is the runtime's: at the High
+graphics quality the belly is lifted to a register of its own, over a body's and over a
+vessel's cladding ([art-direction.md](art-direction.md#a-manta-shows-its-belly)), so
+of this block's checklist the manta's belly does not answer "darker and quieter than any
+vessel", and whether it may not is the owner's glance at the frame. The variant
 covers those seven slugs and nothing else — no other floating prop, no
 gameplay fauna — and the rest of ENV STYLE
 binds them as it binds a crag. All seven rows carry Light `none`, the deep fish and the
@@ -2087,9 +2100,10 @@ column is the slice's canonical size for each, the crab's its spread across the 
 fish's its length, the ray's and the manta's their wingspan and the jelly's the width of
 its bell, every row's Light is `none`, and their Height is the file's to the centimetre.
 All seven are one grammar in `seabed.mjs` ("The microfauna"): a body is a `shaft`, a closed
-run of corner rings each corner of which is pushed and slipped a little by a seeded stream,
-so the skin is crisp facets and not a lathe, and whose band quads are cut on mirrored
-diagonals; everything flat on it is a `blade`, a thin closed slab on a convex outline,
+run of corner rings whose band quads are cut on mirrored diagonals, and on six of the
+seven each corner is pushed and slipped a little by a seeded stream, so the skin is crisp
+facets and not a lathe. The manta's corners are not pushed: its skin is fine facets for
+the runtime to smooth (its own paragraphs, below). Everything flat on a body is a `blade`, a thin closed slab on a convex outline,
 rooted through the skin the way the kelp stand's fronds root through their stalk — a
 dorsal or anal fin is a `median`, its plane yawed to its own root chord so it follows a
 body that bends and tapers under it, and each script samples every median root along its
@@ -2322,8 +2336,9 @@ trailing edge is a knife. The still pose is a level glide in a shallow upstroke:
 chord line is level from the centreline to ±2.3 m, 0.12 m up at ±4, 0.46 at ±6, 0.98 at
 ±8 and 1.40 at the tip points, 0.39 m of that in the last tenth of the half-span where
 the tenth before climbs 0.26. The head, the mouth, the gills, the eyes and the tail's
-root all stand on the level centre body, inside ±2.31 m, for the runtime's stroke to
-leave alone.
+root all stand on the level centre body, inside the ±2.3 m where the runtime's stroke
+starts, but for the outer centimetre of each eye, which reaches ±2.31 and which the
+stroke lifts by under a tenth of a millimetre.
 
 Two cephalic lobes are held forward either side of the mouth, each a shaft of seven
 eight-cornered rings from a root inside the head to a small ring fanned shut: 1.90 m ahead
@@ -2363,8 +2378,10 @@ y = 0, the belly itself is at y 0.04, and the body's mid-plane stands 0.79 m ove
 origin. Intake takes `--footprint-m 18 --max-tris 4000` for this row, over its default of
 800, and no `--world-light`. What the target shows that the file does not carry: the
 grey that deepens toward the wings' trailing margin and tips, which is shading and no
-shape, and the light behind the body; both are the runtime's and
-[art-direction.md](art-direction.md)'s to say. Authored in
+shape; the pale undersides of the lobes and the pelvic fins, which the file builds whole
+in `fish_flank`, so from below they are two dark paddles ahead of a pale head; and the
+light behind the body. What the runtime does about each, and what it leaves, is
+[art-direction.md](art-direction.md#a-manta-shows-its-belly)'s to say. Authored in
 `tools/hull-models/props/rim-manta.mjs`.
 
 Shape cues, so the prompts land in each biome's materials brief

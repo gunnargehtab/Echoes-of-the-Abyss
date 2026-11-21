@@ -154,10 +154,13 @@ Five rules ride with the table:
   is the rim manta's underside and nothing else, a cool grey at sRGB hue 195°, 12%
   saturated, the flank's cold cast with half its colour out. It is the one pale hex in
   this table, and pale is a ratio here and not a level: at 0.1080 linear luminance it is
-  five times `fish-flank`, so under the ceiling rule the manta's belly takes the level any
-  body's brightest material takes, a fish's flank or the jelly's bell, and its back, lobes,
-  tail and fins sit at 0.199 of it, darker against their own body than any other body's
-  second material. The gill slits, the blotches and the mouth on that belly are geometry in
+  five times `fish-flank`, and the runtime sets the level. Under the ceiling rule a prop's
+  brightest material takes the props' level, so the file's belly would stand where a
+  fish's flank does. No frame draws it there: High alone stands the manta, and lifts its
+  belly to a register of its own, 0.7, over a body's 0.16 and over a vessel's cladding
+  ([art-direction.md](art-direction.md#a-manta-shows-its-belly)), the author's call on
+  #1867, waiting on the owner. Its back, lobes, tail and fins sit at 0.199 of the belly,
+  darker against their own body than any other body's second material. The gill slits, the blotches and the mouth on that belly are geometry in
   `fish-flank`, so they read at the back's level on the pale skin. Intake fences no base
   colour, only emissive, triangles, the count of materials and their vertex attributes, so
   nothing but this rule holds a token's lightness.
