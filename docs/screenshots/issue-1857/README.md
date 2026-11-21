@@ -122,12 +122,28 @@ over the world area, of each pixel's largest channel difference, out of 255
 | Low | 0.16 | 0.47 | 26 and 587,001, both |
 | Survey | 0.00 | 0.00 | 45 and 594,970, both |
 | Garden close | 0.16 | 0.35 | 31 and 591,001, both |
+| Pocket | 0.01, against `main` taken for it | 0.01, the branch against the branch | 23 and 585,705, both |
 
-LOW_PROSE
+Each reading is under the floor two takes of one tree set. No frame of `main` existed at
+the pocket eye, so `main`'s own files were checked out over the branch's seven under
+`packages/` and [pocket.mjs](pocket.mjs) run with `QUALITY=low`: it reports the same 156
+dots, and [seats.py](seats.py) reads the same six peaks off it, 133 to 236.
+[The pocket's map](software/pocket/diff-low-main-vs-branch.png) is marine snow and
+nothing else. In counted work `packages/frontend/test/tutorialLoading.test.mjs` holds
+Low's dots, and no light, before High is drawn and after it.
 
 ## The clip
 
-CLIP_PROSE
+[clip-low-to-pocket.mp4](software/clip-low-to-pocket.mp4): the camera moved at High from
+gate 6's low eye down to the pocket eye and held there. It opens on the pocket seen from
+2 km, dark, with no ring in it. The six fish come up out of the dark over the last five
+seconds, as the eye closes on them, and stand as pale points through the hold, the last
+2.5 s. It is the middle 1280 × 720 of a 1920 × 1080 recording, so a pixel is a pixel of
+the frames above, at twelve times the speed the rasteriser drew it. It is taken without
+reduced motion and spans 294 s of the match, a lap and a fifth of the ring.
+
+The target's Home-to-Close clip is not retaken: no deep fish is in either frame, and
+both read as #1867's.
 
 ## Calls taken with these frames
 
