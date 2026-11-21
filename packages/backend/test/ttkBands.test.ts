@@ -683,8 +683,9 @@ describe('§4 — every band at rank 3 against rank 0', () => {
   it('moves no siege band by more than a third, and records the floors a veteran crosses', () => {
     // §9's siege table, in the cycles the rank-0 siege test above counts it
     // in. A structure has no rank, so a wall row moves only by the shooter's
-    // gun; the Furnace's hull row moves from both sides. The Tocsin's row is
-    // on a turret, so it is the same at rank 3 by construction and held anyway.
+    // gun; the Furnace's hull row moves from both sides. The Tocsin's target
+    // is a turret, so only its gun moves that row, and 1000 / 230 still rounds
+    // up to the same five shots.
     const cycles = (hp: number, damage: number, s: ReturnType<typeof statsFor>) =>
       Math.ceil(hp / damage) * s.attackCooldownS;
     const r3 = rankGunFactor(3);
@@ -716,8 +717,8 @@ describe('§4 — every band at rank 3 against rank 0', () => {
     );
 
     // Inside the third and still across a floor §9 states as "never": a
-    // rank-3 cutter reads as a gun for 8 s of its 90, and a rank-3 Corvette
-    // brings an anchor down a second inside 37. Recorded, as the four above
+    // rank-3 cutter kills a Corvette in 82 s, 8 s inside the 90 s floor, and
+    // a rank-3 Corvette brings an anchor down a second inside 37. Recorded, as the four above
     // are, and left while balance is frozen.
     assert.equal(
       veteranCutter,
