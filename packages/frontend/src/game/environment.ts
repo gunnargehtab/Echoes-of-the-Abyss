@@ -380,7 +380,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
       ['env-deep-fish', 2, 304],
       ['env-rim-ray', 18, 586],
       ['env-drift-jelly', 6, 594],
-      ['env-rim-manta', 18, 4000],
+      ['env-rim-manta', 18, 2689],
     ] as const
   ).map(([slug, footprintM, triBudget]): PropSpec => ({
     slug,

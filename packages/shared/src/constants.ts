@@ -174,7 +174,7 @@ export const FREE_WATER_HIGH_LIFE = {
   MANTA: {
     at: [315, 2075],
     startDeg: 130,
-    MOTION: { radiusM: 70, periodS: 300, depthM: 165, depthSwingM: 8, axisM: 0.76, bankDeg: 40 },
+    MOTION: { radiusM: 70, periodS: 300, depthM: 165, depthSwingM: 8, axisM: 0.79, bankDeg: 40 },
   },
 } as const;
 
