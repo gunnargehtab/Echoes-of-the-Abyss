@@ -117,7 +117,8 @@ Read off `readings.json` against [#1856's](../issue-1856/software/readings.json)
 | Low | 44, 753,389 | 47, 756,078 |
 | Survey | 63, 761,358 | 66, 764,047 |
 
-The manta is 2,689 triangles at every camera: its batch is not culled. Low's calls and
+The manta is 2,689 triangles at every camera: its batch is not culled. It is two parts,
+belly and the rest, and High draws three more calls with it. The third is not traced. Low's calls and
 triangles are those of #1856 at all five cameras, to the triangle, and Low's frames
 differ from that step's by marine snow and the clock alone.
 
