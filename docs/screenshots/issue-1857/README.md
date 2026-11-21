@@ -99,7 +99,10 @@ Both stand over the Corvette's lamp from there. Whether a deep fish's points mud
 3's reading of a hull ordered down beside it is the owner's glance
 ([art-direction.md](../../art-direction.md#life-in-the-worlds-light)).
 
-From gate 6's low camera the rings are gone under every reading. LOWCAM_LIFT
+From gate 6's low camera the rings are gone under every reading. At the pixels of Low's
+46 brightest dots there, taking the brightest of each one's nine, the median luma is 255
+at Low and 14 as built. A fry's point read 14 too, 0.4 m at 0.3 read 16 and 0.5 m at
+0.4 read 22: what is left is marine snow.
 
 ## What is new in the frame
 
@@ -124,9 +127,11 @@ twelve passes, the 72 world sources, the 624 fry lights and the 1,655 lantern po
 frames report.
 
 Against #1867's own High frames, read as
-[issue-1801](../issue-1801/README.md#low-does-not-move) reads a pair, Home differs by
-0.14, Close by 0.28, Low by 0.28, Garden close by 0.25 and Survey by 0.00: marine snow,
-the rings at Low and 22 pixels at Survey.
+[issue-1801](../issue-1801/README.md#low-does-not-move) reads a pair, Home and Low differ
+by 0.01 and Close, Garden close and Survey by 0.00. This take's snow fell where #1867's
+did, as a take's sometimes does ([issue-1837](../issue-1837/README.md#low-does-not-move)),
+and what is left is the rings at Low and 22 pixels at Survey. The first take of these
+five, at the owner's first call, read 0.14, 0.28, 0.28, 0.25 and 0.00.
 
 The move adds no pass and no per-fragment work, so it is placement, and no timing run
 from the named GPU is owed with it (`dev-loop`, "Look work"). Gate 6's 8 ms is read on
@@ -160,11 +165,12 @@ Low's dots, and no light, before High is drawn and after it.
 
 [clip-low-to-pocket.mp4](software/clip-low-to-pocket.mp4): the camera moved at High from
 gate 6's low eye down to the pocket eye and held there. It opens on the pocket seen from
-2 km, dark, with no ring in it. The six fish come up out of the dark over the last five
-seconds, as the eye closes on them, and stand as pale points through the hold, the last
-2.5 s. It is the middle 1280 × 720 of a 1920 × 1080 recording, so a pixel is a pixel of
-the frames above, at twelve times the speed the rasteriser drew it. It is taken without
-reduced motion and spans 294 s of the match, a lap and a fifth of the ring.
+2 km, dark, with no ring in it. The move is its first 18 s, at forty times the speed the
+rasteriser drew it, and the six fish come up out of the dark in its last second. The
+hold is its last 7 s, at five times that speed: six pale points 250 m off, each swimming
+its ring. It is the middle 1280 × 720 of a 1920 × 1080 recording, so a pixel is a pixel
+of the frames above. It is taken without reduced motion and spans 769 s of the match,
+three laps and a fifth of the ring.
 
 The target's Home-to-Close clip is not retaken: no deep fish is in either frame, and
 both read as #1867's.

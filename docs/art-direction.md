@@ -692,7 +692,7 @@ does, and nothing Low draws is built, patched or keyed differently.
   not taken. The water takes a seat's light with distance, as it takes a fry's. From
   gate 6's low camera the three rings Low draws into the pocket, 2 km off, are gone at
   High, and were under every reading captured there: the widest lifted a ring's pixels
-  by about 10 of 255. That is the cost of the move, and the owner took it with the
+  by 8 of 255. That is the cost of the move, and the owner took it with the
   first call.
 - **High stands more life than Low**, where the target's cameras read a body
   ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
