@@ -84,6 +84,13 @@ The target, and the Close frame's manta at three times its size ([belly.py](bell
 
 Gate 6's low camera and the garden close show no manta, at either quality.
 
+The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camera moved
+from Home to Close at High and held there, at 1280 × 720 and six times the speed the
+rasteriser drew it, taken without reduced motion with #1837's module and `CLIP=1`. It
+ends at T+03:52 of the match. The rasteriser reaches Close after T+03:00, when the manta
+is on the far side of its loop: a pale body about 35 px long over the stand's glow,
+turning. Its near pass, T+00:00 to T+00:40 and again from T+05:00, is not in the clip.
+
 ## How the belly reads
 
 [belly.py](belly.py) reads the Close frame against
@@ -124,8 +131,10 @@ differ from that step's by marine snow and the clock alone.
 
 ## What the frames do not show
 
-- **The stroke.** Reduced motion holds it. `packages/frontend/test/mantaWing.test.ts`
-  holds its shape, and a clip of it is owed with the named GPU's frames.
+- **The stroke, near.** Reduced motion holds it in the stills, and the clip has the
+  manta 200 m off, where a stroke of 1.6 m is a few pixels.
+  `packages/frontend/test/mantaWing.test.ts` holds its shape, and the near pass moving
+  is owed with the named GPU's frames, where the match's first minute is on screen.
 - **A school round it.** The fry's ribbon passes 63 m of depth under the manta and reads
   as its own thing, left of it. The target's fish are all round the body.
 - **The target's light.** The sun behind the target's manta is not the crater's to have.
