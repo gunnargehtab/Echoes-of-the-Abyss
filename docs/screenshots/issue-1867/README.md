@@ -89,10 +89,13 @@ Gate 6's low camera and the garden close show no manta, at either quality.
 
 The clip is [clip-home-to-close.mp4](software/clip-home-to-close.mp4): the camera moved
 from Home to Close at High and held there, at 1280 × 720 and six times the speed the
-rasteriser drew it, taken without reduced motion with #1837's module and `CLIP=1`. It
-ends at T+03:52 of the match. The rasteriser reaches Close after T+03:00, when the manta
-is on the far side of its loop: a pale body about 35 px long over the stand's glow,
-turning. Its near pass, T+00:00 to T+00:40 and again from T+05:00, is not in the clip.
+rasteriser drew it, so the manta glides and strokes six times as fast as it does. It is
+taken without reduced motion, with #1837's module, `CLIP=1` and `CLIP_HOLD_MS=150000`,
+and spans T+00:03 to T+06:04 of the match. The rasteriser reaches Close at about
+T+03:30, with the manta on the far side of its loop, a pale body turning over the
+stand's glow. The hold then runs through its second lap's near pass: it comes on from
+the right, its belly opens to the eye at about T+05:08, its wings at two ends of a
+stroke in frames a few seconds apart, and it leaves the frame's left by T+05:40.
 
 ## How the belly reads
 
@@ -139,10 +142,9 @@ differ from that step's by marine snow and the clock alone.
 
 ## What the frames do not show
 
-- **The stroke, near.** Reduced motion holds it in the stills, and the clip has the
-  manta 200 m off, where a stroke of 1.6 m is a few pixels.
-  `packages/frontend/test/mantaWing.test.ts` holds its shape, and the near pass moving
-  is owed with the named GPU's frames, where the match's first minute is on screen.
+- **The stroke at its own pace.** The stills hold it under reduced motion, and the
+  clip runs it at six times its pace, a few frames a second.
+  `packages/frontend/test/mantaWing.test.ts` holds its shape.
 - **The target's figure.** A mid tone against brighter water; here a pale belly on
   darker water ("What does not", above).
 - **A school round it.** The fry's ribbon passes 63 m of depth under the manta and reads
