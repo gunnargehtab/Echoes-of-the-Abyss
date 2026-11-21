@@ -193,8 +193,8 @@ both read as #1867's.
 - **A seat's light is lifted as a fry's is**, 0.15 m toward the eye. The body is 0.20,
   0.16 and 0.12 m wide at its three seats, so from abeam the far flank's aft light comes
   about 1 cm clear of the near flank and adds to the near aft seat's. The round's critic
-  measured it off the file. A lift of a seat's own would hide it and is not built: it
-  would change these frames.
+  measured it off the file. A lift of a seat's own would hide it and was not built here:
+  it would change these frames. [issue-1876](../issue-1876/README.md) builds it.
 - **One cloud.** A seat's light is a point of the fry's cloud at a level of its own, so
   the move adds no draw.
 
