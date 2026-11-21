@@ -222,6 +222,17 @@ export interface PlayerTelemetry {
   structuresBuiltByKind: Record<number, number>;
   structuresLost: number;
   /**
+   * The tick each fleet-wide refit was bought, by refit kind ordinal (#1785).
+   *
+   * A tick rather than a count because a refit is bought once and never lost
+   * (docs/systems-progression.md §2), so the only questions are whether and
+   * when. Read off the player's own `refits` list on the rise, as a structure
+   * is: the order counts intent every time a refused purchase is asked again,
+   * the list counts the purchase once. A refit present at the first
+   * observation is a gift, not a decision, and is not counted.
+   */
+  refitsBoughtAtTick: Record<number, number>;
+  /**
    * Why this navy's declared ordnance hull was or was not bought (#698).
    *
    * The one field on this interface that is **not** read from a snapshot, and
@@ -342,6 +353,8 @@ export class MatchTelemetry {
    * a rebuilt Refinery to whatever died and freed its id.
    */
   private readonly lastComplete = new Map<number, Set<number>>();
+  /** Refits a slot already held at its first observation, as `slot:kind`. */
+  private readonly openingRefits = new Set<string>();
   /**
    * Slots whose opening base has been recorded.
    *
@@ -410,6 +423,7 @@ export class MatchTelemetry {
         unitsBuiltByKind: {},
         structuresBuiltByKind: {},
         structuresLost: 0,
+        refitsBoughtAtTick: {},
         nodulesEarned: 0,
         peakNodules: 0,
         peakNodulesAtRung: 0,
@@ -669,6 +683,19 @@ export class MatchTelemetry {
         (player.structuresBuiltByKind[structure.kind] ?? 0) + 1;
     }
     this.lastComplete.set(player.slot, nowComplete);
+
+    // A refit is never lost, so its first appearance is its purchase and every
+    // later one is the same refit. The opening observation records what is
+    // standing and credits none of it, the rule the hulls above follow.
+    for (const kind of snapshot.refits) {
+      if (opening) this.openingRefits.add(`${player.slot}:${kind}`);
+      else if (
+        !(kind in player.refitsBoughtAtTick) &&
+        !this.openingRefits.has(`${player.slot}:${kind}`)
+      ) {
+        player.refitsBoughtAtTick[kind] = tick;
+      }
+    }
   }
 
   /**
