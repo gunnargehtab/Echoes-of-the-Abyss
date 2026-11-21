@@ -1,7 +1,8 @@
 # The public playtest host (#1575): docker-compose.yml's two images behind one
 # TLS proxy, on one VPS, under one name.
 #
-#   docker compose -f docker-compose.yml -f deploy/compose.playtest.yml up -d
+#   ECHOES_BUILD=$(git rev-parse --short HEAD) \
+#     docker compose -f docker-compose.yml -f deploy/compose.playtest.yml up -d
 #
 # An override rather than a second compose file, so the images, the health
 # check and the start order stay described once. What it changes is only what a
@@ -19,9 +20,14 @@
 # - **The client hides the Graphics quality control.** High is in development
 #   until the owner accepts the High slice whole (#1637;
 #   docs/graphics-standards.md gate 6).
+# - **Both images name their build.** docker-compose.yml lets ECHOES_BUILD fall
+#   back to `dev`, which on a public host would tag every stranger's error report
+#   and every failure line alike (#1576). Here it is required instead.
 #
-# ECHOES_DOMAIN is the host name the DNS record points at this machine. The
-# deploy job writes it into the host's `.env`, which compose reads on its own.
+# ECHOES_DOMAIN is the host name the DNS record points at this machine, and
+# ECHOES_BUILD the short commit sha the images were built from. The deploy job
+# writes both into the host's `.env`, which compose reads on its own: every
+# command interpolates the whole file, `up --no-build` included.
 #
 # `!reset` needs Docker Compose 2.24 or newer: it empties the base file's port
 # lists instead of appending to them.
@@ -38,6 +44,9 @@ services:
     # host never builds and never pulls these two.
     pull_policy: never
     restart: unless-stopped
+    build:
+      args:
+        ECHOES_BUILD: ${ECHOES_BUILD:?set ECHOES_BUILD to the commit the images are built from}
     environment:
       CORS_ORIGIN: https://${ECHOES_DOMAIN:?set ECHOES_DOMAIN to the playtest host name}
     ports: !reset []
@@ -52,6 +61,7 @@ services:
         # Hides the Graphics quality control until the High slice is accepted whole
         # (docs/graphics-standards.md gate 6; game/graphicsQuality.ts).
         ECHOES_HOSTED: '1'
+        ECHOES_BUILD: ${ECHOES_BUILD:?set ECHOES_BUILD to the commit the images are built from}
     ports: !reset []
 
   proxy:

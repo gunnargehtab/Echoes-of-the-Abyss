@@ -154,6 +154,11 @@ jobs:
             /*
             !/docs/screenshots/
 
+      # The tag on every error report and failure line the hosted build writes
+      # (#1576): compose.playtest.yml refuses to build or start without it.
+      - name: Name the build
+        run: echo "ECHOES_BUILD=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
       - name: Build the images
         run: $COMPOSE build backend frontend
 
@@ -165,10 +170,10 @@ jobs:
 
       - name: Start them
         run: |
-          # Expanded on the runner on purpose: the host has no ECHOES_DOMAIN
-          # until this line writes it.
+          # Expanded on the runner on purpose: the host has no ECHOES_DOMAIN or
+          # ECHOES_BUILD until this line writes them.
           # shellcheck disable=SC2029
-          ssh playtest "cd echoes && printf 'ECHOES_DOMAIN=%s\n' '$ECHOES_DOMAIN' > .env \
+          ssh playtest "cd echoes && printf 'ECHOES_DOMAIN=%s\nECHOES_BUILD=%s\n' '$ECHOES_DOMAIN' '$ECHOES_BUILD' > .env \
             && $COMPOSE up -d --no-build --remove-orphans \
             && docker image prune -f"
 
@@ -180,4 +185,4 @@ jobs:
           curl -fsS --retry 20 --retry-delay 6 --retry-all-errors -o /dev/null "https://$ECHOES_DOMAIN/"
           curl -fsS --retry 20 --retry-delay 6 --retry-all-errors "https://$ECHOES_DOMAIN:3000/health"
           echo
-          echo "Deployed ${{ needs.switch.outputs.sha }} to https://$ECHOES_DOMAIN/"
+          echo "Deployed ${{ needs.switch.outputs.sha }} as build $ECHOES_BUILD to https://$ECHOES_DOMAIN/"
