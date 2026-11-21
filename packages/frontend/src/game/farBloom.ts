@@ -19,7 +19,8 @@
  * client, and it drifts on the shared match time alone. Nothing a hull, a
  * shot or the camera does moves, gathers or brightens it. A lantern keeps
  * one level: the near lanterns' stroke and wave are not carried out here,
- * where 260 points flashing each on its own beat would be a busy frame. Reduced motion holds the river where the match's start stands it.
+ * where 260 points flashing each on its own beat would be a busy frame.
+ * Reduced motion holds the river where the match's start stands it.
  *
  * TUNABLE until a frame of this step is accepted: `FREE_WATER_HIGH_LIFE.BLOOM`
  * and `HIGH_GRAPHICS.LIFE.JELLY.FAR` in packages/shared/src/constants.ts.

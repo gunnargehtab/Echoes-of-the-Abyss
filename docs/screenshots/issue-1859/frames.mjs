@@ -4,7 +4,9 @@
 // gate 6's fourth, in the free-water crater with the HUD on, and one more
 // 400 m from the river's west end, which shows what a lantern of it is from
 // near. Low first, as the control, then High at the same five with the fleet
-// at rest.
+// at rest. Then one staged frame, at High and at Low: the Corvette ordered out
+// under the river's thick middle and Home's camera held, so its ring stands
+// among the lanterns. That is the frame gate 7's glance is for.
 //
 //   SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
 //     node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
@@ -41,6 +43,14 @@ const POSES = [
 // (`FREE_WATER_HIGH_LIFE.BLOOM` in packages/shared/src/constants.ts), looking
 // east-north-east along its north side at the lanterns' own depth.
 const RIVER = ['river', 1200, 1930, 400, -70, 5, 160];
+// The staged frame: where the Corvette is sent, at the fleet's own 300 m. From
+// Home's eye that water lies behind the river's thick middle, so the hull's
+// ring is drawn among the lanterns. `SELECT` is the camera the hull is picked
+// and ordered from; the frame itself is Home's pose, under another name.
+const MARK_AT = [1350, 1800];
+const MARK_DEPTH_M = 300;
+const SELECT = { distance: 300, pitchDeg: 60 };
+const MARK = ['mark', ...POSES[0].slice(1)];
 
 /** halo-cost.mjs's load: about 3.6 ms on the named GPU (gpuQueueLoad.ts). */
 const QUEUE_STEPS = Number(process.env.QUEUE_STEPS ?? 12000);
@@ -53,6 +63,8 @@ const aim = (page, [, x, z, distance, yawDeg, pitchDeg, focusDepthM]) =>
   );
 
 export default async ({ page, shot, recordingStartedMs }) => {
+  // A software rasteriser draws the staging camera at seconds a frame.
+  page.setDefaultTimeout(240000);
   await page.waitForFunction(() => window.__perspectiveProbe?.().modelBacked >= 3, null, {
     timeout: 120000,
   });
@@ -124,6 +136,68 @@ export default async ({ page, shot, recordingStartedMs }) => {
     return drawn;
   };
 
+  // Each hull as a frame has it: where it stands and its live SIG.
+  const hulls = () =>
+    page.evaluate(() => {
+      const round = (v) => Number(v.toFixed(1));
+      return window.__perspectiveLamps().units.map((hull) => ({
+        name: hull.name,
+        sig: hull.sig,
+        restSig: hull.restSig,
+        xM: round(hull.xM),
+        zM: round(hull.zM),
+        depthM: round(hull.depthM),
+      }));
+    });
+  const hullAt = async (name) => (await hulls()).find((hull) => hull.name === name);
+  // A hull is at rest when a second moves it nowhere and its SIG is back at idle.
+  const comeToRest = async (name) => {
+    let was = await hullAt(name);
+    for (let i = 0; i < 600; i++) {
+      await page.waitForTimeout(1000);
+      const now = await hullAt(name);
+      const still =
+        Math.hypot(now.xM - was.xM, now.zM - was.zM) < 0.5 && Math.abs(now.depthM - was.depthM) < 0.5;
+      if (i > 2 && still && now.sig <= now.restSig + 0.5) return now;
+      was = now;
+    }
+    assert.fail(`the ${name} never came to rest`);
+  };
+  // The Corvette, picked where it stands and sent out under the river. Both
+  // clicks land on the view's centre, which is the camera's focus: on the hull
+  // to pick it, then on the water at `MARK_AT`, where an order given on a
+  // raised focus plane is an order to that depth (#1132).
+  const sendOut = async () => {
+    const view = page.viewportSize();
+    const centre = [view.width / 2, view.height / 2];
+    const before = await hulls();
+    const at = before.find((hull) => hull.name === 'Corvette');
+    await aim(page, ['pick', at.xM, at.zM, SELECT.distance, 0, SELECT.pitchDeg, at.depthM]);
+    await page.waitForTimeout(software ? 4000 : 1500);
+    await page.mouse.click(...centre);
+    await page.waitForTimeout(1000);
+    await aim(page, ['order', ...MARK_AT, SELECT.distance, 0, SELECT.pitchDeg, MARK_DEPTH_M]);
+    await page.waitForTimeout(software ? 4000 : 1500);
+    await page.mouse.click(...centre, { button: 'right' });
+    await page.waitForTimeout(2000);
+    const now = await comeToRest('Corvette');
+    assert.ok(
+      Math.abs(now.depthM - MARK_DEPTH_M) < 5 &&
+        Math.hypot(now.xM - MARK_AT[0], now.zM - MARK_AT[1]) < 30,
+      `the Corvette rests at ${now.xM}, ${now.zM}, ${now.depthM} m, not where it was sent`
+    );
+    // The click took the Corvette and nothing else.
+    for (const hull of before.filter((hull) => hull.name !== 'Corvette')) {
+      const stood = await hullAt(hull.name);
+      assert.ok(
+        Math.hypot(stood.xM - hull.xM, stood.zM - hull.zM) < 30,
+        `the ${hull.name} went with the Corvette`
+      );
+    }
+    // The order's own marks fade; the frame is the hull at rest, still picked.
+    await page.waitForTimeout(software ? 6000 : 3000);
+  };
+
   if (process.env.CLIP === '1') {
     // The clip: Home out over the bowl to gate 6's low camera at High, the
     // camera moved a step a frame, so the river is seen from both.
@@ -162,6 +236,7 @@ export default async ({ page, shot, recordingStartedMs }) => {
   const take = async (quality, poses) => {
     for (const pose of poses) {
       const name = pose[0];
+      // FRAMES names cameras; `mark` names the staged frame.
       if (only && !only.includes(name)) continue;
       await aim(page, pose);
       const label = `${quality}-${name}`;
@@ -184,6 +259,7 @@ export default async ({ page, shot, recordingStartedMs }) => {
         calls: probe.drawCalls,
         triangles: probe.triangles,
         camera: pose.slice(1),
+        hulls: await hulls(),
         // Whether the camera's sway and the bodies were held (reduced motion).
         sway: probe.sway ?? null,
         // What the crater stands at this quality, and the lights its fry and
@@ -221,6 +297,17 @@ export default async ({ page, shot, recordingStartedMs }) => {
   if (qualities.includes('high')) {
     await setQuality('high');
     await take('high', [...POSES, RIVER]);
+  }
+  // The staged frame last, since it moves a hull: High, then Low as its
+  // control, the same hull at the same place with no river over it.
+  if (!only || only.includes('mark')) {
+    await setQuality('high');
+    await sendOut();
+    if (qualities.includes('high')) await take('high', [MARK]);
+    if (qualities.includes('low')) {
+      await setQuality('low');
+      await take('low', [MARK]);
+    }
   }
   const high = readings.filter((reading) => reading.quality === 'high');
   if (high.length > 0) {

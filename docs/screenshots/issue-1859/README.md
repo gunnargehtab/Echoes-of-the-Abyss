@@ -24,10 +24,13 @@ node --import tsx --import ./packages/frontend/test/support/viteAssets.mjs \
   docs/screenshots/issue-1859/river.mjs
 ```
 
-[frames.mjs](frames.mjs) is #1837's module with one camera and the clip's move changed:
-Low and then High at the target's three cameras, at gate 6's low camera, and 400 m from
-the river's west end in place of the garden close. It writes [readings.json](software/readings.json) after
-every frame. Reduced motion holds the river where the match's start stands it, so two
+[frames.mjs](frames.mjs) is #1837's module with one camera and the clip's move changed,
+and one staged frame added: Low and then High at the target's three cameras, at gate 6's
+low camera, and 400 m from the river's west end in place of the garden close. Then it
+sends the Corvette out under the river and takes Home's camera again, at High and at
+Low. It writes [readings.json](software/readings.json) after every frame. The staged
+pair here was taken in a second run of the module, with `FRAMES=mark`, and its two
+readings follow the first ten. Reduced motion holds the river where the match's start stands it, so two
 runs frame alike. [bloom.py](bloom.py) reads the High frames against
 [main-high](software/main-high), the same cameras taken on `main` at ba9b6ba0 with the
 same module, and writes the crops below. [river.mjs](river.mjs) prints, from the
@@ -49,6 +52,7 @@ Two more, off the target's three:
 | --- | --- | --- | --- |
 | Low | [low](software/03-low-low.png) | [high](software/08-high-low.png) | Gate 6's fourth camera, over the bowl, looking north: the whole river across the frame's left and middle, 1,273 to 2,009 m off, its west end a knot left of the garden and its sides thinning east across the pocket |
 | River | [low](software/05-low-river.png) | [high](software/10-high-river.png) | 400 m from the river's west end, at the lanterns' own depth: what a lantern of it is from near. A drift of soft discs up to 24 px across, each in a wider faint glow. No bell and no strands |
+| Mark | [low](software/12-low-mark.png) | [high](software/11-high-mark.png) | Home's camera with the Corvette sent to `(1,350, 1,800)` at its 300 m, picked and at rest: its ring stands in the river's thick middle, lanterns inside it and across its stroke. The frame gate 7's glance is for |
 
 ![Home's bowl on main, over the same crop with the river](software/bloom-home.png)
 
@@ -144,10 +148,29 @@ of it and no lantern's cloud in the layer at Low.
 
 ## Gate 7 and the limits
 
-No mark is among the river's points in these frames: at Home its nearest pixel is more
-than 200 px from the Corvette's ring, and the fleet rests on the rim. A hull ordered into the bowl
-puts a ring under the river, and gate 7's glance at it there is the owner's, on the named
-GPU.
+With the fleet at rest no mark is among the river's points: at Home its nearest pixel is
+more than 200 px from the Corvette's ring. The risk the issue names is a mark among
+them, so the Mark frame stages one: the Corvette ordered out under the river's thick
+middle, from Home's camera.
+
+![The Corvette's ring under the river at Home: Low above, High below](software/bloom-mark.png)
+
+The crop at twice its size, Low above and High below. Read by [bloom.py](bloom.py):
+
+| What | Low | High |
+| --- | --- | --- |
+| The ring: its radius, and the pixels of its stroke | 45 px, 358 | the same |
+| Pink pixels inside the ring, of 5,261 | 0 | 407 |
+| The ring's own pixels, luma at the median and the least | 184, 184 | 184, 183 |
+
+A mark is the tactical pass's and is drawn over the world, so no lantern dims the ring:
+its stroke reads at High what it reads at Low, over the river's brightest pixel at 115.
+What the river changes is what stands round and inside the ring: 49 lanterns inside it
+and 8 across its stroke, by [river.mjs](river.mjs), with the Corvette's own lamp among
+them. The hull is the quiet end of this: the Light Scout's
+ring is fainter and no frame stages it. Whether the ring, the lamp and the hull read in
+under a second there is the owner's glance, and the same module takes this frame on the
+named GPU.
 
 Limits 2 to 4 hold by construction. The river is an authored list on an authored loop,
 drawn once from the fixture's seed, the same for every client, and it drifts on the
@@ -157,7 +180,7 @@ No colour-vision palette was captured: those run once, at promotion.
 
 ## Calls taken with these frames
 
-Six, each written with its other readings in
+Seven, each written with its other readings in
 [art-direction.md](../../art-direction.md#a-far-bloom-of-lanterns), and each the owner's
 to overturn:
 
@@ -173,6 +196,12 @@ to overturn:
 - **It is told from a Tetherjelly field by hue and form.** A crowd of lanterns is nearer
   a field's look than one lantern was, and the crater authors no field to stand beside
   it.
+- **It turns clockwise, as every loop here does.** So its north side drifts east, with
+  the current the kelp leans to, and its south side drifts west against it.
+
+And one about this page: **it carries no timing run.** The points are placement in a
+draw and a program #1837 wrote, as #1857's seats were, and the fragments they add are
+counted above.
 
 Three more are numbers, TUNABLE until a frame is accepted: 260 lanterns, a disc's light
 at 0.3, as a near lantern's seat, and a lap in 13,500 s, which is a drifting jelly's
@@ -194,8 +223,9 @@ CLIP=1 CLIP_HOLD_MS=20000 RECORD_VIDEO=docs/screenshots/issue-1859/gpu VIEW_W=19
   --out docs/screenshots/issue-1859/gpu --steps docs/screenshots/issue-1859/frames.mjs
 ```
 
-The first writes ten frames and `readings.json`, whose `queued` GPU time at the five
-cameras is gate 6's reading. The second records the clip and prints where the move
+The first writes twelve frames and `readings.json`, whose `queued` GPU time at each
+camera is gate 6's reading. Its last two are the Mark pair, after the Corvette's run out
+under the river, which takes about a minute. The second records the clip and prints where the move
 starts and ends in it. Neither sets reduced motion, so the river stands where the match's
 clock has carried it: it drifts 0.44 m/s at its fastest, 26 m in a minute.
 

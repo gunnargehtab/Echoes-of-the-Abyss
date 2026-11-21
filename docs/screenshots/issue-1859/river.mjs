@@ -155,6 +155,32 @@ for (const name of Object.keys(POSES)) report(name, 0);
 // Where a session finds the river later: it drifts, and Home's eye does not.
 for (const minutes of [10, 30, 60]) report('home', minutes * 60);
 
+// The staged frame (frames.mjs `MARK_AT`): the Corvette sent out at 300 m, from
+// Home's eye. bloom.py reads its ring's radius off the frame, 45 px; a lantern
+// within 4 px of that circle is across its stroke.
+{
+  const camera = cameraOf(POSES.home);
+  const RING_PX = 45;
+  const toScreen = (point) => {
+    const ndc = point.clone().project(camera);
+    return [((ndc.x + 1) / 2) * VIEW_W, ((1 - ndc.y) / 2) * VIEW_H];
+  };
+  const [cx, cy] = toScreen(new Vector3(1350, depthToWorldY(300), 1800));
+  let inside = 0;
+  let across = 0;
+  const point = new Vector3();
+  for (const slot of FAR_BLOOM) {
+    const [sx, sy] = toScreen(farLanternAt(slot, 0, point));
+    const off = Math.hypot(sx - cx, sy - cy);
+    if (off < RING_PX - 4) inside++;
+    else if (off <= RING_PX + 4) across++;
+  }
+  console.log(
+    `mark: the Corvette at 1,350 / 1,800 draws at ${fmt(cx)}, ${fmt(cy)} from Home; ` +
+      `${inside} lanterns stand inside a ring of ${RING_PX} px there and ${across} across its stroke`
+  );
+}
+
 // The three shapes written for the loop, by what Home's eye holds of each at
 // the match's start: the same list hung on another loop. A circle the bowl
 // holds whole, about the crater's centre and in its north-west, and the

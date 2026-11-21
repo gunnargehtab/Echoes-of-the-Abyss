@@ -14,6 +14,12 @@ step, which no river explains: it is printed beside each count.
 
 Luma is Pillow's `L`, out of 255. It writes `bloom-<camera>.png` beside the
 frames: the camera's crop of `main` above the same crop of the step, enlarged.
+
+The staged pair, `*-low-mark.png` and `*-high-mark.png`, is the Corvette sent
+out under the river and picked, at Home's camera. Its selection ring is the
+one near-white circle in `MARK_BOX`: the script fits it, counts the pink
+pixels inside it at each quality, reads the ring's own stroke at both, and
+writes `bloom-mark.png`, Low above High.
 """
 import glob
 import os
@@ -31,6 +37,8 @@ CROPS = {
     'survey': ((790, 440, 1090, 620), 4),
     'close': ((1100, 380, 1920, 560), 1),
 }
+# The staged frame's crop: the water the Corvette is sent to, from Home's eye.
+MARK_BOX = (1280, 300, 1780, 620)
 # The five jellies' lips at Home, by eye off the frame, for the same reading.
 NEAR = [(848, 592), (1188, 591), (890, 712), (673, 738)]
 
@@ -50,7 +58,54 @@ def river_mask(now, before):
     )
 
 
+def staged(folder, quality):
+    found = glob.glob(os.path.join(folder, f'*-{quality}-mark.png'))
+    assert len(found) == 1, f'{len(found)} frames named *-{quality}-mark.png in {folder}'
+    return Image.open(found[0]).convert('RGB').crop(MARK_BOX)
+
+
+def mark(folder):
+    low, high = staged(folder, 'low'), staged(folder, 'high')
+    # The selection ring: near-white, and nothing else in the crop is.
+    white = lambda im: [
+        (x, y)
+        for y in range(im.height)
+        for x in range(im.width)
+        if min(im.getpixel((x, y))) >= 150 and max(im.getpixel((x, y))) - min(im.getpixel((x, y))) <= 40
+    ]
+    stroke = white(low)
+    xs, ys = [x for x, _ in stroke], [y for _, y in stroke]
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    radius = ((max(xs) - min(xs)) + (max(ys) - min(ys))) / 4
+    print(
+        f'mark: the ring is {len(stroke)} pixels at Low, centred {MARK_BOX[0] + cx:.0f}, '
+        f'{MARK_BOX[1] + cy:.0f}, {radius:.0f} px in radius'
+    )
+    for quality, im in (('low', low), ('high', high)):
+        inside = pink = 0
+        for y in range(im.height):
+            for x in range(im.width):
+                if (x - cx) ** 2 + (y - cy) ** 2 > (radius - 4) ** 2:
+                    continue
+                inside += 1
+                r, g, b = im.getpixel((x, y))
+                pink += r - g >= PINK and b - g >= PINK and (r + g + b) / 3 >= 40
+        lumas = sorted(im.convert('L').getpixel(at) for at in stroke)
+        print(
+            f'mark, {quality}: {pink} pink pixels of the {inside} inside the ring; the '
+            f"ring's own pixels read {lumas[len(lumas) // 2]} at the median, {lumas[0]} at the least"
+        )
+    w, h = low.size
+    sheet = Image.new('RGB', (w * 2, h * 4 + 4), (255, 255, 255))
+    sheet.paste(low.resize((w * 2, h * 2), Image.LANCZOS), (0, 0))
+    sheet.paste(high.resize((w * 2, h * 2), Image.LANCZOS), (0, h * 2 + 4))
+    path = os.path.join(folder, 'bloom-mark.png')
+    sheet.save(path)
+    print(f'wrote {path}')
+
+
 def read(folder):
+    mark(folder)
     for name, (box, scale) in CROPS.items():
         now = frame(folder, name)
         before = frame(os.path.join(folder, 'main-high'), name)

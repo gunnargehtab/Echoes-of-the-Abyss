@@ -876,9 +876,9 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 `HIGH_GRAPHICS.LIFE.JELLY.FAR` and `FREE_WATER_HIGH_LIFE.BLOOM`
 (`packages/shared/src/constants.ts`) until a frame of it is accepted.
 [issue-1837](screenshots/issue-1837/README.md) offered it with its frames and did not
-build it. Six calls were taken in the open here, and wait on the owner: what a far
-lantern is, whose draw it is, where the river runs, that it keeps one level, what it is
-from near, and a crowd of lanterns beside a Tetherjelly field.*
+build it. Seven calls were taken in the open here, and wait on the owner: what a far
+lantern is, whose draw it is, where the river runs, that it keeps one level, which way
+it turns, what it is from near, and a crowd of lanterns beside a Tetherjelly field.*
 
 From Home's eye the bowl beyond the fleet was empty water, and the five lanterns hung
 over the fleet's start alone. A river of 260 small lanterns now drifts far out over the
@@ -924,8 +924,18 @@ bowl ([free-water-slice.md](free-water-slice.md) §5, "A far bloom over the bowl
 - **It moves, and for nothing** (limit 4). The list is drawn once from the fixture's
   seed and is the same for every client. It drifts on the shared match time, a lap of
   its loop in 13,500 s: 0.32 m/s on the average and 0.44 along the loop's long sides,
-  against a drifting jelly's 0.31 on its own. No hull, shot, ping or camera starts, hurries, gathers or
-  brightens it, and reduced motion holds it where the match's start stands it.
+  against a drifting jelly's 0.31 on its own. No hull, shot, ping or camera starts,
+  hurries, gathers or brightens it, and reduced motion holds it where the match's start
+  stands it.
+- **It turns clockwise seen from above, as every loop of the fixture does.** So its
+  north side drifts east, with the one prevailing current the kelp leans to
+  ([free-water-slice.md](free-water-slice.md) §5, "No rows"), and its south side drifts
+  west, against it. Two readings were written. **Anticlockwise** only changes which
+  side runs against the current. **A river that does not close**, east with the current
+  and gone, leaves the bowl empty after it or has to be fed, and the issue asks for a
+  loop. **Clockwise** is taken, with the fixture. A river 1.9 km long shows its
+  direction where a 14 m loop does not, and whether its south side reads as wrong is
+  the owner's glance, in the clip.
 - **From near it is a drift of soft discs.** A point is a disc at any distance. From
   400 m a lantern of the river draws up to 24 px across, with no bell and no strands,
   where a lantern of the five shows both. Three readings were written. **Fade a point
@@ -948,9 +958,13 @@ bowl ([free-water-slice.md](free-water-slice.md) §5, "A far bloom over the bowl
   written. **Keep the river off any map that stands a field** is the rule this cut
   leaves for whoever carries the bloom out of the crater. **Trust hue and form** is what
   the crater's frames can show. Whether a river reads as a field is the owner's glance.
-- **Low draws none of it, and no mark, lamp or halo is touched.** No ring stands in the
-  water it crosses from Home's eye, and gate 7's glance at a mark among its points, a
-  hull ordered out under it, is the owner's.
+- **Low draws none of it, and no mark, lamp or halo is touched.** With the fleet at
+  rest no ring stands in the water it crosses from Home's eye. The Corvette sent out
+  under it is staged ([issue-1859](screenshots/issue-1859/README.md#gate-7-and-the-limits)):
+  a mark is drawn over the world, so its ring's stroke reads 184 of 255 at Low and at
+  High alike, over the river's brightest pixel at 115, with 49 lanterns inside the ring
+  and 8 across its stroke. What the river changes is what stands round a mark, and gate 7's glance at a
+  mark among its points is the owner's.
 
 `packages/frontend/test/farBloom.test.ts` holds the river over the bowl a whole lap
 long, its list, its two points a lantern, its one level and its drift, and

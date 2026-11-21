@@ -13,6 +13,7 @@ import { describe, it } from 'node:test';
 import { Vector3 } from 'three';
 import { FREE_WATER_HIGH_LIFE, FREE_WATER_LIFE, HIGH_GRAPHICS } from '@echoes/shared';
 import { terrainFor } from '../../backend/src/sim/maps/index.ts';
+import { propHash } from '../src/game/environment.ts';
 import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
 import {
   FAR_BLOOM,
@@ -145,11 +146,17 @@ describe('the far bloom (#1859)', () => {
     assert.ok(slowest >= jellyMps / 3, `${slowest} m/s round the ends`);
   });
 
-  it('is drawn from the fixture’s seed and nothing else', async () => {
-    // The list is a constant of the module: a second reading of it is the
-    // same list, whatever a match has done since.
-    const again = await import('../src/game/farBloom.ts');
-    assert.equal(again.FAR_BLOOM, FAR_BLOOM);
-    assert.equal(typeof FREE_WATER_LIFE.SEED, 'number');
+  it('is drawn from the fixture’s seed and nothing else', () => {
+    // Every lantern is the fixture's seed, the loop's centre, its own number
+    // and an axis through the registry's hash: no clock, no camera and no
+    // match is an input, so every client draws the one river.
+    FAR_BLOOM.forEach((slot, i) => {
+      const draw = (axis: number) => propHash([FREE_WATER_LIFE.SEED, at[0], at[1], i, axis]);
+      const along = draw(1) + draw(2) - 1;
+      assert.equal(slot.phase, ((startDeg + (along * SPAN_DEG) / 2) * Math.PI) / 180);
+      assert.equal(slot.acrossM, (draw(3) * 2 - 1) * STATION.acrossM);
+      assert.equal(slot.depthM, depthM + (draw(4) * 2 - 1) * STATION.depthM);
+      assert.equal(slot.sizeM, FAR.SIZE_M * (FAR.SMALLEST + (1 - FAR.SMALLEST) * draw(5)));
+    });
   });
 });
