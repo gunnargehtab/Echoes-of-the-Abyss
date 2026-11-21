@@ -450,8 +450,9 @@ degrees over its horizon. **A steeper bank on a loop beyond the body** is taken.
 manta starts 16 degrees short of its near point, 100 m out and coming on, which is where
 reduced motion holds it and where a still frame finds it. The eye sees half its plan or
 more for 52 s of each 300 s lap. For the rest it turns away, edge on and then back to the
-eye, 235 m off at its farthest. From Home's eye it is 643 to 770 m off, and its span
-draws 35 to 42 px.
+eye, 235 m off at its farthest. From Home's eye it is 643 to 770 m off, where a span
+square to the eye would draw 35 to 42 px; at its start that eye, over the Lid, sees a
+quarter of its belly past the bank, a pale fleck about 20 px across at the frame's foot.
 
 At that bank a wingtip stands 5.8 m of drawn height off the axis, so its whole body
 spans 131 to 199 m deep over the lap, over the outside rim's 600 m floor. Its path

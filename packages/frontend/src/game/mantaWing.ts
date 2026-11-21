@@ -6,7 +6,7 @@
  * (docs/screenshots/issue-1867/target-manta.jpg): a smooth pale belly with
  * its gill slits and blotches, on wings that are plainly a living thing's.
  * `env-rim-manta` is a body in the world's light as every swimmer is
- * (lifeLight.ts), with two things more:
+ * (lifeLight.ts), with three things more:
  *
  * - **Its skin is smooth.** The file is flat-shaded, as the kit writes every
  *   prop, and a body 18 m across passing 95 m from the eye shows each facet
@@ -19,6 +19,14 @@
  *   `mantaLift` is written twice, here and in the program, from the same
  *   constants. It runs on the shared match time and for nothing a match does
  *   (limit 4), and reduced motion holds the file's pose.
+ * - **The Lid's glow comes through its wings.** A face that looks down takes
+ *   the Lid's horizon share and little else, and at a body's register the
+ *   belly drew darker than the water behind it. So its belly's albedo is its
+ *   own (environmentModels.ts `buildTemplate`), and a face that looks down
+ *   takes, beside the rest, the Lid's glow that stands on the back over it,
+ *   less what the body between keeps: `wingThickness` reads that thickness
+ *   off the file once, a vertex at a time. The Lid's own light in the Lid's
+ *   token, and no source of the manta's.
  *
  * Nothing here emits and nothing is a mark. Low never builds this template:
  * the manta is not stood there (docs/free-water-slice.md §5).

@@ -47,8 +47,96 @@ round the target's manta are about a thirtieth of its span, and the crater's fry
 ## Cameras
 
 The manta is judged in [the High slice's](../issue-1799/README.md) three frames, and its
-glide is placed for Close, the one low eye of the three. Where it glides, and the frames
-beside this one, are written here by the pull request that places it.
+glide is placed for Close, the one low eye of the three
+([free-water-slice.md](../../free-water-slice.md) §5, "A manta before the Close eye").
+[glide.mjs](glide.mjs) prints what that eye sees of it over a lap.
+
+## The frames beside the target
+
+**A software rasteriser drew every frame here**: SwiftShader, in headless Chromium, in the
+cloud container that built the step. They guide a round and are not offered for
+acceptance. The frames the owner accepts against are taken on the named GPU, with
+[issue-1837](../issue-1837/README.md)'s commands under "Who captures" and this folder as
+`--out`.
+
+```bash
+SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
+  node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
+  --out docs/screenshots/issue-1867/software --steps docs/screenshots/issue-1837/frames.mjs
+python3 docs/screenshots/issue-1867/belly.py
+```
+
+[frames.mjs](../issue-1837/frames.mjs) is #1837's module, unchanged: Low and then High at
+the target's three cameras, at gate 6's low camera and at the garden close, with
+[readings.json](software/readings.json) written after every frame. Reduced motion holds
+every body at its loop's start and the manta's wings at the file's pose, so two runs
+frame alike.
+
+![The manta at Close beside its target](software/beside-target.png)
+
+The target, and the Close frame's manta at three times its size ([belly.py](belly.py)).
+
+| Camera | Low | High | What High shows now |
+| --- | --- | --- | --- |
+| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The manta as a pale fleck about 20 px across at the frame's foot, 650 m off: under the Harvester's ring and just over the controls' hint line. That eye is over the Lid and sees a quarter of the belly past the bank. It reads as a body by its paleness and not by its plan. Nothing else moved |
+| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | The manta in the upper middle of the frame, 100 m off and 14 m of drawn height over the eye, 270 px from lobe to wingtip: its belly to the eye, pale against the water, the gill slits in two rows and the blotches dark on it, the two lobes ahead and the whip tail behind. It stands over the jellies and clear of every ring, panel and lamp. Nothing else moved |
+| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | Unchanged but for the clock: no body draws from 10 km |
+
+Gate 6's low camera and the garden close show no manta, at either quality.
+
+## How the belly reads
+
+[belly.py](belly.py) reads the Close frame against
+[#1856's](../issue-1856/software/07-high-close.png), which holds the same water without
+the manta. The manta is every pixel of its box that differs from that water by 8 of 255 or
+more.
+
+| What | Luma, of 255 |
+| --- | --- |
+| The water the manta covers, at its median | 42 |
+| The belly, at its median | 81 |
+| The belly, at its ninth decile | 112 |
+| The belly, at its palest | 130 |
+| A mark, a lobe or the tail, at its median | 22 |
+
+So the belly reads at about twice the water behind it, and its margin at three times.
+[#1837](../issue-1837/README.md) read the same frame's lamps at 165, 159 and 130 and its
+lanterns' lips at 189, 177 and 164, so the belly's palest pixel is level with the
+quietest hull's lamp and under every other. At a body's register, 0.16, before the
+belly had its own, it read 13 against the water's 38: a silhouette
+([art-direction.md](../../art-direction.md#a-manta-shows-its-belly)).
+
+## What is new in the frame
+
+Read off `readings.json` against [#1856's](../issue-1856/software/readings.json).
+
+| Camera | High before: calls, triangles | High now |
+| --- | --- | --- |
+| Home | 63, 760,720 | 66, 763,409 |
+| Close | 63, 760,720 | 66, 763,409 |
+| Low | 44, 753,389 | 47, 756,078 |
+| Survey | 63, 761,358 | 66, 764,047 |
+
+The manta is 2,689 triangles at every camera: its batch is not culled. Low's calls and
+triangles are those of #1856 at all five cameras, to the triangle, and Low's frames
+differ from that step's by marine snow and the clock alone.
+
+## What the frames do not show
+
+- **The stroke.** Reduced motion holds it. `packages/frontend/test/mantaWing.test.ts`
+  holds its shape, and a clip of it is owed with the named GPU's frames.
+- **A school round it.** The fry's ribbon passes 63 m of depth under the manta and reads
+  as its own thing, left of it. The target's fish are all round the body.
+- **The target's light.** The sun behind the target's manta is not the crater's to have.
+
+## Open for the owner
+
+Seven calls wait, each written with its options in
+[art-direction.md](../../art-direction.md#a-manta-shows-its-belly),
+[free-water-slice.md](../../free-water-slice.md) §5 or
+[asset-prompts-3d.md](../../asset-prompts-3d.md) Block 4: the belly's register over a
+vessel's cladding, the light through the wings, the stroke, the 4,000-triangle row, the
+`fish-belly` token, the 40 degree bank, and the fine unpushed facets.
 
 ## Related
 
