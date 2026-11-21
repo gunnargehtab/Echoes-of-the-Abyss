@@ -110,6 +110,12 @@ export interface EnvTemplate {
   heightM: number;
   /** Named public-life seats, transformed exactly like the baked vertices. */
   photophores?: readonly Vector3[];
+  /**
+   * The way each of those seats faces, a unit vector in the template's
+   * frame: its facet's own normal in the file. A seat's light at High is lit
+   * by it (lifeGlow.ts, #1876).
+   */
+  photophoreFacings?: readonly Vector3[];
   /** Present only on a jelly's High template: what its membrane reads, and where its lip is. */
   jelly?: { uniforms: JellyUniforms; shape: JellyShape };
   /** Present only on the manta's High template: what its wings' stroke reads. */
@@ -232,6 +238,35 @@ export type WorldLit = boolean | 'lantern' | 'wing';
  * manta's: a body in the world's light whose skin is smoothed and whose
  * wings stroke (mantaWing.ts, #1867).
  */
+/**
+ * The way a seat's facet faces: the normal of its triangles, each weighed by
+ * its area, in the scene's frame. A seat is a flat lozenge laid on the skin
+ * and wound to face off it (tools/hull-models/seabed.mjs `seat`), so this is
+ * the skin's own outward normal there, read off the file.
+ */
+function facetFacing(node: Object3D): Vector3 {
+  const facing = new Vector3();
+  const [a, b, c, normal] = [new Vector3(), new Vector3(), new Vector3(), new Vector3()];
+  node.traverse((child) => {
+    if (!(child instanceof Mesh)) return;
+    const at = child.geometry.getAttribute('position');
+    const index = child.geometry.getIndex();
+    const corner = (i: number, into: Vector3): Vector3 =>
+      into
+        .fromBufferAttribute(at, index === null ? i : index.getX(i))
+        .applyMatrix4(child.matrixWorld);
+    const count = index === null ? at.count : index.count;
+    for (let i = 0; i < count; i += 3) {
+      corner(i, a);
+      corner(i + 1, b);
+      corner(i + 2, c);
+      // Half the cross product is the triangle's area along its normal.
+      facing.add(normal.subVectors(b, a).cross(c.sub(a)));
+    }
+  });
+  return facing.normalize();
+}
+
 export function buildTemplate(
   scene: Group,
   footprintM: number,
@@ -286,6 +321,7 @@ export function buildTemplate(
   merged.updateMatrixWorld(true);
   const heightM = size.y * scale;
   const photophores: Vector3[] = [];
+  const photophoreFacings: Vector3[] = [];
   copy.updateMatrixWorld(true);
   for (let i = 1; i <= 6; i++) {
     const node = copy.getObjectByName(`photophore_${String(i).padStart(2, '0')}`);
@@ -298,6 +334,7 @@ export function buildTemplate(
           .sub(new Vector3(centre.x, box.min.y, centre.z))
           .multiplyScalar(scale)
       );
+      photophoreFacings.push(facetFacing(node));
     }
   }
 
@@ -371,7 +408,16 @@ export function buildTemplate(
     smoothSkin(skins);
     wingThickness(skins);
   }
-  return { parts, trianglesPerInstance: triangles, sway, heightM, photophores, jelly, manta };
+  return {
+    parts,
+    trianglesPerInstance: triangles,
+    sway,
+    heightM,
+    photophores,
+    photophoreFacings,
+    jelly,
+    manta,
+  };
 }
 
 /**

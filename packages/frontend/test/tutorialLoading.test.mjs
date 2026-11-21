@@ -533,6 +533,20 @@ describe('a body’s own light at High (#1837)', () => {
           [kind(SEAT.SIZE_M, SEAT.LEVEL), high.photophoreLights],
         ])
       );
+      // A seat's light carries the way its seat faces, a unit vector turned
+      // with its body, and a fry's carries none (#1876). No point of a
+      // lantern has a seat to face by.
+      const face = layer.glow.points.geometry.getAttribute('aGlowFace');
+      let faced = 0;
+      for (let i = 0; i < layer.glow.count; i++) {
+        const length = Math.hypot(face.getX(i), face.getY(i), face.getZ(i));
+        const seat = glow.getY(i) === Math.fround(SEAT.LEVEL / LEVEL);
+        assert.ok(Math.abs(length - (seat ? 1 : 0)) < 1e-5, `light ${i} faces by ${length}`);
+        if (seat) faced++;
+      }
+      assert.equal(faced, high.photophoreLights);
+      const hung = layer.lantern.points.geometry.getAttribute('aGlowFace');
+      assert.ok(hung.array.subarray(0, layer.lantern.count * 3).every((v) => v === 0));
       // "A jelly is a lantern": the glow round its bell, its six seats and
       // its strands' beads, in a cloud of its own token.
       const { COUNT, BEADS } = HIGH_GRAPHICS.LIFE.JELLY.STRANDS;
