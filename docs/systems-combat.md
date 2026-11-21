@@ -543,9 +543,12 @@ elsewhere in this bible still holds and only the seconds moved. The 37 s floor i
 rounded down to the second the Klaxon still clears. §9.5 is why.
 
 These are **rank-0** figures. A hull's rank ([systems-progression.md](systems-progression.md)
-§3) multiplies gun damage and hull by up to +15% and +30%, and the per-rank figures are sized
-so that no band moves by more than a third at rank 3 against rank 0; the test that holds the
-bands should hold a rank-3 row too.
+§3) multiplies gun damage and hull by up to +15% and +30%. At rank 3 against rank 0 no band
+moves by more than a third from the veteran's gun, and all but four do not from its hull: a
+kill is whole shots with the first at once, so +30% hull can add more than a third to the time
+from first shot to last. Those four are recorded in
+[systems-progression.md](systems-progression.md) §4, and `test/ttkBands.test.ts` holds the
+rest and pins them.
 
 Fast TTK is safe *because* of rule 2 in §1: everything lethal is audible before it lands,
 so short fights punish bad approaches, not slow reflexes. That defends the intent. The next
