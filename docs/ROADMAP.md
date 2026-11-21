@@ -921,6 +921,12 @@ and no row below is open.
 | Re-syncing the vendored three.js skills to the r187 client | [#1804](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1804) |
 | Preflight passing a dependency that resolves outside its range | [#1828](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1828) |
 
+**Look work at High**
+
+| Work | Issue |
+| --- | --- |
+| A dark school staged in front of the vent’s glow | [#1856](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1856) |
+
 **Store art**
 
 | Work | Issue |
@@ -1007,6 +1013,24 @@ takes this one.
 | The free-water triangle total leaving out the rim ray | [#1789](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1789) |
 
 A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shipped map.
+
+**The look at High**
+
+| Work | Issue |
+| --- | --- |
+| Vent steam on every map as lit smoke | [#1853](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1853) |
+| World-light tokens held clear of faction inks | [#1854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1854) |
+| Marine snow lit inside a searchlight beam | [#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855) |
+| The deep fish’s photophores as world light | [#1857](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1857) |
+| Decorative life placed by depth band | [#1858](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1858) |
+| A far bloom of small lanterns over the bowl | [#1859](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1859) |
+| A second hue of lantern jelly | [#1860](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1860) |
+| A lantern’s light falling on what passes it | [#1861](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1861) |
+| Bioluminescence that answers a hull | [#1862](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1862) |
+| Step 3’s look calls left unsettled by #1852 | [#1863](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1863) |
+| A manta over the rim, seen from below | [#1867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1867) |
+
+Look work under [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) at High. Most wait on a target frame or an owner call.
 
 **Built when a branch wants it**
 
