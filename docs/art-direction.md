@@ -230,6 +230,9 @@ Built so far:
   development and not accepted. Below.
 - **The crater stands one vent stand, and its chimneys breathe lit smoke** (#1837). In
   development and not accepted. Below.
+- **A river of small lanterns drifts far out over the crater's bowl**
+  ([#1859](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1859)). In
+  development and not accepted. Below.
 - **The fine snow inside an own hull's beam is lit**
   ([#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855)). In
   development and not accepted. Below.
@@ -864,6 +867,106 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 | How far over the crown a wave starts, in its widths | `LIFE.JELLY.PULSE.LEAD` | 2 |
 | What a wave adds, as a share of the light it passes | `LIFE.JELLY.PULSE.GAIN` | 0.6 |
 | Seconds one jelly's clock runs ahead of the last's | `LIFE.JELLY.STAGGER_S` | 19.75 |
+
+#### A far bloom of lanterns
+
+*In development with the rest of High, and not accepted
+([#1859](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1859);
+[issue-1859](screenshots/issue-1859/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.LIFE.JELLY.FAR` and `FREE_WATER_HIGH_LIFE.BLOOM`
+(`packages/shared/src/constants.ts`) until a frame of it is accepted.
+[issue-1837](screenshots/issue-1837/README.md) offered it with its frames and did not
+build it. Six calls were taken in the open here, and wait on the owner: what a far
+lantern is, whose draw it is, where the river runs, that it keeps one level, what it is
+from near, and a crowd of lanterns beside a Tetherjelly field.*
+
+From Home's eye the bowl beyond the fleet was empty water, and the five lanterns hung
+over the fleet's start alone. A river of 260 small lanterns now drifts far out over the
+bowl ([free-water-slice.md](free-water-slice.md) §5, "A far bloom over the bowl").
+
+- **A far lantern is points, and no body.** Three readings were written. **More full
+  lanterns** cost 594 triangles of membrane and 331 points each, and from 1,300 m a bead
+  is under a pixel. **None** leaves the bowl the dark it is. **Points alone** is taken:
+  no file, no membrane and no strands. A lantern is two points of the world pass, as a
+  near lantern's seats and beads are: a soft disc 3 to 6 m across for its lit bell, and
+  the glow in the water round it, 8 to 16 m across at a tenth of its level. Both are
+  `jelly-lantern`, so the river follows its palette as the five do.
+- **It is no draw of its own.** The five jellies' points are one draw of the world pass
+  already, and the river's 520 follow them in it. Two readings were written. **A cloud
+  of its own** is the one draw the issue allowed. **The lantern's cloud** is taken: the
+  step adds no draw, no triangle, no pass and no byte of target. Its cost is 520 points
+  and their fragments, each a disc a few pixels across from Home's eye.
+- **The water fades it.** A point of the world pass only loses light to the swim
+  ([What is built at High](#what-is-built-at-high)). From Home's eye the river stands
+  1,316 to 2,554 m off, where the water leaves 0.59 to 0.14 of a lantern's light, so
+  its far end goes out into the dark and no edge is drawn. A bell's disc draws 2.2 to
+  6.4 px there. From the Close eye, whose water reaches 630 m, 0.08 is left at most, and
+  that frame holds a trace of it: 58 pixels lifted by 8 of 255 or more, across the vent
+  stand's light. From Survey's 10 km every disc is under the 1.6 px floor
+  and is drawn at it with its level cut by the area gained
+  ([Life in the world's light](#life-in-the-worlds-light)): a faint dusting of the
+  bowl's west lobe.
+- **The river runs along the bowl's north half, on a loop that is no circle.** Three
+  shapes were written, each read by what Home's eye holds of it
+  ([river.mjs](screenshots/issue-1859/river.mjs)). **A circle about the crater's
+  centre** shows that eye 151 of the 260, in the last 190 px of the frame.
+  **A circle in the bowl's north-west** shows it 207, in the last 385 px: a hook at the
+  frame's edge. **An ellipse along the north half** is taken: 204, across 475 px, its
+  west end the nearest of it and both its sides running off east into the dark. It is
+  the one loop of the fixture that is no circle. The river fills 230 degrees of it,
+  thickest at its middle and thinning to both ends: a river with a head and a tail,
+  where a full loop would read from Survey as a ring, and a ring there is a hull's.
+- **It keeps one level.** Three readings were written. **The near lanterns' stroke and
+  wave, carried out** is 260 points each flashing on its own beat, the busy frame the
+  issue names as its risk. **One slow swell down the river** is a light that travels,
+  and reads as a signal. **One level** is taken: the river moves by drifting and by
+  nothing else.
+- **It moves, and for nothing** (limit 4). The list is drawn once from the fixture's
+  seed and is the same for every client. It drifts on the shared match time, a lap of
+  its loop in 13,500 s: 0.44 m/s along the loop's long sides, against a drifting
+  jelly's 0.31 on its own. No hull, shot, ping or camera starts, hurries, gathers or
+  brightens it, and reduced motion holds it where the match's start stands it.
+- **From near it is a drift of soft discs.** A point is a disc at any distance. From
+  400 m a lantern of the river draws up to 24 px across, with no bell and no strands,
+  where a lantern of the five shows both. Three readings were written. **Fade a point
+  as the eye nears** is a light that answers the camera, which a world light never does
+  ([Life in the world's light](#life-in-the-worlds-light)). **A body in place of the
+  point, by distance** is the full lantern's cost, 260 times. **Leave it a disc** is
+  taken, and it is this cut's known limit: the bloom is far because of where it
+  stands, over the bowl and 517 m in plan from the nearest hull's start, and a hull
+  ordered into the bowl brings the eye to it. Whether that reads
+  as a lantern or as a fault is the owner's glance.
+- **It is not a Tetherjelly field.** One lantern was held apart from a field's bell by
+  being alone and adrift ([A jelly is a lantern](#a-jelly-is-a-lantern)), and 260
+  together are not alone. A field is public chart data that a commander plans by
+  ([map-visuals.md](map-visuals.md) §8), so a river read as one would be a false
+  chart. What still stands between them: a field is nine bells, each a dome, a rim and
+  tentacles in dots, 44 m across, in the fauna colour on the tactical layer, and it
+  stands where the map puts it. A lantern of the river is one soft disc 6 m across at
+  most, in `jelly-lantern`, and adrift. No
+  Tetherjelly field is authored in the crater, so no frame holds both. Two readings were
+  written. **Keep the river off any map that stands a field** is the rule this cut
+  leaves for whoever carries the bloom out of the crater. **Trust hue and form** is what
+  the crater's frames can show. Whether a river reads as a field is the owner's glance.
+- **Low draws none of it, and no mark, lamp or halo is touched.** No ring stands in the
+  water it crosses from Home's eye, and gate 7's glance at a mark among its points, a
+  hull ordered out under it, is the owner's.
+
+`packages/frontend/test/farBloom.test.ts` holds the river over the bowl a whole lap
+long, its list, its two points a lantern, its one level and its drift, and
+`packages/frontend/test/tutorialLoading.test.mjs` counts its points in the lantern's
+cloud at High, none at Low, and holds it under reduced motion.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Width of the widest lantern's disc, metres | `LIFE.JELLY.FAR.SIZE_M` | 6 |
+| The narrowest, as a share of the widest | `LIFE.JELLY.FAR.SMALLEST` | 0.5 |
+| A disc's light at its centre, in the renderer's linear units | `LIFE.JELLY.FAR.LEVEL` | 0.3 |
+| Width of the glow round the widest lantern, metres | `LIFE.JELLY.FAR.HALO.SIZE_M` | 16 |
+| That glow at its centre | `LIFE.JELLY.FAR.HALO.LEVEL` | 0.03 |
+
+Where the river runs, its count and its pace are
+[free-water-slice.md](free-water-slice.md) §5's.
 
 #### A manta shows its belly
 

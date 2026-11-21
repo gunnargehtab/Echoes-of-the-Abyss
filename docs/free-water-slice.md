@@ -191,7 +191,8 @@ water-polished rim. Forty-metre kelp and dim living tips recall the Plateaus. No
 lamp, vent chimney, glowing sky or overhead light is licensed here. That is Low, and it
 stands. At the High graphics quality the owner licensed one vent stand on the outside rim
 on 20 November 2026 (High's own vents, below). The bowl remains mostly empty, so the
-forest ends rather than dissolving into props at every depth.
+forest ends rather than dissolving into props at every depth. At High a river of far
+lanterns drifts over it, in development (#1859, below): points of light, and no prop.
 
 | Place / purpose | Retained or commissioned kit | Boundary |
 | --- | --- | --- |
@@ -201,6 +202,7 @@ forest ends rather than dissolving into props at every depth.
 | Small life / close inspection | The four small shapes below, public decoration | No dependency on own or enemy positions, contacts, occupancy, fauna AI or future events |
 | Large life / the opening | The ray below, one public decorative body of 18 m (#1777) | The same independence; no silhouette of a classified animal, and nothing of the colossus |
 | Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence. Not the Tetherjelly or its stipple figure: a field's bell is seven times as wide, a figure in dots in the fauna colour with six tentacles, and stands where it is, where a lantern is a lit skin in a hue of its own over eighteen strands, adrift alone. Not the Hollow's crescent. No light in its file |
+| Far life / over the bowl, High alone | No kit: the far bloom below, 260 lanterns that are points of `jelly-lantern` light and no body (#1859) | The same independence. No file, no membrane and no strands. Not a Tetherjelly field: a lantern is one soft disc 6 m across at most, in a hue of its own and adrift, where a field's bell is a figure in dots seven times as wide, in the fauna colour, and stands where it is. No lantern among the hulls' 300 m or under it |
 | Large life / before the Close eye, High alone | The manta below, a public decorative body of 18 m (#1867) | The same independence; no silhouette of a classified animal, nothing of a hunter and nothing of the colossus. It is not the rim ray reshaped: that file and its glide stand as they did |
 
 Two placement options were considered:
@@ -470,6 +472,51 @@ until the owner accepts a frame, and [glide.mjs](screenshots/issue-1867/glide.mj
 prints every figure here from them. How it is lit, its skin and its stroke are
 [art-direction.md](art-direction.md#a-manta-shows-its-belly)'s.
 
+**A far bloom over the bowl (#1859).** *In development, and not accepted.
+[issue-1837](screenshots/issue-1837/README.md) offered it with its frames and did not
+build it.* From Home's eye the bowl beyond the fleet was empty water. At High a river of
+260 small lanterns drifts over it, each two points of light and no body
+([art-direction.md](art-direction.md#a-far-bloom-of-lanterns)): no slot of the list above
+stands one, no file loads for one, and Low stands none.
+
+| River | Loop centre, radii east-west and north-south, period | Depth | Lanterns, and the share of the loop they fill | Station: across, depth |
+| --- | --- | --- | --- | --- |
+| The far bloom | `(2,150, 1,930)`, 950 m and 330 m, 13,500 s | 160 m | 260 over 230 degrees of its phase | 60 m, 60 m |
+
+Its loop is an ellipse along the bowl's north half, the one loop of this fixture that is
+no circle, clockwise seen from above as every loop here is. The band it sweeps in a lap,
+120 m across, lies over `x=1,140..3,160` and `y=1,540..2,320`: every cell under it is the
+bowl's or the pocket's, open to the Lid over a floor of 1,500 m or more, south of the
+garden's row and north of the southern wall. Where the ground under it shoals or roofs
+over, the river is not stood at all. It hangs 100 to 220 m deep, over the hulls' 300 m,
+and its band passes 517 m in plan from the Light Scout's start at its nearest.
+
+A lantern keeps station on the loop as a schooling fish does: a fixed seeded place along
+the river, up to 60 m across its line and 60 m of depth off it, and a width of its own,
+3 to 6 m. Where it stands along the river is the sum of two draws, so the river is
+thickest at its middle and thins to nothing at its head and its tail, 115 degrees of
+phase either way. Its middle starts at the loop's west end, `(1,200, 1,930)`, the nearest
+of it to Home's eye, which is where reduced motion holds it and where a still frame
+finds it. The loop is 4,261 m round, so a lap in 13,500 s is 0.44 m/s along its long
+sides and 0.15 m/s round its ends, against a drifting jelly's 0.31 m/s on its own loop.
+
+What each camera holds of it when the match starts
+([river.mjs](screenshots/issue-1859/river.mjs) prints every figure here):
+
+| Camera | Lanterns in the frame, of 260 | How far off | A bell's disc | What the water leaves of its light |
+| --- | --- | --- | --- | --- |
+| Home | 204 | 1,316 to 2,554 m | 2.2 to 6.4 px | 0.14 to 0.59 |
+| Close | 246 | 994 to 2,264 m | 2.5 to 8.6 px | 0.08 at most: a trace shows |
+| Low | 260 | 1,273 to 2,009 m | 2.3 to 6.7 px | 0.51 to 0.76 |
+| Survey | 260 | 10 km | under the 1.6 px floor, every one | 0.91 |
+
+It drifts and Home's eye does not: after 10 minutes that eye holds 218 of them, after 30
+minutes 232, and after an hour 171, the river's middle by then on the loop's far north
+side, 2,166 m off at the median. It is decoration under every rule of this section: no
+reaction, no collision, no tell, the same river for every client, held still under
+reduced motion. The numbers are TUNABLE in `FREE_WATER_HIGH_LIFE.BLOOM` until the owner
+accepts a frame.
+
 **High's own vents (#1837).** *In development with the same look step, and not accepted.
 The owner chose an authored stand on the rim in session on 20 November 2026, against
 frames from another map and against leaving the vents out.* At High the fixture stands
@@ -738,7 +785,8 @@ caps, 720,000 at Low and 900,000 at High (below).
 **At the High graphics quality the frame cap is 900,000 triangles** over every pass, by
 the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent
 stand that Low does not (§5): its frame stood at up to 720,318 after #1837 and at up to
-761,358 with #1856's school, and stands at up to 764,047 with #1867's manta. Low keeps
+761,358 with #1856's school, and stands at up to 764,047 with #1867's manta. #1859's
+river is points and adds no triangle and no draw to it. Low keeps
 720,000, and gate 6's 8 ms of GPU time
 still binds High's frame. The 600,000 reservation above binds the Low list alone, by the
 owner's decision the same day, against binding High's list too and against a second

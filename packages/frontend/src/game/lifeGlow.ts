@@ -10,7 +10,8 @@
  * the same cloud, one on each photophore seat its file marks (#1857): at Low
  * those seats are the stipple channel's dots, and at High no dot is drawn for
  * one. A drifting jelly's seats and the beads of its strands are points of
- * the same kind in a cloud of their own, in the jelly's token (jellyLight.ts).
+ * the same kind in a cloud of their own, in the jelly's token (jellyLight.ts),
+ * and the far bloom's lanterns are points of that cloud too (farBloom.ts).
  *
  * It is world light, not a mark, and it is drawn where world light is: one
  * `Points` in the world pass (highFrame.ts), scene-referred, so the water

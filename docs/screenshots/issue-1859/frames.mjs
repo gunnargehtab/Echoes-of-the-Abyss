@@ -52,7 +52,7 @@ const aim = (page, [, x, z, distance, yawDeg, pitchDeg, focusDepthM]) =>
     { x, z, distance, yawDeg, pitchDeg, focusDepthM }
   );
 
-export default async ({ page, shot }) => {
+export default async ({ page, shot, recordingStartedMs }) => {
   await page.waitForFunction(() => window.__perspectiveProbe?.().modelBacked >= 3, null, {
     timeout: 120000,
   });
@@ -131,6 +131,10 @@ export default async ({ page, shot }) => {
     const [from, to] = [POSES[0], POSES[2]];
     await aim(page, from);
     await page.waitForTimeout(2000);
+    // Where the move starts and ends in the recording, to cut the clip by.
+    const mark = (what) =>
+      console.log(`clip: ${what} ${((Date.now() - (recordingStartedMs ?? Date.now())) / 1000).toFixed(1)} s in`);
+    mark('the move starts');
     const steps = Number(process.env.CLIP_STEPS ?? 120);
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
@@ -139,8 +143,10 @@ export default async ({ page, shot }) => {
       await aim(page, pose);
       await page.waitForTimeout(Number(process.env.CLIP_STEP_MS ?? 50));
     }
+    mark('the move ends');
     // Held over the bowl, for the river's drift.
     await page.waitForTimeout(Number(process.env.CLIP_HOLD_MS ?? 6000));
+    mark('the hold ends');
     await shot('clip-end');
     return;
   }
