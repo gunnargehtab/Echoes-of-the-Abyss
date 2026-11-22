@@ -64,6 +64,13 @@ Counted on the *rise* rather than on the order, because a commander whose placem
 server refuses asks again on every observation. The opening Bastion and Foundry are excluded
 for the reason the opening stockpile is not income: they are a gift, not a decision.
 
+**Refits bought — share of matches, median minute.** Whether a navy bought each fleet-wide
+refit (`docs/systems-progression.md` §2), and when. A refit is bought once and never lost, so
+it is read off the player's own `refits` list on its first appearance, and the minute is the
+median over the matches that bought it. Read it under the structures table: every refit but
+the Order's Pressure Refit is bought on the Slipway's line. The table prints only when a refit
+was bought.
+
 **Nodules, Crystal and Biomass per minute.** Half the roster is priced in crystal or Biomass
 (`docs/economy.md` §8), so a navy that cannot fill those accounts cannot field what they buy
 however well it saves. The Directorate is the case that made the column necessary: it

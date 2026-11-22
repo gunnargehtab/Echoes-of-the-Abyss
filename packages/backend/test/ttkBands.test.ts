@@ -24,6 +24,8 @@ import {
   StructureKind,
   UnitKind,
   damageMultiplierFor,
+  rankGunFactor,
+  rankedHull,
   statsFor,
   structureStatsFor,
 } from '@echoes/shared';
@@ -525,5 +527,220 @@ describe('the mid-tier — two guns that read SIG', () => {
       ttkS(caisson.maxHp, responsory.attackDamage, responsory.attackCooldownS) > onCaisson,
       'a quiet hull with a Caisson’s plate must take longer'
     );
+  });
+});
+
+/**
+ * Rank's guard-rail — docs/systems-progression.md §4, "Rank breaks the TTK
+ * bands", and docs/systems-combat.md §9's note under the table (#1785).
+ *
+ * The bands above are rank-0 figures. A rank-3 hull shoots with 1.15× the gun
+ * and is shot with 1.3× the hull, both through the shared readers the server
+ * uses (`rankGunFactor`, the multiplier `profileFor` applies, and
+ * `rankedHull`, the maximum a rank-up writes), so each row below is the band
+ * the combat loop would play with one side at rank 3 and the other fresh.
+ *
+ * §4's claim is that no band moves by more than a third. On the shooter's
+ * side that holds for every band. On the target's side it holds for all but
+ * the four `RECORDED` rows. A kill is whole shots with the first at t=0, so
+ * the band is (shots - 1) cooldowns: +30% hull rounds up to whole shots, and
+ * one fewer of them is counted, so a three-shot kill becomes four (+50%) and a
+ * Cruiser's 24 Corvette shots become 32 (+35%). Balance is frozen (CLAUDE.md), so those four are recorded
+ * at their figures, in both docs, and left rather than answered by moving a
+ * hull or a gun. A mechanic that moves one fails here, and the fix is to
+ * re-read §4 and re-record it, never to widen the third.
+ */
+describe('§4 — every band at rank 3 against rank 0', () => {
+  /** "No band moves by more than a third", as a ratio to the rank-0 band. */
+  const THIRD = 1 / 3;
+  // Three of the target-side rows land on exactly 4/3, which floating point
+  // can put a last bit over.
+  const EPS = 1e-9;
+
+  interface Band {
+    readonly name: string;
+    /** The shooter's damage at rank 0, doctrine and SIG rules already in it. */
+    readonly damage: number;
+    readonly cooldownS: number;
+    /** The target's listed maximum hull. */
+    readonly hp: number;
+    /** False for a turret: a structure has no rank (`profileFor`). */
+    readonly shooterRanks: boolean;
+  }
+
+  const klaxon = FACTION_COMBAT.KLAXON.DAMAGE_MULTIPLIER;
+  const gun = (s: ReturnType<typeof statsFor>, multiplier = 1) => ({
+    damage: s.attackDamage * multiplier,
+    cooldownS: s.attackCooldownS,
+    shooterRanks: true,
+  });
+
+  // §9's gun rows that this file holds at rank 0, with the same multipliers
+  // the rank-0 tests above put in them. The siege rows have their own test
+  // below, in the cycles the siege test counts them in. The flight row is not
+  // here because this file does not hold it at rank 0 either.
+  const BANDS: readonly Band[] = [
+    { name: 'Corvette kills Light Scout', ...gun(corvette), hp: scout.maxHp },
+    { name: 'Corvette vs Corvette', ...gun(corvette), hp: corvette.maxHp },
+    { name: 'Cruiser kills Corvette', ...gun(cruiser), hp: corvette.maxHp },
+    { name: 'Corvette kills Cruiser', ...gun(corvette), hp: cruiser.maxHp },
+    { name: 'Caisson kills Corvette', ...gun(caisson, klaxon), hp: corvette.maxHp },
+    { name: 'Corvette kills Caisson', ...gun(corvette), hp: caisson.maxHp },
+    { name: 'Reed kills Corvette', ...gun(reed), hp: corvette.maxHp },
+    { name: 'Corvette kills Reed', ...gun(corvette), hp: reed.maxHp },
+    {
+      name: 'Derrick kills Corvette',
+      ...gun(derrick, damageMultiplierFor(Faction.Bathyarch, derrick.sigCruise)),
+      hp: corvette.maxHp,
+    },
+    { name: 'Corvette kills Derrick', ...gun(corvette), hp: derrick.maxHp },
+    { name: 'Responsory kills Corvette', ...gun(responsory), hp: corvette.maxHp },
+    {
+      name: 'Responsory kills Caisson',
+      ...gun(responsory, responsory.loudTargetDamageMultiplier!),
+      hp: caisson.maxHp,
+    },
+    {
+      name: 'Sentinel Turret kills Corvette',
+      damage: turret.attackDamage!,
+      cooldownS: turret.attackCooldownS!,
+      hp: corvette.maxHp,
+      shooterRanks: false,
+    },
+  ];
+
+  /**
+   * The target-side rows that move by more than a third, at the seconds they
+   * move to. Recorded, not answered: see the block comment.
+   */
+  const RECORDED: Readonly<Record<string, number>> = {
+    'Cruiser kills Corvette': 11.25, // 7.5 s, three shots, becomes four
+    'Corvette kills Cruiser': 55.8, // 41.4 s
+    'Corvette kills Derrick': 48.6, // 36 s
+    'Responsory kills Corvette': 18.2, // 13 s, six shots, becomes eight
+  };
+
+  const fresh = (b: Band) => ttkS(b.hp, b.damage, b.cooldownS);
+
+  it('moves no band by more than a third when the rank-3 hull is the one shooting', () => {
+    for (const b of BANDS) {
+      const r0 = fresh(b);
+      const shooter = b.shooterRanks ? rankGunFactor(3) : 1;
+      const r3 = ttkS(b.hp, b.damage * shooter, b.cooldownS);
+      assert.ok(
+        r3 >= r0 * (1 - THIRD) - EPS && r3 <= r0,
+        `${b.name}: ${r0.toFixed(2)} s at rank 0, ${r3.toFixed(2)} s from a rank-3 gun`
+      );
+    }
+  });
+
+  it('moves every band but the four recorded ones by no more than a third when it is the target', () => {
+    for (const b of BANDS) {
+      const r0 = fresh(b);
+      const r3 = ttkS(rankedHull(b.hp, 3), b.damage, b.cooldownS);
+      assert.ok(r3 >= r0, `${b.name}: a rank-3 hull cannot die faster than a fresh one`);
+      const recorded = RECORDED[b.name];
+      if (recorded === undefined) {
+        assert.ok(
+          r3 <= r0 * (1 + THIRD) + EPS,
+          `${b.name}: ${r0.toFixed(2)} s at rank 0, ${r3.toFixed(2)} s on a rank-3 hull`
+        );
+      } else {
+        assert.ok(
+          Math.abs(r3 - recorded) < 1e-6,
+          `${b.name}: recorded at ${recorded} s, now ${r3.toFixed(2)} s; re-read §4 and re-record it`
+        );
+        assert.ok(r3 > r0 * (1 + THIRD), `${b.name}: no longer a breach; take it off the list`);
+      }
+    }
+    // Every recorded row names a band that exists, or the list drifts silently.
+    for (const name of Object.keys(RECORDED)) {
+      assert.ok(
+        BANDS.some((b) => b.name === name),
+        `no band called ${name}`
+      );
+    }
+  });
+
+  it('gives §4\u2019s duel the figures §4 states for it', () => {
+    // "At rank 3 against rank 0, a Corvette kills a Corvette in 12.6 s and
+    // dies to one in 18 s": the fresh duel's nine shots become eight from the
+    // veteran's gun and eleven into the veteran's hull.
+    const kills = ttkS(
+      corvette.maxHp,
+      corvette.attackDamage * rankGunFactor(3),
+      corvette.attackCooldownS
+    );
+    const dies = ttkS(
+      rankedHull(corvette.maxHp, 3),
+      corvette.attackDamage,
+      corvette.attackCooldownS
+    );
+    assert.ok(Math.abs(kills - 12.6) < 1e-6, `kills in ${kills.toFixed(2)} s`);
+    assert.ok(Math.abs(dies - 18) < 1e-6, `dies in ${dies.toFixed(2)} s`);
+  });
+
+  it('moves no siege band by more than a third, and records the floors a veteran crosses', () => {
+    // §9's siege table, in the cycles the rank-0 siege test above counts it
+    // in. A structure has no rank, so a wall row moves only by the shooter's
+    // gun; the Furnace's hull row moves from both sides. The Tocsin's target
+    // is a turret, so only its gun moves that row, and 1000 / 230 still rounds
+    // up to the same five shots.
+    const cycles = (hp: number, damage: number, s: ReturnType<typeof statsFor>) =>
+      Math.ceil(hp / damage) * s.attackCooldownS;
+    const r3 = rankGunFactor(3);
+    const within = (name: string, r0: number, moved: number) =>
+      assert.ok(
+        moved >= r0 * (1 - THIRD) - EPS && moved <= r0 * (1 + THIRD) + EPS,
+        `${name}: ${r0} s at rank 0, ${moved} s at rank 3`
+      );
+
+    const wall = cycles(refinery.maxHp, furnace.attackDamageStructure!, furnace);
+    within(
+      'Furnace kills a Refinery',
+      wall,
+      cycles(refinery.maxHp, furnace.attackDamageStructure! * r3, furnace)
+    );
+    const bell = cycles(turret.maxHp, tocsin.attackDamageStructure!, tocsin);
+    within(
+      'Tocsin kills a Sentinel Turret',
+      bell,
+      cycles(turret.maxHp, tocsin.attackDamageStructure! * r3, tocsin)
+    );
+    const cutter = cycles(corvette.maxHp, furnace.attackDamage, furnace);
+    const veteranCutter = cycles(corvette.maxHp, furnace.attackDamage * r3, furnace);
+    within('Furnace vs Corvette, rank-3 Furnace', cutter, veteranCutter);
+    within(
+      'Furnace vs Corvette, rank-3 Corvette',
+      cutter,
+      cycles(rankedHull(corvette.maxHp, 3), furnace.attackDamage, furnace)
+    );
+
+    // Inside the third and still across a floor §9 states as "never": a
+    // rank-3 cutter kills a Corvette in 82 s, 8 s inside the 90 s floor, and
+    // a rank-3 Corvette brings an anchor down a second inside 37. Recorded, as the four above
+    // are, and left while balance is frozen.
+    assert.equal(
+      veteranCutter,
+      82,
+      'a rank-3 Furnace kills a Corvette in 82 s, under the 90 s floor'
+    );
+    const chip = ttkS(cruiser.maxHp, corvette.attackDamage * r3, corvette.attackCooldownS);
+    assert.ok(
+      Math.abs(chip - 36) < 1e-6,
+      `a rank-3 Corvette kills a Cruiser in ${chip} s, under 37`
+    );
+  });
+
+  it('leaves the hit-count rows where they were, or one hit further', () => {
+    // A rank never touches a torpedo or a mine (§3), so only the target's side
+    // moves. "Survives one, dies to two" holds for a rank-3 Corvette; a rank-3
+    // Cruiser takes a fifth torpedo where a fresh one takes four, which is a
+    // quarter, inside the third; a rank-3 Light Scout still dies to a mine.
+    const torpedoes = (hp: number) => Math.ceil(hp / ORDNANCE.TORPEDO.DAMAGE);
+    assert.equal(torpedoes(rankedHull(corvette.maxHp, 3)), 2, 'a rank-3 Corvette dies to two');
+    assert.equal(torpedoes(rankedHull(cruiser.maxHp, 3)), 5, 'a rank-3 Cruiser dies to five');
+    assert.ok(ORDNANCE.MINE.DAMAGE >= rankedHull(scout.maxHp, 3), 'a rank-3 scout dies to a mine');
+    assert.ok(ORDNANCE.MINE.DAMAGE < rankedHull(corvette.maxHp, 3), 'and a Corvette survives one');
   });
 });
