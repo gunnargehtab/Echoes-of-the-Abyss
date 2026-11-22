@@ -667,8 +667,8 @@ tallow, and no navy's glow, so rule 5 holds. It is not the fauna colour: that is
 stipple's, on the tactical layer.
 
 `jelly-lantern` is a drifting jelly: its bell, its seats and the beads of its strands
-([art-direction.md](art-direction.md#a-jelly-is-a-lantern)), and each lantern of the far
-bloom over the free-water crater's bowl, which is points of the same light and no body
+([art-direction.md](art-direction.md#a-jelly-is-a-lantern)), by the fleet and in the far
+bloom over the free-water crater's bowl, which is the same jelly 120 times
 ([art-direction.md](art-direction.md#a-far-bloom-of-lanterns)). The owner's target shows a
 jelly as a lantern of pink-violet light, and its brightest pixels are `#BFA6E2`, at a hue
 of 265 degrees: the hue of Hadron's glow, `#C9A6FF`, within a degree. A world light takes
@@ -821,8 +821,8 @@ halo, new ground-light family or response to a participant is licensed. Its othe
 decorative animals carry no emission; this exception remains confined to the study. At
 High a schooling fry carries one point of world light, `life-glint`, a deep fish's
 seats carry that token in place of their dots, and a drifting
-jelly is drawn as a lantern, `jelly-lantern`, both above. The far bloom over the bowl is
-points of `jelly-lantern` too, and no body (#1859).
+jelly is drawn as a lantern, `jelly-lantern`, both above, the far bloom's 120 over the
+bowl among them (#1859).
 
 ### The arch study's licence
 

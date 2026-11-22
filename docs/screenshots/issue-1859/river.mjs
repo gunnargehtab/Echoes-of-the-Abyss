@@ -1,41 +1,52 @@
 // What each camera holds of the far bloom (#1859): the numbers
 // docs/free-water-slice.md §5, "A far bloom over the bowl", and
 // docs/art-direction.md, "A far bloom of lanterns", print. Arithmetic on the
-// constants and the river's own list, after `npm run build:shared`:
+// river's own slots, after `npm run build:shared`:
 //
 //   node --import tsx --import ./packages/frontend/test/support/viteAssets.mjs \
 //     docs/screenshots/issue-1859/river.mjs
 //
-// The loop is farBloom.ts's: an ellipse, clockwise seen from above, a lantern
-// keeping station on it. The cameras are the frame module's, and the water's
-// reach is water.ts's free-water curve.
+// The slots are freeWaterDecoration.ts's, over the crater the server paints,
+// and a lantern stands where `decorationPose` puts it. The cameras are the
+// frame module's, and the water's reach is water.ts's free-water curve.
 import { PerspectiveCamera, Vector3 } from 'three';
 import { FREE_WATER_HIGH_LIFE, HIGH_GRAPHICS } from '../../../packages/shared/dist/index.js';
+import { terrainFor } from '../../../packages/backend/src/sim/maps/index.ts';
+import { FREE_WATER_SLICE } from '../../../packages/backend/src/sim/maps/freeWaterSlice.ts';
+import { propSpec } from '../../../packages/frontend/src/game/environment.ts';
 import {
-  FAR_BLOOM,
-  farBloomPlan,
-  farLanternAt,
-} from '../../../packages/frontend/src/game/farBloom.ts';
+  decorationPose,
+  freeWaterPlacements,
+} from '../../../packages/frontend/src/game/freeWaterDecoration.ts';
 import { CONN_FOV_DEG } from '../../../packages/frontend/src/game/readability.ts';
 import { waterReachM, waterTransmittance } from '../../../packages/frontend/src/game/water.ts';
 import { depthToWorldY } from '../../../packages/frontend/src/game/perspectiveTerrain.ts';
 
 const [VIEW_W, VIEW_H] = [1920, 1080];
-const { at, RADII_M, SPAN_DEG, COUNT, periodS, depthM, STATION } = FREE_WATER_HIGH_LIFE.BLOOM;
-const { FAR } = HIGH_GRAPHICS.LIFE.JELLY;
-const { MIN_PX } = HIGH_GRAPHICS.LIFE.GLOW;
+const { BLOOM, JELLIES } = FREE_WATER_HIGH_LIFE;
+const { at, RADII_M, SPAN_DEG, COUNT, depthM, STATION, MOTION } = BLOOM;
+const { STRANDS, HALO } = HIGH_GRAPHICS.LIFE.JELLY;
+const { MIN_PX, LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
+const BELL_M = propSpec('env-drift-jelly').footprintM;
 
-// docs/screenshots/issue-1799/README.md, Cameras, and gate 6's low: the focus
-// in plan, the dolly, yaw and pitch in degrees, the focus depth.
+const crater = terrainFor(FREE_WATER_SLICE).serialize();
+const RIVER = freeWaterPlacements(crater, true, true).filter((p) => p.far === true);
+/** Where a lantern's bell hangs at a match time: its mid-height, which its depth places. */
+const bellAt = (slot, timeS, out) => {
+  const pose = decorationPose(slot, timeS * 1000, () => 0);
+  return out.set(pose.x, pose.y + slot.motion.axisM, pose.z);
+};
+
+// docs/screenshots/issue-1799/README.md, Cameras, gate 6's low, and the frame
+// module's own three: the focus in plan, the dolly, yaw and pitch in degrees,
+// the focus depth.
 const POSES = {
-  // An eye inside the river's thickest water, 60 m from its line: the worst a
-  // camera can ask of the points.
-  inside: [1260, 1930, 60, -90, 0, 160],
   home: [709, 1710, 1200, -34, 15, 300],
   close: [542, 1958, 420, -60, 2, 300],
   low: [2000, 2000, 1600, 0, 12, 850],
   survey: [2000, 2000, 10000, 0, 88, 0],
   river: [1200, 1930, 400, -70, 5, 160],
+  field: [1550, 1930, 1100, 0, 20, 200],
 };
 const cameraOf = ([fx, fz, dolly, yawDeg, pitchDeg, focusDepthM]) => {
   const camera = new PerspectiveCamera(CONN_FOV_DEG, VIEW_W / VIEW_H, 10, 60000);
@@ -56,6 +67,10 @@ const pxPerM = VIEW_H / 2 / Math.tan((CONN_FOV_DEG * Math.PI) / 360);
 const fmt = (n, d = 0) => n.toFixed(d);
 const sorted = (list) => [...list].sort((a, b) => a - b);
 const median = (list) => sorted(list)[Math.floor(list.length / 2)];
+const toScreen = (camera, point) => {
+  const ndc = point.clone().project(camera);
+  return [((ndc.x + 1) / 2) * VIEW_W, ((1 - ndc.y) / 2) * VIEW_H, ndc];
+};
 
 // The loop: its length, by walking it, and its pace.
 let lengthM = 0;
@@ -66,13 +81,12 @@ for (let i = 0; i < 3600; i++) {
     RADII_M[1] * (Math.sin(b) - Math.sin(a))
   );
 }
-const jelly = FREE_WATER_HIGH_LIFE.JELLIES.MOTION;
 console.log(`loop: ${fmt(lengthM)} m round, ${COUNT} lanterns over ${SPAN_DEG} degrees of it`);
 console.log(
-  `pace: ${fmt((2 * Math.PI * RADII_M[0]) / periodS, 2)} m/s on the long sides, ` +
-    `${fmt((2 * Math.PI * RADII_M[1]) / periodS, 2)} round the ends, ` +
-    `${fmt(lengthM / periodS, 2)} mean; a drifting jelly ` +
-    `${fmt((2 * Math.PI * jelly.radiusM) / jelly.periodS, 2)} m/s`
+  `pace: ${fmt((2 * Math.PI * RADII_M[0]) / MOTION.periodS, 2)} m/s on the long sides, ` +
+    `${fmt((2 * Math.PI * RADII_M[1]) / MOTION.periodS, 2)} round the ends, ` +
+    `${fmt(lengthM / MOTION.periodS, 2)} mean; a drifting jelly ` +
+    `${fmt((2 * Math.PI * JELLIES.MOTION.radiusM) / JELLIES.MOTION.periodS, 2)} m/s`
 );
 console.log(
   `band: x ${fmt(at[0] - RADII_M[0] - STATION.acrossM)}..${fmt(at[0] + RADII_M[0] + STATION.acrossM)}, ` +
@@ -84,7 +98,8 @@ const FLEET = { 'Light Scout': [625, 1875], Corvette: [625, 2125], Harvester: [3
 let nearest = { m: Infinity, hull: '' };
 for (let deg = 0; deg < 360; deg += 0.25) {
   for (const acrossM of [-STATION.acrossM, 0, STATION.acrossM]) {
-    const [x, y] = farBloomPlan((deg * Math.PI) / 180, acrossM);
+    const x = at[0] + (RADII_M[0] + acrossM) * Math.cos((deg * Math.PI) / 180);
+    const y = at[1] + (RADII_M[1] + acrossM) * Math.sin((deg * Math.PI) / 180);
     for (const [hull, [hx, hy]] of Object.entries(FLEET)) {
       const m = Math.hypot(x - hx, y - hy);
       if (m < nearest.m) nearest = { m, hull };
@@ -94,30 +109,33 @@ for (let deg = 0; deg < 360; deg += 0.25) {
 console.log(
   `the band's nearest point to a hull's start, in plan: ${fmt(nearest.m)} m, the ${nearest.hull}'s`
 );
-const widths = FAR_BLOOM.map((slot) => slot.sizeM);
-console.log(`a bell's disc: ${fmt(Math.min(...widths), 1)} to ${fmt(Math.max(...widths), 1)} m`);
+const depths = RIVER.map((slot) => slot.motion.depthM);
+console.log(
+  `the lanterns hang ${fmt(Math.min(...depths))} to ${fmt(Math.max(...depths))} m deep; ` +
+    `a bell is ${BELL_M} m across, a bead ${STRANDS.SIZE_M} m at the lip`
+);
+console.log(
+  `the crater stands ${JELLIES.SLOTS.length + COUNT} jellies: ` +
+    `${(JELLIES.SLOTS.length + COUNT) * 594} triangles of membrane, ` +
+    `${(JELLIES.SLOTS.length + COUNT) * (1 + 6 + STRANDS.COUNT * STRANDS.BEADS)} points; ` +
+    `the river's ${COUNT} are ${COUNT * 594} and ${COUNT * (1 + 6 + STRANDS.COUNT * STRANDS.BEADS)} of them`
+);
 
-// What a camera holds of a list of points at a match time: how many stand in
-// its frame, how far off, how wide a disc draws and what the water leaves.
-const seen = (name, timeS, lanterns = FAR_BLOOM, placeOf = farLanternAt) => {
+// What a camera holds of the river at a match time: how many bells stand in
+// its frame, how far off, how wide a bell and a bead draw and what the water
+// leaves of their light.
+const seen = (name, timeS, placeOf = bellAt) => {
   const pose = POSES[name];
   const camera = cameraOf(pose);
   const reachM = waterReachM(pose[2], true);
   const inside = [];
   const point = new Vector3();
-  for (const slot of lanterns) {
+  for (const slot of RIVER) {
     placeOf(slot, timeS, point);
     const rangeM = point.distanceTo(camera.position);
-    const ndc = point.clone().project(camera);
+    const [sx, sy, ndc] = toScreen(camera, point);
     if (Math.abs(ndc.x) > 1 || Math.abs(ndc.y) > 1 || ndc.z > 1) continue;
-    inside.push({
-      rangeM,
-      px: (slot.sizeM * pxPerM) / rangeM,
-      haloPx: (((FAR.HALO.SIZE_M * slot.sizeM) / FAR.SIZE_M) * pxPerM) / rangeM,
-      left: waterTransmittance(rangeM, reachM),
-      sx: ((ndc.x + 1) / 2) * VIEW_W,
-      sy: ((1 - ndc.y) / 2) * VIEW_H,
-    });
+    inside.push({ rangeM, sx, sy, left: waterTransmittance(rangeM, reachM) });
   }
   return { reachM, inside };
 };
@@ -128,56 +146,79 @@ const report = (name, timeS) => {
     return;
   }
   const of = (key) => inside.map((one) => one[key]);
-  const floor = inside.filter((one) => one.px < MIN_PX).length;
+  const [near, far] = [Math.min(...of('rangeM')), Math.max(...of('rangeM'))];
+  const px = (sizeM, rangeM) => (sizeM * pxPerM) / rangeM;
   console.log(
     `${name} at ${timeS} s: ${inside.length} of ${COUNT} in the frame, ` +
-      `${fmt(Math.min(...of('rangeM')))} to ${fmt(Math.max(...of('rangeM')))} m off ` +
-      `(median ${fmt(median(of('rangeM')))}); a disc ${fmt(Math.min(...of('px')), 1)} to ` +
-      `${fmt(Math.max(...of('px')), 1)} px, ${floor} under the ${MIN_PX} px floor; the water ` +
-      `(reach ${fmt(reachM)} m) leaves ${fmt(Math.min(...of('left')), 2)} to ` +
-      `${fmt(Math.max(...of('left')), 2)} (median ${fmt(median(of('left')), 2)}); ` +
+      `${fmt(near)} to ${fmt(far)} m off (median ${fmt(median(of('rangeM')))}); ` +
+      `a bell ${fmt(px(BELL_M, far), 1)} to ${fmt(px(BELL_M, near), 1)} px, a bead at the lip ` +
+      `${fmt(px(STRANDS.SIZE_M, far), 2)} to ${fmt(px(STRANDS.SIZE_M, near), 2)} px against the ` +
+      `${MIN_PX} px floor; the water (reach ${fmt(reachM)} m) leaves ` +
+      `${fmt(Math.min(...of('left')), 2)} to ${fmt(Math.max(...of('left')), 2)} ` +
+      `(median ${fmt(median(of('left')), 2)}); ` +
       `x ${fmt(Math.min(...of('sx')))}..${fmt(Math.max(...of('sx')))}, ` +
       `y ${fmt(Math.min(...of('sy')))}..${fmt(Math.max(...of('sy')))}`
   );
-  // What the points cost: the fragments of each disc, a point never drawn
-  // narrower than its floor, and no disc counted past the frame's own area.
+  // What the lanterns' points cost: the fragments of each disc, none drawn
+  // narrower than its floor and none counted past the frame's own area. The
+  // glow round the bell, the six seats and the beads; the bell's membrane is
+  // its own pixels and is not summed here.
   const frame = VIEW_W * VIEW_H;
-  const disc = (px) => Math.min(frame, (Math.PI / 4) * Math.max(px, MIN_PX) ** 2);
-  const bells = of('px').reduce((sum, px) => sum + disc(px), 0);
-  const halos = of('haloPx').reduce((sum, px) => sum + disc(px), 0);
+  const disc = (sizeM, rangeM) =>
+    Math.min(frame, (Math.PI / 4) * Math.max(px(sizeM, rangeM), MIN_PX) ** 2);
+  let glow = 0;
+  let small = 0;
+  for (const rangeM of of('rangeM')) {
+    glow += disc(HALO.SIZE_M, rangeM);
+    small += 6 * disc(LANTERN.SIZE_M, rangeM);
+    for (let j = 0; j < STRANDS.BEADS; j++) {
+      const t = (j + 1) / STRANDS.BEADS;
+      small += STRANDS.COUNT * disc(STRANDS.SIZE_M * (1 - STRANDS.TAPER * t), rangeM);
+    }
+  }
   console.log(
-    `  fragments: ${fmt(bells)} of the bells' discs and ${fmt(halos)} of their glow, ` +
-      `${fmt(((bells + halos) / frame) * 100, 1)}% of the frame's ${frame}; ` +
-      `the widest glow ${fmt(Math.max(...of('haloPx')))} px`
+    `  fragments of the points: ${fmt(glow)} of the glow round the bells and ${fmt(small)} of ` +
+      `the seats and beads, ${fmt(((glow + small) / frame) * 100, 1)}% of the frame's ${frame}`
   );
 };
 for (const name of Object.keys(POSES)) report(name, 0);
 // Where a session finds the river later: it drifts, and Home's eye does not.
 for (const minutes of [10, 30, 60]) report('home', minutes * 60);
 
-// The staged frame (frames.mjs `MARK_AT`): the Corvette sent out at 300 m, from
-// Home's eye. bloom.py reads its ring's radius off the frame, 45 px; a lantern
-// within 4 px of that circle is across its stroke.
+// The staged frames (frames.mjs). `MARK_AT`: the Corvette sent out at 300 m,
+// from Home's eye; bloom.py reads its ring's radius off the frame, and a bell
+// within 4 px of that circle is across its stroke. `FIELD_AT`: a Tetherjelly
+// field, 250 m in radius, and the lanterns that hang inside its rim in plan.
 {
   const camera = cameraOf(POSES.home);
   const RING_PX = 45;
-  const toScreen = (point) => {
-    const ndc = point.clone().project(camera);
-    return [((ndc.x + 1) / 2) * VIEW_W, ((1 - ndc.y) / 2) * VIEW_H];
-  };
-  const [cx, cy] = toScreen(new Vector3(1350, depthToWorldY(300), 1800));
+  const [cx, cy] = toScreen(camera, new Vector3(1350, depthToWorldY(300), 1800));
   let inside = 0;
   let across = 0;
   const point = new Vector3();
-  for (const slot of FAR_BLOOM) {
-    const [sx, sy] = toScreen(farLanternAt(slot, 0, point));
+  for (const slot of RIVER) {
+    const [sx, sy] = toScreen(camera, bellAt(slot, 0, point));
     const off = Math.hypot(sx - cx, sy - cy);
     if (off < RING_PX - 4) inside++;
     else if (off <= RING_PX + 4) across++;
   }
   console.log(
     `mark: the Corvette at 1,350 / 1,800 draws at ${fmt(cx)}, ${fmt(cy)} from Home; ` +
-      `${inside} lanterns stand inside a ring of ${RING_PX} px there and ${across} across its stroke`
+      `${inside} bells stand inside a ring of ${RING_PX} px there and ${across} across its stroke`
+  );
+  const FIELD = { x: 1550, y: 1930, radiusM: 250 };
+  const within = RIVER.filter((slot) => {
+    bellAt(slot, 0, point);
+    return Math.hypot(point.x - FIELD.x, point.z - FIELD.y) <= FIELD.radiusM;
+  }).length;
+  const ring = RIVER.filter((slot) => {
+    bellAt(slot, 0, point);
+    const off = Math.hypot(point.x - FIELD.x, point.z - FIELD.y);
+    return off > FIELD.radiusM && off <= FIELD.radiusM + 150;
+  }).length;
+  console.log(
+    `field: of the river's ${COUNT}, ${within} hang inside the staged field's 250 m rim in plan ` +
+      `and ${ring} within 150 m outside it`
   );
 }
 
@@ -196,23 +237,22 @@ const shapes = {
     radii: [600, 600],
     startDeg: 250,
   },
-  'the ellipse taken': { at, radii: RADII_M, startDeg: FREE_WATER_HIGH_LIFE.BLOOM.startDeg },
+  'the ellipse taken': { at, radii: RADII_M, startDeg: BLOOM.startDeg },
 };
 for (const [label, shape] of Object.entries(shapes)) {
-  const turn = ((shape.startDeg - FREE_WATER_HIGH_LIFE.BLOOM.startDeg) * Math.PI) / 180;
-  const placeOf = (slot, _timeS, out) =>
-    out.set(
-      shape.at[0] + (shape.radii[0] + slot.acrossM) * Math.cos(slot.phase + turn),
-      depthToWorldY(slot.depthM),
-      shape.at[1] + (shape.radii[1] + slot.acrossM) * Math.sin(slot.phase + turn)
+  const turn = ((shape.startDeg - BLOOM.startDeg) * Math.PI) / 180;
+  const placeOf = (slot, _timeS, out) => {
+    const acrossM = slot.motion.radiusM - RADII_M[0];
+    return out.set(
+      shape.at[0] + (shape.radii[0] + acrossM) * Math.cos(slot.motion.phase + turn),
+      depthToWorldY(slot.motion.depthM),
+      shape.at[1] + (shape.radii[1] + acrossM) * Math.sin(slot.motion.phase + turn)
     );
-  const { inside } = seen('home', 0, FAR_BLOOM, placeOf);
+  };
+  const { inside } = seen('home', 0, placeOf);
   const xs = inside.map((one) => one.sx);
   console.log(
     `${label}: ${inside.length} of ${COUNT} in Home's frame` +
       (inside.length > 0 ? `, x ${fmt(Math.min(...xs))}..${fmt(Math.max(...xs))}` : '')
   );
 }
-console.log(
-  `a lantern: ${FAR.SIZE_M} m at most, level ${FAR.LEVEL}; its glow ${FAR.HALO.SIZE_M} m at ${FAR.HALO.LEVEL}`
-);

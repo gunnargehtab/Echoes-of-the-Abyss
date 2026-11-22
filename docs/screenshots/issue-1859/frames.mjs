@@ -51,6 +51,16 @@ const MARK_AT = [1350, 1800];
 const MARK_DEPTH_M = 300;
 const SELECT = { distance: 300, pitchDeg: 60 };
 const MARK = ['mark', ...POSES[0].slice(1)];
+// The other staged pair: a Tetherjelly field stood beside the river, to judge
+// the two together. The crater's simulation authors no field, so the study's
+// own hook stands the client's figure of one (GameCanvas.tsx
+// `__freeWaterStudyField`): its rim and its nine bells, at the species' Kelp
+// Forest band, 250 m (docs/bestiary.md §4), inside the river's loop by its
+// west end, where the river is thickest and passes the field on three sides.
+// `FIELD` looks north over it from an orbit; `FIELD_HOME` is Home's pose.
+const FIELD_AT = { id: 2_000_000_000, x: 1550, y: 1930, depth: 250 };
+const FIELD = ['field', FIELD_AT.x, FIELD_AT.y, 1100, 0, 20, 200];
+const FIELD_HOME = ['field-home', ...POSES[0].slice(1)];
 
 /** halo-cost.mjs's load: about 3.6 ms on the named GPU (gpuQueueLoad.ts). */
 const QUEUE_STEPS = Number(process.env.QUEUE_STEPS ?? 12000);
@@ -297,7 +307,23 @@ export default async ({ page, shot, recordingStartedMs }) => {
     await setQuality('high');
     await take('high', [...POSES, RIVER]);
   }
-  // The staged frame last, since it moves a hull: High, then Low as its
+  // The staged field: High, then Low as its control, the same field with no
+  // river round it. It is taken away again before the next stage.
+  if (!only || only.includes('field') || only.includes('field-home')) {
+    const stand = async (fields) => {
+      const stood = await page.evaluate((f) => window.__freeWaterStudyField(f), fields);
+      assert.equal(stood, fields === null ? 0 : fields.length);
+      // A field is drawn from the next snapshot, five a second.
+      await page.waitForTimeout(software ? 4000 : 1500);
+    };
+    for (const quality of ['high', 'low'].filter((q) => qualities.includes(q))) {
+      await setQuality(quality);
+      await stand([FIELD_AT]);
+      await take(quality, [FIELD, FIELD_HOME]);
+    }
+    await stand(null);
+  }
+  // The staged hull last, since it moves one: High, then Low as its
   // control, the same hull at the same place with no river over it.
   if (!only || only.includes('mark')) {
     await setQuality('high');

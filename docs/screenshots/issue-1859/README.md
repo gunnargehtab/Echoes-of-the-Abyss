@@ -1,7 +1,7 @@
-# A far bloom of small lanterns over the bowl (#1859)
+# A far bloom of lanterns over the bowl (#1859)
 
-Frames for one increment at the High graphics quality: a river of 260 small lanterns far
-out over the free-water crater's bowl, each two points of light and no body
+Frames for one increment at the High graphics quality: a river of 120 lanterns far out
+over the free-water crater's bowl, each a whole `env-drift-jelly`
 ([art-direction.md](../../art-direction.md#a-far-bloom-of-lanterns);
 [free-water-slice.md](../../free-water-slice.md) §5, "A far bloom over the bowl"). They
 stand beside [the target frame](../issue-1799/README.md) at its three cameras, with the
@@ -13,6 +13,10 @@ cloud container that built the step. They guide a round and are not offered for
 acceptance. The frames the owner accepts against are taken on the named GPU, with the
 commands under [Who captures](#who-captures).
 
+**This is the second cut.** The first drew a lantern as two points and no body. The owner
+saw its software frames and took six calls in session on 22 November 2026, listed under
+[Calls](#calls). The first cut's frames are in this folder's history at a2f4e7c9.
+
 ## Reproduce
 
 ```bash
@@ -22,19 +26,22 @@ SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VI
 python3 docs/screenshots/issue-1859/bloom.py docs/screenshots/issue-1859/software
 node --import tsx --import ./packages/frontend/test/support/viteAssets.mjs \
   docs/screenshots/issue-1859/river.mjs
+node --import tsx --import ./packages/frontend/test/support/viteAssets.mjs \
+  docs/screenshots/issue-1859/beads.mjs
 ```
 
-[frames.mjs](frames.mjs) is #1837's module with one camera and the clip's move changed,
-and one staged frame added: Low and then High at the target's three cameras, at gate 6's
-low camera, and 400 m from the river's west end in place of the garden close. Then it
-sends the Corvette out under the river and takes Home's camera again, at High and at
-Low. It writes [readings.json](software/readings.json) after every frame. The staged
-pair here was taken in a second run of the module, with `FRAMES=mark`, and its two
-readings follow the first ten. Reduced motion holds the river where the match's start stands it, so two
-runs frame alike. [bloom.py](bloom.py) reads the High frames against
+[frames.mjs](frames.mjs) is #1837's module with one camera and the clip's move changed
+and two staged pairs added. It takes Low and then High at the target's three cameras, at
+gate 6's low camera, and 400 m from the river's west end in place of the garden close.
+Then it stands a Tetherjelly field beside the river and takes it from two cameras, and
+last it sends the Corvette out under the river and takes Home's camera again; each pair
+at High and at Low. It writes [readings.json](software/readings.json) after every frame.
+Reduced motion holds the river where the match's start stands it, so two runs frame
+alike. [bloom.py](bloom.py) reads the High frames against
 [main-high](software/main-high), the same cameras taken on `main` at ba9b6ba0 with the
-same module, and writes the crops below. [river.mjs](river.mjs) prints, from the
-constants, what each camera holds.
+module #1837 wrote, and writes the crops below. [river.mjs](river.mjs) prints, from the
+river's own slots, what each camera holds. [beads.mjs](beads.mjs) times the writing of
+the lanterns' beads.
 
 ## The frames beside the target
 
@@ -42,17 +49,16 @@ constants, what each camera holds.
 
 | Camera | Low | High | What High shows now |
 | --- | --- | --- | --- |
-| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The river in the water right of the fleet, under the garden's edge: 204 of its 260 lanterns, 1,316 to 2,554 m off, across the frame's last 475 px. Its thick middle is a drift of orchid points 2 to 6 px across, right of centre, and its two sides run off east, the far one fading out against the garden's foot. No ring stands in the water it crosses. Nothing else moved |
-| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | A trace of it: 58 pixels lifted by 8 of 255 or more, a faint pink haze behind the mill, across the stand's light. This eye's water reaches 630 m and the river's nearest lantern is 994 m off, so 0.08 of its light is left at most. Nothing else moved |
-| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | A faint dusting of the bowl's west lobe, with a thinner trail over the pocket's north and south edges: 95 pixels, 48 of 255 at most. Every disc is under the 1.6 px floor from 10 km |
+| Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The river in the water right of the fleet, under the garden's edge: 89 of its 120 lanterns, 1,331 to 2,240 m off, across the frame's last 475 px. Each is a small orchid bell 4 to 7 px across over a faint fall of strands. Its thick middle stands right of centre and its two sides run off east, the far one fading out against the garden's foot. No ring stands in the water it crosses. Nothing else moved |
+| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | A trace of it: a band of faint bells behind the mill, across the stand's light. This eye's water reaches 630 m and the river's nearest lantern is 994 m off, so 0.08 of its light is left at most. Nothing else moved |
+| Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | A C of points round the west side of the pocket, with a thinner trail over its north and south edges: each lantern a point of one or two pixels, 85 of 255 at most. A bell is under a pixel from 10 km, and a lantern's 331 points land on the same two |
 
 Two more, off the target's three:
 
 | Camera | Low | High | What High shows now |
 | --- | --- | --- | --- |
-| Low | [low](software/03-low-low.png) | [high](software/08-high-low.png) | Gate 6's fourth camera, over the bowl, looking north: the whole river across the frame's left and middle, 1,273 to 2,009 m off, its west end a knot left of the garden and its sides thinning east across the pocket |
-| River | [low](software/05-low-river.png) | [high](software/10-high-river.png) | 400 m from the river's west end, at the lanterns' own depth: what a lantern of it is from near. A drift of soft discs up to 24 px across, each in a wider faint glow. No bell and no strands |
-| Mark | [low](software/12-low-mark.png) | [high](software/11-high-mark.png) | Home's camera with the Corvette sent to `(1,350, 1,800)` at its 300 m, picked and at rest: its ring stands in the river's thick middle, lanterns inside it and across its stroke. The frame gate 7's glance is for |
+| Low | [low](software/03-low-low.png) | [high](software/08-high-low.png) | Gate 6's fourth camera, over the bowl, looking north: the whole river across the frame's left and middle, 1,273 to 1,993 m off, its west end a knot left of the garden and its sides thinning east across the pocket |
+| River | [low](software/05-low-river.png) | [high](software/10-high-river.png) | 400 m from the river's west end, at the lanterns' own depth: what a lantern of it is from near. Translucent bells up to 26 px across, brightest at the lip, each over its strands of beads: the lanterns the fleet has, in a crowd |
 
 ![Home's bowl on main, over the same crop with the river](software/bloom-home.png)
 
@@ -70,58 +76,71 @@ Survey's bowl at four times its size, `main` above and the step below.
 The clip is [clip-home-to-low.mp4](software/clip-home-to-low.mp4): the camera moved from
 Home out over the bowl to gate 6's low camera at High and held there, at 1280 × 720 and
 six times the speed the rasteriser drew it, so the river drifts six times as fast as it
-does. It is taken without reduced motion, and spans 251 s of the match. The hold over
-the bowl is its last 10 s, a minute of the match, in which a lantern on the loop's long
-side drifts 26 m.
+does. It is taken without reduced motion, so the softer wave of light runs, and spans
+286 s of the match. The hold over the bowl is its last 10 s, a minute of the match, in
+which a lantern on the loop's long side drifts 26 m.
 
 ## How bright the river reads
 
 [bloom.py](bloom.py) counts a pixel as the river's where the frame stands 8 or more of
-255 over `main`'s in luma and is pink. The same test the other way round, `main` over the
-step, passes no pixel at any of the four cameras.
+255 over `main`'s in luma and is pink, inside the box [river.mjs](river.mjs) stands the
+river in. The same test the other way round, `main` over the step, is its floor.
 
-| Camera | Pixels of the river | Luma at the median, the 99th percentile, the most |
+| Camera | Pixels of the river, and the floor | Luma at the median, the 99th percentile, the most |
 | --- | --- | --- |
-| Home | 1,796 | 49, 92, 115 |
-| Low | 1,801 | 56, 90, 115 |
-| Survey | 95 | 33, 48, 48 |
-| Close | 58 | 59, 83, 83, over the stand's light |
+| Home | 2,258, 0 | 50, 104, 142 |
+| Low | 2,572, 0 | 54, 111, 141 |
+| Survey | 234, 0 | 40, 73, 85 |
+| Close | 315, 44 | not read: the box also holds one of the five by the fleet |
 
 On the same Home frame the four near lanterns clear of the stand peak at 125, 111, 160
-and 130. So the river's brightest pixel, where two discs overlap, is level with the
-dimmest of the five, and 99 pixels in 100 of it stand under every one of them.
+and 130. So a far lantern's brightest pixel stands among the near four, and 99 pixels in
+100 of the river stand under every one of them. The held frames show no wave, which adds
+20% to a far lantern as it passes and 60% to a near one.
 [issue-1837](../issue-1837/README.md#gate-3-gate-7-and-the-limits) read the lamps on its
 Close frame: 165, 159 and 130.
 
 ## What is new in the frame
 
-Read off `readings.json`, against `main` taken the same day with the same module.
+Read off `readings.json`, against `main` taken the same day with #1837's module.
 
-| Camera | High on `main`: calls, triangles | High now | Lantern points before, now |
+| Camera | High on `main`: calls, triangles | High now | Jellies, and their points, before and now |
 | --- | --- | --- | --- |
-| Home | 65, 763,409 | 65, 763,409 | 1,655, 2,175 |
-| Close | 65, 763,409 | 65, 763,409 | 1,655, 2,175 |
-| Low | 46, 756,078 | 46, 756,078 | 1,655, 2,175 |
-| Survey | 65, 764,047 | 65, 764,047 | 1,655, 2,175 |
+| Home | 65, 763,409 | 65, 834,689 | 5 and 1,655; 125 and 41,375 |
+| Close | 65, 763,409 | 65, 834,689 | the same |
+| Low | 46, 756,078 | 46, 827,358 | the same |
+| Survey | 65, 764,047 | 65, 835,327 | the same |
 
-No draw, no triangle, no pass and no byte of target more: the river is 520 points, two a
-lantern, in the draw the five jellies' 1,655 already take. What grows is the fragments
-that draw shades, by a program #1837 wrote. [river.mjs](river.mjs) sums each disc's area:
+No draw and no pass more, and 71,280 triangles: 120 lanterns of 594, in the two draws
+the five already take, with 39,720 points in the lantern's cloud. The frame stands at up
+to 835,327 of the crater's 900,000
+([free-water-slice.md](../../free-water-slice.md) §7).
 
-| Camera | Fragments of the bells' discs | Of the glow round them | Share of a 1920 × 1080 frame |
-| --- | --- | --- | --- |
-| Home | 3,247 | 23,088 | 1.3% |
-| Close | 6,107 | 43,427 | 2.4% |
-| Low | 3,225 | 22,933 | 1.3% |
-| Survey | 523 | 702 | 0.1% |
-| River, 400 m off | 32,787 | 233,152 | 12.8% |
-| An eye inside the river's thickest water | 146,319 | 1,040,492 | 57.2% |
+Two costs the counts above do not show.
 
-The last row is arithmetic and no frame: an eye 60 m from the river's line, looking along
-it. It is the worst a camera can ask, and the glow is seven eighths of it. No pass and no
-per-fragment program is new, so this page carries no timing run of its own; gate 6's
-8 ms is read on the named GPU, and whether these fragments are owed a run is the owner's
-call.
+**Writing the beads.** A lantern's 331 points are placed on the CPU every frame. Written
+as #1837 wrote them that was 9.3 ms a frame for 125 jellies; it is 1.3 to 1.8 ms now, and
+0.8 ms held under reduced motion, with every light the same to eleven places
+([beads.mjs](beads.mjs), in Node on this container, and a stopwatch, not a budget).
+`packages/frontend/test/jellyLight.test.ts` holds the work by counting it: 18 sines a
+jelly a frame where there were 720.
+
+**Fragments.** [river.mjs](river.mjs) sums the area of every point's disc, a point never
+drawn narrower than its 1.6 px floor. The bells' own pixels are not in it: a bell is two
+membranes, both sides, over the pixels the table's width gives.
+
+| Camera | Fragments of the glow round the bells | Of the seats and beads | Share of a 1920 × 1080 frame | A bell's width |
+| --- | --- | --- | --- | --- |
+| Home | 14,781 | 59,052 | 3.6% | 4.0 to 6.7 px |
+| Close | 28,394 | 72,985 | 4.9% | 4.6 to 9.0 px |
+| Low | 16,406 | 79,621 | 4.6% | 4.5 to 7.0 px |
+| Survey | 462 | 79,621 | 3.9% | 0.9 px |
+| River, 400 m off | 151,516 | 78,739 | 11.1% | 6.7 to 25.7 px |
+
+No pass and no per-fragment program is new: the river is more of a body #1837 drew, as
+the school of #1856 was more of a fish. So this page carries no timing run of its own. Gate
+6's 8 ms and the display's 16.7 ms interval are read on the named GPU, and the CPU's
+share above is the one to watch there.
 
 ## Low does not move
 
@@ -132,26 +151,69 @@ world area, of each pixel's largest channel difference, out of 255
 
 | Camera | `main` against `main` | `main`'s first take against these frames | `main`'s second take against these | Calls and triangles |
 | --- | --- | --- | --- | --- |
-| Home | 0.09 | 0.00 | 0.09 | 44 and 593,684, all |
-| Close | 0.21 | 0.01 | 0.20 | 44 and 593,684, all |
-| Low | 0.19 | 0.01 | 0.18 | 26 and 587,001, all |
+| Home | 0.09 | 0.17 | 0.08 | 44 and 593,684, all |
+| Close | 0.21 | 0.34 | 0.18 | 44 and 593,684, all |
+| Low | 0.19 | 0.34 | 0.16 | 26 and 587,001, all |
 | Survey | 0.00 | 0.00 | 0.00 | 45 and 594,970, all |
 
-A take differs from a take by where the marine snow has drifted. These frames fall on
-`main`'s first take and stand as far from its second as the two takes of `main` stand
-from each other, so no camera tells the branch from `main`.
-[The Home map](software/low-control/diff-home-main-vs-branch.png) is against the first
-take, and the other three lie beside it. The River camera is new with this page and has
-no take on `main`; its Low frame holds open water and no lantern. In counted work
-`packages/frontend/test/tutorialLoading.test.mjs` holds no lantern of the river, no point
-of it and no lantern's cloud in the layer at Low.
+A take differs from a take by where the marine snow has drifted, and by nothing else.
+These frames stand nearer `main`'s second take than its two takes stand to each other,
+and farther from its first: [issue-1837](../issue-1837/README.md#low-does-not-move) read
+0.03 to 0.60 the same way over four takes of a Low path nothing had changed.
+[The Close map](software/low-control/diff-close-main-vs-branch.png) is against the first
+take, the widest reading here, and is marine snow and nothing else; the other three lie
+beside it. The River, Field and Mark cameras are new with this page and have no take on
+`main`. In counted work `packages/frontend/test/freeWaterDecoration.test.ts` holds Low's
+list unmoved under High's, `packages/frontend/test/farBloom.test.ts` holds a circle's
+heading the expression it was before an ellipse was a loop, and
+`packages/frontend/test/tutorialLoading.test.mjs` holds no lantern in the layer at Low.
+
+## A Tetherjelly field beside the river
+
+The owner's call: before this merges, a field and a river in one frame. The crater's
+simulation authors no field, so the study's own hook stands the client's figure of one
+(`__freeWaterStudyField`, development builds under `?study=free-water` alone): the rim
+and the nine bells a real field draws, at the species' Kelp Forest band, 250 m, centred
+`(1,550, 1,930)` inside the river's loop by its west end. It is a figure and no field:
+no server holds it, and it bends no sound. Of the river's 120, 21 hang inside its 250 m
+rim in plan and 77 within 150 m outside it.
+
+| Camera | Low: the field alone | High: the field and the river |
+| --- | --- | --- |
+| Field: an orbit looking north over it, 1,100 m off | [low](software/13-low-field.png) | [high](software/11-high-field.png) |
+| Home | [low](software/14-low-field-home.png) | [high](software/12-high-field-home.png) |
+
+![The staged field at its own camera: alone at Low above, with the river at High below](software/bloom-field.png)
+
+The Field camera's crop, Low above and High below.
+[bloom-field-home.png](software/bloom-field-home.png) is Home's. Read by
+[bloom.py](bloom.py):
+
+| What | Field camera | Home |
+| --- | --- | --- |
+| Pixels of the field's dots, off the Low frame | 1,136 | 454 |
+| Those pixels' luma at the median: Low, High | 73, 69 | 71, 70 |
+| Pink pixels in the crop: Low, High | 0, 4,275 | 0, 1,770 |
+| Those pink pixels' luma at High: the median, the 99th percentile, the most | 61, 112, 161 | 55, 110, 142 |
+
+What the pair shows on this rasteriser: the two do not look alike. A field's bell is a
+figure in pale green dots about 56 px across from the Field camera, a lantern a lit
+orchid body of 6 to 11 px. And the river is the louder of the two. A dot of the field
+reads about 70 of 255 and is one pixel or two; a lantern's pixels read 61 at the median
+and 112 at the 99th percentile, and there are four times as many of them in the crop.
+So a river passing a field draws the eye off it. Whether that hides a field a commander
+should see is the owner's glance, on the named GPU.
 
 ## Gate 7 and the limits
 
-With the fleet at rest no mark is among the river's points: at Home its nearest pixel is
-more than 200 px from the Corvette's ring. The risk the issue names is a mark among
-them, so the Mark frame stages one: the Corvette ordered out under the river's thick
-middle, from Home's camera.
+With the fleet at rest no mark is among the river's lanterns: at Home its nearest pixel
+is more than 200 px from the Corvette's ring. The risk the issue names is a mark among
+them, so the Mark frame stages one: the Corvette ordered to `(1,350, 1,800)` at its
+300 m, picked and at rest, from Home's camera.
+
+| Camera | Low | High |
+| --- | --- | --- |
+| Mark | [low](software/16-low-mark.png) | [high](software/15-high-mark.png) |
 
 ![The Corvette's ring under the river at Home: Low above, High below](software/bloom-mark.png)
 
@@ -160,18 +222,21 @@ The crop at twice its size, Low above and High below. Read by [bloom.py](bloom.p
 | What | Low | High |
 | --- | --- | --- |
 | The ring: its radius, and the pixels of its stroke | 45 px, 358 | the same |
-| Pink pixels inside the ring, of 5,261 | 0 | 407 |
+| Pink pixels inside the ring, of 5,261 | 0 | 498 |
 | The ring's own pixels, luma at the median and the least | 184, 184 | 184, 183 |
 
 A mark is the tactical pass's and is drawn over the world, so no lantern dims the ring:
-its stroke reads at High what it reads at Low, over the river's brightest pixel at 115.
-What the river changes is what stands round and inside the ring: 49 lanterns inside it
-and 8 across its stroke, by [river.mjs](river.mjs), with the Corvette's own lamp among
-them. The Corvette is not the hardest case: the Light Scout's ring is smaller and its
-loudness arc shorter, SIG 6 against the Corvette's 28, and no frame stages it. Whether
-the ring, the lamp and the hull read in
-under a second there is the owner's glance, and the same module takes this frame on the
-named GPU.
+its stroke reads at High what it reads at Low. What the river changes is what stands
+round and inside the ring: 20 bells inside it and 5 across its stroke, by
+[river.mjs](river.mjs), with the Corvette's own lamp among them. The Corvette is not the
+hardest case: the Light Scout's ring is smaller and its loudness arc shorter, SIG 6
+against the Corvette's 28, and no frame stages it. Whether the ring, the lamp and the
+hull read in under a second there is the owner's glance, and the same module takes this
+frame on the named GPU.
+
+From Survey the river is a C of points at up to 85 of 255.
+[free-water-slice.md](../../free-water-slice.md) §7 asks that survey keep decoration
+below tactical ink, and the ring's stroke reads 184: that glance is the owner's too.
 
 Limits 2 to 4 hold by construction. The river is an authored list on an authored loop,
 drawn once from the fixture's seed, the same for every client, and it drifts on the
@@ -179,34 +244,28 @@ match's clock alone. `jelly-lantern` is no faction's hue and no family's
 ([style-neon-noir.md](../../style-neon-noir.md#world-light--the-terrain-carve-outs)).
 No colour-vision palette was captured: those run once, at promotion.
 
-## Calls taken with these frames
+## Calls
 
-Seven, each written with its other readings in
-[art-direction.md](../../art-direction.md#a-far-bloom-of-lanterns), and each the owner's
-to overturn:
+The owner's, in session on 22 November 2026, on the first cut's software frames. Each is
+written with its other readings in
+[art-direction.md](../../art-direction.md#a-far-bloom-of-lanterns):
 
-- **A far lantern is two points and no body**: a soft disc 3 to 6 m across for its bell,
-  and the glow in the water round it.
-- **It draws in the lantern's own cloud**, so the step adds no draw.
-- **The river runs on an ellipse along the bowl's north half**, and fills 230 degrees of
-  it, thickest at its middle. A circle the bowl holds whole shows Home's eye a hook at
-  the frame's edge.
-- **It keeps one level.** No stroke and no wave: it moves by drifting alone.
-- **From near it is a drift of soft discs**, and stays one: [the River
-  frame](software/10-high-river.png). No point fades for the camera.
-- **It is told from a Tetherjelly field by hue and form.** A crowd of lanterns is nearer
-  a field's look than one lantern was, and the crater authors no field to stand beside
-  it.
-- **It turns clockwise, as every loop here does.** So its north side drifts east, with
-  the current the kelp leans to, and its south side drifts west against it.
+- **Whole lanterns**, in place of two points and no body.
+- **120 of them**, against 30, 60 and 200.
+- **On the ellipse along the bowl's north half**, against two circles.
+- **In procession, clockwise**, against the other way round and against each on a small
+  loop of its own. Its south side runs west, against the kelp's current.
+- **A softer wave of light**, a third of a near lantern's, against none and against the
+  whole one.
+- **A Tetherjelly field staged beside it before it merges**, against a rule and against
+  trusting hue and form.
 
-And one about this page: **it carries no timing run.** The points are placement in a
-draw and a program #1837 wrote, as #1857's seats were, and the fragments they add are
-counted above.
+The author's, taken in the open, and the owner's to overturn:
 
-Three more are numbers, TUNABLE until a frame is accepted: 260 lanterns, a disc's light
-at 0.3, as a near lantern's seat, and a lap in 13,500 s, which is a drifting jelly's
-pace on the average.
+- **A lantern of the river keeps its depth and leans its own way**, up to 12 degrees,
+  where the five rise, sink and lean into their turn.
+- **This page carries no timing run.** The river is more of a body #1837 drew.
+- **Where the staged field stands**: inside the river's loop by its west end, at 250 m.
 
 ## Who captures
 
@@ -224,11 +283,12 @@ CLIP=1 CLIP_HOLD_MS=20000 RECORD_VIDEO=docs/screenshots/issue-1859/gpu VIEW_W=19
   --out docs/screenshots/issue-1859/gpu --steps docs/screenshots/issue-1859/frames.mjs
 ```
 
-The first writes twelve frames and `readings.json`, whose `queued` GPU time at each
-camera is gate 6's reading. Its last two are the Mark pair, after the Corvette's run out
-under the river, which takes about a minute. The second records the clip and prints where the move
-starts and ends in it. Neither sets reduced motion, so the river stands where the match's
-clock has carried it: it drifts 0.44 m/s at its fastest, 26 m in a minute.
+The first writes sixteen frames and `readings.json`, whose `queued` GPU time at each
+camera is gate 6's reading. Its last six are the Field pairs and then the Mark pair,
+after the Corvette's run out under the river, which takes about a minute. The second
+records the clip and prints where the move starts and ends in it. Neither sets reduced
+motion, so the river stands where the match's clock has carried it: it drifts 0.44 m/s
+at its fastest, 26 m in a minute.
 
 ## Related
 

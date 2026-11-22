@@ -21,6 +21,7 @@ import {
   type BoundSig,
   type EchoSnapshot,
   type Faction,
+  type JellyCluster,
   type MissionResultPayload,
   type MissionView,
 } from '@echoes/shared';
@@ -375,6 +376,8 @@ export function GameCanvas({
      * leave an orphaned canvas attached.
      */
     let cancelled = false;
+    // Fields a study capture stands beside the public ones (`__freeWaterStudyField`).
+    let studyField: JellyCluster[] = [];
 
     const audio = new AudioEngine();
     audioRef.current = audio;
@@ -591,6 +594,20 @@ export function GameCanvas({
       // what the chart drew, every input to it resolved for this player.
       (window as unknown as { __chartProbe?: () => unknown }).__chartProbe = () =>
         activeRenderer.probeReading();
+      // The free-water study's staged field (docs/screenshots/issue-1859): a
+      // capture stands a Tetherjelly field beside the far bloom, to judge the
+      // two together, on a map whose simulation authors none. It is the
+      // client's own figure of a public field, rim and bells, and no more: no
+      // server holds it, so it bends no sound and grips no hull. Development
+      // builds under the study alone (`FREE_WATER_SLICE`).
+      if (FREE_WATER_SLICE) {
+        (
+          window as unknown as { __freeWaterStudyField?: (fields: JellyCluster[] | null) => number }
+        ).__freeWaterStudyField = (fields) => {
+          studyField = fields ?? [];
+          return studyField.length;
+        };
+      }
       if (travelled) activeRenderer.holdOpeningFrame();
       // One camera, two painters: every world mark and every aimed pointer in
       // the Pixi layer goes through the conn view from here on.
@@ -668,8 +685,14 @@ export function GameCanvas({
                   : snapshot.tick
               );
             }
-            activeRenderer.applySnapshot(snapshot);
-            perspective.applySnapshot(snapshot);
+            // The study's staged field rides with the public ones to both
+            // painters, and to nothing that listens or decides.
+            const drawn =
+              studyField.length === 0
+                ? snapshot
+                : { ...snapshot, jellies: [...snapshot.jellies, ...studyField] };
+            activeRenderer.applySnapshot(drawn);
+            perspective.applySnapshot(drawn);
             // A snapshot after a result is the deciding tick's: the chart draws
             // it under the result card, and the mix lets it go before the tick
             // can voice it (#1326).
@@ -915,6 +938,7 @@ export function GameCanvas({
 
     return () => {
       cancelled = true;
+      delete (window as unknown as { __freeWaterStudyField?: unknown }).__freeWaterStudyField;
       joinRef.current = null;
       unsubscribeSettings?.();
       panelsRef.current?.stop();

@@ -30,21 +30,46 @@
         15,
         300
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
           "env-rim-crab": 32,
-          "env-deep-fish": 26,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
+          "env-deep-fish": 26,
           "env-rim-ray": 1
         },
         "glints": 0,
         "jellyLights": 0,
-        "farLanterns": 0,
-        "bloomLights": 0
+        "farLanterns": 0
       },
       "vents": {
         "plumes": 0,
@@ -87,21 +112,46 @@
         2,
         300
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
           "env-rim-crab": 32,
-          "env-deep-fish": 26,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
+          "env-deep-fish": 26,
           "env-rim-ray": 1
         },
         "glints": 0,
         "jellyLights": 0,
-        "farLanterns": 0,
-        "bloomLights": 0
+        "farLanterns": 0
       },
       "vents": {
         "plumes": 0,
@@ -140,21 +190,46 @@
         12,
         850
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
           "env-rim-crab": 32,
-          "env-deep-fish": 26,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
+          "env-deep-fish": 26,
           "env-rim-ray": 1
         },
         "glints": 0,
         "jellyLights": 0,
-        "farLanterns": 0,
-        "bloomLights": 0
+        "farLanterns": 0
       },
       "vents": {
         "plumes": 0,
@@ -197,21 +272,46 @@
         88,
         null
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
           "env-rim-crab": 32,
-          "env-deep-fish": 26,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
+          "env-deep-fish": 26,
           "env-rim-ray": 1
         },
         "glints": 0,
         "jellyLights": 0,
-        "farLanterns": 0,
-        "bloomLights": 0
+        "farLanterns": 0
       },
       "vents": {
         "plumes": 0,
@@ -250,21 +350,46 @@
         5,
         160
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
           "env-rim-crab": 32,
-          "env-deep-fish": 26,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
+          "env-deep-fish": 26,
           "env-rim-ray": 1
         },
         "glints": 0,
         "jellyLights": 0,
-        "farLanterns": 0,
-        "bloomLights": 0
+        "farLanterns": 0
       },
       "vents": {
         "plumes": 0,
@@ -303,7 +428,7 @@
         "split"
       ],
       "calls": 65,
-      "triangles": 763409,
+      "triangles": 834689,
       "camera": [
         709,
         1710,
@@ -312,25 +437,50 @@
         15,
         300
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-outer-fish": 184,
-          "env-deep-fish": 26,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
           "env-rim-ray": 1,
-          "env-drift-jelly": 5,
-          "env-vent-chimney": 2,
+          "env-drift-jelly": 125,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1
+          "env-rim-manta": 1,
+          "env-vent-chimney": 2
         },
         "glints": 624,
-        "jellyLights": 1655,
-        "farLanterns": 260,
-        "bloomLights": 520
+        "jellyLights": 41375,
+        "farLanterns": 120
       },
       "vents": {
         "plumes": 2,
@@ -369,7 +519,7 @@
         "split"
       ],
       "calls": 65,
-      "triangles": 763409,
+      "triangles": 834689,
       "camera": [
         542,
         1958,
@@ -378,25 +528,50 @@
         2,
         300
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-outer-fish": 184,
-          "env-deep-fish": 26,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
           "env-rim-ray": 1,
-          "env-drift-jelly": 5,
-          "env-vent-chimney": 2,
+          "env-drift-jelly": 125,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1
+          "env-rim-manta": 1,
+          "env-vent-chimney": 2
         },
         "glints": 624,
-        "jellyLights": 1655,
-        "farLanterns": 260,
-        "bloomLights": 520
+        "jellyLights": 41375,
+        "farLanterns": 120
       },
       "vents": {
         "plumes": 2,
@@ -431,7 +606,7 @@
         "split"
       ],
       "calls": 46,
-      "triangles": 756078,
+      "triangles": 827358,
       "camera": [
         2000,
         2000,
@@ -440,25 +615,50 @@
         12,
         850
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-outer-fish": 184,
-          "env-deep-fish": 26,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
           "env-rim-ray": 1,
-          "env-drift-jelly": 5,
-          "env-vent-chimney": 2,
+          "env-drift-jelly": 125,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1
+          "env-rim-manta": 1,
+          "env-vent-chimney": 2
         },
         "glints": 624,
-        "jellyLights": 1655,
-        "farLanterns": 260,
-        "bloomLights": 520
+        "jellyLights": 41375,
+        "farLanterns": 120
       },
       "vents": {
         "plumes": 2,
@@ -497,7 +697,7 @@
         "split"
       ],
       "calls": 65,
-      "triangles": 764047,
+      "triangles": 835327,
       "camera": [
         2000,
         2000,
@@ -506,25 +706,50 @@
         88,
         null
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-outer-fish": 184,
-          "env-deep-fish": 26,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
           "env-rim-ray": 1,
-          "env-drift-jelly": 5,
-          "env-vent-chimney": 2,
+          "env-drift-jelly": 125,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1
+          "env-rim-manta": 1,
+          "env-vent-chimney": 2
         },
         "glints": 624,
-        "jellyLights": 1655,
-        "farLanterns": 260,
-        "bloomLights": 520
+        "jellyLights": 41375,
+        "farLanterns": 120
       },
       "vents": {
         "plumes": 2,
@@ -559,7 +784,7 @@
         "split"
       ],
       "calls": 44,
-      "triangles": 755430,
+      "triangles": 826710,
       "camera": [
         1200,
         1930,
@@ -568,25 +793,50 @@
         5,
         160
       ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
       "sway": "held",
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
           "env-kelp-cluster": 16,
-          "env-outer-fish": 184,
-          "env-deep-fish": 26,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
           "env-rim-ray": 1,
-          "env-drift-jelly": 5,
-          "env-vent-chimney": 2,
+          "env-drift-jelly": 125,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1
+          "env-rim-manta": 1,
+          "env-vent-chimney": 2
         },
         "glints": 624,
-        "jellyLights": 1655,
-        "farLanterns": 260,
-        "bloomLights": 520
+        "jellyLights": 41375,
+        "farLanterns": 120
       },
       "vents": {
         "plumes": 2,
@@ -600,6 +850,344 @@
         "worldLights": 72,
         "searchlights": 2,
         "beamMotes": 72000,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
+    },
+    {
+      "name": "field",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "split-copy",
+        "split"
+      ],
+      "calls": 45,
+      "triangles": 826710,
+      "camera": [
+        1550,
+        1930,
+        1100,
+        0,
+        20,
+        200
+      ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-drift-jelly": 125,
+          "env-vent-basalt": 3,
+          "env-rim-manta": 1,
+          "env-vent-chimney": 2
+        },
+        "glints": 624,
+        "jellyLights": 41375,
+        "farLanterns": 120
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
+      },
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 72,
+        "searchlights": 2,
+        "beamMotes": 72000,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
+    },
+    {
+      "name": "field-home",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 66,
+      "triangles": 834689,
+      "camera": [
+        709,
+        1710,
+        1200,
+        -34,
+        15,
+        300
+      ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 624,
+          "env-outer-fish": 184,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1,
+          "env-drift-jelly": 125,
+          "env-vent-basalt": 3,
+          "env-rim-manta": 1,
+          "env-vent-chimney": 2
+        },
+        "glints": 624,
+        "jellyLights": 41375,
+        "farLanterns": 120
+      },
+      "vents": {
+        "plumes": 2,
+        "worldLights": 72
+      },
+      "graphicsQuality": {
+        "asked": "high",
+        "drawn": "high",
+        "targetBytes": 136145280,
+        "groundBytes": 2796203,
+        "worldLights": 72,
+        "searchlights": 2,
+        "beamMotes": 72000,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
+    },
+    {
+      "name": "field",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "calls": 24,
+      "triangles": 585705,
+      "camera": [
+        1550,
+        1930,
+        1100,
+        0,
+        20,
+        200
+      ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 144,
+          "env-outer-fish": 16,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1
+        },
+        "glints": 0,
+        "jellyLights": 0,
+        "farLanterns": 0
+      },
+      "vents": {
+        "plumes": 0,
+        "worldLights": 0
+      },
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "searchlights": 0,
+        "beamMotes": 0,
+        "frameGpuBudgetMs": 8
+      },
+      "gpuTimer": "software",
+      "avgGpuMs": null,
+      "queued": null,
+      "insideBudget": null
+    },
+    {
+      "name": "field-home",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 45,
+      "triangles": 593684,
+      "camera": [
+        709,
+        1710,
+        1200,
+        -34,
+        15,
+        300
+      ],
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300
+        }
+      ],
+      "sway": "held",
+      "life": {
+        "bodies": {
+          "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
+          "env-rim-crab": 32,
+          "env-shoal-fry": 144,
+          "env-outer-fish": 16,
+          "env-deep-fish": 26,
+          "env-rim-ray": 1
+        },
+        "glints": 0,
+        "jellyLights": 0,
+        "farLanterns": 0
+      },
+      "vents": {
+        "plumes": 0,
+        "worldLights": 0
+      },
+      "graphicsQuality": {
+        "asked": "low",
+        "drawn": "low",
+        "targetBytes": 0,
+        "groundBytes": 0,
+        "worldLights": 0,
+        "searchlights": 0,
+        "beamMotes": 0,
         "frameGpuBudgetMs": 8
       },
       "gpuTimer": "software",
@@ -625,7 +1213,7 @@
         "split"
       ],
       "calls": 65,
-      "triangles": 763409,
+      "triangles": 834689,
       "camera": [
         709,
         1710,
@@ -663,22 +1251,21 @@
       "sway": "held",
       "life": {
         "bodies": {
-          "env-kelp-cluster": 16,
           "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
           "env-rim-crab": 32,
           "env-shoal-fry": 624,
           "env-outer-fish": 184,
           "env-deep-fish": 26,
           "env-rim-ray": 1,
-          "env-drift-jelly": 5,
-          "env-rim-manta": 1,
+          "env-drift-jelly": 125,
           "env-vent-chimney": 2,
-          "env-vent-basalt": 3
+          "env-vent-basalt": 3,
+          "env-rim-manta": 1
         },
         "glints": 624,
-        "jellyLights": 1655,
-        "farLanterns": 260,
-        "bloomLights": 520
+        "jellyLights": 41375,
+        "farLanterns": 120
       },
       "vents": {
         "plumes": 2,
@@ -750,8 +1337,8 @@
       "sway": "held",
       "life": {
         "bodies": {
-          "env-kelp-cluster": 16,
           "env-kelp-stand": 56,
+          "env-kelp-cluster": 16,
           "env-rim-crab": 32,
           "env-shoal-fry": 144,
           "env-outer-fish": 16,
@@ -760,8 +1347,7 @@
         },
         "glints": 0,
         "jellyLights": 0,
-        "farLanterns": 0,
-        "bloomLights": 0
+        "farLanterns": 0
       },
       "vents": {
         "plumes": 0,
