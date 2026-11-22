@@ -3,9 +3,11 @@
  * bloom of lanterns"; docs/free-water-slice.md §5, "A far bloom over the
  * bowl"; #1859). What those sections promise: a river of whole lanterns over
  * the bowl and nowhere else, the last slots of High's list; thickest at its
- * middle, which starts at the loop's west end; over the hulls' depth; a
- * procession round an ellipse, clockwise, each lantern heading the way it
- * travels; and a wave of light a third as strong as a lantern's by the fleet.
+ * middle, which starts at the loop's west end; over the hulls' depth; carried
+ * clockwise round the bowl's eddy, faster beside the stream and slower and
+ * wider on the return side, each lantern wandering across the flow and heading
+ * the way it travels; and a wave of light a third as strong as a lantern's by
+ * the fleet.
  * What it looks like is the frames in docs/screenshots/issue-1859, and the
  * layer that stands it is booted in tutorialLoading.test.mjs.
  */
@@ -27,7 +29,7 @@ import {
 import { DEPTH_VISUAL_M_PER_M } from '../src/game/perspectiveTerrain.ts';
 
 const { BLOOM, JELLIES } = FREE_WATER_HIGH_LIFE;
-const { at, RADII_M, startDeg, SPAN_DEG, COUNT, depthM, STATION, MOTION } = BLOOM;
+const { at, RADII_M, startDeg, SPAN_DEG, COUNT, depthM, STATION, MOTION, EDDY } = BLOOM;
 const { PULSE, FAR } = HIGH_GRAPHICS.LIFE.JELLY;
 const { LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
 
@@ -95,11 +97,10 @@ describe('the far bloom (#1859)', () => {
     const reach = propSpec('env-drift-jelly')!.footprintM / DEPTH_VISUAL_M_PER_M;
     for (const p of river) {
       const m = p.motion!;
+      const eddy = m.eddy!;
       assert.deepEqual([p.xM, p.yM], [...at]);
-      // One offset across the river's line, on both of the loop's radii.
-      const acrossM = m.radiusM - RADII_M[0];
-      assert.ok(Math.abs(acrossM) <= STATION.acrossM);
-      assert.ok(Math.abs(m.radiusNsM! - RADII_M[1] - acrossM) < 1e-9);
+      assert.deepEqual([m.radiusM, eddy.radiusNsM], [...RADII_M]);
+      assert.ok(Math.abs(eddy.acrossM) <= STATION.acrossM);
       assert.ok(Math.abs(m.depthM! - depthM) <= STATION.depthM);
       // Its whole body, strands not counted, stands over the hulls.
       assert.ok(m.depthM! + reach < HULLS_M, `a lantern at ${m.depthM} m, among the hulls`);
@@ -109,9 +110,19 @@ describe('the far bloom (#1859)', () => {
       assert.ok(Math.abs(m.bankDeg!) <= MOTION.bankDeg);
       const off = (m.phase * 180) / Math.PI - startDeg;
       assert.ok(Math.abs(off) <= SPAN_DEG / 2, `a lantern ${off} degrees from the middle`);
+      // The eddy's own two numbers, and a wander of its own: a whole number
+      // of them a lap, so a lap brings it back.
+      assert.deepEqual([eddy.skew, eddy.spread], [EDDY.SKEW, EDDY.SPREAD]);
+      assert.ok(eddy.wanderM >= EDDY.WANDER_M[0] && eddy.wanderM <= EDDY.WANDER_M[1]);
+      assert.ok(Number.isInteger(eddy.wanderLaps));
+      assert.ok(eddy.wanderLaps >= EDDY.WANDER_LAPS[0] && eddy.wanderLaps <= EDDY.WANDER_LAPS[1]);
     }
-    assert.equal(new Set(river.map((p) => `${p.motion!.phase}:${p.motion!.radiusM}`)).size, COUNT);
+    assert.equal(
+      new Set(river.map((p) => `${p.motion!.phase}:${p.motion!.eddy!.acrossM}`)).size,
+      COUNT
+    );
     assert.ok(new Set(river.map((p) => p.motion!.bankDeg)).size > COUNT / 2);
+    assert.ok(new Set(river.map((p) => p.motion!.eddy!.wanderPhase)).size > COUNT / 2);
   });
 
   it('is drawn from the fixture’s seed and nothing else', () => {
@@ -121,11 +132,16 @@ describe('the far bloom (#1859)', () => {
     river.forEach((p, i) => {
       const draw = (axis: number) => propHash([FREE_WATER_LIFE.SEED, at[0], at[1], i, axis]);
       const along = draw(1) + draw(2) - 1;
-      const acrossM = (draw(3) * 2 - 1) * STATION.acrossM;
+      const eddy = p.motion!.eddy!;
       assert.equal(p.motion!.phase, ((startDeg + (along * SPAN_DEG) / 2) * Math.PI) / 180);
-      assert.equal(p.motion!.radiusM, RADII_M[0] + acrossM);
+      assert.equal(eddy.acrossM, (draw(3) * 2 - 1) * STATION.acrossM);
       assert.equal(p.motion!.depthM, depthM + (draw(4) * 2 - 1) * STATION.depthM);
       assert.equal(p.motion!.bankDeg, (draw(5) * 2 - 1) * MOTION.bankDeg);
+      assert.equal(
+        eddy.wanderM,
+        EDDY.WANDER_M[0] + (EDDY.WANDER_M[1] - EDDY.WANDER_M[0]) * draw(6)
+      );
+      assert.equal(eddy.wanderPhase, draw(8) * Math.PI * 2);
     });
     assert.deepEqual(
       freeWaterPlacements(crater, true, true).filter((p) => p.far === true),
@@ -144,20 +160,34 @@ describe('the far bloom (#1859)', () => {
     assert.ok(thirds[0]! > 0 && thirds[2]! > 0, `${thirds}`);
   });
 
+  /** A lantern on the river's own line, at a phase, that neither keeps off it nor wanders. */
+  const onLine = (phase: number, acrossM = 0) => ({
+    ...river[0]!,
+    motion: {
+      ...river[0]!.motion!,
+      phase,
+      eddy: { ...river[0]!.motion!.eddy!, acrossM, wanderM: 0 },
+    },
+  });
+  /**
+   * How far one body stands outside another that shares its place on the
+   * loop: both hang on one ray of it, so the gap is all across the flow.
+   */
+  const outside = (body: { x: number; z: number }, line: { x: number; z: number }) =>
+    Math.hypot(body.x - line.x, body.z - line.z) *
+    Math.sign((body.x - line.x) * (line.x - at[0]) + (body.z - line.z) * (line.z - at[1]));
+
   it('starts with its middle at the loop’s west end, the end nearer Home’s eye', () => {
-    const middle = { ...river[0]!, motion: { ...river[0]!.motion!, phase: Math.PI } };
-    middle.motion.radiusM = RADII_M[0];
-    middle.motion.radiusNsM = RADII_M[1];
-    const pose = decorationPose(middle, 0, ground);
+    const pose = decorationPose(onLine(Math.PI), 0, ground);
     assert.ok(Math.abs(pose.x - (at[0] - RADII_M[0])) < 1e-6);
     assert.ok(Math.abs(pose.z - at[1]) < 1e-6);
   });
 
-  it('is a procession: a lap a period, clockwise, each lantern heading the way it travels', () => {
+  it('is carried round the eddy: a lap a period, clockwise, each lantern heading the way it travels', () => {
     const lapMs = MOTION.periodS * 1000;
     for (const p of [river[0]!, river[40]!, river[COUNT - 1]!]) {
       const start = decorationPose(p, 0, ground);
-      // A lap brings it back, at the depth it kept all the way round.
+      // A lap brings it back, wander and all, at the depth it kept all the way round.
       const back = decorationPose(p, lapMs, ground);
       assert.ok(Math.hypot(back.x - start.x, back.z - start.z) < 1e-6);
       for (const share of [0.1, 0.37, 0.5, 0.81]) {
@@ -167,34 +197,105 @@ describe('the far bloom (#1859)', () => {
         // along +X, and a yaw about +y turns that toward -Z.
         const next = decorationPose(p, lapMs * share + 1000, ground);
         const run = Math.hypot(next.x - now.x, next.z - now.z);
-        assert.ok(Math.abs((next.x - now.x) / run - Math.cos(now.yaw)) < 1e-3);
-        assert.ok(Math.abs((next.z - now.z) / run + Math.sin(now.yaw)) < 1e-3);
+        assert.ok(Math.abs((next.x - now.x) / run - Math.cos(now.yaw)) < 1e-9);
+        assert.ok(Math.abs((next.z - now.z) / run + Math.sin(now.yaw)) < 1e-9);
       }
     }
-    // A quarter lap from the east is the south: clockwise seen from above.
-    const east = { ...river[0]!, motion: { ...river[0]!.motion!, phase: 0 } };
-    east.motion.radiusM = RADII_M[0];
-    east.motion.radiusNsM = RADII_M[1];
-    const south = decorationPose(east, lapMs / 4, ground);
-    assert.ok(Math.abs(south.x - at[0]) < 1e-6 && Math.abs(south.z - (at[1] + RADII_M[1])) < 1e-6);
-    // So the north side runs east, with the kelp's current, and the south side west.
-    const north = decorationPose(east, (lapMs * 3) / 4, ground);
-    const northNext = decorationPose(east, (lapMs * 3) / 4 + 1000, ground);
-    assert.ok(northNext.x > north.x);
-    assert.ok(decorationPose(east, lapMs / 4 + 1000, ground).x < south.x);
-    // No faster on the loop's long sides than twice a drifting jelly on its
-    // own loop, and nowhere slower than a third of one.
+    // Clockwise seen from above: from the west end the line goes north, and
+    // a lap passes the north point, the east end and the south point in turn.
+    const line = onLine(Math.PI);
+    const quarter = (pose: { x: number; z: number }) =>
+      (Math.atan2(pose.z - at[1], pose.x - at[0]) + Math.PI * 2) % (Math.PI * 2);
+    let turned = 0;
+    let last = quarter(decorationPose(line, 0, ground));
+    for (let step = 1; step <= 720; step++) {
+      const now = quarter(decorationPose(line, (lapMs * step) / 720, ground));
+      const by = ((now - last + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      assert.ok(by > 0, `the line turns back at step ${step}`);
+      turned += by;
+      last = now;
+    }
+    assert.ok(Math.abs(turned - Math.PI * 2) < 1e-6);
+  });
+
+  it('runs with the stream on its north side and comes back slower and wider on its south', () => {
+    // The crater's current runs east along the garden, the bowl's north edge
+    // (docs/free-water-slice.md §5, "No rows"), and the eddy is what that
+    // stream turns in the bowl beside it.
+    const lapMs = MOTION.periodS * 1000;
+    const line = onLine(Math.PI);
+    const samples = Array.from({ length: 1440 }, (_, step) => {
+      const ms = (lapMs * step) / 1440;
+      const [now, next] = [
+        decorationPose(line, ms, ground),
+        decorationPose(line, ms + 1000, ground),
+      ];
+      return { now, east: next.x - now.x, mps: Math.hypot(next.x - now.x, next.z - now.z) };
+    });
+    const north = samples.reduce((a, b) => (b.now.z < a.now.z ? b : a));
+    const south = samples.reduce((a, b) => (b.now.z > a.now.z ? b : a));
+    assert.ok(north.east > 0, 'the north side runs west, against the stream');
+    assert.ok(south.east < 0, 'the south side runs east');
+    // Faster beside the stream by about the eddy's own share, and as much
+    // slower coming back: the lap's pace is skewed about its north and south
+    // points, a few degrees of the loop off each.
+    const paceMps = (2 * Math.PI * RADII_M[0]) / MOTION.periodS;
+    assert.ok(Math.abs(north.mps / paceMps - (1 + EDDY.SKEW)) < 0.04, `${north.mps} m/s north`);
+    assert.ok(Math.abs(south.mps / paceMps - (1 - EDDY.SKEW)) < 0.04, `${south.mps} m/s south`);
+    // No faster anywhere than twice a drifting jelly on its own loop, and
+    // nowhere slower than a third of one.
     const jellyMps = (2 * Math.PI * JELLIES.MOTION.radiusM) / JELLIES.MOTION.periodS;
-    assert.ok((2 * Math.PI * RADII_M[0]) / MOTION.periodS <= jellyMps * 2);
-    assert.ok((2 * Math.PI * RADII_M[1]) / MOTION.periodS >= jellyMps / 3);
+    const paces = samples.map((sample) => sample.mps);
+    assert.ok(Math.max(...paces) <= jellyMps * 2, `${Math.max(...paces)} m/s at the fastest`);
+    assert.ok(Math.min(...paces) >= jellyMps / 3, `${Math.min(...paces)} m/s at the slowest`);
+    // Wider coming back: a lantern that keeps outside the line keeps further
+    // out on the south side than on the north, by the eddy's own share.
+    const kept = onLine(Math.PI, STATION.acrossM);
+    const gap = (sample: (typeof samples)[number]) =>
+      outside(decorationPose(kept, (lapMs * samples.indexOf(sample)) / 1440, ground), sample.now);
+    assert.ok(
+      Math.abs(gap(north) - STATION.acrossM * (1 - EDDY.SPREAD)) < 0.5,
+      `${gap(north)} m north`
+    );
+    assert.ok(
+      Math.abs(gap(south) - STATION.acrossM * (1 + EDDY.SPREAD)) < 0.5,
+      `${gap(south)} m south`
+    );
+  });
+
+  it('holds no lantern at a fixed station: each wanders across the flow, and no two together', () => {
+    const lapMs = MOTION.periodS * 1000;
+    for (const p of [river[3]!, river[57]!, river[101]!]) {
+      const eddy = p.motion!.eddy!;
+      const still = { ...p, motion: { ...p.motion!, eddy: { ...eddy, wanderM: 0 } } };
+      let most = 0;
+      let crossings = 0;
+      let side = 0;
+      for (let step = 0; step < 5400; step++) {
+        const ms = (lapMs * step) / 5400;
+        const by = outside(decorationPose(p, ms, ground), decorationPose(still, ms, ground));
+        most = Math.max(most, Math.abs(by));
+        if (side !== 0 && Math.sign(by) !== 0 && Math.sign(by) !== side) crossings++;
+        if (Math.sign(by) !== 0) side = Math.sign(by);
+      }
+      // As far as its own wander and no further, once each way a wander.
+      assert.ok(
+        most <= eddy.wanderM + 0.5 && most >= eddy.wanderM * 0.9,
+        `${most} of ${eddy.wanderM}`
+      );
+      assert.ok(Math.abs(crossings - eddy.wanderLaps * 2) <= 1, `${crossings} crossings`);
+      // Slowly: across the flow it never moves as fast as the flow carries it.
+      const acrossMps = (eddy.wanderM * 2 * Math.PI * eddy.wanderLaps) / MOTION.periodS;
+      assert.ok(acrossMps < (2 * Math.PI * RADII_M[1]) / MOTION.periodS);
+    }
   });
 
   it('leaves a circle’s heading the expression it always was', () => {
     // Low does not move: a body on a circle takes its heading as it did
-    // before an ellipse was a loop, to the last bit.
+    // before an eddy was a loop, to the last bit.
     const low = freeWaterPlacements(crater, true);
     for (const p of low.filter((slot) => slot.motion !== undefined)) {
-      assert.equal(p.motion!.radiusNsM, undefined);
+      assert.equal(p.motion!.eddy, undefined);
       const ms = 123456;
       const phase =
         p.motion!.phase + (((ms / 1000) % p.motion!.periodS) / p.motion!.periodS) * Math.PI * 2;

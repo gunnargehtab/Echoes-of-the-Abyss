@@ -320,7 +320,13 @@ describe('authored public decoration', () => {
       assert.deepEqual(end, start);
       for (let step = 0; step < 100; step++) {
         const pose = decorationPose(p, m.periodS * 10 * step, () => -88);
-        assert.ok(Math.hypot(pose.x - p.xM, pose.z - p.yM) <= m.radiusM + 1e-8);
+        // A body the bowl's eddy carries keeps and wanders as far outside
+        // its loop's line as its own numbers say (#1859; farBloom.test.ts).
+        const reach =
+          m.eddy === undefined
+            ? 0
+            : Math.abs(m.eddy.acrossM) * (1 + m.eddy.spread) + m.eddy.wanderM;
+        assert.ok(Math.hypot(pose.x - p.xM, pose.z - p.yM) <= m.radiusM + reach + 1e-8);
         if (m.depthM !== null) {
           const bodyDepth = -(pose.y + m.axisM) / DEPTH_VISUAL_M_PER_M;
           assert.ok(Math.abs(bodyDepth - m.depthM) <= m.depthSwingM + 1e-8);

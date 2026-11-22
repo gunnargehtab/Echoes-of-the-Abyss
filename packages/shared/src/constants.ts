@@ -180,21 +180,30 @@ export const FREE_WATER_HIGH_LIFE = {
    * The far bloom (#1859): a slow river of lanterns far out over the bowl,
    * where Home's eye had empty water beyond the fleet. Each is a whole
    * `env-drift-jelly`, as the five by the fleet are, by the owner's call in
-   * session on 22 November 2026. The river's loop is an ellipse along the
-   * bowl's north half, `RADII_M` east-west and north-south about `at`, and
-   * the one loop here that is no circle: a circle the bowl holds whole shows
-   * Home's eye a hook at the frame's edge. `COUNT` lanterns keep station on
-   * it over `SPAN_DEG` of its phase, thickest at the middle and thinning to
-   * both ends, so it is a river with a head and a tail and no ring.
-   * `startDeg` is where its middle stands when the match starts, as the
-   * loop's own phase (0 east, 90 south): the west end, the end nearer Home's
-   * eye. `STATION` is how far a lantern keeps from the river's own line,
-   * across it and in depth about `depthM`, over the hulls' 300 m. A lap is
-   * `MOTION.periodS`, clockwise as every loop here, which is a drifting
-   * jelly's own pace on the average, 0.32 m/s against its 0.31, and 0.44
-   * along the loop's long sides. A lantern keeps its depth as it goes, hangs
-   * by its bell's mid-height as the five do, and leans up to `bankDeg`
-   * either way, each its own.
+   * session on 22 November 2026. The river is carried round the bowl's eddy:
+   * a loop along the bowl's north half, `RADII_M` east-west and north-south
+   * about `at`, and the one loop here that is no circle. `COUNT` lanterns
+   * stand along it over `SPAN_DEG` of its phase, thickest at the middle and
+   * thinning to both ends, so it is a river with a head and a tail and no
+   * ring. `startDeg` is where its middle stands when the match starts, as
+   * the loop's own phase (0 east, 90 south): the west end, the end nearer
+   * Home's eye. `STATION` is how far a lantern keeps from the river's own
+   * line, across it and in depth about `depthM`, over the hulls' 300 m. A
+   * lap is `MOTION.periodS`, clockwise as every loop here, 0.32 m/s on the
+   * average, where a drifting jelly makes 0.31 on its own loop. A lantern
+   * keeps its depth as it goes, hangs by its bell's mid-height as the five
+   * do, and leans up to `bankDeg` either way, each its own.
+   *
+   * `EDDY` is what makes the loop an eddy and no ring turning, by the
+   * owner's call the same day to think of the ocean's currents and its
+   * turbulence (freeWaterDecoration.ts `eddyPlan`). The crater's current runs
+   * east along the garden's shelf, the bowl's north edge, and drags the water
+   * beside it along: the eddy's north side runs `SKEW` faster than the lap's
+   * own pace and its south side, the return flow, as much slower. The return
+   * side is `SPREAD` wider and the stream side as much narrower. And no
+   * lantern holds a fixed station: each wanders across the flow, between the
+   * two of `WANDER_M` either way, between the two of `WANDER_LAPS` times a
+   * lap, which is once in 10 to 25 minutes.
    */
   BLOOM: {
     at: [2150, 1930],
@@ -205,6 +214,7 @@ export const FREE_WATER_HIGH_LIFE = {
     depthM: 160,
     STATION: { acrossM: 60, depthM: 60 },
     MOTION: { periodS: 13500, depthSwingM: 0, axisM: 2.76, bankDeg: 12 },
+    EDDY: { SKEW: 0.3, SPREAD: 0.4, WANDER_M: [8, 20], WANDER_LAPS: [9, 22] },
   },
 } as const;
 
