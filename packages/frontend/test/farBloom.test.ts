@@ -4,8 +4,8 @@
  * bowl"; #1859). What those sections promise: a river of whole lanterns over
  * the bowl and nowhere else, the last slots of High's list; thickest at its
  * middle, which starts at the loop's west end; over the hulls' depth; carried
- * clockwise round the bowl's eddy, faster beside the stream and slower and
- * wider on the return side, each lantern wandering across the flow and heading
+ * clockwise round the eddy over the bowl, faster beside the stream and slower and
+ * wider on its far side, each lantern wandering across the flow and heading
  * the way it travels; and a wave of light a third as strong as a lantern's by
  * the fleet.
  * What it looks like is the frames in docs/screenshots/issue-1859, and the
@@ -219,9 +219,9 @@ describe('the far bloom (#1859)', () => {
   });
 
   it('runs with the stream on its north side and comes back slower and wider on its south', () => {
-    // The crater's current runs east along the garden, the bowl's north edge
-    // (docs/free-water-slice.md §5, "No rows"), and the eddy is what that
-    // stream turns in the bowl beside it.
+    // The fixture's one current runs east, where the kelp leans, in the garden
+    // north of the bowl (docs/free-water-slice.md §5, "No rows"). The eddy is
+    // read as what that stream's shear turns in the slower water south of it.
     const lapMs = MOTION.periodS * 1000;
     const line = onLine(Math.PI);
     const samples = Array.from({ length: 1440 }, (_, step) => {

@@ -940,17 +940,20 @@ over the fleet's start alone. A river of 120 lanterns now drifts far out over th
   the other way and against each lantern on a small loop of its own, which holds the
   river's place in Home's frame all match and reads as a bloom hanging, not a river
   flowing. Every lantern heads the way it travels, with its strands trailing behind it.
-- **It is carried round the bowl's eddy.** The owner saw the procession's clip and
+- **It is carried round the eddy over the bowl.** The owner saw the procession's clip and
   asked that its movement be thought through as the ocean's currents and turbulence.
-  The crater has one current: it runs east along the garden's shelf, which is the
-  bowl's north edge, and the kelp leans to it
-  ([free-water-slice.md](free-water-slice.md) §5, "No rows"). A stream passing the
-  mouth of a deep basin turns the water in it. The water beside the stream is dragged
-  along with it, and comes back the other way along the far wall. For a stream running
-  east on the north edge that eddy turns clockwise seen from above, which is how the
-  procession already went and how every loop of the fixture turns. So the direction
-  stands, and the south side running west is the eddy's return flow and no fault. What
-  changed is how it moves, in three things an eddy has and a ring turning does not:
+  What follows is the author's reading of that, and the owner's to overturn. The
+  fixture writes one current, east, which the kelp leans to
+  ([free-water-slice.md](free-water-slice.md) §5, "No rows"), and the kelp stands in
+  the garden, along the bowl's north side. The reading: the stream runs over the
+  garden, and the water over the bowl south of it is slower. Where a stream runs beside
+  slower water the two shear, and the shear on the south flank of an eastward stream
+  turns clockwise seen from above, fastest beside the stream. That is how the
+  procession already went and how every loop of the fixture turns, so the direction
+  stands, and the south side running west is the eddy's far side coming back. Nothing
+  walls it in: at the lanterns' 100 to 220 m the garden's water and the bowl's are one
+  open layer. That the loop closes is the author's choice for the frame. What changed
+  is how it moves, in three things an eddy has and a ring turning does not:
   - **Its pace is uneven.** Beside the stream, at the loop's north point, a lantern
     makes 0.57 m/s, and coming back along the south side 0.32. A lap is still 13,500 s
     and 0.32 m/s on the average, against a drifting jelly's 0.31 on its own loop.
@@ -960,11 +963,12 @@ over the fleet's start alone. A river of 120 lanterns now drifts far out over th
     either way, once in 10 to 25 minutes, each on a rhythm of its own, and heads where
     that carries it. A river whose lanterns all kept station turned as one rigid ring.
 
-  Three readings were written. **Turn it the other way** puts the return flow beside
-  the stream, against it. **A river that does not close**, east with the stream and
-  gone, leaves the bowl empty behind it or has to be fed. **The eddy** is taken. Its
+  Three readings were written. **Turn it the other way** runs its near side against
+  the stream beside it. **A river that does not close**, east with the stream and
+  gone, is the truer of open water, and leaves the bowl empty behind it or has to be
+  fed. **A closed eddy** is taken. Its
   three numbers are the author's and TUNABLE: how much faster the stream side runs,
-  0.3 of the lap's pace, how much wider the return side is, 0.4, and the wander. After
+  0.3 of the lap's pace, how much wider the far side is, 0.4, and the wander. After
   an hour the river's middle stands far along the loop's north side, and Home's eye
   holds 55 of the 120.
 - **A lantern of it keeps its depth and leans its own way.** The author's, and left by

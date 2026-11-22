@@ -17,7 +17,7 @@ commands under [Who captures](#who-captures).
 saw its software frames and took six calls in session on 22 November 2026; the second
 cut built them, as a procession turning as one ring. The owner saw that cut's frames the
 same day and asked that its movement be thought through as the ocean's currents and
-turbulence, which is this cut: the river carried round the bowl's eddy. All of it is
+turbulence, which is this cut: the river carried round the eddy over the bowl. All of it is
 under [Calls](#calls). The earlier cuts' frames are in this folder's history, at
 a2f4e7c9 and 2b397a00.
 
@@ -54,7 +54,7 @@ the lanterns' beads.
 | Camera | Low | High | What High shows now |
 | --- | --- | --- | --- |
 | Home | [low](software/01-low-home.png) | [high](software/06-high-home.png) | The river in the water right of the fleet, under the garden's edge: 92 of its 120 lanterns, 1,316 to 2,453 m off, across the frame's last 480 px. Each is a small orchid bell 4 to 7 px across over a faint fall of strands. Its thick middle stands right of centre and its two sides run off east, the far one fading out against the garden's foot. No ring stands in the water it crosses. Nothing else moved |
-| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | A trace of it: a band of faint bells behind the mill, across the stand's light. This eye's water reaches 630 m and the river's nearest lantern is 994 m off, so 0.08 of its light is left at most. Nothing else moved |
+| Close | [low](software/02-low-close.png) | [high](software/07-high-close.png) | A trace of it: a band of faint bells behind the mill, across the stand's light. This eye's water reaches 630 m and the river's nearest lantern is 992 m off, so 0.08 of its light is left at most. Nothing else moved |
 | Survey | [low](software/04-low-survey.png) | [high](software/09-high-survey.png) | A C of points round the west side of the pocket, with a thinner trail over its north and south edges: each lantern a point of one or two pixels, 67 of 255 at the 99th percentile and 100 at most, where two land on one pixel. A bell is under a pixel from 10 km, and a lantern's 331 points land on the same two |
 
 Two more, off the target's three:
@@ -286,9 +286,12 @@ On the second cut's:
 None of those is acceptance, which waits on the named GPU's frames. The author's, taken
 in the open, and the owner's to overturn:
 
-- **The eddy's numbers**: the stream side 0.3 faster than the lap's pace and the return
-  side as much slower, the return side 0.4 wider, and a wander of 8 to 20 m once in 10
-  to 25 minutes.
+- **The eddy itself**: the reading that the stream runs east over the garden and shears
+  the slower water over the bowl clockwise, and that the loop closes, which nothing at
+  the lanterns' depth makes it do.
+- **The eddy's numbers**: the stream side 0.3 faster than the lap's pace and the far
+  side as much slower, the far side 0.4 wider, and a wander of 8 to 20 m once in 10 to
+  25 minutes.
 - **This page carries no timing run.** The river is more of a body #1837 drew.
 - **Where the staged field stands**: inside the river's loop by its west end, at 250 m.
 
@@ -312,8 +315,8 @@ The first writes sixteen frames and `readings.json`, whose `queued` GPU time at 
 camera is gate 6's reading. Its last six are the Field pairs and then the Mark pair,
 after the Corvette's run out under the river, which takes about a minute. The second
 records the clip and prints where the move starts and ends in it. Neither sets reduced
-motion, so the river stands where the match's clock has carried it: it drifts 0.44 m/s
-at its fastest, 26 m in a minute.
+motion, so the river stands where the match's clock has carried it: it drifts 0.57 m/s
+at its fastest, beside the stream, 34 m in a minute.
 
 ## Related
 

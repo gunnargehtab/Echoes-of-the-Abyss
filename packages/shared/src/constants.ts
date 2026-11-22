@@ -180,7 +180,7 @@ export const FREE_WATER_HIGH_LIFE = {
    * The far bloom (#1859): a slow river of lanterns far out over the bowl,
    * where Home's eye had empty water beyond the fleet. Each is a whole
    * `env-drift-jelly`, as the five by the fleet are, by the owner's call in
-   * session on 22 November 2026. The river is carried round the bowl's eddy:
+   * session on 22 November 2026. The river is carried round the eddy over the bowl:
    * a loop along the bowl's north half, `RADII_M` east-west and north-south
    * about `at`, and the one loop here that is no circle. `COUNT` lanterns
    * stand along it over `SPAN_DEG` of its phase, thickest at the middle and
@@ -196,11 +196,12 @@ export const FREE_WATER_HIGH_LIFE = {
    *
    * `EDDY` is what makes the loop an eddy and no ring turning, by the
    * owner's call the same day to think of the ocean's currents and its
-   * turbulence (freeWaterDecoration.ts `eddyPlan`). The crater's current runs
-   * east along the garden's shelf, the bowl's north edge, and drags the water
-   * beside it along: the eddy's north side runs `SKEW` faster than the lap's
-   * own pace and its south side, the return flow, as much slower. The return
-   * side is `SPREAD` wider and the stream side as much narrower. And no
+   * turbulence (freeWaterDecoration.ts `eddyPlan`). The reading taken: the
+   * crater's one current runs east over the garden, along the bowl's north
+   * side, the water over the bowl is slower, and the shear between them turns
+   * clockwise. The eddy's north side, beside the stream, runs `SKEW` faster
+   * than the lap's own pace and its south side as much slower. The south side
+   * is `SPREAD` wider and the stream side as much narrower. And no
    * lantern holds a fixed station: each wanders across the flow, between the
    * two of `WANDER_M` either way, between the two of `WANDER_LAPS` times a
    * lap, which is once in 10 to 25 minutes.

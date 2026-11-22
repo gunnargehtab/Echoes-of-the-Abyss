@@ -455,12 +455,12 @@ export interface PropPlacement {
   motion?: {
     radiusM: number;
     /**
-     * The far bloom's alone (#1859): its loop is the bowl's eddy and no
+     * The far bloom's alone (#1859): its loop is the eddy over the bowl and no
      * circle (freeWaterDecoration.ts `eddyPlan`). `radiusNsM` is the loop's
      * north-south radius, `radiusM` then its east-west. `acrossM` is where
      * the body keeps station across the flow, outside the loop's line. `skew`
      * is how much faster than the lap's own pace the side beside the stream
-     * runs, and slower the return side; `spread` how much wider the return
+     * runs, and slower the far side; `spread` how much wider the far
      * side is, and narrower the stream side. `wanderM` is how far the body
      * wanders across the flow, `wanderLaps` times a lap, from `wanderPhase`.
      */

@@ -494,19 +494,24 @@ roofs over keeps its slot and is not drawn, as any slot here. The river hangs 10
 220 m deep, a lantern's whole bell over the hulls' 300 m, and its band passes 500 m in
 plan from the Light Scout's start at its nearest.
 
-**The loop is the bowl's eddy** (the owner's call in session on 22 November 2026, to
-think of the ocean's currents and its turbulence). The fixture has one current, east,
-which the kelp leans to (No rows, above), and it runs along the garden's shelf, the
-bowl's north edge. A stream passing the mouth of a deep basin turns the water in it: the
-water beside the stream is dragged along with it and comes back the other way along the
-far wall. So the eddy turns clockwise, its north side running east with the stream and
-its south side west, as its return flow. Three things make it an eddy and no ring
-turning:
+**The loop is an eddy on the stream's south flank** (the author's reading of the
+owner's call in session on 22 November 2026, to think of the ocean's currents and its
+turbulence). The fixture writes one current, east, which the kelp leans to (No rows,
+above), and the kelp stands in the garden, along the bowl's north side. The reading: the
+stream runs over the garden, and the water over the bowl south of it is slower. Where a
+stream runs beside slower water the two shear, and the shear on the south flank of an
+eastward stream turns clockwise seen from above, fastest beside the stream. So the eddy
+turns as every loop here does, its north side running east with the stream and its
+south side coming back west, slower. Nothing walls it in: the lanterns hang 100 to 220 m
+deep, over the garden's 400 m floor and the bowl's alike, where the water is one open
+layer. That the loop closes is the author's choice for the frame, since a river that
+ran east with the stream and was gone would leave the bowl empty behind it or have to be
+fed. Three things make it an eddy and no ring turning:
 
 | What | Constant | Value |
 | --- | --- | --- |
-| How much faster than the lap's own pace the stream side runs, and slower the return side | `BLOOM.EDDY.SKEW` | 0.3 |
-| How much wider the return side is, and narrower the stream side | `BLOOM.EDDY.SPREAD` | 0.4 |
+| How much faster than the lap's own pace the stream side runs, and slower the far side | `BLOOM.EDDY.SKEW` | 0.3 |
+| How much wider the far side is, and narrower the stream side | `BLOOM.EDDY.SPREAD` | 0.4 |
 | How far a lantern wanders across the flow, either way, metres: the least and the most | `BLOOM.EDDY.WANDER_M` | 8, 20 |
 | How many times a lap it wanders: the least and the most | `BLOOM.EDDY.WANDER_LAPS` | 9, 22 |
 

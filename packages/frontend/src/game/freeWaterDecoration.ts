@@ -361,7 +361,7 @@ export function freeWaterPlacements(
   add('env-rim-manta', mantaAt[0], mantaAt[1], { ...manta, phase: (mantaStart * Math.PI) / 180 });
   // The far bloom (#1859), last again, so every slot before it keeps its
   // index and the five lanterns by the fleet stay the first of their file's
-  // list: a river of whole lanterns carried round the bowl's eddy, where
+  // list: a river of whole lanterns carried round the eddy over the bowl, where
   // every other loop is a circle (`eddyPlan`). Each is drawn from the
   // fixture's seed. Where it stands along the river is the sum of two draws,
   // so the river is thickest at its middle and thins to nothing at its head
@@ -405,21 +405,23 @@ export function freeWaterPlacements(
 }
 
 /**
- * Where a body carried round the bowl's eddy stands in plan at a match time
+ * Where a body carried round the eddy over the bowl stands in plan at a match time
  * (docs/free-water-slice.md §5, "A far bloom over the bowl"; #1859).
  *
- * The crater's one current runs east along the garden's shelf, the bowl's
- * north edge. A stream passing the mouth of a deep basin turns the water in
- * it: the side beside the stream is dragged along with it, and the water
- * comes back the other way along the far wall. So the eddy turns clockwise
- * seen from above, as every loop of the fixture does, and its south side
- * running west is its return flow and no fault.
+ * The fixture writes one current, east, and the kelp that leans to it stands
+ * in the garden, along the bowl's north side. The reading taken: the stream
+ * runs over the garden and the water over the bowl is slower, and the shear
+ * on the south flank of an eastward stream turns clockwise seen from above,
+ * fastest beside the stream. So the eddy turns as every loop of the fixture
+ * does, and its south side running west is its far side coming back. Nothing
+ * walls it in at the depth it is drawn: that the loop closes is a choice for
+ * the frame.
  *
  * Three things make it an eddy and not a ring turning. Its pace is uneven:
  * the lap's own phase runs `skew` faster beside the stream, at the loop's
- * north point, and as much slower on the return side. Its width is uneven
- * the other way, as slower water is wider: a body keeps `spread` further from
- * the loop's line on the return side and as much nearer on the stream side.
+ * north point, and as much slower on the far side. Its width is uneven the
+ * other way, as slower water is wider: a body keeps `spread` further from
+ * the loop's line on the far side and as much nearer on the stream side.
  * And a body holds no fixed station: it wanders across the flow, `wanderM`
  * either way, a whole number of times a lap.
  */

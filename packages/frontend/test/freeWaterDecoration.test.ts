@@ -320,7 +320,7 @@ describe('authored public decoration', () => {
       assert.deepEqual(end, start);
       for (let step = 0; step < 100; step++) {
         const pose = decorationPose(p, m.periodS * 10 * step, () => -88);
-        // A body the bowl's eddy carries keeps and wanders as far outside
+        // A body the eddy over the bowl carries keeps and wanders as far outside
         // its loop's line as its own numbers say (#1859; farBloom.test.ts).
         const reach =
           m.eddy === undefined
