@@ -69,19 +69,23 @@ const RIM = { aheadM: 80, distance: 360, pitchDeg: 35 };
 // looks just past the west mesa's south-east corner, at (1750, 3470), 30 m right
 // of it at the corner's range. The mesa stands 1,250 m over the floor and the
 // lamp 450 m, so the corner's shadow halves the pool on the channel floor
-// beyond it with a straight edge, run north-east from the corner: lit ground on
-// one side, the same ground cut on the other. An order on a raised focus plane
+// beyond it with an edge run north-east from the corner: lit ground on one
+// side, the same ground cut on the other. The edge is toothed: the walk's
+// twelve reads step past a corner that thin, as its JS copy does too. An order on a raised focus plane
 // is an order to that depth (#1132), and the route goes round the rock at it
-// (pathfinding.ts). `CAST.focus` is the pool's middle, the frame's centre.
+// (pathfinding.ts). `CAST.focus` is the pool's middle, the frame's centre, seen
+// from the south-south-east and steeply, square across the edge: from lower
+// down the cone's own light in the water hides the ground under it, and from
+// the east the cut lies behind the mesa.
 const CAST = {
   at: [1651, 3562],
   headingDeg: 330,
   leadM: 160,
   clearM: 450,
   focus: [1820, 3455],
-  distance: 420,
+  distance: 380,
   yawDeg: 30,
-  pitchDeg: 50,
+  pitchDeg: 65,
 };
 
 /** halo-cost.mjs's load: about 3.6 ms on the named GPU (gpuQueueLoad.ts). */
