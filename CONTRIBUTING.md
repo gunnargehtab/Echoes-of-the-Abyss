@@ -142,7 +142,7 @@ every issue template added it, nothing removed it, and all 76 issues that carrie
 were closed. And it dropped `standing` once #703, the one issue it was cut for, closed
 (`packages/backend/src/ai/types.ts` says so).
 
-One label carries a routing rule rather than a category. **`shape-work`** marks an issue
+Two labels carry a routing rule rather than a category. **`shape-work`** marks an issue
 whose work is *shape* — a hull script, a faction module, a GLB, a prop, a prompt block —
 and is therefore executed under the design model of record that
 [docs/asset-prompts-3d.md](docs/asset-prompts-3d.md) rule 3 names for the whole series.
@@ -163,6 +163,15 @@ are adversarial to the model rather than about which one authored it. So the loo
 cost is real and worth naming: #540 carries the label across what is left of it — Phase
 6's pristine pass, now that every hull, structure and environment prop is built by a
 script — so none of it is the loop's to take.
+
+**`look-work`** is the other, added on 22 November 2026 (#1880). It marks look work: a
+change accepted on how a frame reads, against a frame the owner named, which a Fable
+session authors (`.claude/skills/dev-loop/SKILL.md`, "Look work"). The Routine skips it
+for `shape-work`'s reason. Until then the only hold on a look issue was the owner as its
+assignee, which also means "taken", says nothing about why and is lost to an unassign;
+eight look issues were filed without even that. Whoever files a look issue applies the
+label, a firing that finds look work without it applies it and stands down, and only a
+person removes it. A panel, a mark or a readout is not look work and does not take it.
 
 Three further labels are addressed to the unattended backlog Routine rather than to a
 person, and each takes an issue off its list for a different reason. **`routine-log`**
