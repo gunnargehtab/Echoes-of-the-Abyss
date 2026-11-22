@@ -853,6 +853,14 @@ of the production pages or the build page, reads its whole name and the price in
 seconds §7 gives it. Hover rather than a key, because the card is the mouse's route (§2) and the
 hand on it is the one asking.
 
+**A code names one thing.** Every hull, structure and refit code, and the throttle's `THR`,
+is unique across all of them (#1886). A code sits beside any other its navy can field, and
+one rule across every navy is simpler to hold than one per navy. The Knights' Herald read
+`HLD`, which is their Hold refit, and the Directorate's Thurible read `THR`, which is the
+harvest throttle beside its Harvester. The hull took the new code in both cases, `HER` and
+`THU`: the buttons' codes abbreviate what they do, and a hull's code is only its name cut
+short.
+
 ### What yields when the card is full
 
 A squad page can be offered more than twelve entries too, without a roster in sight: a mixed
