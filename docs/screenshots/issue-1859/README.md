@@ -167,8 +167,9 @@ A mark is the tactical pass's and is drawn over the world, so no lantern dims th
 its stroke reads at High what it reads at Low, over the river's brightest pixel at 115.
 What the river changes is what stands round and inside the ring: 49 lanterns inside it
 and 8 across its stroke, by [river.mjs](river.mjs), with the Corvette's own lamp among
-them. The hull is the quiet end of this: the Light Scout's
-ring is fainter and no frame stages it. Whether the ring, the lamp and the hull read in
+them. The Corvette is not the hardest case: the Light Scout's ring is smaller and its
+loudness arc shorter, SIG 6 against the Corvette's 28, and no frame stages it. Whether
+the ring, the lamp and the hull read in
 under a second there is the owner's glance, and the same module takes this frame on the
 named GPU.
 
