@@ -985,6 +985,7 @@ a Phase 13 row.
 | --- | --- |
 | Directorate wins 75% — parked under the balance freeze | [#654](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/654) |
 | The rung costs a third of a navy’s match income | [#706](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/706) |
+| The commander buying the four remaining refits | [#1871](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1871) |
 
 `CLAUDE.md` freezes balance work while the systems still change shape. Both readings are
 recorded and left.
@@ -1029,6 +1030,8 @@ A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shi
 | Bioluminescence that answers a hull | [#1862](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1862) |
 | Step 3’s look calls left unsettled by #1852 | [#1863](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1863) |
 | A manta over the rim, seen from below | [#1867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1867) |
+| The manta’s findings left open at merge: a timing run and a mid-tone belly | [#1870](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1870) |
+| A deep fish’s far aft light showing through its body from abeam | [#1876](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1876) |
 
 Look work under [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) at High. Most wait on a target frame or an owner call.
 
