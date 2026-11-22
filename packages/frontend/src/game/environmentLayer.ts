@@ -90,6 +90,7 @@ import { FieldHaze, hazeSites } from './fieldHaze.ts';
 const TMP_MATRIX = new Matrix4();
 const TMP_QUAT = new Quaternion();
 const TMP_POS = new Vector3();
+const TMP_FACE = new Vector3();
 const TMP_SCALE = new Vector3();
 const Y_AXIS = new Vector3(0, 1, 0);
 const TMP_COLOR = new Color();
@@ -621,15 +622,19 @@ export class EnvironmentLayer {
     const timeS = this.matchMs / 1000;
     let glints = 0;
     let seats = 0;
-    const glint = (at: Vector3, [sizeM, level]: readonly [number, number]) => {
-      if (this.glintAt.length < (glints + 1) * 5) {
-        const grown = new Float32Array(Math.max(256, (glints + 1) * 2) * 5);
+    // Eight floats a light: its place, its width and its level, and the way
+    // its seat faces, which is no length at all for a fry's.
+    const glint = (at: Vector3, [sizeM, level]: readonly [number, number], face?: Vector3) => {
+      if (this.glintAt.length < (glints + 1) * 8) {
+        const grown = new Float32Array(Math.max(256, (glints + 1) * 2) * 8);
         grown.set(this.glintAt);
         this.glintAt = grown;
       }
-      at.toArray(this.glintAt, glints * 5);
-      this.glintAt[glints * 5 + 3] = sizeM;
-      this.glintAt[glints * 5 + 4] = level;
+      at.toArray(this.glintAt, glints * 8);
+      this.glintAt[glints * 8 + 3] = sizeM;
+      this.glintAt[glints * 8 + 4] = level;
+      if (face === undefined) this.glintAt.fill(0, glints * 8 + 5, glints * 8 + 8);
+      else face.toArray(this.glintAt, glints * 8 + 5);
       glints++;
     };
     for (const [slug, { template, meshes, list }] of this.fixtureBatches) {
@@ -669,10 +674,18 @@ export class EnvironmentLayer {
           // A deep fish's seats are world light at High, and no dot of the
           // stipple channel stands on one there (#1857): one light a seat,
           // or the water would take it and the canvas give it back.
-          for (const seat of template.photophores ?? []) {
-            glint(TMP_POS.copy(seat).applyMatrix4(TMP_MATRIX), LIFE_GLOW_KIND.seat);
+          const facings = template.photophoreFacings ?? [];
+          (template.photophores ?? []).forEach((seat, k) => {
+            // A seat's light is lit by the way its seat faces, turned with
+            // its body (#1876): a seat without one would face everywhere.
+            const face = facings[k];
+            glint(
+              TMP_POS.copy(seat).applyMatrix4(TMP_MATRIX),
+              LIFE_GLOW_KIND.seat,
+              face === undefined ? undefined : TMP_FACE.copy(face).transformDirection(TMP_MATRIX)
+            );
             seats++;
-          }
+          });
           return;
         }
         for (const seat of template.photophores ?? [])
@@ -684,10 +697,11 @@ export class EnvironmentLayer {
     }
     this.seatLights = seats;
     const lit = this.glintAt;
-    this.glow.write(glints, (positions, glow) => {
+    this.glow.write(glints, (positions, glow, face) => {
       for (let i = 0; i < glints; i++) {
-        positions.set(lit.subarray(i * 5, i * 5 + 3), i * 3);
-        glow.set(lit.subarray(i * 5 + 3, i * 5 + 5), i * 2);
+        positions.set(lit.subarray(i * 8, i * 8 + 3), i * 3);
+        glow.set(lit.subarray(i * 8 + 3, i * 8 + 5), i * 2);
+        face.set(lit.subarray(i * 8 + 5, i * 8 + 8), i * 3);
       }
     });
     this.lantern.setToken(JELLY_LANTERN, 1);

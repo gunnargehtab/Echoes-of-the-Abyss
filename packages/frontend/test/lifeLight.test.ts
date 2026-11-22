@@ -236,11 +236,24 @@ describe('a fry’s own light (#1837)', () => {
     assert.ok(shader.vertexShader.includes(`max( glowPx, ${MIN_PX.toFixed(6)} * size )`));
     assert.match(
       shader.vertexShader,
-      /vGlowLevel = aGlow\.y \* \( glowPx \* glowPx \) \/ \( gl_PointSize \* gl_PointSize \)/
+      /vGlowLevel = aGlow\.y \* glowFacing \* \( glowPx \* glowPx \) \/ \( gl_PointSize \* gl_PointSize \)/
     );
     // A fry's point is its cloud's own level.
     assert.deepEqual([...LIFE_GLOW_KIND.axis], [SIZE_M, 1]);
     assert.ok(shader.vertexShader.includes(`1.0 - ${LIFT_M.toFixed(6)} /`));
+    // A light with a seat is lit by the way the seat faces the eye (#1876),
+    // between the two cosines the constant names; one without faces
+    // everywhere.
+    const [dark, whole] = HIGH_GRAPHICS.LIFE.GLOW.SEAT.FACE;
+    assert.ok(dark >= 0 && whole > dark && whole <= 1);
+    assert.ok(shader.vertexShader.includes('attribute vec3 aGlowFace;'));
+    assert.ok(shader.vertexShader.includes('if ( dot( aGlowFace, aGlowFace ) > 0.25 )'));
+    assert.ok(
+      shader.vertexShader.includes(
+        `glowFacing = smoothstep( ${dark.toFixed(6)}, ${whole.toFixed(6)}, dot( glowFaceView, normalize( - mvPosition.xyz ) ) );`
+      )
+    );
+    assert.ok(shader.vertexShader.includes('vGlowLevel = aGlow.y * glowFacing * '));
     assert.match(shader.fragmentShader, /diffuseColor\.rgb \*= glowFall \* glowFall \* vGlowLevel/);
   });
 
@@ -260,6 +273,17 @@ describe('a fry’s own light (#1837)', () => {
     assert.ok(Math.abs(kind.getX(1) - 0.55) < 1e-6);
     assert.ok(Math.abs(kind.getY(1) - 0.5) < 1e-6);
     assert.ok(Math.abs(kind.getX(0) - HIGH_GRAPHICS.LIFE.GLOW.SIZE_M) < 1e-6);
+    // A light faces everywhere until its filler says which way its seat
+    // does, and a slot forgets a seat it held the frame before.
+    const face = glow.points.geometry.getAttribute('aGlowFace');
+    assert.deepEqual([...face.array], new Array(9).fill(0));
+    glow.write(3, (_positions, _kinds, faces) => {
+      assert.deepEqual([...faces.subarray(0, 9)], new Array(9).fill(0));
+      faces.set([0, 0, 1], 3);
+    });
+    assert.deepEqual([...face.array], [0, 0, 0, 0, 0, 1, 0, 0, 0]);
+    glow.write(3, () => {});
+    assert.deepEqual([...face.array], new Array(9).fill(0));
     // Fewer bodies keep the buffer and draw fewer.
     const held = glow.points.geometry;
     glow.write(1, (positions) => positions.set([9, 9, 9]));
@@ -269,6 +293,49 @@ describe('a fry’s own light (#1837)', () => {
     assert.equal(glow.count, 0);
     assert.equal(glow.points.visible, false);
     glow.dispose();
+  });
+
+  it('faces each of a deep fish’s seats off its own flank, so the far flank’s is dark (#1876)', async () => {
+    // docs/art-direction.md, "Life in the world's light": a seat's light is
+    // whole while its seat faces the eye and gone when it is turned from it.
+    // The facings are read off the file's facets. From abeam, the bearing the
+    // body is thinnest from, each flank's three face the eye on their own
+    // side squarely enough to be whole, and are turned from the one on the
+    // other side.
+    const spec = propSpec('env-deep-fish')!;
+    const template = buildTemplate(
+      await parse('env-deep-fish'),
+      spec.footprintM,
+      spec.swayM,
+      'free-water'
+    );
+    const [dark, whole] = HIGH_GRAPHICS.LIFE.GLOW.SEAT.FACE;
+    const seats = template.photophores!;
+    const facings = template.photophoreFacings!;
+    assert.equal(facings.length, seats.length);
+    assert.equal(facings.length, 6);
+    for (const [i, facing] of facings.entries()) {
+      assert.ok(Math.abs(facing.length() - 1) < 1e-6, `seat ${i + 1} faces by a unit vector`);
+      const side = Math.sign(seats[i]!.z);
+      // The cosine to an eye abeam on a side is the facing's own z, signed.
+      assert.ok(
+        side * facing.z >= whole,
+        `seat ${i + 1} is whole from its own side: ${(side * facing.z).toFixed(3)} under ${whole}`
+      );
+      assert.ok(
+        -side * facing.z <= dark,
+        `seat ${i + 1} is dark from the far side: ${(-side * facing.z).toFixed(3)} over ${dark}`
+      );
+    }
+    // No other body's file marks a seat that a light of this cloud stands on.
+    const fry = propSpec('env-shoal-fry')!;
+    const school = buildTemplate(
+      await parse('env-shoal-fry'),
+      fry.footprintM,
+      fry.swayM,
+      'free-water'
+    );
+    assert.deepEqual(school.photophoreFacings, []);
   });
 
   it('is in the crater’s layer while the view draws a world pass, and out of it at Low', () => {

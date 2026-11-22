@@ -684,8 +684,9 @@ does, and nothing Low draws is built, patched or keyed differently.
   frame overturned it: a flank's three seats stand 0.22 to 0.24 m apart, so discs that
   wide merge into one lit patch, lit skin and no photophore. **A fry's width at twice
   its level, 0.6** is taken: three points that stand apart on the flank, and a fish
-  peaks at 102 to 162 from 250 m. Its cost is the register. A seat's centre is over a
-  fry's and over the bloom's threshold, and from a flight eye about 60 m off a fish
+  peaked at 102 to 162 from 250 m, until #1876 below. Its cost is the register. A
+  seat's centre is over a fry's and over the bloom's threshold, and from a flight eye
+  about 60 m off a fish
   peaks at 184, over that lamp, as the patch did at 186. A deep fish swims at 2,000 m
   and the fixture's hulls start at 300 m, so none stands beside a lamp unless a hull is
   ordered down, and whether its points muddy gate 3's reading of a hull there is the
@@ -695,7 +696,22 @@ does, and nothing Low draws is built, patched or keyed differently.
   gate 6's low camera the three rings Low draws into the pocket, 2 km off, are gone at
   High, and were under every reading captured there: the widest lifted a ring's pixels
   by 8 of 255. That is the cost of the move, and the owner took it with the
-  first call.
+  first call. A seat's light is lit by the way its seat faces
+  ([#1876](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1876);
+  [issue-1876](screenshots/issue-1876/README.md)). The lift that keeps a body's flank
+  from cutting a light's disc, a fry's 0.15 m, carried the far flank's aft light 1.3 cm
+  through a body 0.12 m wide there, from abeam, where it added to the near one. Three
+  readings were written, and the owner took two calls in session on 21 November 2026.
+  **A lift of a seat's own, 0.04 m** was the first, and its flight frame overturned it:
+  it hid a far flank's light from every bearing, and seen off square the flank cut the
+  near discs into ovals. **Lit by its facing** is taken: a
+  seat's light is whole while its seat faces the eye, within 60 degrees of square, and
+  gone edge on, on its facet's own normal in the file. A far flank's light is then dark
+  from every bearing, and the lift is a fry's again. Its cost is a fish seen end on,
+  where both flanks' seats stand near edge on to the eye. From 250 m the ring's six
+  peak at 64 to 113 where they peaked at 102 to 162: the two seen end on lost 42 and
+  49, and the other four lost 5 to 29, which was a far flank's light showing. **A
+  fry's lift and no more** leaves one point of three doubled from abeam.
 - **High stands more life than Low**, where the target's cameras read a body
   ([free-water-slice.md](free-water-slice.md) §5, "High's own life"). Two readings were
   written. **Add to Low's lists** would move the frame Low draws. **Slots High alone
@@ -743,6 +759,9 @@ holds Low's list unmoved under High's.
 | Width of a fry's light, metres | `LIFE.GLOW.SIZE_M` | 0.22 |
 | The least a light is drawn, pixels | `LIFE.GLOW.MIN_PX` | 1.6 |
 | How far toward the eye a light is drawn from its body's axis, metres | `LIFE.GLOW.LIFT_M` | 0.15 |
+| A deep fish's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.SEAT.LEVEL` | 0.6 |
+| Width of a deep fish's seat light, metres | `LIFE.GLOW.SEAT.SIZE_M` | 0.22 |
+| Cosines between a seat's facing and the sight line at which its light is dark, and whole | `LIFE.GLOW.SEAT.FACE` | 0, 0.5 |
 | A jelly's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.LANTERN.LEVEL` | 0.3 |
 | Width of a jelly's seat light, metres | `LIFE.GLOW.LANTERN.SIZE_M` | 0.55 |
 
