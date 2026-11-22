@@ -283,8 +283,10 @@ On the second cut's:
 - **A mark reads among the lanterns**: yes, yes and no to gate 7's three questions.
 - **Its movement is the ocean's, currents and turbulence.** This cut: the eddy.
 
+On the third cut's clip, the owner left the author's three calls below as they stood.
+
 None of those is acceptance, which waits on the named GPU's frames. The author's, taken
-in the open, and the owner's to overturn:
+in the open:
 
 - **The eddy itself**: the reading that the stream runs east over the garden and shears
   the slower water over the bowl clockwise, and that the loop closes, which nothing at

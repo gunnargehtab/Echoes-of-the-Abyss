@@ -884,9 +884,10 @@ cut's software frames, the owner left the river from Home and from Survey as the
 stood, left a lantern keeping its depth and leaning its own way, found a mark readable
 among the lanterns, ruled that the bloom may go on a map that has fields, and asked that
 its movement be thought through as the ocean's currents and turbulence. None of that is acceptance, which waits on the named
-GPU's frames. Three calls are the author's, taken in the open here, and wait on the
-owner: the eddy's numbers, where the staged field stands, and that the page carries no
-timing run.*
+GPU's frames. Three calls were the author's, taken in the open here: the eddy, with its
+numbers and its loop closing, where the staged field stands, and that the page carries
+no timing run. The owner saw the third cut's clip the same day and left all three as
+they stood, which is not acceptance either.*
 
 From Home's eye the bowl beyond the fleet was empty water, and the five lanterns hung
 over the fleet's start alone. A river of 120 lanterns now drifts far out over the bowl
@@ -942,7 +943,8 @@ over the fleet's start alone. A river of 120 lanterns now drifts far out over th
   flowing. Every lantern heads the way it travels, with its strands trailing behind it.
 - **It is carried round the eddy over the bowl.** The owner saw the procession's clip and
   asked that its movement be thought through as the ocean's currents and turbulence.
-  What follows is the author's reading of that, and the owner's to overturn. The
+  What follows is the author's reading of that, which the owner saw in the third cut's
+  clip and left. The
   fixture writes one current, east, which the kelp leans to
   ([free-water-slice.md](free-water-slice.md) §5, "No rows"), and the kelp stands in
   the garden, along the bowl's north side. The reading: the stream runs over the
