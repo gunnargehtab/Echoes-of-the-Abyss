@@ -1215,6 +1215,7 @@ export class PerspectiveView {
     surface: LitGroundSurface;
     triangles: number;
     rim: EdgePoint[];
+    edgeVertex: Uint32Array;
   } | null = null;
   /**
    * The water's hue over this ground, a plan texture (waterMedium.ts), and
@@ -1631,7 +1632,13 @@ export class PerspectiveView {
     const mesh = new Mesh(geometry, material);
     mesh.layers.set(WORLD_LAYER);
     this.scene.add(mesh);
-    this.outer = { mesh, surface, triangles: data.triangles, rim: data.rim };
+    this.outer = {
+      mesh,
+      surface,
+      triangles: data.triangles,
+      rim: data.rim,
+      edgeVertex: data.edgeVertex,
+    };
     this.shadeOuterGround();
   }
 
@@ -1647,26 +1654,26 @@ export class PerspectiveView {
   }
 
   /**
-   * The veil on the ground past the edge: each vertex takes the shade of the
-   * point on the map's edge nearest it, so the two grounds drain alike on
-   * the line they share and no hull is heard past the map.
+   * The veil on the ground past the edge: each vertex takes the shade the
+   * map's ground holds at the edge vertex nearest it (`OuterMesh.edgeVertex`),
+   * so the two grounds drain alike on the line they share and no hull is
+   * heard past the map. A copy of what `shadeGround` just wrote, never a
+   * second read of the veil: 8,520 vertices an Echo tick would be half the
+   * ground's own again.
    */
   private shadeOuterGround(): void {
     const outer = this.outer;
-    const terrain = this.terrain;
-    if (outer === null || terrain === null) return;
-    const widthM = terrain.cols * terrain.cellM;
-    const heightM = terrain.rows * terrain.cellM;
-    const positions = outer.mesh.geometry.getAttribute('position') as BufferAttribute;
+    const ground = this.terrainMesh?.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as
+      BufferAttribute | undefined;
+    if (outer === null || ground === undefined) return;
     const colors = outer.mesh.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
-    const shade = this.veilColor;
-    for (let i = 0; i < positions.count; i++) {
-      this.displayShadeAt(
-        Math.min(widthM, Math.max(0, positions.getX(i))),
-        Math.min(heightM, Math.max(0, positions.getZ(i))),
-        shade
-      );
-      colors.setXYZ(i, shade.r, shade.g, shade.b);
+    const from = ground.array;
+    const to = colors.array;
+    for (let i = 0; i < outer.edgeVertex.length; i++) {
+      const at = outer.edgeVertex[i]! * 3;
+      to[i * 3] = from[at]!;
+      to[i * 3 + 1] = from[at + 1]!;
+      to[i * 3 + 2] = from[at + 2]!;
     }
     colors.needsUpdate = true;
   }
@@ -2430,6 +2437,9 @@ export class PerspectiveView {
    * the edge cell's depth, so the chart cuts its rings and lines here first
    * (rimClip.ts, #1556). A placed mission's exterior is ground
    * (docs/world-map.md §7.4), so ink past its edge lands on it, as before.
+   * The free-water study's ground past its edge at High is not that
+   * (outerGround.ts): no cell lies under it, so the chart still ends at the
+   * rim, by a call written in docs/map-visuals.md §5.
    */
   inkBounds(): PlanRect | null {
     return this.worldRegion === null ? this.missionRect() : null;

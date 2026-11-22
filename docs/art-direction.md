@@ -1420,9 +1420,8 @@ Built, in the free-water study alone:
   as dark as the pocket beside it. It shades the glow alone: a pool and a beam are light
   from beside the ground. Two readings of where it shows were written. **In the ground's
   bake, at every camera** is taken: it is the ground's own light, and it does not come and
-  go with the zoom. Home and Close then stand inside what two takes of one tree differ
-  by, and gate 6's low camera, which looks across the bowl's floor, moves 8.1% of its
-  pixels by more than 2 of 255. **Brought in with the column's knee** would leave those
+  go with the zoom. Against `main`, Home then moves 2.2% of its pixels by more than 2 of
+  255, Close 0.8%, and gate 6's low camera, which looks across the bowl's floor, 8.1%. **Brought in with the column's knee** would leave those
   three cameras as `main` draws them, and stand the walls' shade up as the camera pulls
   out.
 - **The survey ink takes the same water.** The tactical layer is drawn as Low draws it,
@@ -1447,9 +1446,14 @@ Built, in the free-water study alone:
   for 250 m and has eased out by 1,000 m. Its lit bake is 1,024 px a side at the map's
   own 7.8125 m a pixel, 11.2 MB with its mips. It takes the veil of the point on the
   edge nearest it. The skirt hangs from its far boundary. Nothing is asked of it by the
-  simulation: no cell lies under it, a click on it is clamped onto the map as before,
-  and the survey draws no ink on it, since the chart ends at the rim, which stays where
-  it was. Low, and every shipped map, keep the skirt at the edge.
+  simulation: no cell lies under it, and a click on it is clamped onto the map as before.
+  Two readings of the chart out there were written. **The chart ends at the rim** is
+  taken: the survey draws no ink on it, a ring or a course still stops on the rim
+  ([map-visuals.md](map-visuals.md) §5), and the rim line stays where it was. The rim is
+  where the heard water ends, and a ring laid past it would draw heard water the
+  simulation does not have. **Marks land on it, as on a placed mission's exterior**
+  (#1556) would run the chart on with the ground, over ground with no cells. Low, and
+  every shipped map, keep the skirt at the edge.
 
 Not built: the roofed cut keeps its ruled sides
 ([free-water-slice.md](free-water-slice.md) §9), and the outer ground carries no silt

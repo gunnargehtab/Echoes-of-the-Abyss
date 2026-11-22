@@ -148,6 +148,22 @@ describe("the ground past the map's edge (#1891)", () => {
     }
   });
 
+  it('names, for each vertex, the map’s edge vertex nearest it', () => {
+    // The outer ground takes the veil's shade from that vertex, by index,
+    // so it must be the grid's vertex at the point clamped onto the map.
+    const mesh = outerMesh(terrain, grid, seed, rockTop);
+    assert.equal(mesh.edgeVertex.length, mesh.positions.length / 3);
+    for (let v = 0; v < mesh.edgeVertex.length; v++) {
+      const x = Math.min(WIDTH_M, Math.max(0, mesh.positions[v * 3]!));
+      const z = Math.min(HEIGHT_M, Math.max(0, mesh.positions[v * 3 + 2]!));
+      const at = mesh.edgeVertex[v]!;
+      assert.equal((at % grid.vertsX) * grid.stepM, x);
+      assert.equal(Math.floor(at / grid.vertsX) * grid.stepM, z);
+      // And it is on the map's edge: nothing inside the map lends its shade.
+      assert.ok(x === 0 || x === WIDTH_M || z === 0 || z === HEIGHT_M);
+    }
+  });
+
   it('spends the triangles its rings say, inside the study’s frame', () => {
     const mesh = outerMesh(terrain, grid, seed, rockTop);
     const rings = RINGS_M.length;

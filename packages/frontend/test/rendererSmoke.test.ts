@@ -3123,6 +3123,32 @@ describe('renderer smoke test: the water', () => {
             grounds.every((mesh) => mesh.layers.mask === 1 << WORLD_LAYER),
             'both in the world pass'
           );
+          // The ground past the edge drains with the veil as the map's edge
+          // does: each of its vertices holds the shade of the map's vertex at
+          // the point clamped onto the map, and nothing is heard past it.
+          loneListener(world);
+          world.frame(1);
+          const map = grounds.find((m) => m.geometry.getAttribute('surveyFloor') !== undefined)!;
+          const past = grounds.find((m) => m !== map)!;
+          const at = map.geometry.getAttribute('position') as BufferAttribute;
+          const mapShade = map.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
+          const shadeAt = new Map<string, number>();
+          let [widthM, heightM] = [0, 0];
+          for (let v = 0; v < at.count; v++) {
+            shadeAt.set(`${at.getX(v)}:${at.getZ(v)}`, mapShade.getX(v));
+            widthM = Math.max(widthM, at.getX(v));
+            heightM = Math.max(heightM, at.getZ(v));
+          }
+          const out = past.geometry.getAttribute('position') as BufferAttribute;
+          const outShade = past.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
+          let drained = 0;
+          for (let v = 0; v < out.count; v++) {
+            const x = Math.min(widthM, Math.max(0, out.getX(v)));
+            const z = Math.min(heightM, Math.max(0, out.getZ(v)));
+            assert.equal(outShade.getX(v), shadeAt.get(`${x}:${z}`), `vertex ${v}`);
+            if (outShade.getX(v) < 1) drained++;
+          }
+          assert.ok(drained > 0, 'the premise: the veil drains some of the edge');
           // The ink overlay reads the density the world pass does.
           assert.equal(inkColumn(world.gl.lastScene), 1 / HIGH_GRAPHICS.CRATER.COLUMN_REACH_M);
           // Under the knee, where a player commands from, there is no column.

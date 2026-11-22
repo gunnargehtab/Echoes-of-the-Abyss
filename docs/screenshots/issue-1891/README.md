@@ -144,7 +144,7 @@ more in the skirt, which now hangs from its longer boundary. Its lit bake is two
 1,024 px a side, 11,184,811 bytes with their mips. The frame stands at up to 851,455 of
 the crater's 900,000 ([free-water-slice.md](../../free-water-slice.md) §7).
 
-Three costs the counts do not show.
+Four costs the counts do not show.
 
 **Per-fragment work.** Three programs gained arithmetic and none a texture read. Every
 fogged draw of the world pass multiplies its swim by one more exponential. The lit ground
@@ -162,7 +162,11 @@ at High: 16,641 vertices, 16 bearings and 26 steps a bearing. A stopwatch, not a
 **Baking the ground past the edge.** 831 to 862 ms in Node on this container, when the
 ground is built at High: 794,560 pixels, one read of the drawn ground each.
 
-Both are read again whole on a ground delta, inside the frame it arrives in. The study's
+**The veil on the ground past the edge.** None read: each of its 8,520 vertices copies
+the shade the map's ground already holds at the edge vertex nearest it, on the Echo tick
+the ground is shaded on.
+
+The first two are read again whole on a ground delta, inside the frame it arrives in. The study's
 delta was whole already: its rounded ground re-reads its whole grid
 (`perspectiveTerrain.ts` `patchHeightGrid`). Its fixture authors no delta.
 
@@ -203,8 +207,10 @@ read the same way:
 | Low | 0.78 | 8.1% |
 | Survey | 2.78 | 26.3% |
 
-Home and Close stand inside what two takes of one tree differ by. Gate 6's low camera
-looks across the bowl's floor, which the shade darkens, and Survey is the step. The
+Two takes of High on one tree were not read against each other, so how much of Home's and
+Close's figures is drifting snow is not known. Two takes of Low on `main` differ by 0.25
+and 0.43 there. Home shows the shade under the garden's scarp. Gate 6's low camera looks
+across the bowl's floor, which the shade darkens, and Survey is the step. The
 ground past the edge is in all four, and shows at Survey: at the other three it lies
 behind the eye or past the water's reach.
 
@@ -272,7 +278,11 @@ open:
   bible does not have.
 - **It is baked at the map's own 7.8125 m a pixel,** 11.2 MB. The reading not taken:
   half that density, a quarter the bytes, and softer than the map's ground beside it.
-- **No ink is drawn on it, and the rim line stays.** The chart ends at the rim.
+- **The chart ends at the rim.** No ink is drawn on the ground past it, a ring or a
+  course still stops on the rim, and the rim line stays. The reading not taken: marks
+  land on it as on a placed mission's exterior (#1556), which lays chart over ground with
+  no cells. [map-visuals.md](../../map-visuals.md) §5 now names the study beside that
+  rule.
 - **It carries no silt detail.** The map's ground beside it does, so near the edge a
   low camera can tell the two apart.
 - **This page waits on a timing run** it cannot take.

@@ -120,6 +120,13 @@ export interface OuterMesh {
   triangles: number;
   /** The mesh's own outer boundary, walked once round as `edgeRing` walks the map's. */
   rim: EdgePoint[];
+  /**
+   * For each vertex, the vertex of the map's grid on the edge nearest it: its
+   * own, for a vertex on the edge. The outer ground drains with the veil as
+   * that vertex does, so no hull is heard past the map and the two grounds
+   * agree on the line they share (`PerspectiveView.shadeOuterGround`).
+   */
+  edgeVertex: Uint32Array;
 }
 
 /** The square the outer bake covers, in the map's metres: the map and the reach round it. */
@@ -158,6 +165,8 @@ export function outerMesh(
   const index = new Int32Array(xs.length * zs.length).fill(-1);
   const positions: number[] = [];
   const uvs: number[] = [];
+  const edgeVertex: number[] = [];
+  const clamp = (at: number, verts: number) => Math.min(verts - 1, Math.max(0, at - rings));
   for (let j = 0; j < zs.length; j++) {
     for (let i = 0; i < xs.length; i++) {
       if (inside(i, j)) continue;
@@ -169,6 +178,7 @@ export function outerMesh(
       index[j * xs.length + i] = positions.length / 3;
       positions.push(x, y, z);
       uvs.push((x - frame.x0M) / frame.sideM, (z - frame.z0M) / frame.sideM);
+      edgeVertex.push(clamp(j, grid.vertsZ) * grid.vertsX + clamp(i, grid.vertsX));
     }
   }
   const quads: number[] = [];
@@ -198,6 +208,7 @@ export function outerMesh(
     indices: Uint32Array.from(quads),
     triangles: quads.length / 3,
     rim,
+    edgeVertex: Uint32Array.from(edgeVertex),
   };
 }
 

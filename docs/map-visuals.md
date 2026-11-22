@@ -196,7 +196,10 @@ the whole map would then draw nothing, which [systems-echo.md](systems-echo.md) 
 the rim itself is stroked in the reach's ink: the heard water ends at it ([ui-ux.md](ui-ux.md)
 §3.5). A placed
 mission's exterior is ground ([world-map.md](world-map.md) §7.4), so a mark there keeps drawing
-on it (#1556).
+on it (#1556). The free-water study at the High graphics quality also draws ground past its rim
+([art-direction.md](art-direction.md#the-crater-from-above)), and a mark still ends at the rim
+there: no cell lies under that ground, so a ring laid on it would draw heard water the
+simulation does not have.
 
 **A mark on the ground passes behind a model.** The mark layer is painted over the conn view,
 so a ring, a rim or a course that crossed a hull or a structure used to run across its roof,
