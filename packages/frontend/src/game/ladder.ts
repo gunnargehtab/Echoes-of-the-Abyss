@@ -66,8 +66,8 @@ import { BIOME_COLOR, scaleRgb, TIER_SHAPE, type Palette } from './palette.ts';
  * site's rim (`furnitureFloorLift`, below). Which of them is quietest depends
  * on the palette and the ground — the dormant eruption rim in three of the
  * four, and in protanopia, whose threat red is brighter, the idle kelp rim
- * over black and the dormant eruption rim over paler ground — so the floor is
- * the least of them. Every other outline here lifts more than that floor
+ * over black and the near-black trench fill and the dormant eruption rim over
+ * paler ground — so the floor is the least of them. Every other outline here lifts more than that floor
  * in every palette, which ladder.test.ts holds, near the eye (see the fog,
  * above) — all but residue's arc at a faint mark's own peak, which it records.
  *

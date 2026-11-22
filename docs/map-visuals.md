@@ -488,9 +488,9 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   isobath's 0.043. A detonation's lifts it by 0.071: over the ink, and still under rung 5's
   floor there (0.080–0.104). In battle red, the quietest of its four colours, the arc clears
   the coast only from intensity 0.27, and rung 5's floor only from 0.38–0.56 by palette and
-ground. Under
-  that reading rung 5's floor is residue's, and it sits under rung 4's. The tests weigh the arc
-  at the ceiling and at 0.02, and pin the break. Neither the arc nor the ink moved.
+  ground. Under that reading rung 5's floor is residue's, and it sits under rung 4's. The
+  tests weigh the arc at the ceiling and at 0.02, and pin the break. Neither the arc nor the
+  ink moved.
 - **Rung 7 sits under rung 6 on the chart**, in every palette. A Tier-3 contact's ring and
   glyph wear its navy's colour, and the darkest primaries, the Directorate's crimson and the
   Hadron's deep blue and dark teal, sit at 0.17–0.19 luminance. At 0.33 the ring lifts the kelp
@@ -546,9 +546,8 @@ the field's footprint and the bells are the life above it. The rim is stroked at
 gripping kelp rim's alpha: at 0.18 the bells read on Ventfront Divide and the footprint a
 commander plans by did not (#1882). It is still the quietest outline rung 5 draws in the
 fauna colour, under a scattered shoal's 0.4 ring, so it stays one of the floor's four. From
-an oblique camera the bloom
-stands above its rim, not inside it. The owner ruled on #866 that the bloom, like a shoal's
-cloud, is a mark of its own, weighed by its loudest dot (§5).
+an oblique camera the bloom stands above its rim, not inside it. The owner ruled on #866 that
+the bloom, like a shoal's cloud, is a mark of its own, weighed by its loudest dot (§5).
 
 Four choices a reviewer should see:
 
