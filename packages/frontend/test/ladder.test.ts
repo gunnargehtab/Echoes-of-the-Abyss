@@ -50,6 +50,7 @@ import {
   additiveLift,
   AGENT_OUTLINES,
   encodedLuminance,
+  FURNITURE_OUTLINE_ALPHA,
   FURNITURE_OUTLINES,
   furnitureFloorLift,
   furnitureFloorStrokes,
@@ -177,6 +178,14 @@ describe('the loudness ladder’s palest ground', () => {
 });
 
 describe('the loudness ladder, rung 5', () => {
+  it("keeps a Tetherjelly field's rim the quietest outline in the fauna colour", () => {
+    // It is the fauna colour's floor stroke (docs/map-visuals.md §5). Raised
+    // so a field's footprint reads (#1882), it stays under the one other
+    // outline rung 5 draws in that colour, or the floor would name the wrong
+    // rim. Both are weighed in the fauna colour alone, so alpha orders them.
+    assert.ok(FURNITURE_OUTLINE_ALPHA.jellyRim < FURNITURE_OUTLINE_ALPHA.shoalScatterRing);
+  });
+
   it('records every outline that lifts some ground less than its floor', () => {
     // The claim ladder.ts makes about the four rims it names: every other
     // rung-5 outline lifts at least as much — the bells and shoal clouds by
