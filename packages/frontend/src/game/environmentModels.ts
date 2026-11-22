@@ -228,17 +228,6 @@ export function propFootprint(root: Object3D): number {
 export type WorldLit = boolean | 'lantern' | 'wing';
 
 /**
- * One prop's template from its parsed file; exported for the test that holds
- * it to intake. `worldLit` builds the High graphics quality's template for a
- * decorative body (docs/art-direction.md, "Life in the world's light",
- * #1837): its register is a body's own and it takes the world's light
- * (lifeLight.ts). Low's template is built without it, as it always was.
- * `'lantern'` is the drifting jelly's High template instead: every part a
- * lit membrane and none of it stone (jellyLight.ts). `'wing'` is the
- * manta's: a body in the world's light whose skin is smoothed and whose
- * wings stroke (mantaWing.ts, #1867).
- */
-/**
  * The way a seat's facet faces: the normal of its triangles, each weighed by
  * its area, in the scene's frame. A seat is a flat lozenge laid on the skin
  * and wound to face off it (tools/hull-models/seabed.mjs `seat`), so this is
@@ -267,6 +256,17 @@ function facetFacing(node: Object3D): Vector3 {
   return facing.normalize();
 }
 
+/**
+ * One prop's template from its parsed file; exported for the test that holds
+ * it to intake. `worldLit` builds the High graphics quality's template for a
+ * decorative body (docs/art-direction.md, "Life in the world's light",
+ * #1837): its register is a body's own and it takes the world's light
+ * (lifeLight.ts). Low's template is built without it, as it always was.
+ * `'lantern'` is the drifting jelly's High template instead: every part a
+ * lit membrane and none of it stone (jellyLight.ts). `'wing'` is the
+ * manta's: a body in the world's light whose skin is smoothed and whose
+ * wings stroke (mantaWing.ts, #1867).
+ */
 export function buildTemplate(
   scene: Group,
   footprintM: number,

@@ -684,8 +684,9 @@ does, and nothing Low draws is built, patched or keyed differently.
   frame overturned it: a flank's three seats stand 0.22 to 0.24 m apart, so discs that
   wide merge into one lit patch, lit skin and no photophore. **A fry's width at twice
   its level, 0.6** is taken: three points that stand apart on the flank, and a fish
-  peaks at 102 to 162 from 250 m. Its cost is the register. A seat's centre is over a
-  fry's and over the bloom's threshold, and from a flight eye about 60 m off a fish
+  peaked at 102 to 162 from 250 m, until #1876 below. Its cost is the register. A
+  seat's centre is over a fry's and over the bloom's threshold, and from a flight eye
+  about 60 m off a fish
   peaks at 184, over that lamp, as the patch did at 186. A deep fish swims at 2,000 m
   and the fixture's hulls start at 300 m, so none stands beside a lamp unless a hull is
   ordered down, and whether its points muddy gate 3's reading of a hull there is the
@@ -758,6 +759,9 @@ holds Low's list unmoved under High's.
 | Width of a fry's light, metres | `LIFE.GLOW.SIZE_M` | 0.22 |
 | The least a light is drawn, pixels | `LIFE.GLOW.MIN_PX` | 1.6 |
 | How far toward the eye a light is drawn from its body's axis, metres | `LIFE.GLOW.LIFT_M` | 0.15 |
+| A deep fish's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.SEAT.LEVEL` | 0.6 |
+| Width of a deep fish's seat light, metres | `LIFE.GLOW.SEAT.SIZE_M` | 0.22 |
+| Cosines between a seat's facing and the sight line at which its light is dark, and whole | `LIFE.GLOW.SEAT.FACE` | 0, 0.5 |
 | A jelly's seat light at its centre, in the renderer's linear units | `LIFE.GLOW.LANTERN.LEVEL` | 0.3 |
 | Width of a jelly's seat light, metres | `LIFE.GLOW.LANTERN.SIZE_M` | 0.55 |
 
