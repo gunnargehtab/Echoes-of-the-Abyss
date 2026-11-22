@@ -389,6 +389,8 @@ export const SEEDING_RADICALS: MissionDefinition = {
     {
       id: 'the-column',
       text: "Thirty-three are going south in four hulls, and we didn't turn it, and they're ours. We'd like four in the far water.",
+      gloss:
+        'Get the barge Cruiser and all 3 Harvesters into the far water; they follow their own route, and an order of yours holds them for 30 s.',
       initial: ObjectiveStatus.Pending,
       markerId: 'the-far-water',
       terminal: true,
@@ -409,6 +411,7 @@ export const SEEDING_RADICALS: MissionDefinition = {
     {
       id: 'the-seed',
       text: 'Two hulls in the far water is a seeding that still has seed in it. We agreed two at the Concourse, the way we agreed six at Kell.',
+      gloss: 'At least 2 of those 4 hulls in the far water.',
       initial: ObjectiveStatus.Pending,
       markerId: 'the-far-water',
       // §8 — the middle rung, in Thin Water's and Sorrowgate's arrangement: the
@@ -423,7 +426,8 @@ export const SEEDING_RADICALS: MissionDefinition = {
     },
     {
       id: 'the-escorts',
-      text: "Juno's three are yours to spend, and so, this time, is the noise.",
+      text: "Juno's three are yours to use, and so, this time, is the noise. We'd still like them home.",
+      gloss: 'Keep all 3 Corvettes afloat; they may fire and be loud.',
       initial: ObjectiveStatus.Pending,
       // §8 — non-terminal and standing, re-derived every pass (`isStanding`),
       // read at the close. The met reading cannot say *came home*: `survive`
@@ -439,6 +443,7 @@ export const SEEDING_RADICALS: MissionDefinition = {
     {
       id: 'the-households',
       text: "Four went down. We'd like four read, wherever they're read.",
+      gloss: 'Keep all 4 column hulls afloat.',
       initial: ObjectiveStatus.Pending,
       // §8 — non-terminal with a reading: it prints beneath whichever outcome
       // the crossing earned and ranks nothing. The count the ladder reads is

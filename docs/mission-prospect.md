@@ -414,6 +414,16 @@ Watch-Speaker's account-and-debt is agency refused in two sentences; the reconna
 a compliment to a mineral; and Osk closes the campaign's oldest register — the works order —
 over the strangest water the concern has ever billed a shift to.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-field` | Each Corvette reads the faces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field. |
+| `the-ascent` | Have 3 of your 4 hulls back in the staging, at the north edge, when the mission closes at T+22:00. |
+| `the-ledger` | How long your column has been classified; keep it under 60 s. |
+
 ---
 
 ## 13. Scaffold Status

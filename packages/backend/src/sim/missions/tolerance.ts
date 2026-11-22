@@ -206,6 +206,7 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
     {
       id: 'the-casting',
       text: 'Pour the casting. The gauge fits both apertures; the arithmetic does not.',
+      gloss: 'Hold the casting Harvester in the casting yard for 90 s to pour the casting.',
       initial: ObjectiveStatus.Pending,
       markerId: 'yard',
       predicate: {
@@ -219,6 +220,8 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
     {
       id: 'the-root',
       text: 'The root is the habitat. What it costs to reach is on the ledger, per second, and does not heal.',
+      gloss:
+        'Carry the casting to the root aperture; below 1,800 m it costs the Harvester 4 hull a second, and it seals only one aperture.',
       initial: ObjectiveStatus.Pending,
       markerId: 'root',
       terminal: true,
@@ -238,6 +241,8 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
     {
       id: 'the-section',
       text: 'The section is the people still in it. The frame takes the same gauge.',
+      gloss:
+        "Or carry it to Sector Vayle's frame instead: there is one casting, so only one of the two can be sealed.",
       initial: ObjectiveStatus.Pending,
       markerId: 'section',
       terminal: true,

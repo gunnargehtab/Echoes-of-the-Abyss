@@ -2025,6 +2025,46 @@ button.objectives-row .objectives-text {
   font-weight: 700;
 }
 
+/* A rule that holds right now (#1883): the tick of a met task, without the
+   dimming, because the rule is still in force and can still be broken. */
+.objectives-row.kept .objectives-status {
+  color: var(--neon-teal);
+  font-weight: 700;
+}
+
+/* A budget the player is spending: a figure to watch, not a box to fill. Spent,
+   it warns in amber — the mission goes on, but what the budget protected is
+   gone (#1883). */
+.objectives-row.budget .objectives-status {
+  color: var(--text-cyan);
+}
+
+/* A record the document grades in neither direction (#1883): named in the
+   status column's own dim ink, never teal and never amber. */
+.objectives-row.record .objectives-status {
+  color: var(--text-dim);
+}
+
+.objectives-row.spent .objectives-status {
+  color: var(--neon-amber);
+  font-weight: 700;
+}
+
+/* Whether a row decides the result, at the foot of its reading (#1883). Small
+   and set like the status column, so it reads as a label rather than as part
+   of the sentence the mission speaks. */
+.objectives-weight {
+  font-size: 0.82em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+
+.objectives-weight.critical {
+  color: var(--neon-magenta);
+}
+
 /* The reading and its gloss share the middle column, one above the other —
    §10.5's gloss rule. Placed explicitly rather than left to auto-flow, because
    the row is a three-column grid and a fourth child would otherwise take the
@@ -2498,6 +2538,16 @@ button.objectives-row .objectives-text {
 
 .mission-result-objective.failed .mission-result-status {
   color: var(--neon-red);
+  font-weight: 700;
+}
+
+.mission-result-objective.kept .mission-result-status {
+  color: var(--neon-teal);
+  font-weight: 700;
+}
+
+.mission-result-objective.spent .mission-result-status {
+  color: var(--neon-amber);
   font-weight: 700;
 }
 

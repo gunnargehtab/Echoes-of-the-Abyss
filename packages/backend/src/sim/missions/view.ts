@@ -11,7 +11,7 @@
  * Widening it is how this stops being true, so it is the line to defend.
  */
 
-import { ObjectiveStatus, SIM } from '@echoes/shared';
+import { ObjectiveForm, ObjectiveStatus, ObjectiveWeight, SIM } from '@echoes/shared';
 import type {
   AbilityLock,
   CommanderAbilityView,
@@ -22,7 +22,7 @@ import type {
   ObjectiveView,
 } from '@echoes/shared';
 
-import { exposedAtLeast, progressOf, type PairedIds } from './predicates.ts';
+import { exposedAtLeast, isStanding, progressOf, type PairedIds } from './predicates.ts';
 import type {
   MissionDefinition,
   MissionObjective,
@@ -206,6 +206,14 @@ function objectiveView(
     }),
     status: state.statuses.get(objective.id) ?? objective.initial,
   };
+  // What kind of sentence the row is and whether it decides the result
+  // (docs/ui-ux.md §10.5, #1883). Codes, not words: the shell says them. Read
+  // off the literal's own shape, so a row cannot be told it is a rule while
+  // the runtime latches it as a task.
+  const form = formOf(objective);
+  if (form !== ObjectiveForm.Task) view.form = form;
+  if (objective.keystone === true) view.weight = ObjectiveWeight.Critical;
+  else if (objective.terminal !== true) view.weight = ObjectiveWeight.Optional;
   // The plain line beside the reading — docs/ui-ux.md §10.5, #720, #725.
   //
   // Chosen from the literal, never assembled: this is one of the mission's own
@@ -215,7 +223,10 @@ function objectiveView(
   // half of `ObjectiveView.gloss`'s anti-reveal rule the match can break; the
   // half an *author* can break is prose, and `missions.test.ts` is what holds
   // it.
-  const gloss = glossFor(objective, state);
+  const gloss = glossFor(objective, state, (predicate) => {
+    const { done, of } = judge(predicate);
+    return done >= of;
+  });
   if (gloss !== undefined) view.gloss = gloss;
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
   if (objective.viaMarkerId !== undefined) view.viaMarkerId = objective.viaMarkerId;
@@ -291,25 +302,50 @@ function textFor(
 }
 
 /**
+ * What kind of sentence a row is, read off the literal (#1883).
+ *
+ * A tolerance is a budget unless its document reads it as a record. A rule is
+ * one of `isStanding`'s predicates — a ceiling or a muster, true now and able
+ * to stop being true, which the runtime returns to Pending rather than to
+ * Failed. A row authored `standing` on any other predicate is read at the
+ * close: its hulls may start in the region, so it claims nothing until then.
+ * Everything else is a task, met once and kept.
+ */
+export function formOf(objective: MissionObjective): ObjectiveForm {
+  if (objective.predicate.kind === 'tolerance') {
+    return objective.record === true ? ObjectiveForm.Record : ObjectiveForm.Budget;
+  }
+  if (isStanding(objective.predicate)) return ObjectiveForm.Rule;
+  if (objective.standing === true) return ObjectiveForm.Close;
+  return ObjectiveForm.Task;
+}
+
+/**
  * The gloss that goes with whichever reading is live.
  *
- * `debtGloss` wins while the debt does, on the one condition `textFor` keys
- * the debt reading on, so the two halves of a row can never describe different
- * states.
- *
- * There is deliberately no branch for `stallText` or for a `states` entry, and
- * `missions.test.ts` is what keeps that honest rather than this quietly
- * returning the base gloss: a glossed objective may author no alternate
- * reading without a gloss of its own — `debtText` without `debtGloss`
- * included, which is the near miss, since the branch above would fall back
- * happily. A sentence explaining the rule shown underneath a *different*
- * sentence stating it is the one failure this pairing exists to prevent, and
- * it is what makes invariants row 24 true over every mission rather than over
- * this one. A mission that wants another reading gains a paired field here
- * beside it, exactly as `debtGloss` did.
+ * Picked in `textFor`'s order and on its conditions — the debt, then a stalled
+ * walk, then the first `states` reading that holds — so a sentence explaining
+ * the rule can never sit under a *different* sentence stating it, which is
+ * what makes invariants row 24 true over every mission. Each alternate reading
+ * authors its own gloss (`debtGloss`, `stallGloss`, a state's `gloss`), and
+ * `missions.test.ts` refuses an objective that authors one without the other
+ * (#1883).
  */
-function glossFor(objective: MissionObjective, state: MissionState): string | undefined {
-  if (objective.debtGloss !== undefined && state.debtS > 0) return objective.debtGloss;
+
+function glossFor(
+  objective: MissionObjective,
+  state: MissionState,
+  holds: (predicate: MissionPredicate) => boolean
+): string | undefined {
+  // The same order `textFor` picks its reading in, so the two halves of a row
+  // always describe one state.
+  if (objective.debtText !== undefined && state.debtS > 0) return objective.debtGloss;
+  if (objective.stallText !== undefined && state.walk?.stalled === true) {
+    return objective.stallGloss;
+  }
+  for (const reading of objective.states ?? []) {
+    if (holds(reading.when)) return reading.gloss;
+  }
   return objective.gloss;
 }
 

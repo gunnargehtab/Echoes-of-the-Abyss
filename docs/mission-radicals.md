@@ -613,7 +613,8 @@ middle rung, in *Thin Water*'s and *Sorrowgate*'s arrangement: the ladder reads 
 terminal rows were met, so a three-row Results table needs two, and the ask is still four.
 Reading met: *Two at the least. That's a seeding.* Unmet: *Fewer than two. That isn't.*
 
-**`the-escorts`** — *Juno's three are yours to spend, and so, this time, is the noise.* —
+**`the-escorts`** — *Juno's three are yours to use, and so, this time, is the noise. We'd still like them
+home.* —
 `{ kind: 'survive'; role: 'escort'; count: 3 }` — **non-terminal**, standing, read at the
 close. Reading met: *Three guns are still three. The basin never heard them as anything but
 weather.* Unmet: *We spent a gun in the drowned city to be the loudest thing in it. Nobody's
@@ -923,7 +924,8 @@ what was agreed at the Concourse:
   like four in the far water.*
 - *Two hulls in the far water is a seeding that still has seed in it. We agreed two at the
   Concourse, the way we agreed six at Kell.*
-- *Juno's three are yours to spend, and so, this time, is the noise.*
+- *Juno's three are yours to use, and so, this time, is the noise. We'd still like them home.*
+  (The row read *yours to spend* until #1883, beside a count met only if all three survive.)
 - *Four went down. We'd like four read, wherever they're read.*
 
 Four rows, four lines, and no fifth: what the watch calls in the water is a `say` beat and
@@ -1035,6 +1037,17 @@ own it* — spent by the person it was built to be spent on, on herself, and dec
 same breath.
 
 She is *she* throughout, as [characters.md](characters.md) writes her.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-column` | Get the barge Cruiser and all 3 Harvesters into the far water; they follow their own route, and an order of yours holds them for 30 s. |
+| `the-seed` | At least 2 of those 4 hulls in the far water. |
+| `the-escorts` | Keep all 3 Corvettes afloat; they may fire and be loud. |
+| `the-households` | Keep all 4 column hulls afloat. |
 
 ---
 

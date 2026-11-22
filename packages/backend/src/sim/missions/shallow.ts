@@ -740,6 +740,8 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       id: 'the-transcript',
       text: 'The Shelf is listened to. Five of ten is sufficiency. The Undermarshalcy does not round up.',
+      gloss:
+        'Hear 5 of the 10 plateau sounds; each counts once your contact log shows it with a bearing.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — monotone, and revealed from 00:00. An emitter resolved at Tier 2
@@ -751,6 +753,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       id: 'the-slope',
       text: "The column is under the line at the tide's turn. Six of eight on the slope is a column.",
+      gloss: 'Have 6 of your 8 Choristers inside the slope marker.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — revealed at 18:00, and the late reveal is load-bearing: an
@@ -765,6 +768,8 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       id: 'the-ears',
       text: 'Two of three ears on the slope.',
+      gloss:
+        'Have 2 of your 3 listeners, the Submersibles and the Cruiser, inside the slope marker.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       revealAtTick: T(18),
@@ -778,6 +783,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       id: 'the-record',
       text: 'What is heard of the column is entered by the concern, and read later, elsewhere.',
+      gloss: 'How long your hulls have been classified; keep it under 60 s.',
       initial: ObjectiveStatus.Pending,
       // §8 — sixty seconds of Classification, cumulative, in anybody's ears.
       // Non-terminal: meeting it is neither good nor bad, it is a fact about
@@ -792,6 +798,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       id: 'the-whole',
       text: 'Eight of ten, and the Holdfast among them.',
+      gloss: "Hear 8 of the 10, the Holdfast's among them.",
       initial: ObjectiveStatus.Pending,
       // §8 — read out, never ranked. Eight of ten cannot be reached without
       // standing inside the concern's corridor for the Holdfast's three

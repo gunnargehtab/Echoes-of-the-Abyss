@@ -615,6 +615,15 @@ discipline, spoken by the person whose job is to enforce it, in front of the per
 to act on it — and the Knights, who would agree with every word, could not have stayed quiet
 afterwards the way Ossary does.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `sufficiency` | Hear at least 5 of the 9 arrivals: each sounds for 20 s along the axis and counts once your contact log shows it with a bearing. |
+| `cycle` | Hear all 9 for a complete result; the log calls each arrival about 60 s before it sounds. |
+
 ---
 
 ## 13. Scaffold Status

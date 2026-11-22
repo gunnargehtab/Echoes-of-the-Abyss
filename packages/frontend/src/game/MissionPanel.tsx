@@ -24,30 +24,14 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { remaining, stamp } from './clock.ts';
 import { fitPanel } from './panelFit.ts';
+import { progressWords, statusClass, statusWord, weightWord } from './objectiveWords.ts';
 import {
-  ObjectiveStatus,
   type BoundSig,
   type MissionAbility,
   type AbilityLock,
   type MissionView,
   type ObjectiveView,
 } from '@echoes/shared';
-
-/**
- * Status is carried as a word as well as a colour and a weight, per §11: the
- * scale has to survive a colour-vision difference and a screen reader both.
- */
-const STATUS_WORD: Record<ObjectiveStatus, string> = {
-  [ObjectiveStatus.Pending]: 'open',
-  [ObjectiveStatus.Met]: 'met',
-  [ObjectiveStatus.Failed]: 'failed',
-};
-
-const STATUS_CLASS: Record<ObjectiveStatus, string> = {
-  [ObjectiveStatus.Pending]: 'pending',
-  [ObjectiveStatus.Met]: 'met',
-  [ObjectiveStatus.Failed]: 'failed',
-};
 
 /**
  * A SIG figure in §3's form — three digits, zero-padded, "so the digit count
@@ -264,14 +248,27 @@ export function MissionPanel({
         {view.objectives.length === 0 && <p className="objectives-empty">no orders</p>}
         {view.objectives.map((objective) => {
           const marker = markerFor(objective);
-          const className = `objectives-row ${STATUS_CLASS[objective.status]}`;
+          const className = `objectives-row ${statusClass(objective)}`;
+          const weight = weightWord(objective);
+          const progress = progressWords(objective);
           const body = (
             <>
-              <span className="objectives-status">{STATUS_WORD[objective.status]}</span>
+              {/* Status is carried as a word as well as a colour and a weight,
+                  per §11, and the word follows what kind of row this is
+                  (`objectiveWords.ts`, #1883). */}
+              <span className="objectives-status">{statusWord(objective)}</span>
               {/* Authored, in-register, verbatim. A mission states its goals in
                   the voice of whoever is setting them; the client never
                   templates or rewords one. */}
-              <span className="objectives-text">{objective.text}</span>
+              <span className="objectives-text">
+                {objective.text}
+                {/* Whether the row decides the result, at the reading's foot
+                    so it costs no line of its own (#1883). Required is the
+                    plain case and carries no word. */}
+                {weight !== undefined && (
+                  <span className={`objectives-weight ${weight}`}> {weight}</span>
+                )}
+              </span>
               {/* The plain line beside the court's own — §10.5's gloss rule,
                   and the decision on #720 that the reading is not rewritten.
                   Authored server-side and printed here unedited, exactly as
@@ -295,11 +292,7 @@ export function MissionPanel({
               {objective.gloss !== undefined && (
                 <span className="objectives-gloss">{objective.gloss}</span>
               )}
-              {objective.progress !== undefined && (
-                <span className="objectives-progress">
-                  {objective.progress.done} of {objective.progress.of}
-                </span>
-              )}
+              {progress !== undefined && <span className="objectives-progress">{progress}</span>}
               {/* A hold's countdown, under the status word rather than in the
                   counter's slot: there it narrowed the reading and cost the
                   panel a line, which overflowed it during a silence debt or a

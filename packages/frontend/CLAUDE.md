@@ -86,6 +86,13 @@ without it stops at `mount()` — `devices` on `WorldBackdrop`, the same factori
 board's world, and `listRooms` on `BrowseScreen`. All default to the real thing; none is a
 feature.
 
+## Words on screen
+
+A string a player sees names what they see and do, never a doc section or an issue number
+(#1883); `bindings.test.ts` holds the reserved-key reasons to it. An
+objective's status word comes from `objectiveWords.ts`, which words a task, a rule and a
+budget differently, and never from a table of its own.
+
 Related: `CLAUDE.md` (the root file — the wire, import extensions, constants, CI) ·
 `docs/graphics-standards.md` (the gates anything visual clears, screenshot included) ·
 `.claude/skills/run-game/SKILL.md` (driving the real client headless)

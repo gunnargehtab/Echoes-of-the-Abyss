@@ -429,11 +429,11 @@ arrangement):
   Order raised two nodes on attended ground to learn that."*
 - `load-one-home` … `load-five-home` — met: *"The [nth] cut of the [face] is home."* Unmet: *"The
   [nth] cut of the [face] is on the rim, or in the rim."*
-- `the-cutters` — met: *"The cutters are home."* Unmet: *"A cutter is entered. Say the name to
-  the house yourself."* ([mission-aptitude.md](mission-aptitude.md) §8's refusal, and
+- `the-cutters` — met: *"The cutters are home."* Unmet: *"A cutter did not come home. Say the name
+  to the house yourself."* ([mission-aptitude.md](mission-aptitude.md) §8's refusal, and
   [mission-nineteen.md](mission-nineteen.md)'s standard line.)
-- `the-escort` — met: *"The escort is home."* Unmet: *"A hull of the escort is entered. Say the
-  name to the house yourself."*
+- `the-escort` — met: *"The escort is home."* Unmet: *"A hull of the escort did not come home. Say
+  the name to the house yourself."*
 - `the-count` — met: *"The raid is in the Directorate's record at length. So are the nodes, and
   the nodes were there first."* Unmet: *"The raid was heard and classified by nobody for long,
   which on this rim means the lip has stopped listening, and the Order is the reason."*
@@ -762,6 +762,25 @@ Directorate liturgy is in "counted at what leaves". The pair refuses the imperat
 sentence and offers a distinction instead of a demand. And Kalliso's is the only line in the
 mission that wants something from another faction, and what it wants is a question — which is why
 she says it to nobody.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-chord` | Bring at least 2 loaded cutter Corvettes back above the Staging line; each face is cut by its own cutter, 240 s a load. |
+| `load-one-home` | First load from the western face, above the Staging line. |
+| `load-two-home` | Second load from the western face, above the Staging line. |
+| `load-three-home` | First load from the middle face, above the Staging line. |
+| `load-four-home` | Second load from the middle face, above the Staging line. |
+| `load-five-home` | The one load from the eastern face, above the Staging line. |
+| `the-cutters` | Keep all 3 cutter Corvettes afloat. |
+| `the-escort` | Keep your Cruiser and both escort Corvettes afloat. |
+| `the-count` | How long your hulls have been classified; the raised nodes give you away, so it fills early. |
+
+`the-count` is authored `record` (#1883): met by 00:30 by design, "not a rule, a recall or a threshold but a reading" (§8), so the panel counts its seconds under
+*RECORD* and grades nothing, where a budget would read *SPENT* in amber.
 
 ---
 

@@ -616,9 +616,8 @@ Bearing. A pair that walks the table's legs meets it; a pair held at its seat al
 not. The attendants' own readings assemble beneath the close, entered or gap, in the Commune's
 grammar (§12).
 
-**the-escorts.** Text: *Juno's people are at the staging with their guns struck. The furrow
-will hold them once it's a furrow. We're not asking them down, and they're not coming until
-the basin's awake.* Met: *Three guns came down at seventy-two into the basin's noise and every
+**the-escorts.** Text: *Juno's people are at the staging with their guns struck. Once the
+basin's awake they can come down, and the furrow will hold them.* Met: *Three guns came down at seventy-two into the basin's noise and every
 navy on the rim heard the plateaus' army arrive, struck. That's the sentence the Directorate
 wrote in 205, and we've finished it for them.* Unmet: *Juno's people stayed up. The
 arrangement ends without a gun in the water, and it ends.* Right as an extract-at-reveal: the
@@ -963,8 +962,9 @@ what the plateaus agreed under the bed, and the player learns to hear the ask in
 - *What is heard of us today is in three accounts we'll never read.*
 - *There's something on the lip that isn't ours and isn't theirs. We'd like to hear it once
   before we plant near it.*
-- *Juno's people are at the staging with their guns struck. The furrow will hold them once
-  it's a furrow. We're not asking them down, and they're not coming until the basin's awake.*
+- *Juno's people are at the staging with their guns struck. Once the basin's awake they can come
+  down, and the furrow will hold them.* (It read *We're not asking them down* until #1883,
+  beside a row met only when they come down.)
 
 The second arrives at 20:30, with the basin awake and the concern climbing, and names a place
 to stay at 3,000 m without saying whether anybody should — the register doing its job at the
@@ -1093,6 +1093,18 @@ for both halves, inside the reading where the plateaus got everything they asked
 
 Anholt is *she* throughout, as [characters.md](characters.md) writes her;
 [mission-thin-water.md](mission-thin-water.md) §8 and §12 were the side that moved.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-seeding` | Hold the sower Harvester within 250 m of the lip, facing it, out of Silent Running, for 60 s. |
+| `the-furrow` | Have 3 of your 4 seed hulls inside the lip's furrow. |
+| `the-ledger` | How long your hulls have been tracked exactly; keep it under 60 s. |
+| `the-returns` | Get near enough that a sound on the lip shows in your contact log with a bearing. |
+| `the-escorts` | Bring the 3 Corvettes from the staging into the lip's furrow once they are released at T+20:30. |
 
 ---
 

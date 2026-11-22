@@ -379,6 +379,16 @@ opinion. The Commune could not stay out of the choice, the Knights could not sta
 it, and the Directorate could not put the agency where every line here puts it: in the room,
 on the player, priced.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-casting` | Hold the casting Harvester in the casting yard for 90 s to pour the casting. |
+| `the-root` | Carry the casting to the root aperture; below 1,800 m it costs the Harvester 4 hull a second, and it seals only one aperture. |
+| `the-section` | Or carry it to Sector Vayle's frame instead: there is one casting, so only one of the two can be sealed. |
+
 ---
 
 ## 13. Scaffold Status

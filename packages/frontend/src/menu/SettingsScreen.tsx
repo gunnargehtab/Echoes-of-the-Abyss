@@ -167,9 +167,9 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
             <span className="menu-toggle-label">Contact timbre</span>
             <span className="menu-toggle-note">
               Whether a classified contact is heard as what it is — the Consortium&rsquo;s beat, the
-              Directorate&rsquo;s clicks. Off while those are being reworked: a contact still sounds
-              and still reports bearing and range, it just stops saying what it is. The mark and the
-              log say it either way.
+              Directorate&rsquo;s clicks. Off by default. Off, a contact still sounds and still
+              reports bearing and range; it just stops saying what it is. The mark and the log say
+              it either way.
             </span>
           </label>
 

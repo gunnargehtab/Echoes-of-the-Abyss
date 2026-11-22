@@ -773,6 +773,18 @@ should not say aloud** ([mission-attendance.md](mission-attendance.md) §12;
 on the record, one on the eight per cent, one on a lie, and one on the shallows. The campaign
 stops one clause short of the real one in *Conclave* and says nothing at all at the rim.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-transcript` | Hear 5 of the 10 plateau sounds; each counts once your contact log shows it with a bearing. |
+| `the-slope` | Have 6 of your 8 Choristers inside the slope marker. |
+| `the-ears` | Have 2 of your 3 listeners, the Submersibles and the Cruiser, inside the slope marker. |
+| `the-record` | How long your hulls have been classified; keep it under 60 s. |
+| `the-whole` | Hear 8 of the 10, the Holdfast's among them. |
+
 ---
 
 ## 13. Scaffold Status

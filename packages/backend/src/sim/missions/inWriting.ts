@@ -591,7 +591,8 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
   objectives: [
     {
       id: 'the-people',
-      text: "Sixteen are under the beds. We'd like sixteen over the layer, and we're saying it the way we said six at Kell: so nobody down there has to say it first.",
+      text: "Sixteen are under the beds, aboard three hulls. We'd like all three over the layer, and we're saying it the way we said six at Kell: so nobody down there has to say it first.",
+      gloss: 'Bring all 3 Harvesters, which carry the 16, to the Foot, above the layer.',
       initial: ObjectiveStatus.Pending,
       // Terminal and deliberately not a keystone: §8's ladder is a count of
       // how many terminal rows were met, and a run that brought one tender up
@@ -608,6 +609,7 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
     {
       id: 'the-crossing',
       text: 'One of ours over the layer is a plateau that still has people in it.',
+      gloss: 'Get at least 1 Harvester to the Foot.',
       initial: ObjectiveStatus.Pending,
       // The middle rung, in *Thin Water*'s and *Sorrowgate*'s arrangement: the
       // ladder reads how many terminal rows were met, so a three-row Results
@@ -620,6 +622,7 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
     {
       id: 'the-letter',
       text: "What they hear of us they'll enter, and this time they came to enter it in person.",
+      gloss: 'How long your hulls have been classified; a hull under a bed cannot be heard.',
       initial: ObjectiveStatus.Pending,
       // Non-terminal, and the one row in this union where meeting a predicate
       // is not good news: thirty seconds cumulative of the force at
@@ -640,6 +643,7 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
     {
       id: 'the-escorts',
       text: "Juno's people are under the east bed with their guns struck. They're ours to move, not to spend, and we've never had to say that before.",
+      gloss: 'Keep all 3 Corvettes afloat; their weapons are locked.',
       initial: ObjectiveStatus.Pending,
       // Standing (`predicates.ts`, `isStanding`), so it is re-derived every
       // tick and read at the close rather than latched on the first pass. The

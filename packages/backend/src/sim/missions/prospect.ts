@@ -296,6 +296,8 @@ export const LEDGER_PROSPECT: MissionDefinition = {
     {
       id: 'the-field',
       text: 'Prove the field. Read the faces by hand; enough closes the survey.',
+      gloss:
+        'Each Corvette reads the faces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field.',
       initial: ObjectiveStatus.Pending,
       markerId: 'terraces',
       terminal: true,
@@ -304,6 +306,8 @@ export const LEDGER_PROSPECT: MissionDefinition = {
     {
       id: 'the-ascent',
       text: 'Bring the column off the rim at the turn. A survey that stays is not a survey.',
+      gloss:
+        'Have 3 of your 4 hulls back in the staging, at the north edge, when the mission closes at T+22:00.',
       initial: ObjectiveStatus.Pending,
       markerId: 'return',
       terminal: true,
@@ -320,6 +324,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
     {
       id: 'the-ledger',
       text: 'The rim is crowded and the trade is loud. What is heard of you is entered, and read later, elsewhere.',
+      gloss: 'How long your column has been classified; keep it under 60 s.',
       initial: ObjectiveStatus.Pending,
       predicate: {
         kind: 'tolerance',

@@ -447,12 +447,13 @@ arrangement), printed at the close in this order:
 - `the-lattice` — met: *"The crystal is set. The Chord is whole."* Unmet: *"The crystal is not set.
   The Chord is a node on a lip, and the Order spent its lattice to reach a node."*
 - `the-choirmaster` — met: *"The Choirmaster is above the line, or under the Chord, and answers."*
-  Unmet: *"The Choirmaster is entered. There is nobody left to say the name to the house."*
-- `the-escort` — met: *"The escort answers."* Unmet: *"A hull of the escort is entered. Say the name
-  to the house yourself."* ([mission-aptitude.md](mission-aptitude.md) §8's refusal, and
+  Unmet: *"The Choirmaster did not come home. There is nobody left to say the name to the
+  house."*
+- `the-escort` — met: *"The escort answers."* Unmet: *"A hull of the escort did not come home. Say
+  the name to the house yourself."* ([mission-aptitude.md](mission-aptitude.md) §8's refusal, and
   [mission-nineteen.md](mission-nineteen.md)'s standard line.)
-- `the-carriers` — met: *"The carriers answer."* Unmet: *"A carrier is entered. Say the name to the
-  house yourself."*
+- `the-carriers` — met: *"The carriers answer."* Unmet: *"A carrier did not come home. Say the name to
+  the house yourself."*
 - `the-transmission` — met: *"Transmitted. The reply is not entered here."* Unmet: *"The Chord
   stood, whole, and was not struck. The Voice did not refuse; the interval passed, which is the
   same thing said courteously."*
@@ -699,7 +700,8 @@ id and nothing else.
 **Named on the chart** (#1617). *The Chord* and *The sounding point* are printed with their
 markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The second
 marker's line opens with the interval, which is a time and belongs to the lip (§1), so its name is
-the place §3 gives 4,800, 3,550: the sounding point.
+the place §3 gives 4,800, 3,550: the sounding point. Its line reads *The interval. Thirty seconds at the hundredth, bow to the
+Mouth, held.*, the same direction the row gives: the briefing's *south* is where the Mouth lies.
 
 ---
 
@@ -831,6 +833,23 @@ the lattice he built with his own hands come down on somebody else's rim and dec
 say anything about it — a refusal that only means something in a register where silence is written
 down and played. And Kalliso's is the only line in the mission that counts two kinds of number in
 one breath, which is why she says it to nobody.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-lattice` | Bring both loaded carrier Corvettes into the Chord on the lip. |
+| `the-choirmaster` | Keep the Cruiser your escort guards afloat; it is released at T+15:30. |
+| `the-escort` | Keep your other Cruiser and both escort Corvettes afloat. |
+| `the-carriers` | Keep both carrier Corvettes afloat. |
+| `the-transmission` | Hold the escorted Cruiser within 400 m of the sounding point, facing it (south, to the Mouth), out of Silent Running, for 30 s. |
+| `the-lip` | Hear 3 sounds on the lip; each counts once your contact log shows it with a bearing. |
+| `the-count` | How long your hulls have been classified; the nodes give you away, so it fills early. |
+
+`the-count` is authored `record` (#1883): met by about 00:30 by design, a reading rather than a rung, so the panel counts its seconds under
+*RECORD* and grades nothing, where a budget would read *SPENT* in amber.
 
 ---
 

@@ -422,6 +422,8 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'share',
       text: 'The share wants bringing in. We think three loads is a tide.',
+      gloss:
+        'Hold each Harvester in the gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast.',
       initial: ObjectiveStatus.Pending,
       markerId: 'holdfast',
       terminal: true,
@@ -430,6 +432,8 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'jellies',
       text: "The jellies would sit better off the lane. It's loud work; the water's ours for another hour.",
+      gloss:
+        'Hold both Light Scouts on the West Lane for 90 s; one of them moves the jellies, loudly, at SIG 45.',
       initial: ObjectiveStatus.Pending,
       markerId: 'west-lane',
       terminal: true,
@@ -446,6 +450,8 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'gift',
       text: "Teel's landing is short of bread. We're not asking. We're saying it's short.",
+      gloss:
+        'Pass your Harvesters by the ovens beside the Holdfast; the one that picks up the bread takes it to the landing.',
       initial: ObjectiveStatus.Pending,
       markerId: 'landing',
       terminal: true,
@@ -454,6 +460,7 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'stillness',
       text: 'The sweep is on the drop. The plateaus are going still now.',
+      gloss: 'From T+06:00 to the end, keep every Harvester at SIG 20 or less.',
       initial: ObjectiveStatus.Pending,
       // Revealed when the watch calls the sweep — the reading exists because
       // the sweep does. Standing, like the court's silence: in force or not,
@@ -464,6 +471,7 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'turning',
       text: "That's the turning, arriving. Nobody has to answer tonight.",
+      gloss: 'Nothing more is asked; the tide ends when the countdown does.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(15),
       // Terminal and always met before the tide ends, which is what makes

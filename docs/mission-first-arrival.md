@@ -131,8 +131,8 @@ under the one instrument it has, which is the mission in one distance.
    Cantorate put one sound in the water in mission 3
    ([mission-the-dome.md](mission-the-dome.md)); the ending is the mission where the faction
    does neither of the two things a transmission can be (§13).
-4. **No active sonar.** Carried, live, and locked: *aboard, live, and not used — the rim is
-   attended, not asked.* The campaign's oldest argument, arriving at the place it was always
+4. **No active sonar.** Carried, live, and locked: *aboard and not used — the rim is attended,
+   not asked.* (It said *live* until #1883, beside a button the panel shows as withheld.) The campaign's oldest argument, arriving at the place it was always
    about ([mission-attendance.md](mission-attendance.md) §3). Withheld to mission 3, handed over
    at the Fourth's foot, priced in a basin
    ([mission-trench-awakening.md](mission-trench-awakening.md)), and here a lock with a reason on
@@ -756,6 +756,17 @@ whose highest praise is *sufficient* has been building to one sentence for seven
 closes by declining to spend it, in front of the one person who would have had to act on it —
 and Ossary, who has closed every mission the campaign has put him in by saying nothing, says
 nothing again, and this time they mean the same thing by it.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-rim` | Have 8 of your 12 Choristers on the terraces. |
+| `the-watch` | Keep at least 4 of your 6 Submersibles afloat. |
+| `the-attending` | Hear both sounds on the lip; each counts once your contact log shows it with a bearing. |
+| `the-record` | How long your column has been classified; keep it under 60 s. |
 
 ---
 

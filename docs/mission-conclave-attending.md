@@ -127,8 +127,8 @@ thing.
 
 ### What the called do not carry
 
-1. **No active sonar.** Locked, with the reason *aboard, live, and not used — the head of the
-   Ninth is not asked.* The button was handed over three missions ago
+1. **No active sonar.** Locked, with the reason *aboard and not used — the head of the Ninth is
+   not asked.* (It said *live* until #1883, beside a button the panel shows as withheld.) The button was handed over three missions ago
    ([mission-the-dome.md](mission-the-dome.md)) and the campaign has been paying for it since;
    here it is withheld again and by doctrine rather than by
    [campaign.md](campaign.md) §10's schedule. The Ninth's axis aims at the Mouth and pinging it
@@ -810,6 +810,18 @@ say without apologising for it; the stalls name a thing by what it is not, three
 once by what it is; and Ossary's last line is a silence that is entered as a presence, which is
 the single most Directorate sentence in this document and the only one the Knights would
 understand immediately and could not have said.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-calling` | Bring 8 of your 16 hulls into the axis. |
+| `the-muster` | Keep at least 12 of your 16 hulls afloat. |
+| `the-cells` | Hear 3 of the cells across the trench; each counts once your contact log shows it with a bearing. |
+| `the-crossing` | Keep every hull at SIG 25 or less, all mission long. |
+| `the-crossing`, while the debt runs | A hull went over SIG 25, so the dome's ears are withdrawn until the debt pays itself off. |
 
 ---
 

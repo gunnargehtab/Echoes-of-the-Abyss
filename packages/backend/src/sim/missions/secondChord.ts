@@ -701,7 +701,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     },
     {
       id: 'the-mouth',
-      label: 'The interval. Thirty seconds at the hundredth, bow to the south, held.',
+      label: 'The interval. Thirty seconds at the hundredth, bow to the Mouth, held.',
       name: 'The sounding point',
       x: 4800,
       y: 3550,
@@ -1010,6 +1010,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       id: 'the-lattice',
       text: 'Two loads are set into the node on the lip. Without them a tone over it is a tone.',
+      gloss: 'Bring both loaded carrier Corvettes into the Chord on the lip.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       keystone: true,
@@ -1036,6 +1037,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       id: 'the-choirmaster',
       text: 'The Choirmaster answers the count.',
+      gloss: 'Keep the Cruiser your escort guards afloat; it is released at T+15:30.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — standing, and re-derived every tick (`isStanding`), so a hull lost
@@ -1043,34 +1045,39 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       predicate: { kind: 'survive', role: 'tender', count: 1 },
       reading: {
         met: 'The Choirmaster is above the line, or under the Chord, and answers.',
-        unmet: 'The Choirmaster is entered. There is nobody left to say the name to the house.',
+        unmet:
+          'The Choirmaster did not come home. There is nobody left to say the name to the house.',
       },
     },
     {
       id: 'the-escort',
       text: 'Three of the escort answer the count.',
+      gloss: 'Keep your other Cruiser and both escort Corvettes afloat.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       predicate: { kind: 'survive', role: 'escort', count: 3 },
       reading: {
         met: 'The escort answers.',
-        unmet: 'A hull of the escort is entered. Say the name to the house yourself.',
+        unmet: 'A hull of the escort did not come home. Say the name to the house yourself.',
       },
     },
     {
       id: 'the-carriers',
       text: 'Two carriers answer the count.',
+      gloss: 'Keep both carrier Corvettes afloat.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       predicate: { kind: 'survive', role: 'carrier', count: 2 },
       reading: {
         met: 'The carriers answer.',
-        unmet: 'A carrier is entered. Say the name to the house yourself.',
+        unmet: 'A carrier did not come home. Say the name to the house yourself.',
       },
     },
     {
       id: 'the-transmission',
       text: 'Thirty seconds at the hundredth, bow to the Mouth, from the Chord. A tone you interrupt is a tone you have not played.',
+      gloss:
+        'Hold the escorted Cruiser within 400 m of the sounding point, facing it (south, to the Mouth), out of Silent Running, for 30 s.',
       initial: ObjectiveStatus.Pending,
       // §8 — **non-terminal**, and that is the ending. It cannot touch
       // Complete, Partial or Lost, and it prints beneath whatever the count
@@ -1091,6 +1098,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       id: 'the-lip',
       text: 'Three returns sound on this lip. What is heard is entered as a time.',
+      gloss: 'Hear 3 sounds on the lip; each counts once your contact log shows it with a bearing.',
       initial: ObjectiveStatus.Pending,
       // §8, §13 — `attend` counts attendable emitters and names none, so the
       // row is worded in threes rather than pretending to point at the lip's
@@ -1106,6 +1114,10 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       id: 'the-count',
       text: 'The rim is attended. Three nodes are entered, and the count is not yours.',
+      gloss:
+        'How long your hulls have been classified; the nodes give you away, so it fills early.',
+      // A record, not a budget: met by about 00:30 by design, a reading rather than a rung (#1883).
+      record: true,
       initial: ObjectiveStatus.Pending,
       // §8, §13 — Met by about 00:30 and that is the design, as it was on D+2.
       // `ExposureReport.tier` is the best tier anybody holds on any entity of

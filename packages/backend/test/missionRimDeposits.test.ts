@@ -1002,11 +1002,11 @@ describe('the objective, as docs/mission-rim-deposits.md §8 counts it', () => {
     // §8's refusal, borrowed from Aptitude and Nineteen and said twice here.
     assert.equal(
       objectiveById('the-cutters').reading!.unmet,
-      'A cutter is entered. Say the name to the house yourself.'
+      'A cutter did not come home. Say the name to the house yourself.'
     );
     assert.equal(
       objectiveById('the-escort').reading!.unmet,
-      'A hull of the escort is entered. Say the name to the house yourself.'
+      'A hull of the escort did not come home. Say the name to the house yourself.'
     );
     assert.match(objectiveById('the-count').reading!.met, /the nodes were there first/);
     assert.match(objectiveById('the-count').reading!.unmet, /the Order is the reason/);

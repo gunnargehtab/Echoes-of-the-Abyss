@@ -344,6 +344,12 @@ describe('a mission view says only what the player could have worked out', () =>
       'endsAtTick',
       'markerId',
       'viaMarkerId',
+      // `form` and `weight` are codes, `MovementHold.reason`'s terms (#1883):
+      // what kind of sentence the row is and whether it decides the result,
+      // both read off the literal's own shape. The check below holds them to
+      // numbers, so neither can become a sentence.
+      'form',
+      'weight',
     ]);
     const marker = new Set(['id', 'label', 'name', 'x', 'y', 'radiusM']);
     const lock = new Set(['ability', 'reason']);
@@ -363,6 +369,9 @@ describe('a mission view says only what the player could have worked out', () =>
         }
         if (shown.progress !== undefined) {
           assert.deepEqual(Object.keys(shown.progress).sort(), ['done', 'of']);
+        }
+        for (const code of [shown.form, shown.weight]) {
+          if (code !== undefined) assert.equal(typeof code, 'number', 'a row kind is a code');
         }
       }
       for (const shown of sentView.markers) {

@@ -259,6 +259,8 @@ export const LEDGER_BAFFLE: MissionDefinition = {
     {
       id: 'the-plant',
       text: "Deliver the plant to the yard's berth. The arithmetic closes at the whistle.",
+      gloss:
+        'Order the plant Harvester and an escort within 450 m to the Deep Yard together, before the plant fails at T+20:00.',
       initial: ObjectiveStatus.Pending,
       markerId: 'yard',
       terminal: true,
@@ -271,6 +273,7 @@ export const LEDGER_BAFFLE: MissionDefinition = {
     {
       id: 'the-column',
       text: 'Bring the column out of what the corridor costs. The exchange is entered either way.',
+      gloss: 'Bring your Cruiser and both Corvettes to the Deep Yard as well.',
       initial: ObjectiveStatus.Pending,
       markerId: 'yard',
       // The writ counts the column at the berth: a straggler mid-trench when

@@ -573,7 +573,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     },
     {
       ability: 'activeSonar',
-      reason: 'aboard, live, and not used — the rim is attended, not asked',
+      reason: 'aboard and not used — the rim is attended, not asked',
     },
     { ability: 'construction', reason: 'the rim is not built on' },
   ],
@@ -595,6 +595,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       id: 'the-rim',
       text: "The rim is held at the tide's turn. Eight of twelve on the terraces is a hold, and the Undermarshalcy does not round up.",
+      gloss: 'Have 8 of your 12 Choristers on the terraces.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8, §9, §13 — revealed on the stalls' own beat at 19:00. `extract` is
@@ -608,6 +609,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       id: 'the-watch',
       text: 'Six attend the lip. Four is a watch.',
+      gloss: 'Keep at least 4 of your 6 Submersibles afloat.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — standing, and re-derived every tick (`isStanding`), so a hull the
@@ -619,6 +621,8 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       id: 'the-attending',
       text: 'The rim is attended. What is heard is entered, and the gap is entered too.',
+      gloss:
+        'Hear both sounds on the lip; each counts once your contact log shows it with a bearing.',
       initial: ObjectiveStatus.Pending,
       // §4, §8, §13 — met from the seat on the first pass, and authored
       // **non-terminal** for exactly that reason: the attending is a condition
@@ -636,6 +640,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       id: 'the-record',
       text: 'What is heard of the column is entered in accounts that are not ours.',
+      gloss: 'How long your column has been classified; keep it under 60 s.',
       initial: ObjectiveStatus.Pending,
       // §8 — sixty seconds, cumulative, at Classification or better. Read out
       // and never ranked: being heard is not a failure, it is an entry in

@@ -311,7 +311,7 @@ export const ATTENDING_ATTENDANCE: MissionDefinition = {
     { ability: 'depthCharges', reason: 'nothing is left in the water the cohorts sleep over' },
     {
       ability: 'activeSonar',
-      reason: 'aboard, live, and not used — the Directorate does not ask',
+      reason: 'aboard and not used — the Directorate does not ask',
     },
     { ability: 'construction', reason: 'a shift produces nothing' },
   ],
@@ -326,6 +326,8 @@ export const ATTENDING_ATTENDANCE: MissionDefinition = {
     {
       id: 'sufficiency',
       text: 'The watch is seated. The stalls are attended. The Undermarshalcy does not round up.',
+      gloss:
+        'Hear at least 5 of the 9 arrivals: each sounds for 20 s along the axis and counts once your contact log shows it with a bearing.',
       initial: ObjectiveStatus.Pending,
       markerId: 'axis',
       terminal: true,
@@ -334,6 +336,8 @@ export const ATTENDING_ATTENDANCE: MissionDefinition = {
     {
       id: 'cycle',
       text: 'What is heard is entered. What is not heard is entered as a gap.',
+      gloss:
+        'Hear all 9 for a complete result; the log calls each arrival about 60 s before it sounds.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       predicate: { kind: 'attend', count: 9 },

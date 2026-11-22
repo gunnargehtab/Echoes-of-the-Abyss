@@ -291,25 +291,29 @@ export const LAYOUTS: Record<Exclude<LayoutName, 'custom'>, Bindings> = {
  * the class of collision the document spent two paragraphs settling — and
  * silently, because the loser is a *mouse* interaction that simply stops
  * behaving, with no key to press and notice.
+ *
+ * Each reason is shown to the player verbatim on the Controls screen, so it
+ * names what the key does and never the section that decided it: a `§9` there
+ * is a reference only this repository can follow (#1883).
  */
 export const RESERVED_CODES: ReadonlyMap<string, string> = new Map([
-  ['Escape', 'cancels a pending build or opens the menu, and is handled before every other key'],
-  ['ShiftLeft', 'queues an order behind the current plan (§9)'],
-  ['ShiftRight', 'queues an order behind the current plan (§9)'],
-  ['ControlLeft', 'subtracts from a selection, and assigns a control group (§9)'],
-  ['ControlRight', 'subtracts from a selection, and assigns a control group (§9)'],
-  ['MetaLeft', 'subtracts from a selection, and assigns a control group (§9)'],
-  ['MetaRight', 'subtracts from a selection, and assigns a control group (§9)'],
+  ['Escape', 'cancels a pending build or opens the menu'],
+  ['ShiftLeft', 'queues an order behind the current plan'],
+  ['ShiftRight', 'queues an order behind the current plan'],
+  ['ControlLeft', 'subtracts from a selection, and assigns a control group'],
+  ['ControlRight', 'subtracts from a selection, and assigns a control group'],
+  ['MetaLeft', 'subtracts from a selection, and assigns a control group'],
+  ['MetaRight', 'subtracts from a selection, and assigns a control group'],
   ...Array.from({ length: 9 }, (_, i): [string, string] => [
     `Digit${i + 1}`,
-    'recalls a control group, which has no other route (§9)',
+    'recalls a control group',
   ]),
-  ['Digit0', 'selects the whole army — every hull that fights (§9)'],
-  ['ArrowUp', 'pans the camera (§9)'],
-  ['ArrowDown', 'pans the camera (§9)'],
-  ['ArrowLeft', 'pans the camera (§9)'],
-  ['ArrowRight', 'pans the camera (§9)'],
-  ['Home', 'homes the camera — the one way back from an angle (§9, docs/free-camera.md §4)'],
+  ['Digit0', 'selects the whole army — every hull that fights'],
+  ['ArrowUp', 'pans the camera'],
+  ['ArrowDown', 'pans the camera'],
+  ['ArrowLeft', 'pans the camera'],
+  ['ArrowRight', 'pans the camera'],
+  ['Home', 'returns the camera to its home view'],
 ]);
 
 /**

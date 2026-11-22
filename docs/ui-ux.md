@@ -1162,6 +1162,28 @@ something new, and a log role would re-announce the whole panel every time a cou
   in that place; a view outside it names it on the outside of the near side, as high on the
   water as there is room. Outside a ring with none of its line on the water, or with no room
   for the name beside it on either side, the chart draws no name, and its row still names it.
+- **A row's status word says what kind of row it is.** A **task** reads `OPEN`, then `MET`
+  or `FAILED`, and a met task's reading dims because it is done. A **rule** — a silence
+  order or a muster, a `quiet` or `survive` row the runtime re-reads every pass — reads
+  `KEPT` while it holds and `BROKEN` when it does not, and is never dimmed, because it can
+  still be broken; the runtime returns a breached rule to Pending, and Pending on a rule is
+  `BROKEN`. A row **read at the close** — authored `standing` on any other predicate, such as
+  a column that must be home when the mission ends — reads `OPEN` until the close, because its
+  hulls may start in the region and `KEPT` at 00:00 claimed something the player had not done.
+  A **budget** — the seconds of classification a mission tolerates — reads `BUDGET`, counts in
+  seconds (`12 of 30 s`), and reads `SPENT` in amber once it is gone. A **record** is a
+  tolerance the mission's document reads as a fact rather than a budget — Item Nine's choice,
+  the counts on the rim that fill by design — authored `record` on the literal: it reads
+  `RECORD`, counts in seconds and grades nothing. All of these read `MET` until #1883, which is
+  how Sorrowgate's silence order read *met* twenty-one seconds in, and how thirteen missions
+  greeted a spent classification budget with the colour of a success. The server sends the
+  kind as a code (`ObjectiveForm`) read off the literal's own shape, and the shell words it.
+- **A row says whether it decides the result.** A keystone — missed, it loses the mission
+  whatever else came home — carries `CRITICAL` at the foot of its reading, and a row the
+  result does not count carries `OPTIONAL`. A required row carries nothing, because it is
+  the plain case. Nothing said which was which until #1883, and a cold read of ten missions
+  could not tell a must-not-fail row from flavour. The code is `ObjectiveWeight`; at the
+  foot of the reading it costs no line of its own on any row authored today.
 - **A row that runs on a clock says how long is left.** A hold that ends on its own — the
   flight holding at the arch, a sitting, a tide — shows the time remaining under its status
   word, `OPEN` over `10:10`, until the row is met. A player told to hold and not told for how
@@ -1187,7 +1209,7 @@ something new, and a log role would re-announce the whole panel every time a cou
   court says *the flight stays under twenty* ([mission-sorrowgate.md](mission-sorrowgate.md)
   §12); a shared string would say "maintain SIG below 20", which is a sentence no faction in
   this setting speaks, and three of the four would have to be broken to make one template fit.
-- **A mission may author a plain gloss beside a reading, and the gloss never replaces it.**
+- **Every objective carries a plain gloss beside its reading, and the gloss never replaces it.**
   The verbatim rule above is exactly why the panel needs one. *The flight stays under twenty*
   is a sentence the court speaks and not one a first-time player can act on: they do not know
   what the flight is, which hulls are in it, that *twenty* is a SIG reading rather than a count
@@ -1196,7 +1218,17 @@ something new, and a log role would re-announce the whole panel every time a cou
   about, and where to look. The authored line stays first and stays whole, in the reading order
   and in the visual hierarchy — a player who wants the fiction gets the fiction. This is the
   decision taken on 13 September (#720): the argument above stands, the reading is not
-  rewritten, and §10.5 permits the gloss rather than replacing anything.
+  rewritten, and §10.5 permits the gloss rather than replacing anything. Until #1883 the gloss
+  was optional and 7 of 121 rows carried one; a cold read of ten missions could not say what
+  most of the rest asked. So it is **required** now, on every row and on every alternate
+  reading a row authors (`debtGloss`, `stallGloss`, a `states` entry's `gloss`). A gloss names
+  the action, the player's own hulls by class (*Harvester*, *Corvette*), the number with its
+  unit (*SIG 20*, *400 m*, *60 s*, *T+14:00*) and the place by its marker's name. A row with no
+  counter states its number in the gloss: a silence order its `SIG n`, a hold when it ends.
+  Each mission document lists its glosses in §12's *Plain lines in the panel* table, and the
+  literal transcribes that table. `missions.test.ts` holds that every row has one, that it is
+  the document's sentence, that a silence row names its `SIG n` and that a hold says when it
+  ends; whether a gloss is *true* of the runtime is review, as the anti-reveal rule is.
 - **A gloss is one sentence, and the panel fits without one being cut.** §2's no-scroll rule
   binds here hardest, because this panel is the one that grows: a mission reveals objectives
   as it runs, a silence order adds a debt row, and every locked ability adds another. A gloss

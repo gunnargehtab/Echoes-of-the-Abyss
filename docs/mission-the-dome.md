@@ -844,6 +844,21 @@ a transmission the Cantorate made and she did not
 [mission-intake.md](mission-intake.md) §12). One sentence per mission, and the campaign spends
 the fourth in *Shallow* and stops one clause short of the real one in *Conclave*.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-mouth` | Have 2 of your Submersibles inside the mouth. |
+| `the-picket` | Keep at least 3 of your 4 Submersibles afloat. |
+| `the-picket`, while the debt runs | A Submersible went over SIG 30, so the dome's ears are withdrawn until the debt pays itself off. |
+| `the-count` | Hear both sounds below the mouth; each counts once your contact log shows it with a bearing. |
+| `the-record` | How long a Submersible has been tracked exactly; a ping or a volley fills it fast. |
+
+`the-record` is authored `record` (#1883): a fact about somebody else's registry, "neither good nor bad" (§8), so the panel counts its seconds under
+*RECORD* and grades nothing, where a budget would read *SPENT* in amber.
+
 ---
 
 ## 13. Scaffold Status

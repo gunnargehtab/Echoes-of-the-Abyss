@@ -535,6 +535,8 @@ export const CHORD_THE_THREE: MissionDefinition = {
     {
       id: 'the-house-hears',
       text: 'The house hears what comes to it. What is heard is entered as the time.',
+      gloss:
+        'Hear both sounds in the house; each counts once your contact log shows it with a bearing.',
       initial: ObjectiveStatus.Pending,
       // Non-terminal, deliberately: read out at the close and unable to touch
       // the ladder (docs/mission-intake.md §5's neutrality guard). Two

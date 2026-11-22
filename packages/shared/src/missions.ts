@@ -1474,6 +1474,48 @@ export enum ObjectiveStatus {
   Failed = 2,
 }
 
+/**
+ * What kind of sentence a row is, so the panel can word its status truthfully
+ * (docs/ui-ux.md §10.5, #1883).
+ *
+ * `Met` means three different things across the catalogue, and the panel used
+ * to say *met* for all three. A **task** is met once and stays met. A **rule**
+ * — a silence order, a muster, a column that must be home at the close — is
+ * met *now* and can stop being met, so *met* beside it read as *done* from the
+ * first second of Sorrowgate. A **budget** — the seconds of classification a
+ * mission tolerates — is met when it is *spent*, which is the outcome the
+ * player was trying to avoid, and *met* in success teal said the opposite.
+ *
+ * A code and not a word, `MovementHoldReason`'s arrangement: the shell says it
+ * in its own voice, and no free text a runtime could compose reaches the wire.
+ * Absent is a task. Two more arrived with the first review of #1883: a **record**
+ * is a tolerance its document reads as a fact rather than a budget (Item Nine's
+ * choice, the counts on the rim that fill by design), so it is counted and
+ * graded by nothing; and a row **read at the close** — an authored `standing`
+ * extract whose hulls may start in the region — is open until the close says
+ * otherwise, because *kept* at 00:00 claimed something the player had not done.
+ */
+export enum ObjectiveForm {
+  Task = 0,
+  Rule = 1,
+  Budget = 2,
+  Record = 3,
+  Close = 4,
+}
+
+/**
+ * Whether a row decides the result — docs/ui-ux.md §10.5, #1883. A terminal row
+ * is required for a complete result, a keystone loses the mission when it is
+ * missed whatever else came home, and every other row is read at the close but
+ * counted by nothing. Nothing on the panel said which was which. Absent is
+ * required.
+ */
+export enum ObjectiveWeight {
+  Required = 0,
+  Critical = 1,
+  Optional = 2,
+}
+
 export enum MissionOutcome {
   /** Everything the mission called terminal was met. */
   Complete = 0,
@@ -1628,11 +1670,16 @@ export interface ObjectiveView {
    * that sentence was learned from, and under-claiming is the whole point of
    * it.
    *
-   * Absent is the ordinary case — twenty-eight missions author none, and a
-   * mission that authors none shows the reading alone exactly as before.
+   * Authored on every row since #1883 (`missions.test.ts`, "glosses every row
+   * in plain words"): it was optional, and 7 of 121 rows carried one. The
+   * field stays optional on the wire so a view can still be read without it.
    */
   gloss?: string;
   status: ObjectiveStatus;
+  /** A rule or a budget; absent is a task. See `ObjectiveForm`. */
+  form?: ObjectiveForm;
+  /** Critical or optional; absent is required. See `ObjectiveWeight`. */
+  weight?: ObjectiveWeight;
   /**
    * INVARIANT: `done` and `of` are computed exclusively from the observer's own
    * resolved snapshot. A counter over anything else is a maphack in a numeral —

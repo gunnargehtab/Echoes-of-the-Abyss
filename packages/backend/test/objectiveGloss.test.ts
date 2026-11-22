@@ -112,7 +112,7 @@ describe('the gloss beside a mission’s own reading', () => {
       const view = match.takeMissionView();
       assert.ok(view, 'the first Echo pass must carry the orders');
       const glossed = view.objectives.filter((row) => row.gloss !== undefined);
-      assert.equal(glossed.length, mission === CHORD_NINETEEN ? 1 : 2);
+      assert.equal(glossed.length, view.objectives.length, 'every row is glossed (#1883)');
       for (const row of glossed) {
         const authored = mission.objectives.find((objective) => objective.id === row.id)!;
         assert.equal(row.text, authored.text, 'the reference never replaces the dramatic reading');

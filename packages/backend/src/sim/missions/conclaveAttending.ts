@@ -397,7 +397,7 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
   locks: [
     {
       ability: 'activeSonar',
-      reason: 'aboard, live, and not used — the head of the Ninth is not asked',
+      reason: 'aboard and not used — the head of the Ninth is not asked',
     },
     { ability: 'construction', reason: 'nothing is built during a calling' },
     { ability: 'mines', reason: 'nothing is left in the water the cohorts sleep over' },
@@ -418,6 +418,7 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
     {
       id: 'the-calling',
       text: 'The calling closes at the cycle. What is assigned descends. Eight of sixteen is a column, and the Undermarshalcy does not round up.',
+      gloss: 'Bring 8 of your 16 hulls into the axis.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8, §9 — revealed on Korrin's own beat at 17:00, for Intake §9's
@@ -431,6 +432,7 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
     {
       id: 'the-muster',
       text: 'Twelve of sixteen. The Undermarshalcy does not round up.',
+      gloss: 'Keep at least 12 of your 16 hulls afloat.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — standing, and re-derived every tick (`isStanding`), so a hull the
@@ -441,6 +443,8 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
     {
       id: 'the-cells',
       text: 'The calling is put. Who attends it is entered, and who does not.',
+      gloss:
+        'Hear 3 of the cells across the trench; each counts once your contact log shows it with a bearing.',
       initial: ObjectiveStatus.Pending,
       // §8 — read out, never ranked. Three rows of the second cohort resolved
       // at Bearing or better, which needs a hull more than three quarters of
@@ -456,6 +460,9 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
     {
       id: 'the-crossing',
       text: 'The stalls are under the terraces. A hull under way between them is the only sound there is.',
+      gloss: 'Keep every hull at SIG 25 or less, all mission long.',
+      debtGloss:
+        "A hull went over SIG 25, so the dome's ears are withdrawn until the debt pays itself off.",
       // §8, §12 — the same rule as the stalls state it while the debt stands.
       // It replaces the line above and does not add a row: the ask has not
       // changed, only who is currently owed.

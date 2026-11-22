@@ -19,7 +19,9 @@ import { createElement } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import {
   MovementHoldReason,
+  ObjectiveForm,
   ObjectiveStatus,
+  ObjectiveWeight,
   SIM,
   type AbilityLock,
   type BoundSig,
@@ -497,6 +499,113 @@ describe('the objectives panel: whose words these are', () => {
     try {
       const words = rendered.allByClass('objectives-status').map((s) => s.props.children);
       assert.deepEqual(words, ['open', 'met', 'failed']);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('says a rule is kept, never met, and does not dim it', async () => {
+    // §10.5 (#1883): a rule is true now and can stop being true. Sorrowgate's
+    // silence order read *met* twenty-one seconds in, and dimmed like a task
+    // the player could stop thinking about.
+    const statuses = [ObjectiveStatus.Pending, ObjectiveStatus.Met, ObjectiveStatus.Failed];
+    const { rendered } = await panel(
+      missionView({
+        objectives: statuses.map((status, i) =>
+          objective({ id: `r${i}`, status, form: ObjectiveForm.Rule })
+        ),
+        markers: [],
+      })
+    );
+    try {
+      const words = rendered.allByClass('objectives-status').map((s) => s.props.children);
+      // The runtime returns a breached rule to Pending, so Pending reads broken.
+      assert.deepEqual(words, ['broken', 'kept', 'broken']);
+      const rows = rendered.allByClass('objectives-row').map((r) => String(r.props.className));
+      assert.ok(rows[1]!.split(' ').includes('kept'), 'a kept rule has its own class');
+      assert.ok(!rows[1]!.split(' ').includes('met'), 'a kept rule is not dimmed as done');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('counts a budget in seconds and calls it spent, never met', async () => {
+    // §10.5 (#1883): thirteen missions turned their classification budget *met*
+    // in success teal at the moment the survey was caught.
+    const { rendered } = await panel(
+      missionView({
+        objectives: [
+          objective({ id: 'b0', form: ObjectiveForm.Budget, progress: { done: 12, of: 30 } }),
+          objective({
+            id: 'b1',
+            form: ObjectiveForm.Budget,
+            status: ObjectiveStatus.Met,
+            progress: { done: 30, of: 30 },
+          }),
+        ],
+        markers: [],
+      })
+    );
+    try {
+      const words = rendered.allByClass('objectives-status').map((s) => s.props.children);
+      assert.deepEqual(words, ['budget', 'spent']);
+      const counters = rendered.allByClass('objectives-progress').map((c) => reads(c));
+      assert.deepEqual(counters, ['12 of 30 s', '30 of 30 s']);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('names a record without grading it, and opens a row read at the close until then', async () => {
+    // §10.5 (#1883): a record is a count the document grades in neither
+    // direction, and a row read at the close claims nothing before it.
+    const { rendered } = await panel(
+      missionView({
+        objectives: [
+          objective({
+            id: 'r0',
+            form: ObjectiveForm.Record,
+            status: ObjectiveStatus.Met,
+            progress: { done: 30, of: 30 },
+          }),
+          objective({
+            id: 'c0',
+            form: ObjectiveForm.Close,
+            status: ObjectiveStatus.Met,
+            progress: { done: 2, of: 2 },
+          }),
+        ],
+        markers: [],
+      })
+    );
+    try {
+      const words = rendered.allByClass('objectives-status').map((s) => s.props.children);
+      assert.deepEqual(words, ['record', 'open']);
+      const counters = rendered.allByClass('objectives-progress').map((c) => reads(c));
+      assert.deepEqual(counters, ['30 of 30 s', '2 of 2']);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('says which rows decide the result, and leaves the required ones plain', async () => {
+    // §10.5 (#1883): a keystone is CRITICAL and a row the result does not count
+    // is OPTIONAL. Required is the plain case and carries no word.
+    const { rendered } = await panel(
+      missionView({
+        objectives: [
+          objective({ id: 'w0' }),
+          objective({ id: 'w1', weight: ObjectiveWeight.Critical }),
+          objective({ id: 'w2', weight: ObjectiveWeight.Optional }),
+        ],
+        markers: [],
+      })
+    );
+    try {
+      const tags = rendered.allByClass('objectives-weight').map((w) => reads(w).trim());
+      assert.deepEqual(tags, ['critical', 'optional']);
+      const texts = rendered.allByClass('objectives-text').map((n) => deepText(n));
+      assert.match(texts[1]!, /critical$/, 'the word sits at the foot of the reading');
     } finally {
       await rendered.unmount();
     }

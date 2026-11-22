@@ -1009,7 +1009,7 @@ describe('the objective, as §8 chooses it', () => {
     assert.match(byId('the-furrow').text, /A garden with nobody in it is a claim/);
     assert.match(byId('the-ledger').text, /three accounts we'll never read/);
     assert.match(byId('the-returns').text, /isn't ours and isn't theirs/);
-    assert.match(byId('the-escorts').text, /they're not coming until the basin's awake/);
+    assert.match(byId('the-escorts').text, /Once the basin's awake they can come down/);
     // The attendants' own readings, in the Commune's grammar: the first faction
     // in the campaign whose entry declines to file.
     assert.match(emitter('attendant-a').reading!.entered, /we're not going to say what it was/);
