@@ -424,7 +424,7 @@ export function decorationPose(
   // positive roll about +X lowers the starboard wing into the turn. On a
   // circle the heading is a quarter turn behind the phase. On an ellipse it
   // is the loop's own tangent, which a circle's expression would turn up to
-  // 51 degrees off the way the far bloom's lanterns travel (#1859).
+  // 32 degrees off the way the far bloom's lanterns travel (#1859).
   const yaw =
     motion.radiusNsM === undefined
       ? -phase - Math.PI / 2

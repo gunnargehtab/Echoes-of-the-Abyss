@@ -879,9 +879,10 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 build it. Its first cut drew a lantern as two points and no body. The owner saw that
 cut's software frames and took six calls in session on 22 November 2026: whole lanterns,
 120 of them, on the ellipse, in procession clockwise, with a softer wave, and a
-Tetherjelly field staged beside the river before it merges. Two more were the author's,
-taken in the open here, and wait on the owner: that a lantern of the river keeps its
-depth and leans its own way, and that the page carries no timing run.*
+Tetherjelly field staged beside the river before it merges. Three more were the
+author's, taken in the open here, and wait on the owner: that a lantern of the river
+keeps its depth and leans its own way, where the staged field stands, and that the page
+carries no timing run.*
 
 From Home's eye the bowl beyond the fleet was empty water, and the five lanterns hung
 over the fleet's start alone. A river of 120 lanterns now drifts far out over the bowl
@@ -968,8 +969,9 @@ over the fleet's start alone. A river of 120 lanterns now drifts far out over th
   chart. The crater's simulation authors no field. Three readings were written. **Rule
   the bloom off any map that stands a field** costs nothing and shows nothing.
   **Trust hue and form** rests on frames that hold no field. **Stage both** is the
-  owner's call: the study stands the client's own figure of a field inside the river's
-  loop, where the river passes it on three sides
+  owner's call. Where it stands is the author's: the study stands the client's own
+  figure of a field inside the river's loop by its west end, where the river is
+  thickest and passes it on three sides
   ([issue-1859](screenshots/issue-1859/README.md#a-tetherjelly-field-beside-the-river)).
   The staged field is a figure and no field: no server holds it, and it bends no sound.
   What stands between the two in that frame: a field is a rim 250 m in radius and nine
