@@ -189,6 +189,7 @@ import { repaintWaterHue, waterHueTexture } from './waterMedium.ts';
 import { poolTexture, volumeInstances, worldLightsOf, type WorldLightSite } from './worldLights.ts';
 import {
   groundHeightTexture,
+  NO_GROUND,
   searchlightCount,
   searchlightsOf,
   setSearchlights,
@@ -1210,6 +1211,8 @@ export class PerspectiveView {
   private readonly searchHulls: SearchlightHull[] = [];
   /** The last frame's beams and occluders, for the development readout. */
   private searchReading: ReturnType<typeof searchlightsOf> = { lights: [], occluders: [] };
+  /** Off only for a capture's control (`__perspectiveGroundShadow`); no player reaches it. */
+  private searchGroundShadow = true;
   /**
    * The fine snow those beams show (beamMotes.ts, #1855). The world pass's
    * for good, by its layer: the canvas pass never draws it, so Low has none.
@@ -2025,6 +2028,7 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
     delete (window as unknown as { __perspectiveLamps?: unknown }).__perspectiveLamps;
     delete (window as unknown as { __perspectiveSearchlights?: unknown }).__perspectiveSearchlights;
+    delete (window as unknown as { __perspectiveGroundShadow?: unknown }).__perspectiveGroundShadow;
     delete (window as unknown as { __freeWaterDecoration?: unknown }).__freeWaterDecoration;
     delete (window as unknown as { __perspectiveHalo?: unknown }).__perspectiveHalo;
     delete (window as unknown as { __perspectiveSplit?: unknown }).__perspectiveSplit;
@@ -5319,7 +5323,7 @@ export class PerspectiveView {
     setSearchlights(
       lights,
       occluders,
-      this.searchGround,
+      this.searchGroundShadow ? this.searchGround : NO_GROUND,
       terrain.cols * terrain.cellM,
       terrain.rows * terrain.cellM
     );
@@ -6317,6 +6321,15 @@ export class PerspectiveView {
       (
         window as unknown as { __perspectiveSearchlights?: () => unknown }
       ).__perspectiveSearchlights = () => this.searchReading;
+      // The ground's shadow off and on again, for a cast edge's control
+      // (docs/screenshots/issue-1836, #1842). Every beam stays as it is and
+      // the walk finds no ground, so the pair differs by what the walk cuts.
+      (
+        window as unknown as { __perspectiveGroundShadow?: (on: boolean) => boolean }
+      ).__perspectiveGroundShadow = (on: boolean) => {
+        this.searchGroundShadow = on;
+        return this.searchGroundShadow;
+      };
       // The capture switch (tools/render-stack/capture.mjs, HALO=on): an
       // on/off pair on one page, beside the setting a player uses.
       (window as unknown as { __perspectiveHalo?: (on: boolean) => unknown }).__perspectiveHalo = (

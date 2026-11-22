@@ -63,6 +63,23 @@ const RIM_LEGS = [
   [1175, 2075],
 ];
 const RIM = { aheadM: 80, distance: 360, pitchDeg: 35 };
+// A cast edge (#1842): rock's shadow on other lit ground. From the rim's foot
+// the Corvette is sent round to the trench south of the two mesas, `CAST.clearM`
+// over its floor, and its last leg turns it to `CAST.headingDeg`. There its
+// beam grazes the west mesa's south-east corner, and the corner cuts the pool
+// on the floor beyond it with a straight edge. An order on a raised focus plane
+// is an order to that depth (#1132), and the route goes round the rock at it
+// (pathfinding.ts). `CAST.focus` is where the cut lies, the frame's centre.
+const CAST = {
+  at: [1600, 3600],
+  headingDeg: 330,
+  leadM: 160,
+  clearM: 450,
+  focus: [1810, 3470],
+  distance: 420,
+  yawDeg: 0,
+  pitchDeg: 35,
+};
 
 /** halo-cost.mjs's load: about 3.6 ms on the named GPU (gpuQueueLoad.ts). */
 const QUEUE_STEPS = Number(process.env.QUEUE_STEPS ?? 12000);
@@ -377,6 +394,49 @@ export default async ({ page, shot }) => {
       at.depthM,
     ];
   };
+  // A cast edge (#1842). The Corvette is picked where it stands, alone, and
+  // sent at `CAST`'s depth: a leg to a point `leadM` behind the pose, then
+  // one to the pose, which leaves it heading along the second. Each order is
+  // a right click on the view's centre, which is the camera's focus, looking
+  // straight down on it from over the water: nothing stands between.
+  const parkAtCastEdge = async () => {
+    const view = page.viewportSize();
+    const centre = [view.width / 2, view.height / 2];
+    const before = await hulls();
+    const stood = before.find((hull) => hull.name === 'Corvette');
+    await survey();
+    await page.mouse.click(...px(stood.xM, stood.zM));
+    await page.waitForTimeout(1000);
+    const heading = (CAST.headingDeg * Math.PI) / 180;
+    const [x, z] = CAST.at;
+    const floorAt = (at) => page.evaluate(([x, z]) => window.__perspectiveSeabedM(x, z), at);
+    const depthM = (await floorAt(CAST.at)) - CAST.clearM;
+    for (const leg of [
+      [x - Math.cos(heading) * CAST.leadM, z - Math.sin(heading) * CAST.leadM],
+      [x, z],
+    ]) {
+      await aim(page, ['order', ...leg, 300, 0, 88, depthM]);
+      await page.waitForTimeout(software ? 4000 : 1500);
+      await page.mouse.click(...centre, { button: 'right' });
+      await page.waitForTimeout(2000);
+      const at = await comeToRest('Corvette');
+      assert.ok(
+        Math.hypot(at.x - leg[0], at.z - leg[1]) < 40 && Math.abs(at.depthM - depthM) < 10,
+        `the Corvette rests at ${[at.x, at.z, at.depthM].map(Math.round).join(', ')} m, ` +
+          `not at ${[...leg, depthM].map(Math.round).join(', ')} m`
+      );
+    }
+    // The click took the Corvette and nothing else.
+    for (const hull of before.filter((hull) => hull.name !== 'Corvette')) {
+      const now = await hullAt(hull.name);
+      assert.ok(
+        Math.hypot(now.x - hull.xM, now.z - hull.zM) < 150,
+        `the ${hull.name} went with the Corvette`
+      );
+    }
+    const floorM = await floorAt(CAST.focus);
+    return ['edge', ...CAST.focus, CAST.distance, CAST.yawDeg, CAST.pitchDeg, floorM];
+  };
   // The selection is made once: a second drag, over water the fleet has
   // left, would drop it.
   let legs = 0;
@@ -596,6 +656,41 @@ export default async ({ page, shot }) => {
     await take('high', 'silent', POSES.slice(0, 2), true);
     // Rock in a beam: the Corvette at the foot of the rim, at rest.
     await staged('rim frame', async () => take('high', 'rim', [await parkAtRimFoot()]));
+    // A cast edge, and the same frame with the ground's shadow off: nothing
+    // moves between them, and the walk then finds no ground, so the pair
+    // differs by what the walk cuts.
+    await staged('cast edge and its control', async () => {
+      const pose = await parkAtCastEdge();
+      await take('high', 'cast', [pose]);
+      try {
+        assert.equal(await page.evaluate(() => window.__perspectiveGroundShadow(false)), false);
+        await take('high', 'cast', [['open', ...pose.slice(1)]]);
+      } finally {
+        await page.evaluate(() => window.__perspectiveGroundShadow(true));
+      }
+      const [a, b] = readings
+        .slice(-2)
+        .map((frame) => frame.hulls.find((hull) => hull.name === 'Corvette').beam);
+      assert.ok(a !== null && b !== null, 'the Corvette threw no beam in the pair');
+      const turned = Math.abs(((a.bearingDeg - b.bearingDeg + 540) % 360) - 180);
+      const control = {
+        against: 'edge',
+        groundShadow: false,
+        lampMovedM: Number(Math.hypot(a.xM - b.xM, a.zM - b.zM).toFixed(1)),
+        beamTurnedDeg: Number(Math.hypot(turned, a.depressionDeg - b.depressionDeg).toFixed(1)),
+        sway: readings.at(-1).sway,
+      };
+      readings.at(-1).control = control;
+      write();
+      const said =
+        `lamp moved ${control.lampMovedM} m · beam turned ${control.beamTurnedDeg}° · ` +
+        `sway ${control.sway}`;
+      assert.ok(
+        control.lampMovedM <= 1 && control.beamTurnedDeg <= 0.5,
+        `the cast edge and its control are not a pair: ${said}`
+      );
+      console.log(`cast control: ${said}`);
+    });
   }
   for (const r of readings) {
     console.log(
