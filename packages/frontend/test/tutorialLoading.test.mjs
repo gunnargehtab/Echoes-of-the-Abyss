@@ -207,6 +207,7 @@ describe('pending prop delivery', () => {
       lifeGlints: 0,
       photophoreLights: 0,
       jellyLights: 0,
+      farLanterns: 0,
       fixtureAssets: {},
     });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');
@@ -495,11 +496,14 @@ describe('a body’s own light at High (#1837)', () => {
       assert.equal(low.lifeGlints, 0);
       assert.equal(low.photophoreLights, 0);
       assert.equal(low.jellyLights, 0);
+      assert.equal(low.farLanterns, 0);
       assert.equal(count('env-drift-jelly'), 0);
 
       layer.setWorldPass(true);
       layer.rebuild(cells, () => -132);
-      const jellies = FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length;
+      // The five by the fleet, and the far bloom's river after them (#1859).
+      const fleet = FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length;
+      const jellies = fleet + FREE_WATER_HIGH_LIFE.BLOOM.COUNT;
       await settle(
         () =>
           count('env-drift-jelly') === jellies &&
@@ -552,6 +556,48 @@ describe('a body’s own light at High (#1837)', () => {
       const { COUNT, BEADS } = HIGH_GRAPHICS.LIFE.JELLY.STRANDS;
       assert.equal(high.jellyLights, jellies * (1 + 6 + COUNT * BEADS));
       assert.ok(layer.group.children.includes(layer.lantern.points));
+      // "A far bloom of lanterns" (#1859): the river over the bowl is whole
+      // lanterns of the same file, so its points are that cloud's and its
+      // bells the same draws: no cloud and no body of its own.
+      assert.equal(high.farLanterns, FREE_WATER_HIGH_LIFE.BLOOM.COUNT);
+      assert.equal(layer.lantern.count, high.jellyLights);
+      assert.deepEqual(
+        new Set(layer.group.children.filter((c) => c.isPoints && c.userData.worldLayer)),
+        new Set([layer.glow.points, layer.lantern.points, layer.smoke.points]),
+        'the fry’s cloud, the lantern’s and the vent’s smoke, and no cloud of the river’s own'
+      );
+      // The five by the fleet take the whole wave of light and every lantern
+      // after them the softer one: the membrane's program is told where the
+      // river starts in its instances.
+      const programs = [];
+      for (const bell of layer.group.children.filter((c) => c.name === 'env-drift-jelly')) {
+        const shader = { uniforms: {}, vertexShader: '', fragmentShader: '' };
+        bell.material.onBeforeCompile(shader);
+        programs.push(shader.uniforms.uJellyNear.value);
+        assert.equal(bell.count, jellies);
+      }
+      assert.deepEqual([...new Set(programs)], [fleet]);
+      // It drifts on the match's clock, and reduced motion holds it where the
+      // match's start stands it: the river's points follow the five's.
+      const river = () => {
+        const at = layer.lantern.points.geometry.getAttribute('position');
+        return Array.from(
+          at.array.subarray((high.jellyLights / jellies) * fleet * 3, high.jellyLights * 3)
+        );
+      };
+      const at2s = river();
+      layer.tick(0, undefined, 902000);
+      const at902s = river();
+      assert.notDeepEqual(at902s, at2s);
+      layer.setReducedMotion(true);
+      layer.tick(0, undefined, 2000);
+      const held = river();
+      layer.tick(0, undefined, 902000);
+      assert.deepEqual(river(), held);
+      assert.notDeepEqual(held, at2s);
+      layer.setReducedMotion(false);
+      layer.tick(0, undefined, 2000);
+      assert.deepEqual(river(), at2s);
       // Its file is drawn as a membrane there, and names itself the world pass's.
       const bells = layer.group.children.filter((c) => c.name === 'env-drift-jelly');
       assert.ok(bells.length > 0);
@@ -570,6 +616,8 @@ describe('a body’s own light at High (#1837)', () => {
       assert.equal(layer.stats().lifeGlints, 0);
       assert.equal(layer.stats().photophoreLights, 0);
       assert.equal(layer.stats().jellyLights, 0);
+      assert.equal(layer.stats().farLanterns, 0);
+      assert.equal(layer.lantern.count, 0);
       assert.ok(!layer.group.children.includes(layer.lantern.points));
       assert.equal(count('env-drift-jelly'), 0);
       assert.equal(layer.stats().decorativePhotophores, low.decorativePhotophores);

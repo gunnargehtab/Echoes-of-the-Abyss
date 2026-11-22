@@ -125,7 +125,8 @@ export function freeWaterPlacements(
     xM: number,
     yM: number,
     motion?: PropPlacement['motion'],
-    yawRad = 0
+    yawRad = 0,
+    far = false
   ) => {
     const col = Math.floor(xM / terrain.cellM);
     const row = Math.floor(yM / terrain.cellM);
@@ -159,10 +160,17 @@ export function freeWaterPlacements(
     // Test the whole swept plan envelope, including neighbouring cells. The
     // footprint's disc holds a turned stand whole: its script fences every
     // vertex within 60 m of its centre (tools/hull-models/props/kelp-stand.mjs).
-    const radius = (motion?.radiusM ?? 0) + spec.footprintM / 2;
+    // An eddy's envelope is its own two radii, and as far outside its line
+    // as its body keeps station and wanders (the far bloom, #1859).
+    const eddy = motion?.eddy;
+    const reach =
+      (eddy === undefined ? 0 : Math.abs(eddy.acrossM) * (1 + eddy.spread) + eddy.wanderM) +
+      spec.footprintM / 2;
+    const radius = (motion?.radiusM ?? 0) + reach;
+    const radiusNs = (eddy?.radiusNsM ?? motion?.radiusM ?? 0) + reach;
     for (
-      let y = Math.floor((yM - radius) / terrain.cellM);
-      y <= Math.floor((yM + radius) / terrain.cellM);
+      let y = Math.floor((yM - radiusNs) / terrain.cellM);
+      y <= Math.floor((yM + radiusNs) / terrain.cellM);
       y++
     ) {
       for (
@@ -183,6 +191,7 @@ export function freeWaterPlacements(
         scale: 1,
         cellIndex,
         ...(valid ? {} : { disabled: true }),
+        ...(far ? { far: true } : {}),
         ...(motion === undefined ? {} : { motion }),
       });
   };
@@ -350,7 +359,90 @@ export function freeWaterPlacements(
   // eye, its start authored as the ray's is.
   const { at: mantaAt, startDeg: mantaStart, MOTION: manta } = FREE_WATER_HIGH_LIFE.MANTA;
   add('env-rim-manta', mantaAt[0], mantaAt[1], { ...manta, phase: (mantaStart * Math.PI) / 180 });
+  // The far bloom (#1859), last again, so every slot before it keeps its
+  // index and the five lanterns by the fleet stay the first of their file's
+  // list: a river of whole lanterns carried round the eddy over the bowl, where
+  // every other loop is a circle (`eddyPlan`). Each is drawn from the
+  // fixture's seed. Where it stands along the river is the sum of two draws,
+  // so the river is thickest at its middle and thins to nothing at its head
+  // and its tail; where it keeps across the flow, how far and how often it
+  // wanders, its depth and its lean are each a draw of its own.
+  const bloom = FREE_WATER_HIGH_LIFE.BLOOM;
+  const { EDDY } = bloom;
+  for (let i = 0; i < bloom.COUNT; i++) {
+    const draw = (axis: number) =>
+      propHash([FREE_WATER_LIFE.SEED, bloom.at[0], bloom.at[1], i, axis]);
+    const along = draw(1) + draw(2) - 1;
+    const between = ([least, most]: readonly [number, number], axis: number) =>
+      least + (most - least) * draw(axis);
+    add(
+      'env-drift-jelly',
+      bloom.at[0],
+      bloom.at[1],
+      {
+        ...bloom.MOTION,
+        radiusM: bloom.RADII_M[0],
+        phase: ((bloom.startDeg + (along * bloom.SPAN_DEG) / 2) * Math.PI) / 180,
+        depthM: bloom.depthM + (draw(4) * 2 - 1) * bloom.STATION.depthM,
+        // Each leans its own way: on a loop this wide there is no turn to lean into.
+        bankDeg: (draw(5) * 2 - 1) * bloom.MOTION.bankDeg,
+        eddy: {
+          radiusNsM: bloom.RADII_M[1],
+          acrossM: (draw(3) * 2 - 1) * bloom.STATION.acrossM,
+          skew: EDDY.SKEW,
+          spread: EDDY.SPREAD,
+          wanderM: between(EDDY.WANDER_M, 6),
+          // A whole number of wanders a lap, so a lap brings a lantern back.
+          wanderLaps: Math.round(between(EDDY.WANDER_LAPS, 7)),
+          wanderPhase: draw(8) * Math.PI * 2,
+        },
+      },
+      0,
+      true
+    );
+  }
   return slots;
+}
+
+/**
+ * Where a body carried round the eddy over the bowl stands in plan at a match time
+ * (docs/free-water-slice.md §5, "A far bloom over the bowl"; #1859).
+ *
+ * The fixture writes one current, east, and the kelp that leans to it stands
+ * in the garden, along the bowl's north side. The reading taken: the stream
+ * runs over the garden and the water over the bowl is slower, and the shear
+ * on the south flank of an eastward stream turns clockwise seen from above,
+ * fastest beside the stream. So the eddy turns as every loop of the fixture
+ * does, and its south side running west is its far side coming back. Nothing
+ * walls it in at the depth it is drawn: that the loop closes is a choice for
+ * the frame.
+ *
+ * Three things make it an eddy and not a ring turning. Its pace is uneven:
+ * the lap's own phase runs `skew` faster beside the stream, at the loop's
+ * north point, and as much slower on the far side. Its width is uneven the
+ * other way, as slower water is wider: a body keeps `spread` further from
+ * the loop's line on the far side and as much nearer on the stream side.
+ * And a body holds no fixed station: it wanders across the flow, `wanderM`
+ * either way, a whole number of times a lap.
+ */
+function eddyPlan(
+  placement: PropPlacement,
+  motion: NonNullable<PropPlacement['motion']>,
+  eddy: NonNullable<NonNullable<PropPlacement['motion']>['eddy']>,
+  timeS: number
+): [number, number] {
+  const lap = (((timeS % motion.periodS) + motion.periodS) % motion.periodS) / motion.periodS;
+  const phase = motion.phase + lap * Math.PI * 2;
+  // The loop's own angle, 0 east and a quarter turn south: ahead of the
+  // phase everywhere but the west end, where the river's middle starts.
+  const angle = phase + eddy.skew * (1 + Math.cos(phase));
+  const acrossM =
+    eddy.acrossM * (1 + eddy.spread * Math.sin(angle)) +
+    eddy.wanderM * Math.sin(lap * eddy.wanderLaps * Math.PI * 2 + eddy.wanderPhase);
+  return [
+    placement.xM + (motion.radiusM + acrossM) * Math.cos(angle),
+    placement.yM + (eddy.radiusNsM + acrossM) * Math.sin(angle),
+  ];
 }
 
 /** Where a decorative body stands at one match time: its level origin, heading and bank. */
@@ -377,6 +469,16 @@ export function decorationPose(
       roll: 0,
     };
   }
+  const roll = ((motion.bankDeg ?? 0) * Math.PI) / 180;
+  if (motion.eddy !== undefined) {
+    // A body carried by the eddy heads where the next second carries it:
+    // along the loop, less whatever it is wandering across the flow just now.
+    const timeS = matchMs / 1000;
+    const [x, z] = eddyPlan(placement, motion, motion.eddy, timeS);
+    const [nextX, nextZ] = eddyPlan(placement, motion, motion.eddy, timeS + 1);
+    const y = motion.depthM === null ? groundY(x, z) : depthToWorldY(motion.depthM) - motion.axisM;
+    return { x, y, z, yaw: Math.atan2(-(nextZ - z), nextX - x), roll };
+  }
   const phase = motion.phase + (((matchMs / 1000) % motion.periodS) / motion.periodS) * Math.PI * 2;
   const x = placement.xM + Math.cos(phase) * motion.radiusM;
   const z = placement.yM + Math.sin(phase) * motion.radiusM;
@@ -387,7 +489,7 @@ export function decorationPose(
   // Models swim along +X; three's positive yaw turns it toward -Z. Every loop
   // runs clockwise seen from above, so its centre lies to starboard, +Z, and a
   // positive roll about +X lowers the starboard wing into the turn.
-  return { x, y, z, yaw: -phase - Math.PI / 2, roll: ((motion.bankDeg ?? 0) * Math.PI) / 180 };
+  return { x, y, z, yaw: -phase - Math.PI / 2, roll };
 }
 
 const Y_AXIS = new Vector3(0, 1, 0);

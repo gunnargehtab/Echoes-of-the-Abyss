@@ -446,9 +446,33 @@ export interface PropPlacement {
   cellIndex: number;
   /** A fixture retains its slot when public ground no longer admits it. */
   disabled?: boolean;
+  /**
+   * A lantern of the free-water crater's far bloom (#1859): a whole drifting
+   * jelly, whose wave of light is the softer one (jellyLight.ts).
+   */
+  far?: boolean;
   /** Public, fixture-authored motion only; never an entity or a fauna contact. */
   motion?: {
     radiusM: number;
+    /**
+     * The far bloom's alone (#1859): its loop is the eddy over the bowl and no
+     * circle (freeWaterDecoration.ts `eddyPlan`). `radiusNsM` is the loop's
+     * north-south radius, `radiusM` then its east-west. `acrossM` is where
+     * the body keeps station across the flow, outside the loop's line. `skew`
+     * is how much faster than the lap's own pace the side beside the stream
+     * runs, and slower the far side; `spread` how much wider the far
+     * side is, and narrower the stream side. `wanderM` is how far the body
+     * wanders across the flow, `wanderLaps` times a lap, from `wanderPhase`.
+     */
+    eddy?: {
+      radiusNsM: number;
+      acrossM: number;
+      skew: number;
+      spread: number;
+      wanderM: number;
+      wanderLaps: number;
+      wanderPhase: number;
+    };
     periodS: number;
     phase: number;
     depthM: number | null;

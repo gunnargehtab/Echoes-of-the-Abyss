@@ -230,6 +230,9 @@ Built so far:
   development and not accepted. Below.
 - **The crater stands one vent stand, and its chimneys breathe lit smoke** (#1837). In
   development and not accepted. Below.
+- **A river of 120 lanterns drifts far out over the crater's bowl**
+  ([#1859](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1859)). In
+  development and not accepted. Below.
 - **The fine snow inside an own hull's beam is lit**
   ([#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855)). In
   development and not accepted. Below.
@@ -883,6 +886,177 @@ holds, and `packages/frontend/test/tutorialLoading.test.mjs` counts them in the 
 | How far over the crown a wave starts, in its widths | `LIFE.JELLY.PULSE.LEAD` | 2 |
 | What a wave adds, as a share of the light it passes | `LIFE.JELLY.PULSE.GAIN` | 0.6 |
 | Seconds one jelly's clock runs ahead of the last's | `LIFE.JELLY.STAGGER_S` | 19.75 |
+
+#### A far bloom of lanterns
+
+*In development with the rest of High, and not accepted
+([#1859](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1859);
+[issue-1859](screenshots/issue-1859/README.md)). Every number is TUNABLE in
+`FREE_WATER_HIGH_LIFE.BLOOM` and `HIGH_GRAPHICS.LIFE.JELLY.FAR`
+(`packages/shared/src/constants.ts`) until a frame of it is accepted.
+[issue-1837](screenshots/issue-1837/README.md) offered it with its frames and did not
+build it. Its first cut drew a lantern as two points and no body. The owner saw that
+cut's software frames and took six calls in session on 22 November 2026: whole lanterns,
+120 of them, on the ellipse, in procession clockwise, with a softer wave, and a
+Tetherjelly field staged beside the river before it merges. The same day, on the second
+cut's software frames, the owner left the river from Home and from Survey as they
+stood, left a lantern keeping its depth and leaning its own way, found a mark readable
+among the lanterns, ruled that the bloom may go on a map that has fields, and asked that
+its movement be thought through as the ocean's currents and turbulence. None of that is acceptance, which waits on the named
+GPU's frames. Three calls were the author's, taken in the open here: the eddy, with its
+numbers and its loop closing, where the staged field stands, and that the page carries
+no timing run. The owner saw the third cut's clip the same day and left all three as
+they stood, which is not acceptance either.*
+
+From Home's eye the bowl beyond the fleet was empty water, and the five lanterns hung
+over the fleet's start alone. A river of 120 lanterns now drifts far out over the bowl
+([free-water-slice.md](free-water-slice.md) §5, "A far bloom over the bowl").
+
+- **A far lantern is a whole lantern.** Each is `env-drift-jelly` as the five by the
+  fleet are ([A jelly is a lantern](#a-jelly-is-a-lantern)): the bell a membrane, its
+  seats, its eighteen strands of beads and the glow round it. Three readings were
+  written. **Points alone** was the first cut: a soft disc for the bell and a glow
+  round it, at no triangle. From 400 m it was a disc with no bell and no strands.
+  **None** leaves the bowl the dark it is. **Whole lanterns** is the owner's call. The
+  river costs 71,280 triangles and 39,720 points, and High's frame stands at up to
+  835,327 of the crater's 900,000 with it ([free-water-slice.md](free-water-slice.md)
+  §7).
+- **There are 120.** The owner's count, against 30, 60 and 200. From Home's eye a bell
+  is 4 to 7 px across, so a river needs enough of them to read as one, and 200 would
+  leave every later step 17,000 triangles.
+- **It is no draw of its own.** The river's lanterns are instances of the jelly's own
+  file, after the five in its list, so its bells are the two draws the five already
+  take and its points are in the lantern's cloud. High's draw calls and passes are
+  what they were.
+- **A lantern's beads are written once, not drawn again each frame.** A lantern hangs
+  331 points, and their places are written on the CPU every frame. As #1837 wrote
+  them, each bead drew its own hashes, powers and sine: 720 sines a jelly, and 9 ms of
+  a frame for 125 jellies in Node on the machine that built this. What never changes
+  is now kept: a strand's bearing, length and phase, and a bead's place on its strand.
+  A frame draws one sine and one cosine a strand, and an exponential only for a bead
+  the wave of light is near. That is under 2 ms for the same 125, with every light the
+  same to eleven places ([beads.mjs](screenshots/issue-1859/beads.mjs)). The five by
+  the fleet are written the same way, and their frames do not move.
+- **The water fades it.** From Home's eye 92 of the 120 stand in the frame, 1,316 to
+  2,453 m off, where the water leaves 0.59 to 0.16 of a lantern's light, so the river's
+  far end goes out into the dark and no edge is drawn. A bell draws 3.6 to 6.8 px
+  there. A bead is half a pixel or less, so it is drawn at the 1.6 px floor with its
+  level cut by the area gained
+  ([Life in the world's light](#life-in-the-worlds-light)), and a lantern's strands
+  read from there as a faint fall under its bell. From the Close eye, whose water
+  reaches 630 m, 0.08 is left at most. From Survey's 10 km a bell is under a pixel.
+- **The river runs along the bowl's north half, on a loop that is no circle.** Three
+  shapes were written, each read by what Home's eye holds of it
+  ([river.mjs](screenshots/issue-1859/river.mjs)). **A circle about the crater's
+  centre** shows that eye 68 of the 120, in the last 190 px of the frame. **A circle in
+  the bowl's north-west** shows it 91, in the last 370 px: a hook at the frame's edge.
+  **An ellipse along the north half** is the owner's call: 89, across 475 px, its west
+  end toward that eye and both its sides running off east into the dark. Each of the
+  three is the same list on the shape's plain line; with the eddy's pace, below, the
+  ellipse shows that eye 92. It is the one loop of the fixture that is no circle. The river fills 230 degrees of it, thickest at
+  its middle and thinning to both ends: a river with a head and a tail, where a full
+  loop would read from Survey as a ring, and a ring there is a hull's.
+- **It is a procession, clockwise.** The owner's call, against the same river turned
+  the other way and against each lantern on a small loop of its own, which holds the
+  river's place in Home's frame all match and reads as a bloom hanging, not a river
+  flowing. Every lantern heads the way it travels, with its strands trailing behind it.
+- **It is carried round the eddy over the bowl.** The owner saw the procession's clip and
+  asked that its movement be thought through as the ocean's currents and turbulence.
+  What follows is the author's reading of that, which the owner saw in the third cut's
+  clip and left. The
+  fixture writes one current, east, which the kelp leans to
+  ([free-water-slice.md](free-water-slice.md) §5, "No rows"), and the kelp stands in
+  the garden, along the bowl's north side. The reading: the stream runs over the
+  garden, and the water over the bowl south of it is slower. Where a stream runs beside
+  slower water the two shear, and the shear on the south flank of an eastward stream
+  turns clockwise seen from above, fastest beside the stream. That is how the
+  procession already went and how every loop of the fixture turns, so the direction
+  stands, and the south side running west is the eddy's far side coming back. Nothing
+  walls it in: at the lanterns' 100 to 220 m the garden's water and the bowl's are one
+  open layer. That the loop closes is the author's choice for the frame. What changed
+  is how it moves, in three things an eddy has and a ring turning does not:
+  - **Its pace is uneven.** Beside the stream, at the loop's north point, a lantern
+    makes 0.57 m/s, and coming back along the south side 0.32. A lap is still 13,500 s
+    and 0.32 m/s on the average, against a drifting jelly's 0.31 on its own loop.
+  - **Its width is uneven the other way**, as slower water is wider: a lantern keeps up
+    to 57 m off the river's line by the north point and up to 104 m by the south.
+  - **No lantern holds a fixed station.** Each wanders across the flow, 8 to 20 m
+    either way, once in 10 to 25 minutes, each on a rhythm of its own, and heads where
+    that carries it. A river whose lanterns all kept station turned as one rigid ring.
+
+  Three readings were written. **Turn it the other way** runs its near side against
+  the stream beside it. **A river that does not close**, east with the stream and
+  gone, is the truer of open water, and leaves the bowl empty behind it or has to be
+  fed. **A closed eddy** is taken. Its
+  three numbers are the author's and TUNABLE: how much faster the stream side runs,
+  0.3 of the lap's pace, how much wider the far side is, 0.4, and the wander. After
+  an hour the river's middle stands far along the loop's north side, and Home's eye
+  holds 55 of the 120.
+- **A lantern of it keeps its depth and leans its own way.** The author's, and left by
+  the owner on the second cut's frames. The five by the fleet rise and sink 10 m a lap
+  and lean 12 degrees into their turn. On a loop 1.9 km long there is no turn to lean
+  into and a lap is hours, so a lantern of the river hangs at the depth it was drawn,
+  100 to 220 m, and leans up to 12 degrees either way, each its own.
+- **Its wave of light is a third of a lantern's by the fleet.** The owner's call. A
+  lantern strokes its bell, sways its strands and takes a wave of light down its body
+  once in 9 s. From Home's range the stroke and the sway are under a pixel, so the
+  wave is what shows. Three readings were written. **The whole wave**, 60%, on 120
+  lanterns out of step is about 13 flashes a second along the river, the busy frame
+  the issue names as its risk. **No wave** is a steady river beside five that flash.
+  **A softer wave**, 20%, is taken: a shimmer. A lantern's clock still runs 19.75 s
+  ahead of the last's in the list, which spreads the 125 over 36 moments of the wave a
+  quarter of a second apart, so no flash of the river is a flash of all of it. The
+  stroke and the sway are the five's own, for a camera that comes near.
+- **It moves, and for nothing** (limit 4). The list is drawn once from the fixture's
+  seed and is the same for every client. It drifts on the shared match time alone. No
+  hull, shot, ping or camera starts, hurries, gathers or brightens it, and reduced
+  motion holds it where the match's start stands it, with no wave on any body.
+- **It is not a Tetherjelly field, and a field is staged beside it to show that.** One
+  lantern was held apart from a field's bell by being alone and adrift
+  ([A jelly is a lantern](#a-jelly-is-a-lantern)), and 120 together are not alone. A
+  field is public chart data that a commander plans by
+  ([map-visuals.md](map-visuals.md) §8), so a river read as one would be a false
+  chart. The crater's simulation authors no field. Three readings were written. **Rule
+  the bloom off any map that stands a field** costs nothing and shows nothing.
+  **Trust hue and form** rests on frames that hold no field. **Stage both** is the
+  owner's call. Where it stands is the author's: the study stands the client's own
+  figure of a field inside the river's loop by its west end, where the river is
+  thickest and passes it on three sides
+  ([issue-1859](screenshots/issue-1859/README.md#a-tetherjelly-field-beside-the-river)).
+  The staged field is a figure and no field: no server holds it, and it bends no sound.
+  What stands between the two in that frame: a field is a rim 250 m in radius and nine
+  bells, each a dome, a rim and tentacles in pale dots, 44 m across, in the fauna
+  colour on the tactical layer, and it stands where the map puts it. A lantern is a
+  lit skin 6 m across over beads, in `jelly-lantern`, and adrift. The owner saw the
+  pair on the second cut's software frames and ruled that the bloom may go on a map
+  that has fields, so no rule keeps it off one. The owner also found the field hard to
+  identify even with no lantern by it. That is the field's own mark, on the tactical
+  layer, which this step does not touch:
+  [#1882](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1882) holds it.
+- **Low draws none of it, and no mark, lamp or halo is touched.** With the fleet at
+  rest no ring stands in the water it crosses from Home's eye. The Corvette sent out
+  under it is staged
+  ([issue-1859](screenshots/issue-1859/README.md#gate-7-and-the-limits)): a mark is
+  drawn over the world, so its ring's stroke reads at High what it reads at Low, with
+  22 bells inside the ring and 1 across its stroke. The owner looked at the second
+  cut's staged frame against gate 7's three questions: the ring is found straight away,
+  its loudness arc reads as easily as with no lantern by it, and no lantern looks like
+  a contact or a mark. That is a glance at a software frame; the named GPU's is still
+  owed.
+
+`packages/frontend/test/farBloom.test.ts` holds the river over the bowl a whole lap
+long, its list, its seed, the eddy's direction, pace, width and wander, and its softer
+wave,
+`packages/frontend/test/jellyLight.test.ts` counts what writing a jelly's beads draws,
+and `packages/frontend/test/tutorialLoading.test.mjs` counts the river's lanterns in the
+crater at High, none at Low, and holds it under reduced motion.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| What a wave of light adds as it passes a lantern of the river, as a share of the light it passes | `LIFE.JELLY.FAR.PULSE_GAIN` | 0.2 |
+
+Where the river runs, its count and its pace are
+[free-water-slice.md](free-water-slice.md) §5's.
 
 #### A manta shows its belly
 

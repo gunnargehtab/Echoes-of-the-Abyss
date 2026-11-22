@@ -176,6 +176,47 @@ export const FREE_WATER_HIGH_LIFE = {
     startDeg: 130,
     MOTION: { radiusM: 70, periodS: 300, depthM: 165, depthSwingM: 8, axisM: 0.79, bankDeg: 40 },
   },
+  /**
+   * The far bloom (#1859): a slow river of lanterns far out over the bowl,
+   * where Home's eye had empty water beyond the fleet. Each is a whole
+   * `env-drift-jelly`, as the five by the fleet are, by the owner's call in
+   * session on 22 November 2026. The river is carried round the eddy over the bowl:
+   * a loop along the bowl's north half, `RADII_M` east-west and north-south
+   * about `at`, and the one loop here that is no circle. `COUNT` lanterns
+   * stand along it over `SPAN_DEG` of its phase, thickest at the middle and
+   * thinning to both ends, so it is a river with a head and a tail and no
+   * ring. `startDeg` is where its middle stands when the match starts, as
+   * the loop's own phase (0 east, 90 south): the west end, the end nearer
+   * Home's eye. `STATION` is how far a lantern keeps from the river's own
+   * line, across it and in depth about `depthM`, over the hulls' 300 m. A
+   * lap is `MOTION.periodS`, clockwise as every loop here, 0.32 m/s on the
+   * average, where a drifting jelly makes 0.31 on its own loop. A lantern
+   * keeps its depth as it goes, hangs by its bell's mid-height as the five
+   * do, and leans up to `bankDeg` either way, each its own.
+   *
+   * `EDDY` is what makes the loop an eddy and no ring turning, by the
+   * owner's call the same day to think of the ocean's currents and its
+   * turbulence (freeWaterDecoration.ts `eddyPlan`). The reading taken: the
+   * crater's one current runs east over the garden, along the bowl's north
+   * side, the water over the bowl is slower, and the shear between them turns
+   * clockwise. The eddy's north side, beside the stream, runs `SKEW` faster
+   * than the lap's own pace and its south side as much slower. The south side
+   * is `SPREAD` wider and the stream side as much narrower. And no
+   * lantern holds a fixed station: each wanders across the flow, between the
+   * two of `WANDER_M` either way, between the two of `WANDER_LAPS` times a
+   * lap, which is once in 10 to 25 minutes.
+   */
+  BLOOM: {
+    at: [2150, 1930],
+    RADII_M: [950, 330],
+    startDeg: 180,
+    SPAN_DEG: 230,
+    COUNT: 120,
+    depthM: 160,
+    STATION: { acrossM: 60, depthM: 60 },
+    MOTION: { periodS: 13500, depthSwingM: 0, axisM: 2.76, bankDeg: 12 },
+    EDDY: { SKEW: 0.3, SPREAD: 0.4, WANDER_M: [8, 20], WANDER_LAPS: [9, 22] },
+  },
 } as const;
 
 /**
@@ -532,6 +573,15 @@ export const HIGH_GRAPHICS = {
       SWIM: { PERIOD_S: 5.5, SQUEEZE: 0.16 },
       PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, LEAD: 2, GAIN: 0.6 },
       STAGGER_S: 19.75,
+      /**
+       * A lantern of the far bloom (docs/art-direction.md, "A far bloom of
+       * lanterns"; #1859): a whole lantern, with one thing its own.
+       * `PULSE_GAIN` is what the wave of light adds as it passes one, in
+       * place of `PULSE.GAIN`: a third of it, by the owner's call in session
+       * on 22 November 2026, since 120 whole waves out of step are about 13
+       * flashes a second along the river.
+       */
+      FAR: { PULSE_GAIN: 0.2 },
     },
     /**
      * The manta (mantaWing.ts; docs/art-direction.md, "A manta shows its

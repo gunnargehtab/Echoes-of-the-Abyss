@@ -240,6 +240,36 @@ describe('a jelly’s points of light (#1837)', () => {
     }
   });
 
+  it('draws nothing twice: a sine and a cosine a strand, and at most one exponential a bead', () => {
+    // Counted work, not a stopwatch (#1859). The far bloom hangs 120
+    // lanterns, 324 beads each, every frame. A bead's place on its strand and
+    // a strand's own bearing, length and phase never change, so after a
+    // jelly's first frame the writer draws a strand's wave once and hands
+    // each bead its turn of it. Written a bead at a time it was 720 sines a
+    // jelly a frame, and nine milliseconds of a frame for the river
+    // (docs/screenshots/issue-1859/beads.mjs).
+    lights(3, 12, true);
+    const counted = ['sin', 'cos', 'exp', 'pow'] as const;
+    const real = Object.fromEntries(counted.map((name) => [name, Math[name]]));
+    const calls: Record<string, number> = { sin: 0, cos: 0, exp: 0, pow: 0 };
+    try {
+      for (const name of counted) {
+        (Math as unknown as Record<string, unknown>)[name] = (...args: number[]) => {
+          calls[name]!++;
+          return (real[name] as (...a: number[]) => number)(...args);
+        };
+      }
+      lights(3, 12.5, true);
+    } finally {
+      for (const name of counted) (Math as unknown as Record<string, unknown>)[name] = real[name];
+    }
+    // The bell's stroke takes one cosine and the wave at the lip one exponential.
+    assert.equal(calls.sin, STRANDS.COUNT);
+    assert.equal(calls.cos, STRANDS.COUNT + 1);
+    assert.ok(calls.exp <= STRANDS.COUNT * STRANDS.BEADS + 1, `${calls.exp} exponentials`);
+    assert.equal(calls.pow, 0);
+  });
+
   it('moves on the match’s clock, and holds whole under reduced motion', () => {
     // Moving: a later moment is another frame.
     const [a, b] = [lights(0, 3, true), lights(0, 4.3, true)];

@@ -82,7 +82,7 @@ import type { MaskLandmarkPart } from './archMask.ts';
 import { setDistanceGradeOn } from './distanceGrade.ts';
 import { VentPlume, plumeSites, type PlumeSite } from './ventPlume.ts';
 import { LIFE_GLOW_KIND, LifeGlow } from './lifeGlow.ts';
-import { tintJellyMembrane, writeJellyLights } from './jellyLight.ts';
+import { jellyWaveGain, tintJellyMembrane, writeJellyLights } from './jellyLight.ts';
 import { JELLY_LANTERN } from './palette.ts';
 import { VentSmoke } from './ventSmoke.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
@@ -189,6 +189,8 @@ export class EnvironmentLayer {
    * token: the glow round each bell, its seats and its strands' beads
    * (jellyLight.ts, #1837). One more draw in the world pass, in the group
    * while the view draws one. A point's level is its own, so the cloud's is 1.
+   * The far bloom's lanterns are jellies of the same file, so their points
+   * are this cloud's too and the river over the bowl adds no draw (#1859).
    */
   readonly lantern = new LifeGlow(JELLY_LANTERN, 1, 'jelly_lantern');
   /**
@@ -644,6 +646,10 @@ export class EnvironmentLayer {
       if (template.jelly !== undefined) {
         template.jelly.uniforms.uJellyTime.value = timeS;
         template.jelly.uniforms.uJellyMoves.value = this.reducedMotion ? 0 : 1;
+        // The lanterns by the fleet come first in the list and take the whole
+        // wave; the far bloom's follow them and take the softer one.
+        const firstFar = list.findIndex((p) => p.far === true);
+        template.jelly.uniforms.uJellyNear.value = firstFar < 0 ? list.length : firstFar;
         // The lantern's hue is the active palette's, read live as a mark's is.
         for (const part of template.parts) tintJellyMembrane(part.material, JELLY_LANTERN);
       }
@@ -666,7 +672,8 @@ export class EnvironmentLayer {
             i,
             timeS,
             !this.reducedMotion,
-            lantern
+            lantern,
+            jellyWaveGain(p.far === true)
           );
           return;
         }
@@ -937,6 +944,7 @@ export class EnvironmentLayer {
     lifeGlints: number;
     photophoreLights: number;
     jellyLights: number;
+    farLanterns: number;
     fixtureAssets: Record<string, number>;
   } {
     return {
@@ -954,6 +962,12 @@ export class EnvironmentLayer {
       lifeGlints: this.glow.count - this.seatLights,
       photophoreLights: this.seatLights,
       jellyLights: this.lantern.count,
+      // The far bloom's lanterns standing, of the jellies the crater stands.
+      farLanterns: [...this.fixtureBatches.values()].reduce(
+        (sum, batch) =>
+          sum + batch.list.filter((p) => p.far === true && p.disabled !== true).length,
+        0
+      ),
       fixtureAssets: Object.fromEntries(
         [...this.fixtureBatches].map(([slug, batch]) => [
           slug,
