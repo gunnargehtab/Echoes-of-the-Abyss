@@ -617,6 +617,7 @@ export const items = {
   1782: 'The extra review rounds granted to the open-water trial reaching all of its later passes',
   1789: 'The open-water trial’s polygon budget leaving out its newest sea creature',
   1785: 'The four remaining fleet-wide upgrades and a rank for each ship, from the progression design',
+  1871: 'Computer-run navies buying the four remaining fleet upgrades, held until balance work thaws',
   1792: 'A damaged armoured ship still giving away its armour to a listener that tracks it',
   1780: 'The open-water trial’s giant ray looking like a sliver instead of a body',
   1812: 'Parts of a ship’s hull that are mirrored copies drawing nearly black in the game view',
@@ -644,6 +645,8 @@ export const items = {
   1862: 'Whether the water’s glow should answer a ship, with a lit wake or a flare where a ping passes',
   1863: 'The owner’s verdict on a handful of lights from the last look change, read on a real graphics card',
   1867: 'A great manta ray gliding overhead, seen from below, in the open-water trial',
+  1870: 'The manta’s last two checks: a speed run on a real graphics card, and whether its pale belly reads as the target’s mid tone',
+  1876: 'A deep fish’s far glowing spot no longer shining through its body when seen side-on',
   1856: 'A dark school of fish passing in front of the vent’s glow, seen as silhouettes',
   1574: 'The game online, played by people who did not build it, and its first tagged version',
 };
