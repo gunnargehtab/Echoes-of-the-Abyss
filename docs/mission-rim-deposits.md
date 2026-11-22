@@ -763,6 +763,22 @@ sentence and offers a distinction instead of a demand. And Kalliso's is the only
 mission that wants something from another faction, and what it wants is a question — which is why
 she says it to nobody.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-chord` | Bring at least 2 loaded cutter Corvettes back above the Staging line; each face is cut by its own cutter, 240 s a load. |
+| `load-one-home` | First load from the western face, above the Staging line. |
+| `load-two-home` | Second load from the western face, above the Staging line. |
+| `load-three-home` | First load from the middle face, above the Staging line. |
+| `load-four-home` | Second load from the middle face, above the Staging line. |
+| `load-five-home` | The one load from the eastern face, above the Staging line. |
+| `the-cutters` | Keep all 3 cutter Corvettes afloat. |
+| `the-escort` | Keep your Cruiser and both escort Corvettes afloat. |
+| `the-count` | How long your hulls have been classified; keep it under 30 s. |
+
 ---
 
 ## 13. Scaffold Status

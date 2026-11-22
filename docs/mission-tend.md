@@ -478,6 +478,18 @@ no other register would resist; the turning is a request addressed to a *count*,
 the Commune possesses; and Marr's last line is sentiment stated as fact — the Consortium's
 worst insult, spent deliberately, by the person the campaign will charge for it.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `share` | Hold each Harvester in the gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast. |
+| `jellies` | Hold your Light Scouts on the West Lane for 90 s to move the jellies; the work is loud, SIG 45. |
+| `gift` | Pass your Harvesters by the ovens beside the Holdfast; the one that picks up the bread takes it to the landing. |
+| `stillness` | Keep every Harvester at SIG 20 or less while the survey passes. |
+| `turning` | Nothing more is asked; the tide ends when the countdown does. |
+
 ---
 
 ## 13. Scaffold Status

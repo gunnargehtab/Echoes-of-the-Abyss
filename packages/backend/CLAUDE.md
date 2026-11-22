@@ -49,6 +49,11 @@ writing Room or Schema code. Translate two things. Its first step reads the vers
 "nothing installed". And its examples import from `'colyseus'`, which here is
 `'@colyseus/core'`.
 
+Mission literals are player text. Every objective authors a `gloss` copied from its document's
+§12 table, an alternate reading authors its own (`debtGloss`, `stallGloss`, a state's `gloss`),
+and `missions.test.ts` ("the words a player reads") refuses an unglossed row, Markdown, a doc
+reference or a template hole in anything the player sees (#1883).
+
 Related: `CLAUDE.md` (the root file — the wire, import extensions, constants, CI) ·
 `docs/invariants.md` (the rows that hold both budgets above) ·
 `.claude/VENDORED-SKILLS.md` (why the `colyseus` skill is carried at all)

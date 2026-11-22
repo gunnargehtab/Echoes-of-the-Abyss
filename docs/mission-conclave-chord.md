@@ -808,6 +808,22 @@ line on the struck lattice refuses to correct a record in order to protect one, 
 would have read out, the Commune would have opened for discussion, and the concern would have
 filed.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `descant-stood` | Have one of your hulls inside the Descant marker at T+14:00. |
+| `tenor-stood` | Have one hull inside the Tenor marker at T+14:00. |
+| `treble-stood` | Have one hull inside the Treble marker at T+14:00. |
+| `alto-stood` | Have one hull inside the Alto marker at T+14:00. |
+| `bass-stood` | Have one hull inside the Bass marker at T+14:00. |
+| `the-drone-stood` | Have one hull inside the Drone marker at T+14:00. |
+| `the-rest` | Until T+14:30, never hold your Cruiser within 400 m of one of the six markers, facing it, out of Silent Running: that plays the tone. |
+| `the-quiet` | Keep every hull at SIG 28 or less, the Cruiser in Silent Running. |
+| `the-count` | How long your party has been classified; keep it under 30 s. |
+
 ---
 
 ## 13. Scaffold Status

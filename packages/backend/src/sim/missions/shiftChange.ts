@@ -267,6 +267,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
     {
       id: 'the-number',
       text: 'Make the number. The face reports what it always reports.',
+      gloss: 'Bank 3,600 nodules: keep your four working Harvesters harvesting all shift.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       predicate: { kind: 'deliver', account: 'nodules', amount: QUOTA },
@@ -279,6 +280,8 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
     {
       id: 'the-watches',
       text: 'Stand the watches down in order. Berth them at the rail, at grade.',
+      gloss:
+        'Move each of the three barge Harvesters to the rail transfer once it is released, at T+03:00, T+08:00 and T+11:00.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
       terminal: true,

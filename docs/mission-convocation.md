@@ -601,6 +601,9 @@ The Commune cannot command, so its objectives arrive as statements of what the t
 - *The count's ready to read. It goes to the edge, and the edge carries — everything on the drop
   is about to know what we sound like when we agree.*
 - *There's the bell. All of them. Well.*
+- *Home is behind you. We're not ordering anyone to defend it; we're saying that if they stand on
+  it, the day is theirs.* — the keystone's row. It read *Nobody is asking you to defend it* until
+  #1883, which told the player not to do the one thing §8 says loses the mission.
 
 ### The voices on the water
 
@@ -653,6 +656,17 @@ log and the Knights would tune; Teel's line is the imperative mood arriving in a
 and being *apologised for in advance*, which is the register bending exactly as far as it goes
 and no further; and Marr's last sentence is the Commune's proudest fact and its epitaph in the
 same breath, spoken by the person who will be charged for both.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `walk` | Keep a hull on the marked row for 60 s with every hull there at SIG 26 or less; then the walk moves to the next row. |
+| `walk`, while the walk is stalled | The row has stopped turning; after 90 s stalled, the walk starts over from the first row. |
+| `count` | Take a Light Scout into the edge marker on the bare slope. |
+| `holdfast` | If another party's hulls stand on the Holdfast for 60 s before T+18:45, the mission ends lost. |
 
 ---
 

@@ -420,6 +420,8 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
     {
       id: 'sown',
       text: "The second furrow wants sowing. Sixty seconds on the bare rock at the working figure, and the sower's hull is seventy-five. We're saying both numbers here so nobody has to do the sum down there.",
+      gloss:
+        'Hold the sower Harvester within 250 m of the second furrow, facing it, out of Silent Running, for 60 s; bare rock costs it 4 hull a second, 75 s in all.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       markerId: 'the-second-furrow',
@@ -435,6 +437,7 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
     {
       id: 'tended',
       text: "The furrow is home tonight, for anyone who'd rather. We're not saying stay. We're saying it holds.",
+      gloss: 'Bring 2 Harvesters into the furrows.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       markerId: 'the-furrows',
@@ -463,6 +466,7 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
     {
       id: 'the-day',
       text: "Three went down. We'd like three read, whichever water they're read in.",
+      gloss: 'Keep all 3 Harvesters afloat.',
       initial: ObjectiveStatus.Pending,
       // §8 — non-terminal, with a reading: it prints beneath whichever outcome
       // the day earned and touches the ladder not at all. Intake's neutrality

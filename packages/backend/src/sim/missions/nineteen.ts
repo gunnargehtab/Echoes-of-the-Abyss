@@ -278,9 +278,12 @@ const hull = (
  * `the-nineteen` is terminal and Pending, so the close cannot fire on the first
  * one.
  */
-const answers = (id: string, role: MissionRole, name: string): MissionObjective => ({
+const answers = (id: string, role: MissionRole, name: string, gloss: string): MissionObjective => ({
   id,
   text: `${name} answers the count.`,
+  // Authored per hull at the call, never assembled: docs/mission-nineteen.md
+  // §12's table is where each sentence lives (#1883).
+  gloss,
   initial: ObjectiveStatus.Met,
   terminal: true,
   predicate: { kind: 'survive', role, count: 1 },
@@ -661,15 +664,46 @@ export const CHORD_NINETEEN: MissionDefinition = {
           'Entered short. What was played is played and what was not is a rest, and the Order does not pretend a rest is on purpose.',
       },
     },
-    answers('the-voice-answers', 'voice', 'The Voice'),
-    answers('first-answers', 'first', 'The First'),
-    answers('second-answers', 'second', 'The Second'),
-    answers('third-answers', 'third', 'The Third'),
-    answers('fourth-answers', 'fourth', 'The Fourth'),
-    answers('fifth-answers', 'fifth', 'The Fifth'),
+    answers(
+      'the-voice-answers',
+      'voice',
+      'The Voice',
+      'Keep your Cruiser afloat; a hull lost here is lost for the rest of the campaign.'
+    ),
+    answers(
+      'first-answers',
+      'first',
+      'The First',
+      'Keep the First, one of your Corvettes, afloat; a hull lost here is lost for the campaign.'
+    ),
+    answers(
+      'second-answers',
+      'second',
+      'The Second',
+      'Keep the Second, one of your Corvettes, afloat; a hull lost here is lost for the campaign.'
+    ),
+    answers(
+      'third-answers',
+      'third',
+      'The Third',
+      'Keep the Third, one of your Corvettes, afloat; a hull lost here is lost for the campaign.'
+    ),
+    answers(
+      'fourth-answers',
+      'fourth',
+      'The Fourth',
+      'Keep the Fourth, one of your Corvettes, afloat; a hull lost here is lost for the campaign.'
+    ),
+    answers(
+      'fifth-answers',
+      'fifth',
+      'The Fifth',
+      'Keep the Fifth, one of your Corvettes, afloat; a hull lost here is lost for the campaign.'
+    ),
     {
       id: 'the-count',
       text: 'Those below are on the axis. What is classified of the committal is entered in a record that is not ours.',
+      gloss: 'How long your party has been classified; keep it under 60 s.',
       initial: ObjectiveStatus.Pending,
       // Non-terminal, deliberately (§8): read out at the close and unable to
       // touch Complete, Partial or Lost. Nothing else keys on the tolerance —

@@ -1663,8 +1663,9 @@ export interface ObjectiveView {
    * that sentence was learned from, and under-claiming is the whole point of
    * it.
    *
-   * Absent is the ordinary case — twenty-eight missions author none, and a
-   * mission that authors none shows the reading alone exactly as before.
+   * Authored on every row since #1883 (`missions.test.ts`, "glosses every row
+   * in plain words"): it was optional, and 7 of 121 rows carried one. The
+   * field stays optional on the wire so a view can still be read without it.
    */
   gloss?: string;
   status: ObjectiveStatus;

@@ -414,6 +414,15 @@ lives in freight terms without a gram of sentiment; Holt's line is the Klaxon do
 by its beneficiaries — being heard as reassurance — which the Commune could not say without
 irony and the Knights not without making it a courtesy.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-plant` | Order the plant Harvester and an escort within 450 m to the Deep Yard together, before the plant fails at T+20:00. |
+| `the-column` | Bring your Cruiser and both Corvettes to the Deep Yard as well. |
+
 ---
 
 ## 13. Scaffold Status

@@ -475,6 +475,8 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       id: 'the-chord',
       text: 'The lattice stands at six voices. A tone you interrupt is a tone you have not played.',
+      gloss:
+        'Each of your 6 hulls sounds its own formation: within 400 m, facing it, out of Silent Running, for 20 s.',
       initial: ObjectiveStatus.Pending,
       markerId: 'formations',
       terminal: true,
@@ -488,6 +490,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       id: 'the-lattice',
       text: 'A chord certifies against four voices and its Drone. Below that there are measurements and nothing to measure them from.',
+      gloss: 'Met once any 4 of the 6 formations are sounded.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       predicate: { kind: 'sound', count: 4 },
@@ -500,6 +503,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       id: 'the-party',
       text: 'Six of you. Six voices. I would like both of those numbers to be the same at the end as they are now.',
+      gloss: 'Keep all 6 hulls afloat until the close.',
       initial: ObjectiveStatus.Pending,
       markerId: 'approach',
       terminal: true,
@@ -512,6 +516,8 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       id: 'the-tolerance',
       text: 'A concern is coring in the middle of it. What is classified of you is entered against their log, and a log is added up at the end of a shift.',
+      gloss:
+        'How long the survey has classified you; keep it under 30 s by turning your flank to it.',
       initial: ObjectiveStatus.Pending,
       predicate: {
         kind: 'tolerance',

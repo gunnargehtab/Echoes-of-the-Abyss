@@ -25,6 +25,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   Biome,
@@ -810,9 +811,12 @@ describe('the objectives', () => {
       }
 
       for (const objective of mission.objectives) {
-        const glosses = [objective.gloss, objective.debtGloss].filter(
-          (gloss): gloss is string => gloss !== undefined
-        );
+        const glosses = [
+          objective.gloss,
+          objective.debtGloss,
+          objective.stallGloss,
+          ...(objective.states ?? []).map((state) => state.gloss),
+        ].filter((gloss): gloss is string => gloss !== undefined);
         for (const gloss of glosses) {
           assert.equal(
             gloss.trim(),
@@ -856,6 +860,12 @@ describe('the objectives', () => {
             `${mission.id}: "${objective.id}" glosses a debt reading it does not author`
           );
         }
+        if (objective.stallGloss !== undefined) {
+          assert.ok(
+            objective.stallText !== undefined,
+            `${mission.id}: "${objective.id}" glosses a stall reading it does not author`
+          );
+        }
         // And the converse, which is what makes invariants row 24 true as
         // written rather than true of one case. `glossFor` pairs a gloss to
         // `debtText` and to nothing else, so an objective that authors a gloss
@@ -877,18 +887,20 @@ describe('the objectives', () => {
                 `no gloss of its own, so the row would explain the ceiling while stating the debt`
             );
           }
-          assert.equal(
-            objective.stallText,
-            undefined,
-            `${mission.id}: "${objective.id}" is glossed and authors a stall reading with ` +
-              `no gloss of its own — add a paired field beside it, as \`debtGloss\` is`
-          );
-          assert.equal(
-            objective.states,
-            undefined,
-            `${mission.id}: "${objective.id}" is glossed and authors a \`states\` reading ` +
-              `with no gloss of its own — add a paired field beside it`
-          );
+          if (objective.stallText !== undefined) {
+            assert.ok(
+              objective.stallGloss !== undefined,
+              `${mission.id}: "${objective.id}" is glossed and authors a stall reading with ` +
+                `no \`stallGloss\`, so the row would explain the walk while stating the stall`
+            );
+          }
+          for (const state of objective.states ?? []) {
+            assert.ok(
+              state.gloss !== undefined,
+              `${mission.id}: "${objective.id}" is glossed and authors the \`states\` reading ` +
+                `"${state.text}" with no gloss of its own`
+            );
+          }
         }
       }
     }
@@ -1660,6 +1672,45 @@ describe('the words a player reads', () => {
       }
     }
     assert.ok(checked > 1000, `only ${checked} strings were found, so the walk is broken`);
+  });
+
+  it('glosses every row in plain words, transcribed from its document', () => {
+    // docs/ui-ux.md §10.5 (#1883). The reading is in the voice of whoever gives
+    // the order and may be oblique; the gloss beside it may not. Before this
+    // gate 7 of 121 rows carried one, and a cold read of ten missions could not
+    // say what most of the others asked.
+    //
+    // What a plain line has to carry, beyond existing:
+    // - every one is the document's own sentence, from §12's *Plain lines in the
+    //   panel* table, so the doc stays canonical (CLAUDE.md, "docs came first");
+    // - a rule with no counter says its number: a silence order names `SIG n`,
+    //   and a hold says when it ends, because neither row prints a figure;
+    // - it fits the panel's row: one short line, not a paragraph.
+    const MAX_GLOSS = 160;
+    for (const mission of MISSIONS) {
+      const doc = readFileSync(new URL(`../../../${mission.doc}`, import.meta.url), 'utf8');
+      for (const objective of mission.objectives) {
+        const where = `${mission.id}: "${objective.id}"`;
+        assert.ok(objective.gloss !== undefined, `${where} has no plain gloss beside its reading`);
+        const glosses = [
+          objective.gloss,
+          objective.debtGloss,
+          objective.stallGloss,
+          ...(objective.states ?? []).map((state) => state.gloss),
+        ].filter((gloss): gloss is string => gloss !== undefined);
+        for (const gloss of glosses) {
+          assert.ok(doc.includes(gloss), `${where}: "${gloss}" is not in ${mission.doc}`);
+          assert.ok(gloss.length <= MAX_GLOSS, `${where}: a ${gloss.length}-character gloss`);
+        }
+        if (objective.predicate.kind === 'quiet') {
+          const sig = `SIG ${objective.predicate.ceilingSig}`;
+          assert.ok(objective.gloss.includes(sig), `${where}: a silence row's gloss names ${sig}`);
+        }
+        if (objective.predicate.kind === 'endure') {
+          assert.match(objective.gloss, /T\+\d|until|countdown/, `${where}: a hold says when`);
+        }
+      }
+    }
   });
 
   it('tells a task, a rule and a budget apart, and says which rows decide the result', () => {

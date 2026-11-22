@@ -396,6 +396,8 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
     {
       id: 'the-band',
       text: 'The band is two hundred and sixty. It is rendered from what the trench brings, and this tide the trench is sounded.',
+      gloss:
+        'Bank 260 Biomass by hunting: the animals on the walls hold about 210, and what comes up the trench after T+10:00 holds the rest.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — Biomass banked, read off the player's own economy record, and a
@@ -408,6 +410,7 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
     {
       id: 'the-row',
       text: 'Six of eight muster. The Undermarshalcy does not round up.',
+      gloss: 'Keep at least 6 of your 8 hulls afloat.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — a standing count over the eight hulls the mission seated,
@@ -419,6 +422,7 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
     {
       id: 'the-second',
       text: 'Nobody said how many would answer.',
+      gloss: 'Bank 400 Biomass in all.',
       initial: ObjectiveStatus.Pending,
       // §8 — shown from 00:00, because a row that reads *nobody said how many
       // would answer* at the start of a tide and finds out at 16:30 has been

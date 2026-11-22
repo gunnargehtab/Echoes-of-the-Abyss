@@ -757,6 +757,17 @@ closes by declining to spend it, in front of the one person who would have had t
 and Ossary, who has closed every mission the campaign has put him in by saying nothing, says
 nothing again, and this time they mean the same thing by it.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-rim` | Have 8 of your 12 Choristers on the terraces now; the count is taken at the close. |
+| `the-watch` | Keep at least 4 of your 6 Submersibles afloat. |
+| `the-attending` | Hear both sounds on the lip; each counts once your contact log shows it with a bearing. |
+| `the-record` | How long your column has been classified; keep it under 60 s. |
+
 ---
 
 ## 13. Scaffold Status

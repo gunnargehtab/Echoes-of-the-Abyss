@@ -303,12 +303,14 @@ const loadHome = (
   id: string,
   lift: string,
   text: string,
+  gloss: string,
   ordinal: string,
   face: string,
   markerId?: string
 ): MissionObjective => ({
   id,
   text,
+  gloss,
   initial: ObjectiveStatus.Pending,
   terminal: true,
   markerId,
@@ -768,6 +770,8 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
     {
       id: 'the-chord',
       text: 'Two cutters above the line with the rim aboard are the Second Chord. Below that there is no Chord and no reason for the week.',
+      gloss:
+        'Bring at least 2 loaded cutter Corvettes back above the Staging line; each face is cut by its own cutter, 240 s a load.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       keystone: true,
@@ -791,6 +795,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       'load-one-home',
       'load-one',
       'The first cut of the fourth face is above the line.',
+      'First load from the western face, above the Staging line.',
       'first',
       'fourth',
       'the-faces'
@@ -799,6 +804,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       'load-two-home',
       'load-two',
       'The second cut of the fourth face is above the line.',
+      'Second load from the western face, above the Staging line.',
       'second',
       'fourth'
     ),
@@ -806,6 +812,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       'load-three-home',
       'load-three',
       'The first cut of the fifth face is above the line.',
+      'First load from the middle face, above the Staging line.',
       'first',
       'fifth'
     ),
@@ -813,12 +820,14 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       'load-four-home',
       'load-four',
       'The second cut of the fifth face is above the line.',
+      'Second load from the middle face, above the Staging line.',
       'second',
       'fifth'
     ),
     {
       id: 'load-five-home',
       text: 'The cut of the sixth face is above the line.',
+      gloss: 'The one load from the eastern face, above the Staging line.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       predicate: {
@@ -836,6 +845,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
     {
       id: 'the-cutters',
       text: 'Three cutters. Three is the number of hulls the Order can put under two nodes.',
+      gloss: 'Keep all 3 cutter Corvettes afloat.',
       initial: ObjectiveStatus.Pending,
       // §8 — standing, and re-derived every tick (`isStanding`), so a cutter
       // lost at 09:00 reads *entered* at 16:00 rather than *home*. That is the
@@ -849,6 +859,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
     {
       id: 'the-escort',
       text: 'Three of the escort. The Order counts hulls at the close and the number is the argument.',
+      gloss: 'Keep your Cruiser and both escort Corvettes afloat.',
       initial: ObjectiveStatus.Pending,
       predicate: { kind: 'survive', role: 'escort', count: 3 },
       reading: {
@@ -859,6 +870,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
     {
       id: 'the-count',
       text: 'The rim is attended. The nodes were counted when they were raised, and the count is not yours.',
+      gloss: 'How long your hulls have been classified; keep it under 30 s.',
       initial: ObjectiveStatus.Pending,
       // §8, §13 — met by about 00:30 and that is the design. `ExposureReport.
       // tier` is the best tier anybody holds on *any* entity of the player's,

@@ -444,6 +444,17 @@ his second refuses to editorialise about people ringing a bell for a predator, w
 Directorate would render in the passive and the Commune could not render at all; Vail's is an
 instruction phrased as an invoice, and no other faction bills its own escort.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `asset-114` | Hold a Harvester on the collapsed face, 2 km south of the Rail Head, for 120 s to load it, then bring it to the Rail Head. |
+| `asset-181` | Load a second Harvester at the face the same way; two loaded Harvesters at the Rail Head meet this row. |
+| `asset-200` | The chamber rides on one of your three Harvesters, so load all three at the face and bring every one to the Rail Head. |
+| `column` | Bring your Cruiser and both Corvettes to the Rail Head before the mission closes at T+18:00. |
+
 ---
 
 ## 13. Scaffold Status

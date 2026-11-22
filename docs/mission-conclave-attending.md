@@ -811,6 +811,18 @@ once by what it is; and Ossary's last line is a silence that is entered as a pre
 the single most Directorate sentence in this document and the only one the Knights would
 understand immediately and could not have said.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-calling` | Bring 8 of your 16 hulls into the axis before the count at T+19:00. |
+| `the-muster` | Keep at least 12 of your 16 hulls afloat. |
+| `the-cells` | Hear 3 of the 6 cells across the trench; each counts once your contact log shows it with a bearing. |
+| `the-crossing` | Keep every hull at SIG 25 or less while crossing between the terraces. |
+| `the-crossing`, while the debt runs | A hull went over SIG 25, so the dome's ears are withdrawn until the debt pays itself off. |
+
 ---
 
 ## 13. Scaffold Status

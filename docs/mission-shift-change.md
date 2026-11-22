@@ -444,6 +444,15 @@ in the active voice at all. Tull's line prices a dying face's obedience without 
 sentiment, which no other register could resist. Vail's names the cargo and the cargo is a
 rate.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-number` | Bank 3,600 nodules: keep your four working Harvesters harvesting all shift. |
+| `the-watches` | Move each of the three barge Harvesters to the rail transfer once it is released, at T+03:00, T+08:00 and T+11:00. |
+
 ---
 
 ## 13. Scaffold Status

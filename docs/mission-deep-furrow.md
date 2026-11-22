@@ -925,6 +925,16 @@ one person on this water who has the votes, and the one moment she reaches for a
 moment the thing she was right about is under her hull — which is the whole of what
 [mission-radicals.md](mission-radicals.md) is about. Nobody else in this document uses it once.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `sown` | Hold the sower Harvester within 250 m of the second furrow, facing it, out of Silent Running, for 60 s; bare rock costs it 4 hull a second, 75 s in all. |
+| `tended` | Bring 2 Harvesters into the furrows. |
+| `the-day` | Keep all 3 Harvesters afloat. |
+
 ---
 
 ## 13. Scaffold Status

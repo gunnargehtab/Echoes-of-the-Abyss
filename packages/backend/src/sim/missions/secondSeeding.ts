@@ -633,6 +633,8 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     {
       id: 'the-seeding',
       text: "The lip wants sowing. Sixty seconds, bow on, at the working figure, under the bed — and there are three navies on this rim with ears, and we're not going to tell you when. We're saying they walk.",
+      gloss:
+        'Hold the sower Harvester within 250 m of the lip, facing it, out of Silent Running, for 60 s.',
       initial: ObjectiveStatus.Pending,
       markerId: 'the-rim-furrow',
       terminal: true,
@@ -650,6 +652,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     {
       id: 'the-furrow',
       text: "A garden with nobody in it is a claim, and we said we'd never make one. We'd like three of ours in the furrow when the tide turns.",
+      gloss: "Have 3 of your 4 seed hulls inside the lip's furrow.",
       initial: ObjectiveStatus.Pending,
       markerId: 'the-rim-furrow',
       terminal: true,
@@ -677,6 +680,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     {
       id: 'the-ledger',
       text: "What is heard of us today is in three accounts we'll never read.",
+      gloss: 'How long your hulls have been tracked exactly; keep it under 60 s.',
       initial: ObjectiveStatus.Pending,
       // §8, §13 — Track and not Classification, and the document says why: the
       // exposure walk counts the player's structures, and the bed's own 8 is a
@@ -693,6 +697,8 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     {
       id: 'the-returns',
       text: "There's something on the lip that isn't ours and isn't theirs. We'd like to hear it once before we plant near it.",
+      gloss:
+        'Get near enough that one of the 2 sounds on the lip shows in your contact log with a bearing.',
       initial: ObjectiveStatus.Pending,
       // §8 — the attend instrument at its fourth table: a return resolved at
       // Bearing or better by the player's own hulls while it sounds, once. No
@@ -702,7 +708,9 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     },
     {
       id: 'the-escorts',
-      text: "Juno's people are at the staging with their guns struck. The furrow will hold them once it's a furrow. We're not asking them down, and they're not coming until the basin's awake.",
+      text: "Juno's people are at the staging with their guns struck. Once the basin's awake they can come down, and the furrow will hold them.",
+      gloss:
+        "Bring the 3 Corvettes from the staging into the lip's furrow once they are released at T+20:30.",
       initial: ObjectiveStatus.Pending,
       markerId: 'the-rim-furrow',
       // §8 — non-terminal, with a reading, so that the ending is never decided

@@ -603,6 +603,17 @@ institution has not changed a single note since she was nine and saying so with 
 quite affection and not quite an accusation — the Directorate would have called that sufficiency
 and meant it, and the Knights are the only faction for whom it is a joke and a grief at once.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-chord` | Each of your 6 hulls sounds its own formation: within 400 m, facing it, out of Silent Running, for 20 s. |
+| `the-lattice` | Met once any 4 of the 6 formations are sounded. |
+| `the-party` | Keep all 6 hulls afloat until the close. |
+| `the-tolerance` | How long the survey has classified you; keep it under 30 s by turning your flank to it. |
+
 ---
 
 ## 13. Scaffold Status

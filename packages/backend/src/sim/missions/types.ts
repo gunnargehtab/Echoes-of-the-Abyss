@@ -852,6 +852,12 @@ export interface MissionObjective {
    * exactly the line `MissionWalk` is careful not to cross.
    */
   stallText?: string;
+  /**
+   * The plain line for the stalled reading, `debtGloss`'s pairing (#1883). It
+   * is bound by `stallText`'s rule above and says what the stall does, never
+   * what caused it.
+   */
+  stallGloss?: string;
   initial: ObjectiveStatus;
   predicate: MissionPredicate;
   /**
@@ -903,7 +909,12 @@ export interface MissionObjective {
    * Two readings of one rule, never a second objective: the ask has not
    * changed, which is `debtText`'s argument and holds here unchanged.
    */
-  states?: readonly { when: MissionPredicate; text: string }[];
+  states?: readonly {
+    when: MissionPredicate;
+    text: string;
+    /** The plain line beside this reading, paired as `debtGloss` is (#1883). */
+    gloss?: string;
+  }[];
   /**
    * The two readings the close may enter for this objective — met or unmet at
    * the moment the mission resolves.

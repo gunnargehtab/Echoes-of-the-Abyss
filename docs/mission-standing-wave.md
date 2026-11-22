@@ -767,6 +767,20 @@ words available, which is the thing that marks her out in [characters.md](charac
 Order's most ordinary person — the Choirmaster would have called it an unresolved interval and
 meant something by it.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-interval` | Raise 2 Sounding Spires, one on each wall of the Fifth, so they pair into a line. |
+| `the-interval`, while one node of the pair is badly damaged | One of the paired Sounding Spires is badly damaged, and the line between them is failing. |
+| `the-interval`, once the pair holds | The line is up; now take all 6 hulls north to the North Gallery. |
+| `the-interval`, while one node stands alone | One Sounding Spire stands; raise its pair on the opposite wall. |
+| `the-withdrawal` | Once the line is up, have all 6 hulls in the North Gallery at the close. |
+| `untouched` | Keep all 6 hulls afloat; the line harms your hulls as much as anyone's. |
+| `the-third-voice` | A 3rd Sounding Spire, 900 m further south, costs about 12.5 minutes of income. |
+
 ---
 
 ## 13. Scaffold Status

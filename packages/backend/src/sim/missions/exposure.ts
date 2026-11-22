@@ -339,6 +339,8 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
     {
       id: 'the-readings',
       text: 'Take the readings. What is heard is entered, and enough closes the interval.',
+      gloss:
+        'Take your Corvettes near the worked ground until 4 of its 6 sounds show in your contact log with a bearing.',
       initial: ObjectiveStatus.Pending,
       markerId: 'worked-ground',
       terminal: true,
@@ -347,6 +349,8 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
     {
       id: 'the-return',
       text: 'Return over the layer in duplicate. A reading unreturned is a reading unpriced.',
+      gloss:
+        'After the readings, bring at least 2 Corvettes back to the shelf lane, above the layer.',
       initial: ObjectiveStatus.Pending,
       markerId: 'return-line',
       terminal: true,
@@ -362,7 +366,9 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
     },
     {
       id: 'the-tolerance',
-      text: 'Spend Classification like the consumable it is. The ledger runs from the first entry, and the Division does not round down.',
+      text: 'Classification is a consumable, budgeted at thirty seconds. The ledger runs from the first entry, and the Division does not round down.',
+      gloss:
+        'How long your Corvettes have been classified; keep it under 30 s by staying quiet and further off.',
       initial: ObjectiveStatus.Pending,
       predicate: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },
       reading: {

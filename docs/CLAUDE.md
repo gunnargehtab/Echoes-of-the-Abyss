@@ -14,6 +14,13 @@ are canonical and the code transcribes them. `docs/README.md` is the bible's ind
 - Use concrete numbers: "45 SIG while idle with systems live", not "moderate SIG".
 - Prose, not code: Prettier stays out of this directory, and markdownlint and the link
   check (`npm run gates` runs both) are what hold it.
+- **Text a player reads is written to be acted on** (`ui-ux.md` §10.5, #1883). A spoken line
+  may stay oblique; the plain gloss beside each objective may not. It names the action, the
+  player's own hulls by class, the number with its unit (*SIG 20*, *400 m*, *60 s*,
+  *T+14:00*) and the place by its marker's name. Write it in §12's *Plain lines in the panel*
+  table first; the literal copies it. A reading never denies its own row's goal, one word
+  keeps one meaning in a mission, and nothing a player sees carries Markdown, a `§`, a doc
+  path or an issue number. `missions.test.ts` ("the words a player reads") holds the literal.
 
 Related: `CLAUDE.md` (the root file — the balance freeze, SPEC and TUNABLE constants) ·
 `docs/README.md` (the index and its editing rules) · `CONTRIBUTING.md` (docs conventions)

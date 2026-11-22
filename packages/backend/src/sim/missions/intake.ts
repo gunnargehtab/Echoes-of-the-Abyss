@@ -317,6 +317,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
     {
       id: 'the-band',
       text: 'The band is two hundred and forty-five. It is rendered from what lives on the walls, and it will not come to you.',
+      gloss: 'Bank 245 Biomass by hunting the animals on the walls; Biomass is paid on each kill.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — Biomass banked, read off the player's own economy record. The
@@ -331,6 +332,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
     {
       id: 'the-muster',
       text: 'Nine of twelve is a muster. The Undermarshalcy does not round up.',
+      gloss: 'Keep at least 9 of your 12 Submersibles afloat.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — nine of twelve at the close. A standing count, re-derived every
@@ -345,6 +347,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
     {
       id: 'the-finding',
       text: 'At the close the ground files what it heard. It is not asked for a number. It is asked what it heard.',
+      gloss: 'Bring 1 Submersible to the ascent, at the north edge, before the close at T+20:00.',
       initial: ObjectiveStatus.Pending,
       // §9 — revealed when the muster is called, because the last minute is
       // the only one in which the finding can be filed, and the mission does

@@ -553,7 +553,8 @@ which is the point:
 - *Six of you home would be the column. We agreed that at the load-out.*
 - *We'd like all ten. We're saying it because it's true, not because it's the number.*
 - *The line above Kell is closed and we don't have the paper they want.*
-- *The escorts are yours to spend. We'd rather you had to.*
+- *The escorts are ours too. We'd like both of them home, and we'd understand if they weren't.*
+  (It read *The escorts are yours to spend* until #1883, beside a row met only if both survive.)
 - *That's the third one gone quiet. Somebody's walking west along the pipe.*
 
 The fourth line is the hardest sentence in the document and it is the one that makes this
@@ -610,6 +611,17 @@ and Anholt's speech is the only one in the campaign so far where a Commune speak
 that she will ask — a future imposition, flagged in advance, which is as close to the imperative
 mood as the register can come and which the register makes her pay for by saying it out loud in
 front of the dead.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `column` | Bring at least 6 of your 10 Harvesters to the Holdfast Gate; each moves only with a Corvette within 450 m. |
+| `crossing` | Get at least 1 Harvester across the closed line to the Holdfast Gate. |
+| `all-ten` | All 10 Harvesters at the Holdfast Gate. |
+| `escorts` | Keep both Corvettes afloat. |
 
 ---
 

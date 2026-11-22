@@ -298,6 +298,8 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
     {
       id: 'asset-114',
       text: 'Recover Asset 9-06-114. Log exceptions.',
+      gloss:
+        'Hold a Harvester on the collapsed face, 2 km south of the Rail Head, for 120 s to load it, then bring it to the Rail Head.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
       // A count ladder over the two machinery barges, the Sorrowgate tender
@@ -310,6 +312,8 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
     {
       id: 'asset-181',
       text: 'Recover Asset 9-06-181. The frame held; bring it home in the condition it earned.',
+      gloss:
+        'Load a second Harvester at the face the same way; two loaded Harvesters at the Rail Head meet this row.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
       terminal: true,
@@ -318,6 +322,8 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
     {
       id: 'asset-200',
       text: 'The chamber transmits. Treat the interval as schedule.',
+      gloss:
+        'The chamber rides on one of your three Harvesters, so load all three at the face and bring every one to the Rail Head.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
       terminal: true,
@@ -329,6 +335,8 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
     {
       id: 'column',
       text: 'Return the column to the Rail Head. The writ closes at the count.',
+      gloss:
+        'Bring your Cruiser and both Corvettes to the Rail Head before the mission closes at T+18:00.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
       // Revealed when the haul home begins — the column assembles *at* the

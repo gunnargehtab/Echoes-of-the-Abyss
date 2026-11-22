@@ -381,8 +381,9 @@ building's ears, eight hulls walking, and a schedule.
 The row shapes are the format's own, and every one is a query over the player's own force
 ([mission-thin-water.md](mission-thin-water.md) §8; `types.ts`, `MissionPredicate`):
 
-**`the-people`** — *Sixteen are under the beds. We'd like sixteen over the layer, and we're
-saying it the way we said six at Kell: so nobody down there has to say it first.* —
+**`the-people`** — *Sixteen are under the beds, aboard three hulls. We'd like all three over the
+layer, and we're saying it the way we said six at Kell: so nobody down there has to say it
+first.* —
 `{ kind: 'extract'; role: 'tender'; region: 'the-foot'; count: 3 }` — **terminal**, not
 keystone — revealed 00:00 — marker `the-foot` (2000, 250, r 500). Right as an
 extract-at-reveal: nobody is in the Foot at tick zero, and a tender that reaches it is home.
@@ -668,8 +669,9 @@ quotes another register inside itself and declines to answer it in kind.
 The Commune cannot command, so its objectives arrive as statements of what is under the
 beds and what the plateau agreed at the top of the cleft:
 
-- *Sixteen are under the beds. We'd like sixteen over the layer, and we're saying it the way
-  we said six at Kell: so nobody down there has to say it first.*
+- *Sixteen are under the beds, aboard three hulls. We'd like all three over the layer, and we're
+  saying it the way we said six at Kell: so nobody down there has to say it first.* (It asked for
+  *sixteen over the layer* until #1883, beside a counter reading *0 of 3*.)
 - *One of ours over the layer is a plateau that still has people in it.*
 - *What they hear of us they'll enter, and this time they came to enter it in person.*
 - *Juno's people are under the east bed with their guns struck. They're ours to move, not to
@@ -753,6 +755,17 @@ thirty years on the plateau's one protection wanting, for one sentence, the othe
 
 She is *she* throughout, as [characters.md](characters.md) writes her;
 [mission-thin-water.md](mission-thin-water.md) §8 and §12 were the side that moved.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-people` | Bring all 3 Harvesters, which carry the 16, to the Foot, above the layer. |
+| `the-crossing` | Get at least 1 Harvester to the Foot. |
+| `the-letter` | How long your hulls have been classified; a hull under a bed cannot be heard. |
+| `the-escorts` | Keep all 3 Corvettes afloat; their weapons are locked. |
 
 ---
 

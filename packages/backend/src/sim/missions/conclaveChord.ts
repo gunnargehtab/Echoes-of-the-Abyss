@@ -274,11 +274,12 @@ const formation = (voice: Voice): MissionStructure => ({
  * per row instead, because Descant's carries the rule and the Drone's carries
  * the keystone.
  */
-const stood = (id: string, text: string, keystone?: true): MissionObjective => {
+const stood = (id: string, text: string, gloss: string, keystone?: true): MissionObjective => {
   const voice = voiceBy(id);
   return {
     id: `${id}-stood`,
     text,
+    gloss,
     initial: ObjectiveStatus.Pending,
     markerId: id,
     terminal: true,
@@ -602,15 +603,26 @@ export const CHORD_CONCLAVE: MissionDefinition = {
    * the first of those decisions at length and states what it costs.
    */
   objectives: [
-    stood('descant', 'Descant is stood. A hull at the voice, under the ceiling, for the interval.'),
-    stood('tenor', 'Tenor is stood.'),
-    stood('treble', 'Treble is stood.'),
-    stood('alto', 'Alto is stood.'),
-    stood('bass', 'Bass is stood.'),
-    stood('the-drone', 'The Drone is stood. The chord does not certify without it.', true),
+    stood(
+      'descant',
+      'Descant is stood. A hull at the voice, under the ceiling, for the interval.',
+      'Have one of your hulls inside the Descant marker at T+14:00.'
+    ),
+    stood('tenor', 'Tenor is stood.', 'Have one hull inside the Tenor marker at T+14:00.'),
+    stood('treble', 'Treble is stood.', 'Have one hull inside the Treble marker at T+14:00.'),
+    stood('alto', 'Alto is stood.', 'Have one hull inside the Alto marker at T+14:00.'),
+    stood('bass', 'Bass is stood.', 'Have one hull inside the Bass marker at T+14:00.'),
+    stood(
+      'the-drone',
+      'The Drone is stood. The chord does not certify without it.',
+      'Have one hull inside the Drone marker at T+14:00.',
+      true
+    ),
     {
       id: 'the-rest',
       text: "The interval is the Third's. Nothing is struck. A rest is written down, it is played, and it is not an absence.",
+      gloss:
+        'Until T+14:30, never hold your Cruiser within 400 m of one of the six markers, facing it, out of Silent Running: that plays the tone.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       keystone: true,
@@ -638,6 +650,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
     {
       id: 'the-quiet',
       text: 'The Third is quiet at its own interval. Twenty-eight, and the Voice under silence.',
+      gloss: 'Keep every hull at SIG 28 or less, the Cruiser in Silent Running.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(13, 30),
       /**
@@ -662,6 +675,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
     {
       id: 'the-count',
       text: 'A concern is coring under a writ. What is classified of the party is filed, and the escort defines obstruction.',
+      gloss: 'How long your party has been classified; keep it under 30 s.',
       initial: ObjectiveStatus.Pending,
       // The concern's documented reflex, cumulative and capped, and meeting it
       // is not bad news — docs/mission-aptitude.md §5's tolerance, carried

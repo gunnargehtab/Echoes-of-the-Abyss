@@ -875,6 +875,14 @@ Sull's *"It is the same hand"* is the one sentence in the bible that reports thi
 writing without quoting a word of it, which the concern would have filed, the plateaus would have
 opened for discussion, and the Directorate would have been forbidden to say at all.
 
+### Plain lines in the panel
+
+The rows not glossed under *Objective readings, in play* carry plain glosses too (#1883), under the same [ui-ux.md](ui-ux.md) §10.5 rule:
+
+| Row | Gloss |
+| --- | --- |
+| `the-house-hears` | Hear both sounds in the house; each counts once your contact log shows it with a bearing. |
+
 ---
 
 ## 13. Scaffold Status

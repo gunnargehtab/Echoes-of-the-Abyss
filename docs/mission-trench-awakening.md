@@ -752,6 +752,16 @@ the active, from the register that gives the agency to the water and the assignm
 spends the sixth in [mission-conclave-attending.md](mission-conclave-attending.md), one clause
 short, and mission 7 is the silence.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-band` | Bank 260 Biomass by hunting: the animals on the walls hold about 210, and what comes up the trench after T+10:00 holds the rest. |
+| `the-row` | Keep at least 6 of your 8 hulls afloat. |
+| `the-second` | Bank 400 Biomass in all. |
+
 ---
 
 ## 13. Scaffold Status

@@ -834,6 +834,20 @@ say anything about it — a refusal that only means something in a register wher
 down and played. And Kalliso's is the only line in the mission that counts two kinds of number in
 one breath, which is why she says it to nobody.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-lattice` | Bring both loaded carrier Corvettes into the Chord on the lip. |
+| `the-choirmaster` | Keep the Cruiser your escort guards afloat; it is released at T+15:30. |
+| `the-escort` | Keep your other Cruiser and both escort Corvettes afloat. |
+| `the-carriers` | Keep both carrier Corvettes afloat. |
+| `the-transmission` | Hold the escorted Cruiser within 400 m of the sounding point, facing it (south, to the Mouth), out of Silent Running, for 30 s. |
+| `the-lip` | Hear 3 sounds on the lip; each counts once your contact log shows it with a bearing. |
+| `the-count` | How long your hulls have been classified; keep it under 30 s. |
+
 ---
 
 ## 13. Scaffold Status

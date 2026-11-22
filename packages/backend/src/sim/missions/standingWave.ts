@@ -438,6 +438,7 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
     {
       id: 'the-interval',
       text: 'The Fifth is open. No voice stands.',
+      gloss: 'Raise 2 Sounding Spires, one on each wall of the Fifth, so they pair into a line.',
       initial: ObjectiveStatus.Pending,
       markerId: 'the-fifth',
       terminal: true,
@@ -454,17 +455,25 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
             detuned: true,
           },
           text: 'The interval is sour.',
+          gloss:
+            'One of the paired Sounding Spires is badly damaged, and the line between them is failing.',
         },
-        { when: CORRIDOR_STANDS, text: 'The interval is held. The Fifth carries at two.' },
+        {
+          when: CORRIDOR_STANDS,
+          text: 'The interval is held. The Fifth carries at two.',
+          gloss: 'The line is up; now take all 6 hulls north to the North Gallery.',
+        },
         {
           when: { kind: 'build', structure: StructureKind.SoundingSpire, count: 1 },
           text: 'One voice. A voice is not an interval.',
+          gloss: 'One Sounding Spire stands; raise its pair on the opposite wall.',
         },
       ],
     },
     {
       id: 'the-withdrawal',
       text: 'Be north of it. All six, in the Gallery, when the interval is held.',
+      gloss: 'Once the line is up, have all 6 hulls in the North Gallery at the close.',
       initial: ObjectiveStatus.Pending,
       markerId: 'north-gallery',
       terminal: true,
@@ -476,6 +485,7 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
     {
       id: 'untouched',
       text: 'Six went. The instrument does not know whose hulls those are.',
+      gloss: "Keep all 6 hulls afloat; the line harms your hulls as much as anyone's.",
       initial: ObjectiveStatus.Pending,
       predicate: { kind: 'survive', role: 'works', count: 6 },
       reading: {
@@ -487,6 +497,7 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
     {
       id: 'the-third-voice',
       text: 'A third voice is twelve and a half minutes of stipend, and nine hundred metres further south.',
+      gloss: 'A 3rd Sounding Spire, 900 m further south, costs about 12.5 minutes of income.',
       initial: ObjectiveStatus.Pending,
       predicate: { kind: 'build', structure: StructureKind.SoundingSpire, count: 3 },
       reading: {

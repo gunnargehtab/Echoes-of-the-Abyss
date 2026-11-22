@@ -363,6 +363,16 @@ for the minutes, because even at the turn she itemises. The transmission line it
 register bearing its maximum load: a woman ending her career in the passive voice, with a
 procedural note attached.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-session` | Keep the flight at the rail of the chamber until the session closes at T+12:30. |
+| `the-minutes` | The 9 items sound one after another; each counts once your contact log shows it with a bearing. |
+| `the-record` | Your choice: transmitting with the chair's Harvester reads Item Nine into the open record. |
+
 ---
 
 ## 13. Scaffold Status

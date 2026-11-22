@@ -842,6 +842,20 @@ then not saying it again: the Directorate would have entered it as a gap and the
 written it down as an exception, and the Order is the only faction for which saying it aloud is
 itself the cost.
 
+### Plain lines in the panel
+
+The rows not glossed under *Objective readings, in play* carry plain glosses too (#1883), under the same [ui-ux.md](ui-ux.md) §10.5 rule:
+
+| Row | Gloss |
+| --- | --- |
+| `the-voice-answers` | Keep your Cruiser afloat; a hull lost here is lost for the rest of the campaign. |
+| `first-answers` | Keep the First, one of your Corvettes, afloat; a hull lost here is lost for the campaign. |
+| `second-answers` | Keep the Second, one of your Corvettes, afloat; a hull lost here is lost for the campaign. |
+| `third-answers` | Keep the Third, one of your Corvettes, afloat; a hull lost here is lost for the campaign. |
+| `fourth-answers` | Keep the Fourth, one of your Corvettes, afloat; a hull lost here is lost for the campaign. |
+| `fifth-answers` | Keep the Fifth, one of your Corvettes, afloat; a hull lost here is lost for the campaign. |
+| `the-count` | How long your party has been classified; keep it under 60 s. |
+
 ---
 
 ## 13. Scaffold Status

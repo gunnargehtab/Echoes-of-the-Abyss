@@ -680,6 +680,8 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     {
       id: 'column',
       text: 'Six of you home would be the column. We agreed that at the load-out.',
+      gloss:
+        'Bring at least 6 of your 10 Harvesters to the Holdfast Gate; each moves only with a Corvette within 450 m.',
       initial: ObjectiveStatus.Pending,
       markerId: 'holdfast-gate',
       // §8 — no `loaded` flag and no `deliver` row. A tender that arrives
@@ -691,6 +693,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     {
       id: 'crossing',
       text: "The line above Kell is closed and we don't have the paper they want.",
+      gloss: 'Get at least 1 Harvester across the closed line to the Holdfast Gate.',
       initial: ObjectiveStatus.Pending,
       markerId: 'crossing',
       // The floor of §8's Results table — "Some of the column: one to five" —
@@ -704,6 +707,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     {
       id: 'all-ten',
       text: "We'd like all ten. We're saying it because it's true, not because it's the number.",
+      gloss: 'All 10 Harvesters at the Holdfast Gate.',
       initial: ObjectiveStatus.Pending,
       markerId: 'holdfast-gate',
       // §8 — revealed at 00:00 and unmet in almost every run. Non-terminal:
@@ -717,7 +721,8 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     },
     {
       id: 'escorts',
-      text: "The escorts are yours to spend. We'd rather you had to.",
+      text: "The escorts are ours too. We'd like both of them home, and we'd understand if they weren't.",
+      gloss: 'Keep both Corvettes afloat.',
       initial: ObjectiveStatus.Pending,
       predicate: { kind: 'survive', role: 'escort', count: 2 },
       reading: {

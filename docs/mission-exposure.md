@@ -392,7 +392,7 @@ audible. The Consortium's register is defined in [culture.md](culture.md) §3.
 
 - *Take the readings. What is heard is entered, and enough closes the interval.*
 - *Return over the layer in duplicate. A reading unreturned is a reading unpriced.*
-- *Spend Classification like the consumable it is. The ledger runs from the first entry, and the Division does not round down.*
+- *Classification is a consumable, budgeted at thirty seconds. The ledger runs from the first entry, and the Division does not round down.* (It opened *Spend Classification like the consumable it is* until #1883, which read as an order to spend it.)
 
 ### The voices on the channel
 
@@ -427,6 +427,16 @@ register would let him do; the guidance line turns ten seconds of remaining deni
 a lecture on the difference between a margin and a reserve; and the recall is a man leaving
 the most important water of his life on schedule, in writing, because the schedule is the
 only authority he has ever been given.
+
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-readings` | Take your Corvettes near the worked ground until 4 of its 6 sounds show in your contact log with a bearing. |
+| `the-return` | After the readings, bring at least 2 Corvettes back to the shelf lane, above the layer. |
+| `the-tolerance` | How long your Corvettes have been classified; keep it under 30 s by staying quiet and further off. |
 
 ---
 

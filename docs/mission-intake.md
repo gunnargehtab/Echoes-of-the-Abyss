@@ -670,6 +670,16 @@ consecutive Directorate mission that ends with Korrin saying one sentence she sh
 aloud ([mission-attendance.md](mission-attendance.md) §12). That is the civil war being kept, one
 sentence per mission, and the campaign will not spend it until *Conclave*.
 
+### Plain lines in the panel
+
+Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): one sentence beside the reading, saying what to do with which of the player's own hulls, where and by when. The reading stays first and whole.
+
+| Row | Gloss |
+| --- | --- |
+| `the-band` | Bank 245 Biomass by hunting the animals on the walls; Biomass is paid on each kill. |
+| `the-muster` | Keep at least 9 of your 12 Submersibles afloat. |
+| `the-finding` | Bring 1 Submersible to the ascent, at the north edge, before the close at T+20:00. |
+
 ---
 
 ## 13. Scaffold Status

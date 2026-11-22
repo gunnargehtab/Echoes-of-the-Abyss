@@ -531,6 +531,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
     {
       id: 'the-mouth',
       text: 'The trench is closed while the inquiry is open. The mouth is attended at the whistle.',
+      gloss: 'Have 2 of your Submersibles inside the mouth now; the count is taken at the close.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       markerId: 'mouth',
@@ -545,6 +546,9 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
     {
       id: 'the-picket',
       text: 'Three of four attend. The Undermarshalcy does not round up.',
+      gloss: 'Keep at least 3 of your 4 Submersibles afloat.',
+      debtGloss:
+        "A Submersible went over SIG 30, so the dome's ears are withdrawn until the debt pays itself off.",
       // §12 — the second reading of the same rule, while the ledger stands.
       debtText: 'The picket owes the stalls a silence.',
       initial: ObjectiveStatus.Pending,
@@ -557,6 +561,8 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
     {
       id: 'the-count',
       text: 'What enters is counted. What is heard is entered.',
+      gloss:
+        'Hear both sounds below the mouth; each counts once your contact log shows it with a bearing.',
       initial: ObjectiveStatus.Pending,
       // §6 — two emitters carry a reading and are therefore countable: the
       // yard's plant and `call-a`, at Track from 757 m and 400 m. This mission
@@ -571,6 +577,8 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
     {
       id: 'the-record',
       text: 'What is heard of the picket is entered elsewhere.',
+      gloss:
+        'How long a Submersible has been tracked exactly; firing or pinging spends the 3 s fast.',
       initial: ObjectiveStatus.Pending,
       // §8 — 180 sim ticks at Track, which is three seconds: the exact length
       // of an active-sonar reveal. Meeting it is not success and it is not

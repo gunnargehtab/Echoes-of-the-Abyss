@@ -537,6 +537,10 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
       text: 'The walk wants somebody standing on it, and it wants it quiet.',
       stallText:
         "That's still turning. It'll come round again — we've lost the walk, not the question.",
+      gloss:
+        'Keep a hull on the marked row for 60 s with every hull there at SIG 26 or less; then the walk moves to the next row.',
+      stallGloss:
+        'The row has stopped turning; after 90 s stalled, the walk starts over from the first row.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       predicate: { kind: 'walk', count: 7 },
@@ -544,6 +548,7 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
     {
       id: 'count',
       text: 'The count goes to the edge, and the edge carries — everything on the drop is about to know what we sound like when we agree.',
+      gloss: 'Take a Light Scout into the edge marker on the bare slope.',
       initial: ObjectiveStatus.Pending,
       markerId: 'watch-edge',
       terminal: true,
@@ -556,7 +561,9 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
     },
     {
       id: 'holdfast',
-      text: 'Home is behind you. Nobody is asking you to defend it; we are saying it is behind you.',
+      text: "Home is behind you. We're not ordering anyone to defend it; we're saying that if they stand on it, the day is theirs.",
+      gloss:
+        "If another party's hulls stand on the Holdfast for 60 s before T+18:45, the mission ends lost.",
       initial: ObjectiveStatus.Pending,
       // Terminal and the keystone, and the pairing is §8's: everything else is
       // an outcome rather than a failure, and this is the one that is not.
