@@ -1,7 +1,7 @@
 # A Tetherjelly field's rim, raised to read (#1882)
 
 The rim is a field's 250 m footprint, where PF falls by 0.10
-([map-visuals.md](../../map-visuals.md) §8, "Phase 3 — landed"). It was stroked at 0.18 and is
+([map-visuals.md](../../map-visuals.md) §10, "Phase 3 — landed"). It was stroked at 0.18 and is
 stroked at 0.3 now. Each frame is the field nearest the own fleet on the Ventfront Divide, at
 Low, at the home pitch of 55°.
 

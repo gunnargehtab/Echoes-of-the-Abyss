@@ -472,7 +472,8 @@ The rulings:
   below.
 - **A rimless mark is weighed by its loudest crisp element** (§5). Blocked ground by its
   hatch, and the bells and each shoal cloud as marks of their own, by their loudest dot. The
-  bells and both clouds lift the ground more than four times as much as rung 5's floor. The
+  bells and both clouds lift the ground at least 3.9 times as much as rung 5's floor, the
+  least being a scattered shoal's in protanopia since the Tetherjelly rim rose (#1882). The
   hatch clears that floor too, and is rung 6's floor in the two red-green palettes.
 
 What stays recorded, for the owner. The tests pin each break and fail if it moves.
@@ -485,8 +486,9 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   drops a mark. Read as the scale's ceiling, the arc clears rung 5's floor in every palette.
   Read as a mark's own peak, a lone wake or shot lifts black by 0.017–0.018, under the minor
   isobath's 0.043. A detonation's lifts it by 0.071: over the ink, and still under rung 5's
-  floor there (0.080–0.094). In battle red, the quietest of its four colours, the arc clears
-  the coast only from intensity 0.27, and rung 5's floor only from 0.40–0.50 by palette. Under
+  floor there (0.080–0.104). In battle red, the quietest of its four colours, the arc clears
+  the coast only from intensity 0.27, and rung 5's floor only from 0.38–0.56 by palette and
+ground. Under
   that reading rung 5's floor is residue's, and it sits under rung 4's. The tests weigh the arc
   at the ceiling and at 0.02, and pin the break. Neither the arc nor the ink moved.
 - **Rung 7 sits under rung 6 on the chart**, in every palette. A Tier-3 contact's ring and
