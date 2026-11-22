@@ -301,7 +301,9 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
       id: 'the-record',
       text: "Item Nine is on the agenda. What the chair does with it is the chair's.",
       gloss:
-        "Your choice: transmitting with the chair's Harvester reads Item Nine into the open record.",
+        'Your choice: if your hulls are classified for 2 s in all, by pinging or by moving loudly, Item Nine is read into the open record.',
+      // A record, not a budget: the chair's choice, which §8 grades in neither direction (#1883).
+      record: true,
       initial: ObjectiveStatus.Pending,
       predicate: { kind: 'tolerance', ticks: RECORD_TICKS, tier: ResolutionTier.Classification },
       // §8 — one outcome, two records: the ending is this reading, beneath a

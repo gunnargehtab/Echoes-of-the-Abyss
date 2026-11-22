@@ -850,11 +850,14 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `the-mouth` | Have 2 of your Submersibles inside the mouth now; the count is taken at the close. |
+| `the-mouth` | Have 2 of your Submersibles inside the mouth. |
 | `the-picket` | Keep at least 3 of your 4 Submersibles afloat. |
 | `the-picket`, while the debt runs | A Submersible went over SIG 30, so the dome's ears are withdrawn until the debt pays itself off. |
 | `the-count` | Hear both sounds below the mouth; each counts once your contact log shows it with a bearing. |
-| `the-record` | How long a Submersible has been tracked exactly; firing or pinging spends the 3 s fast. |
+| `the-record` | How long a Submersible has been tracked exactly; a ping or a volley fills it fast. |
+
+`the-record` is authored `record` (#1883): a fact about somebody else's registry, "neither good nor bad" (§8), so the panel counts its seconds under
+*RECORD* and grades nothing, where a budget would read *SPENT* in amber.
 
 ---
 

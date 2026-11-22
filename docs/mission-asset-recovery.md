@@ -450,7 +450,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `asset-114` | Hold a Harvester on the collapsed face, 2 km south of the Rail Head, for 120 s to load it, then bring it to the Rail Head. |
+| `asset-114` | Hold your Harvesters on the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head. |
 | `asset-181` | Load a second Harvester at the face the same way; two loaded Harvesters at the Rail Head meet this row. |
 | `asset-200` | The chamber rides on one of your three Harvesters, so load all three at the face and bring every one to the Rail Head. |
 | `column` | Bring your Cruiser and both Corvettes to the Rail Head before the mission closes at T+18:00. |

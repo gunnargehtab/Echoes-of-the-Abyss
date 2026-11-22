@@ -531,7 +531,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
     {
       id: 'the-mouth',
       text: 'The trench is closed while the inquiry is open. The mouth is attended at the whistle.',
-      gloss: 'Have 2 of your Submersibles inside the mouth now; the count is taken at the close.',
+      gloss: 'Have 2 of your Submersibles inside the mouth.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       markerId: 'mouth',
@@ -577,8 +577,9 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
     {
       id: 'the-record',
       text: 'What is heard of the picket is entered elsewhere.',
-      gloss:
-        'How long a Submersible has been tracked exactly; firing or pinging spends the 3 s fast.',
+      gloss: 'How long a Submersible has been tracked exactly; a ping or a volley fills it fast.',
+      // A record, not a budget: a fact about somebody else's registry, "neither good nor bad" (§8) (#1883).
+      record: true,
       initial: ObjectiveStatus.Pending,
       // §8 — 180 sim ticks at Track, which is three seconds: the exact length
       // of an active-sonar reveal. Meeting it is not success and it is not

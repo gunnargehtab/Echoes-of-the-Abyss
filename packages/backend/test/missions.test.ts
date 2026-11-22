@@ -1621,7 +1621,6 @@ const AUTHORING_KEYS = new Set([
   'silencedByLift',
   'species',
   'pattern',
-  'speaker',
   'faction',
   'predicate',
   'when',
@@ -1714,9 +1713,10 @@ describe('the words a player reads', () => {
   });
 
   it('tells a task, a rule and a budget apart, and says which rows decide the result', () => {
-    // docs/ui-ux.md §10.5 (#1883). Exposure carries all three kinds: the
-    // readings are a task, the return is a rule re-read every pass and the
-    // keystone, and classification is a budget no result counts.
+    // docs/ui-ux.md §10.5 (#1883). Exposure carries three kinds: the readings
+    // are a task, the return is read at the close and is the keystone, and
+    // classification is a budget no result counts. Item Nine's choice is a
+    // record, which its document grades in neither direction.
     const match = new Match(missionMapById(LEDGER_EXPOSURE.mapId)!, {
       mission: LEDGER_EXPOSURE,
       fauna: false,
@@ -1728,10 +1728,23 @@ describe('the words a player reads', () => {
     const row = (id: string) => view.objectives.find((objective) => objective.id === id)!;
     assert.equal(row('the-readings').form, undefined, 'a task carries no form');
     assert.equal(row('the-readings').weight, undefined, 'a required row carries no weight');
-    assert.equal(row('the-return').form, ObjectiveForm.Rule);
+    assert.equal(row('the-return').form, ObjectiveForm.Close);
     assert.equal(row('the-return').weight, ObjectiveWeight.Critical);
     assert.equal(row('the-tolerance').form, ObjectiveForm.Budget);
     assert.equal(row('the-tolerance').weight, ObjectiveWeight.Optional);
+    for (const mission of MISSIONS) {
+      for (const objective of mission.objectives) {
+        if (objective.record === true) {
+          assert.equal(
+            objective.predicate.kind,
+            'tolerance',
+            `${mission.id}: a record is a tolerance`
+          );
+        }
+      }
+    }
+    const itemNine = MISSIONS.find((mission) => mission.id === 'ledger-item-nine')!;
+    assert.equal(itemNine.objectives.find((o) => o.id === 'the-record')!.record, true);
   });
 });
 

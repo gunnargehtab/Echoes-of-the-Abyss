@@ -777,7 +777,10 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | `load-five-home` | The one load from the eastern face, above the Staging line. |
 | `the-cutters` | Keep all 3 cutter Corvettes afloat. |
 | `the-escort` | Keep your Cruiser and both escort Corvettes afloat. |
-| `the-count` | How long your hulls have been classified; keep it under 30 s. |
+| `the-count` | How long your hulls have been classified; the raised nodes give you away, so it fills early. |
+
+`the-count` is authored `record` (#1883): met by 00:30 by design, "not a rule, a recall or a threshold but a reading" (§8), so the panel counts its seconds under
+*RECORD* and grades nothing, where a budget would read *SPENT* in amber.
 
 ---
 

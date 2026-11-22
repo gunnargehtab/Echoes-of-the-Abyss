@@ -1103,7 +1103,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | `the-seeding` | Hold the sower Harvester within 250 m of the lip, facing it, out of Silent Running, for 60 s. |
 | `the-furrow` | Have 3 of your 4 seed hulls inside the lip's furrow. |
 | `the-ledger` | How long your hulls have been tracked exactly; keep it under 60 s. |
-| `the-returns` | Get near enough that one of the 2 sounds on the lip shows in your contact log with a bearing. |
+| `the-returns` | Get near enough that a sound on the lip shows in your contact log with a bearing. |
 | `the-escorts` | Bring the 3 Corvettes from the staging into the lip's furrow once they are released at T+20:30. |
 
 ---

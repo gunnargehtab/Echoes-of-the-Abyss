@@ -485,9 +485,9 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | Row | Gloss |
 | --- | --- |
 | `share` | Hold each Harvester in the gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast. |
-| `jellies` | Hold your Light Scouts on the West Lane for 90 s to move the jellies; the work is loud, SIG 45. |
+| `jellies` | Hold both Light Scouts on the West Lane for 90 s; one of them moves the jellies, loudly, at SIG 45. |
 | `gift` | Pass your Harvesters by the ovens beside the Holdfast; the one that picks up the bread takes it to the landing. |
-| `stillness` | Keep every Harvester at SIG 20 or less while the survey passes. |
+| `stillness` | From T+06:00 to the end, keep every Harvester at SIG 20 or less. |
 | `turning` | Nothing more is asked; the tide ends when the countdown does. |
 
 ---

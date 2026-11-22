@@ -783,7 +783,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | `the-slope` | Have 6 of your 8 Choristers inside the slope marker. |
 | `the-ears` | Have 2 of your 3 listeners, the Submersibles and the Cruiser, inside the slope marker. |
 | `the-record` | How long your hulls have been classified; keep it under 60 s. |
-| `the-whole` | Hear 8 of the 10; the Holdfast's 4 sound only from T+10:00 to T+13:00 and carry only into the corridor. |
+| `the-whole` | Hear 8 of the 10, the Holdfast's among them. |
 
 ---
 

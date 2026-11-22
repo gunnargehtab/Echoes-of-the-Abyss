@@ -697,8 +697,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     {
       id: 'the-returns',
       text: "There's something on the lip that isn't ours and isn't theirs. We'd like to hear it once before we plant near it.",
-      gloss:
-        'Get near enough that one of the 2 sounds on the lip shows in your contact log with a bearing.',
+      gloss: 'Get near enough that a sound on the lip shows in your contact log with a bearing.',
       initial: ObjectiveStatus.Pending,
       // §8 — the attend instrument at its fourth table: a return resolved at
       // Bearing or better by the player's own hulls while it sounds, once. No

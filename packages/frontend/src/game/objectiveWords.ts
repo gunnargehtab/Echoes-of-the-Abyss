@@ -28,9 +28,14 @@ const TASK: Words = {
   [ObjectiveStatus.Failed]: 'failed',
 };
 
-/** A rule holds now and can stop holding, so *kept*, never *met*. */
+/**
+ * A rule holds now and can stop holding, so *kept*, never *met*. The runtime
+ * returns a rule that stopped holding to Pending rather than to Failed, so
+ * Pending is *broken* here: a breached silence order read *open* in the first
+ * cut of #1883, which is the word for a row nobody has started.
+ */
 const RULE: Words = {
-  [ObjectiveStatus.Pending]: 'open',
+  [ObjectiveStatus.Pending]: 'broken',
   [ObjectiveStatus.Met]: 'kept',
   [ObjectiveStatus.Failed]: 'broken',
 };
@@ -47,13 +52,22 @@ const BUDGET: Words = {
 
 const formOf = (objective: ObjectiveView): ObjectiveForm => objective.form ?? ObjectiveForm.Task;
 
-/** The status word, lower-case; the panel's type sets the case. */
-export function statusWord(objective: ObjectiveView): string {
+/**
+ * The status word, lower-case; the panel's type sets the case. `closed` is the
+ * mission's close, where a row read at the close finally says met or not.
+ */
+export function statusWord(objective: ObjectiveView, closed = false): string {
   switch (formOf(objective)) {
     case ObjectiveForm.Rule:
       return RULE[objective.status];
     case ObjectiveForm.Budget:
       return BUDGET[objective.status];
+    // A count the document grades in neither direction: named, never judged.
+    case ObjectiveForm.Record:
+      return 'record';
+    // Its hulls may start in the region, so it claims nothing until the close.
+    case ObjectiveForm.Close:
+      return closed ? TASK[objective.status] : 'open';
     case ObjectiveForm.Task:
       return TASK[objective.status];
   }
@@ -64,16 +78,21 @@ export function statusWord(objective: ObjectiveView): string {
  * can be skimmed past; `kept` does not, because a rule is still in force; and
  * `spent` warns.
  */
-export type StatusClass = 'pending' | 'met' | 'kept' | 'failed' | 'budget' | 'spent';
+export type StatusClass = 'pending' | 'met' | 'kept' | 'failed' | 'budget' | 'spent' | 'record';
 
-export function statusClass(objective: ObjectiveView): StatusClass {
+export function statusClass(objective: ObjectiveView, closed = false): StatusClass {
   const form = formOf(objective);
+  if (form === ObjectiveForm.Record) return 'record';
   if (form === ObjectiveForm.Budget) {
     return objective.status === ObjectiveStatus.Pending ? 'budget' : 'spent';
   }
+  if (form === ObjectiveForm.Close && !closed) return 'pending';
+  if (form === ObjectiveForm.Rule) {
+    return objective.status === ObjectiveStatus.Met ? 'kept' : 'failed';
+  }
   if (objective.status === ObjectiveStatus.Pending) return 'pending';
   if (objective.status === ObjectiveStatus.Failed) return 'failed';
-  return form === ObjectiveForm.Rule ? 'kept' : 'met';
+  return 'met';
 }
 
 /**
@@ -96,5 +115,7 @@ export function weightWord(objective: ObjectiveView): string | undefined {
 export function progressWords(objective: ObjectiveView): string | undefined {
   if (objective.progress === undefined) return undefined;
   const { done, of } = objective.progress;
-  return formOf(objective) === ObjectiveForm.Budget ? `${done} of ${of} s` : `${done} of ${of}`;
+  const seconds =
+    formOf(objective) === ObjectiveForm.Budget || formOf(objective) === ObjectiveForm.Record;
+  return seconds ? `${done} of ${of} s` : `${done} of ${of}`;
 }

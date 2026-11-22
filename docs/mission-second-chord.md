@@ -846,7 +846,10 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | `the-carriers` | Keep both carrier Corvettes afloat. |
 | `the-transmission` | Hold the escorted Cruiser within 400 m of the sounding point, facing it (south, to the Mouth), out of Silent Running, for 30 s. |
 | `the-lip` | Hear 3 sounds on the lip; each counts once your contact log shows it with a bearing. |
-| `the-count` | How long your hulls have been classified; keep it under 30 s. |
+| `the-count` | How long your hulls have been classified; the nodes give you away, so it fills early. |
+
+`the-count` is authored `record` (#1883): met by about 00:30 by design, a reading rather than a rung, so the panel counts its seconds under
+*RECORD* and grades nothing, where a budget would read *SPENT* in amber.
 
 ---
 

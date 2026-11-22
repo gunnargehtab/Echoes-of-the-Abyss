@@ -149,8 +149,8 @@ going deep commits you to. One anchored to neither is arbitrary — reconsider i
 implementing it, and aim at dread rather than confusion. `docs/systems-echo.md` and
 `docs/systems-depth.md` are those two systems; `.github/copilot-instructions.md` is the
 design-side companion (SIG scale, biome PF, depth bands, doctrines). Text a player reads says what
-to do in plain words beside any in-world voice: every objective row carries a gloss with digits
-and units, and nothing shown carries Markdown or a `§` (`docs/CLAUDE.md`; `missions.test.ts`).
+to do in plain words beside any in-world voice: every objective row carries a gloss that writes
+its numbers in digits with units, and nothing shown carries Markdown or a `§` (`docs/CLAUDE.md`).
 
 ## CI
 

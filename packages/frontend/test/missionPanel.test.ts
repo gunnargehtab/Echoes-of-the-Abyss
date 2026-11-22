@@ -519,7 +519,8 @@ describe('the objectives panel: whose words these are', () => {
     );
     try {
       const words = rendered.allByClass('objectives-status').map((s) => s.props.children);
-      assert.deepEqual(words, ['open', 'kept', 'broken']);
+      // The runtime returns a breached rule to Pending, so Pending reads broken.
+      assert.deepEqual(words, ['broken', 'kept', 'broken']);
       const rows = rendered.allByClass('objectives-row').map((r) => String(r.props.className));
       assert.ok(rows[1]!.split(' ').includes('kept'), 'a kept rule has its own class');
       assert.ok(!rows[1]!.split(' ').includes('met'), 'a kept rule is not dimmed as done');
@@ -550,6 +551,38 @@ describe('the objectives panel: whose words these are', () => {
       assert.deepEqual(words, ['budget', 'spent']);
       const counters = rendered.allByClass('objectives-progress').map((c) => reads(c));
       assert.deepEqual(counters, ['12 of 30 s', '30 of 30 s']);
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('names a record without grading it, and opens a row read at the close until then', async () => {
+    // §10.5 (#1883): a record is a count the document grades in neither
+    // direction, and a row read at the close claims nothing before it.
+    const { rendered } = await panel(
+      missionView({
+        objectives: [
+          objective({
+            id: 'r0',
+            form: ObjectiveForm.Record,
+            status: ObjectiveStatus.Met,
+            progress: { done: 30, of: 30 },
+          }),
+          objective({
+            id: 'c0',
+            form: ObjectiveForm.Close,
+            status: ObjectiveStatus.Met,
+            progress: { done: 2, of: 2 },
+          }),
+        ],
+        markers: [],
+      })
+    );
+    try {
+      const words = rendered.allByClass('objectives-status').map((s) => s.props.children);
+      assert.deepEqual(words, ['record', 'open']);
+      const counters = rendered.allByClass('objectives-progress').map((c) => reads(c));
+      assert.deepEqual(counters, ['30 of 30 s', '2 of 2']);
     } finally {
       await rendered.unmount();
     }

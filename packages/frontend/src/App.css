@@ -2039,6 +2039,12 @@ button.objectives-row .objectives-text {
   color: var(--text-cyan);
 }
 
+/* A record the document grades in neither direction (#1883): named in the
+   status column's own dim ink, never teal and never amber. */
+.objectives-row.record .objectives-status {
+  color: var(--text-dim);
+}
+
 .objectives-row.spent .objectives-status {
   color: var(--neon-amber);
   font-weight: 700;

@@ -606,16 +606,16 @@ export const CHORD_CONCLAVE: MissionDefinition = {
     stood(
       'descant',
       'Descant is stood. A hull at the voice, under the ceiling, for the interval.',
-      'Have one of your hulls inside the Descant marker at T+14:00.'
+      'Have one of your hulls inside the Descant marker.'
     ),
-    stood('tenor', 'Tenor is stood.', 'Have one hull inside the Tenor marker at T+14:00.'),
-    stood('treble', 'Treble is stood.', 'Have one hull inside the Treble marker at T+14:00.'),
-    stood('alto', 'Alto is stood.', 'Have one hull inside the Alto marker at T+14:00.'),
-    stood('bass', 'Bass is stood.', 'Have one hull inside the Bass marker at T+14:00.'),
+    stood('tenor', 'Tenor is stood.', 'Have one hull inside the Tenor marker.'),
+    stood('treble', 'Treble is stood.', 'Have one hull inside the Treble marker.'),
+    stood('alto', 'Alto is stood.', 'Have one hull inside the Alto marker.'),
+    stood('bass', 'Bass is stood.', 'Have one hull inside the Bass marker.'),
     stood(
       'the-drone',
       'The Drone is stood. The chord does not certify without it.',
-      'Have one hull inside the Drone marker at T+14:00.',
+      'Have one hull inside the Drone marker.',
       true
     ),
     {
@@ -675,7 +675,9 @@ export const CHORD_CONCLAVE: MissionDefinition = {
     {
       id: 'the-count',
       text: 'A concern is coring under a writ. What is classified of the party is filed, and the escort defines obstruction.',
-      gloss: 'How long your party has been classified; keep it under 30 s.',
+      gloss: 'How long your party has been classified; at 30 s the survey files a contact.',
+      // A record, not a budget: the concern's filing, which meeting is not bad news for (#1883).
+      record: true,
       initial: ObjectiveStatus.Pending,
       // The concern's documented reflex, cumulative and capped, and meeting it
       // is not bad news — docs/mission-aptitude.md §5's tolerance, carried

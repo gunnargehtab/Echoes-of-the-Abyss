@@ -763,7 +763,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `the-rim` | Have 8 of your 12 Choristers on the terraces now; the count is taken at the close. |
+| `the-rim` | Have 8 of your 12 Choristers on the terraces. |
 | `the-watch` | Keep at least 4 of your 6 Submersibles afloat. |
 | `the-attending` | Hear both sounds on the lip; each counts once your contact log shows it with a bearing. |
 | `the-record` | How long your column has been classified; keep it under 60 s. |

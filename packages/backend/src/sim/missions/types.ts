@@ -858,6 +858,12 @@ export interface MissionObjective {
    * what caused it.
    */
   stallGloss?: string;
+  /**
+   * A tolerance this mission's document reads as a fact rather than a budget
+   * (#1883): Item Nine's choice, and the counts on the rim that fill by design.
+   * The panel counts its seconds and grades nothing. Only on a `tolerance`.
+   */
+  record?: true;
   initial: ObjectiveStatus;
   predicate: MissionPredicate;
   /**

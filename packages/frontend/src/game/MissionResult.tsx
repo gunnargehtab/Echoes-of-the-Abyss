@@ -70,8 +70,11 @@ export function MissionResult({
 
         <ul className="mission-result-objectives">
           {result.objectives.map((objective) => (
-            <li key={objective.id} className={`mission-result-objective ${statusClass(objective)}`}>
-              <span className="mission-result-status">{statusWord(objective)}</span>
+            <li
+              key={objective.id}
+              className={`mission-result-objective ${statusClass(objective, true)}`}
+            >
+              <span className="mission-result-status">{statusWord(objective, true)}</span>
               <span className="mission-result-text">{objective.text}</span>
               {objective.progress !== undefined && (
                 <span className="mission-result-progress">{progressWords(objective)}</span>

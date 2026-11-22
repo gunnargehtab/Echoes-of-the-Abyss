@@ -1488,12 +1488,19 @@ export enum ObjectiveStatus {
  *
  * A code and not a word, `MovementHoldReason`'s arrangement: the shell says it
  * in its own voice, and no free text a runtime could compose reaches the wire.
- * Absent is a task.
+ * Absent is a task. Two more arrived with the first review of #1883: a **record**
+ * is a tolerance its document reads as a fact rather than a budget (Item Nine's
+ * choice, the counts on the rim that fill by design), so it is counted and
+ * graded by nothing; and a row **read at the close** — an authored `standing`
+ * extract whose hulls may start in the region — is open until the close says
+ * otherwise, because *kept* at 00:00 claimed something the player had not done.
  */
 export enum ObjectiveForm {
   Task = 0,
   Rule = 1,
   Budget = 2,
+  Record = 3,
+  Close = 4,
 }
 
 /**

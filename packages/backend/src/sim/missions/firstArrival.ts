@@ -595,7 +595,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       id: 'the-rim',
       text: "The rim is held at the tide's turn. Eight of twelve on the terraces is a hold, and the Undermarshalcy does not round up.",
-      gloss: 'Have 8 of your 12 Choristers on the terraces now; the count is taken at the close.',
+      gloss: 'Have 8 of your 12 Choristers on the terraces.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8, §9, §13 — revealed on the stalls' own beat at 19:00. `extract` is

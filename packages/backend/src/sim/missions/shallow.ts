@@ -798,8 +798,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       id: 'the-whole',
       text: 'Eight of ten, and the Holdfast among them.',
-      gloss:
-        "Hear 8 of the 10; the Holdfast's 4 sound only from T+10:00 to T+13:00 and carry only into the corridor.",
+      gloss: "Hear 8 of the 10, the Holdfast's among them.",
       initial: ObjectiveStatus.Pending,
       // §8 — read out, never ranked. Eight of ten cannot be reached without
       // standing inside the concern's corridor for the Holdfast's three

@@ -1164,12 +1164,18 @@ something new, and a log role would re-announce the whole panel every time a cou
   for the name beside it on either side, the chart draws no name, and its row still names it.
 - **A row's status word says what kind of row it is.** A **task** reads `OPEN`, then `MET`
   or `FAILED`, and a met task's reading dims because it is done. A **rule** — a silence
-  order, a muster, a column that must be home at the close, anything the runtime re-reads
-  every pass rather than latching — reads `KEPT` while it holds and `BROKEN` when it does
-  not, and is never dimmed, because it can still be broken. A **budget** — the seconds of
-  classification a mission tolerates — reads `BUDGET`, counts in seconds (`12 of 30 s`), and
-  reads `SPENT` in amber once it is gone. All three read `MET` until #1883, which is how
-  Sorrowgate's silence order read *met* twenty-one seconds in, and how thirteen missions
+  order or a muster, a `quiet` or `survive` row the runtime re-reads every pass — reads
+  `KEPT` while it holds and `BROKEN` when it does not, and is never dimmed, because it can
+  still be broken; the runtime returns a breached rule to Pending, and Pending on a rule is
+  `BROKEN`. A row **read at the close** — authored `standing` on any other predicate, such as
+  a column that must be home when the mission ends — reads `OPEN` until the close, because its
+  hulls may start in the region and `KEPT` at 00:00 claimed something the player had not done.
+  A **budget** — the seconds of classification a mission tolerates — reads `BUDGET`, counts in
+  seconds (`12 of 30 s`), and reads `SPENT` in amber once it is gone. A **record** is a
+  tolerance the mission's document reads as a fact rather than a budget — Item Nine's choice,
+  the counts on the rim that fill by design — authored `record` on the literal: it reads
+  `RECORD`, counts in seconds and grades nothing. All of these read `MET` until #1883, which is
+  how Sorrowgate's silence order read *met* twenty-one seconds in, and how thirteen missions
   greeted a spent classification budget with the colour of a success. The server sends the
   kind as a code (`ObjectiveForm`) read off the literal's own shape, and the shell words it.
 - **A row says whether it decides the result.** A keystone — missed, it loses the mission
@@ -1220,7 +1226,9 @@ something new, and a log role would re-announce the whole panel every time a cou
   unit (*SIG 20*, *400 m*, *60 s*, *T+14:00*) and the place by its marker's name. A row with no
   counter states its number in the gloss: a silence order its `SIG n`, a hold when it ends.
   Each mission document lists its glosses in §12's *Plain lines in the panel* table, and the
-  literal transcribes that table; `missions.test.ts` holds all of it.
+  literal transcribes that table. `missions.test.ts` holds that every row has one, that it is
+  the document's sentence, that a silence row names its `SIG n` and that a hold says when it
+  ends; whether a gloss is *true* of the runtime is review, as the anti-reveal rule is.
 - **A gloss is one sentence, and the panel fits without one being cut.** §2's no-scroll rule
   binds here hardest, because this panel is the one that grows: a mission reveals objectives
   as it runs, a silence order adds a debt row, and every locked ability adds another. A gloss

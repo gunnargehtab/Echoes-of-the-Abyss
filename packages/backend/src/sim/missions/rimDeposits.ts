@@ -870,7 +870,10 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
     {
       id: 'the-count',
       text: 'The rim is attended. The nodes were counted when they were raised, and the count is not yours.',
-      gloss: 'How long your hulls have been classified; keep it under 30 s.',
+      gloss:
+        'How long your hulls have been classified; the raised nodes give you away, so it fills early.',
+      // A record, not a budget: met by 00:30 by design, "not a rule, a recall or a threshold but a reading" (§8) (#1883).
+      record: true,
       initial: ObjectiveStatus.Pending,
       // §8, §13 — met by about 00:30 and that is the design. `ExposureReport.
       // tier` is the best tier anybody holds on *any* entity of the player's,

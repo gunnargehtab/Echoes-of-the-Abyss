@@ -817,10 +817,10 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `the-calling` | Bring 8 of your 16 hulls into the axis before the count at T+19:00. |
+| `the-calling` | Bring 8 of your 16 hulls into the axis. |
 | `the-muster` | Keep at least 12 of your 16 hulls afloat. |
-| `the-cells` | Hear 3 of the 6 cells across the trench; each counts once your contact log shows it with a bearing. |
-| `the-crossing` | Keep every hull at SIG 25 or less while crossing between the terraces. |
+| `the-cells` | Hear 3 of the cells across the trench; each counts once your contact log shows it with a bearing. |
+| `the-crossing` | Keep every hull at SIG 25 or less, all mission long. |
 | `the-crossing`, while the debt runs | A hull went over SIG 25, so the dome's ears are withdrawn until the debt pays itself off. |
 
 ---

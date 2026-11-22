@@ -1114,7 +1114,10 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       id: 'the-count',
       text: 'The rim is attended. Three nodes are entered, and the count is not yours.',
-      gloss: 'How long your hulls have been classified; keep it under 30 s.',
+      gloss:
+        'How long your hulls have been classified; the nodes give you away, so it fills early.',
+      // A record, not a budget: met by about 00:30 by design, a reading rather than a rung (#1883).
+      record: true,
       initial: ObjectiveStatus.Pending,
       // §8, §13 — Met by about 00:30 and that is the design, as it was on D+2.
       // `ExposureReport.tier` is the best tier anybody holds on any entity of

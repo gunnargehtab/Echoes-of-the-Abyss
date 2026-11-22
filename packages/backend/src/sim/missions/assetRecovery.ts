@@ -299,7 +299,7 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       id: 'asset-114',
       text: 'Recover Asset 9-06-114. Log exceptions.',
       gloss:
-        'Hold a Harvester on the collapsed face, 2 km south of the Rail Head, for 120 s to load it, then bring it to the Rail Head.',
+        'Hold your Harvesters on the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
       // A count ladder over the two machinery barges, the Sorrowgate tender

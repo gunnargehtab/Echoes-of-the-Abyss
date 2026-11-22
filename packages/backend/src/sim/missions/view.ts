@@ -302,13 +302,21 @@ function textFor(
 }
 
 /**
- * A budget is a tolerance; a rule is whatever the runtime re-reads every pass
- * rather than latching — `isStanding`'s predicates and any row authored
- * `standing`. Everything else is a task, met once and kept.
+ * What kind of sentence a row is, read off the literal (#1883).
+ *
+ * A tolerance is a budget unless its document reads it as a record. A rule is
+ * one of `isStanding`'s predicates — a ceiling or a muster, true now and able
+ * to stop being true, which the runtime returns to Pending rather than to
+ * Failed. A row authored `standing` on any other predicate is read at the
+ * close: its hulls may start in the region, so it claims nothing until then.
+ * Everything else is a task, met once and kept.
  */
 export function formOf(objective: MissionObjective): ObjectiveForm {
-  if (objective.predicate.kind === 'tolerance') return ObjectiveForm.Budget;
-  if (objective.standing === true || isStanding(objective.predicate)) return ObjectiveForm.Rule;
+  if (objective.predicate.kind === 'tolerance') {
+    return objective.record === true ? ObjectiveForm.Record : ObjectiveForm.Budget;
+  }
+  if (isStanding(objective.predicate)) return ObjectiveForm.Rule;
+  if (objective.standing === true) return ObjectiveForm.Close;
   return ObjectiveForm.Task;
 }
 

@@ -433,7 +433,7 @@ export const SEEDING_TEND: MissionDefinition = {
       id: 'jellies',
       text: "The jellies would sit better off the lane. It's loud work; the water's ours for another hour.",
       gloss:
-        'Hold your Light Scouts on the West Lane for 90 s to move the jellies; the work is loud, SIG 45.',
+        'Hold both Light Scouts on the West Lane for 90 s; one of them moves the jellies, loudly, at SIG 45.',
       initial: ObjectiveStatus.Pending,
       markerId: 'west-lane',
       terminal: true,
@@ -460,7 +460,7 @@ export const SEEDING_TEND: MissionDefinition = {
     {
       id: 'stillness',
       text: 'The sweep is on the drop. The plateaus are going still now.',
-      gloss: 'Keep every Harvester at SIG 20 or less while the survey passes.',
+      gloss: 'From T+06:00 to the end, keep every Harvester at SIG 20 or less.',
       initial: ObjectiveStatus.Pending,
       // Revealed when the watch calls the sweep — the reading exists because
       // the sweep does. Standing, like the court's silence: in force or not,
