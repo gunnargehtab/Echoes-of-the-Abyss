@@ -166,7 +166,8 @@ ground is built at High: 794,560 pixels, one read of the drawn ground each.
 the shade the map's ground already holds at the edge vertex nearest it, on the Echo tick
 the ground is shaded on.
 
-The first two are read again whole on a ground delta, inside the frame it arrives in. The study's
+The shade and the bake are read again whole on a ground delta, inside the frame it
+arrives in, and the veil's copy runs again with them, still at no veil read. The study's
 delta was whole already: its rounded ground re-reads its whole grid
 (`perspectiveTerrain.ts` `patchHeightGrid`). Its fixture authors no delta.
 
