@@ -886,8 +886,19 @@ const THROTTLE_LABEL: Record<HarvestThrottle, string> = {
   [HarvestThrottle.Overburden]: 'OVERBURDEN',
 };
 
-/** Compact unit names for command-bar buttons on narrow screens. */
-const UNIT_SHORT: Record<UnitKind, string> = {
+/**
+ * The harvest throttle's code on the squad page. Named so the uniqueness test
+ * can count it beside the tables below (docs/ui-ux.md §9, "A code names one
+ * thing"): the Thurible held `THR` until #1886.
+ */
+export const THROTTLE_CODE = 'THR';
+
+/**
+ * Compact unit names for command-bar buttons on narrow screens. Every code here,
+ * in REFIT_SHORT, in STRUCTURE_SHORT and THROTTLE_CODE is unique across all four
+ * (docs/ui-ux.md §9), because one navy can show any two of them at once.
+ */
+export const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.LightScout]: 'SCT',
   [UnitKind.Corvette]: 'CRV',
   [UnitKind.Cruiser]: 'CRZ',
@@ -912,11 +923,13 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Beacon]: 'BCN',
   [UnitKind.Glider]: 'GLD',
   [UnitKind.Acolyte]: 'ACO',
-  [UnitKind.Herald]: 'HLD',
+  // 'HER' rather than 'HLD', which is the Hold refit (#1886).
+  [UnitKind.Herald]: 'HER',
   // The ordnance hulls (#507).
   [UnitKind.Broadside]: 'BRD',
   [UnitKind.Weaver]: 'WVR',
-  [UnitKind.Thurible]: 'THR',
+  // 'THU' rather than 'THR', which is the harvest throttle (#1886).
+  [UnitKind.Thurible]: 'THU',
   [UnitKind.Lance]: 'LNC',
   // The siege hulls (#508).
   [UnitKind.Furnace]: 'FRN',
@@ -951,7 +964,7 @@ const UNIT_SHORT: Record<UnitKind, string> = {
  * The refits, as the bar abbreviates them (docs/systems-progression.md §2).
  * Same three-letter register as the hulls and the structures beside them.
  */
-const REFIT_SHORT: Record<RefitKind, string> = {
+export const REFIT_SHORT: Record<RefitKind, string> = {
   [RefitKind.Pressure]: 'PRS',
   [RefitKind.Plate]: 'PLT',
   [RefitKind.Drive]: 'DRV',
@@ -960,7 +973,7 @@ const REFIT_SHORT: Record<RefitKind, string> = {
 };
 
 /** Compact structure names for the build buttons. */
-const STRUCTURE_SHORT: Record<StructureKind, string> = {
+export const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.Bastion]: 'BAS',
   [StructureKind.Refinery]: 'REF',
   [StructureKind.Foundry]: 'FND',
@@ -4481,7 +4494,7 @@ export class EchoRenderer {
       const harvester = units.find((u) => u.throttle !== undefined);
       if (harvester !== undefined) {
         buttons.push({
-          label: `THR ${THROTTLE_LABEL[harvester.throttle!]}`,
+          label: `${THROTTLE_CODE} ${THROTTLE_LABEL[harvester.throttle!]}`,
           enabled: true,
           active: harvester.throttle === HarvestThrottle.Overburden,
           action: () => this.commandCycleThrottle(),
