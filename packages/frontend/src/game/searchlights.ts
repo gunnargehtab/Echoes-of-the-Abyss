@@ -222,8 +222,13 @@ export function groundHeightTexture(
   return texture;
 }
 
-/** No ground anywhere, far below any beam: what a material reads until a view hands its own over. */
-const NO_GROUND = new DataTexture(
+/**
+ * No ground anywhere, far below any beam: what a material reads until a view
+ * hands its own over. Only the shadow walk reads the heights, so a capture's
+ * control hands this over in place of the ground's and keeps every beam: the
+ * pair then differs by what the walk cuts (docs/screenshots/issue-1836, #1842).
+ */
+export const NO_GROUND = new DataTexture(
   new Uint16Array([DataUtils.toHalfFloat(-60000)]),
   1,
   1,

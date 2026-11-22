@@ -9,17 +9,19 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Color } from 'three';
-import { Faction, HIGH_GRAPHICS, SILENT_RUNNING } from '@echoes/shared';
+import { Color, DataUtils } from 'three';
+import { DEPTH, Faction, HIGH_GRAPHICS, SILENT_RUNNING } from '@echoes/shared';
 import { HALO_SIG_FLOOR, HALO_SIG_FULL, haloGain } from '../src/game/glow.ts';
 import { HULL_LIGHT_ANCHORS, patchHullLight } from '../src/game/hullLight.ts';
 import { LIT_GROUND_GLSL } from '../src/game/litGround.ts';
 import { FACTION_PALETTE } from '../src/game/palette.ts';
+import { depthToWorldY } from '../src/game/perspectiveTerrain.ts';
 import {
   beamIrradiance,
   groundHeightTexture,
   groundShade,
   hullShade,
+  NO_GROUND,
   SEARCHLIGHT_GLSL,
   SEARCHLIGHT_UNIFORMS,
   searchlightCount,
@@ -160,6 +162,13 @@ describe("an own hull's searchlight", () => {
     // The beam knows its own hull's slot, so its own hull never shadows it.
     assert.equal(SEARCHLIGHT_UNIFORMS.uSearchAim.value[0]!.w, 0);
     assert.equal(SEARCHLIGHT_UNIFORMS.uSearchHullA.value[1]!.w, 6);
+    // A cast edge's control (#1842) hands over heights far below any beam:
+    // the beam is drawn, and the walk finds nothing to cut it with.
+    setSearchlights(lights, occluders, NO_GROUND, 500, 500);
+    assert.equal(searchlightCount(), 1, 'the control keeps the beam');
+    assert.equal(SEARCHLIGHT_UNIFORMS.tSearchGround.value, NO_GROUND);
+    const below = DataUtils.fromHalfFloat((NO_GROUND.image.data as Uint16Array)[0]!);
+    assert.ok(below < depthToWorldY(DEPTH.MAX_M) - SPEC.REACH_M, `no ground reads ${below} m`);
     setSearchlights(lights, occluders, null);
     assert.equal(searchlightCount(), 0, 'no ground, no beam');
     assert.notEqual(SEARCHLIGHT_UNIFORMS.tSearchGround.value, ground);

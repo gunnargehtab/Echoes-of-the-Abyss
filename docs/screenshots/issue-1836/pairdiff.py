@@ -4,6 +4,9 @@ the Harvester sent off the pool. A pool's own edge and a shadow's look alike in
 one frame; in the pair the shadow is the light the first frame lacks.
 
     python3 docs/screenshots/issue-1836/pairdiff.py docs/screenshots/issue-1836/gpu
+    python3 docs/screenshots/issue-1836/pairdiff.py docs/screenshots/issue-1836/gpu cast
+
+`cast` reads the other pair, the ground's shadow (`cast_edge` below).
 
 It reads the two frames and `readings.json` from the folder a run of frames.mjs
 wrote, prints the figures README.md quotes, and writes
@@ -100,5 +103,44 @@ def read(folder):
     print(f'wrote {path}')
 
 
+def cast_edge(folder):
+    """Rock's shadow on other lit ground: `high-cast-edge` against
+    `high-cast-open`, one pose taken with the ground's shadow on and then off
+    (`__perspectiveGroundShadow`). Nothing moved between them but the walk's
+    heights, so the light the first frame lacks is all the walk cut, on the
+    ground and in the cone, and the walk only cuts: light the first frame adds
+    is noise. No window: the shadow may fall anywhere the beam reaches.
+    """
+    found = {}
+    for suffix in ('edge', 'open'):
+        names = glob.glob(os.path.join(folder, f'*-high-cast-{suffix}.png'))
+        assert len(names) == 1, f'{len(names)} frames named *-high-cast-{suffix}.png in {folder}'
+        found[suffix] = Image.open(names[0]).convert('RGB')
+    cut, whole = found['edge'], found['open']
+    assert cut.size == whole.size, 'the two frames are not one size'
+    top, bottom = world_rows(cut.height)
+    world = (0, top, cut.width, bottom)
+    lost = ImageChops.subtract(whole.convert('L'), cut.convert('L')).crop(world)
+    gained = ImageChops.subtract(cut.convert('L'), whole.convert('L')).crop(world)
+    for what, image in (('cut', lost), ('added', gained)):
+        counted = sum(image.histogram()[COUNTED:])
+        reach = image.point(lambda v: 255 if v >= COUNTED else 0).getbbox()
+        where = '' if reach is None else (
+            f', x {reach[0]} to {reach[2] - 1}, y {top + reach[1]} to {top + reach[3] - 1}'
+        )
+        print(f'{what}: {counted} pixels {COUNTED} or more of 255{where}, '
+              f'by {image.getextrema()[1]} at most')
+    scale = lambda v: min(255, max(0, (v - COUNTED + 2) * 255 // (FULL - COUNTED + 2)))
+    out = whole.crop(world).point(lambda v: v * 35 // 100)
+    out.paste(Image.new('RGB', out.size, (255, 40, 40)), mask=lost.point(scale))
+    out.paste(Image.new('RGB', out.size, (40, 220, 255)), mask=gained.point(scale))
+    path = os.path.join(folder, 'diff-cast-edge-vs-open.png')
+    out.save(path)
+    print(f'wrote {path}')
+
+
 if __name__ == '__main__':
-    read(sys.argv[1])
+    if sys.argv[2:] == ['cast']:
+        cast_edge(sys.argv[1])
+    else:
+        read(sys.argv[1])
