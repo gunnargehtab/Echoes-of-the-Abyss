@@ -285,8 +285,8 @@ const answers = (id: string, role: MissionRole, name: string): MissionObjective 
   terminal: true,
   predicate: { kind: 'survive', role, count: 1 },
   reading: {
-    met: `**${name}** is home.`,
-    unmet: `**${name}** is entered. Say the name to the house yourself; it is not mine to enter.`,
+    met: `${name} is home.`,
+    unmet: `${name} did not come home. Say the name to the house yourself; it is not mine to enter.`,
   },
 });
 

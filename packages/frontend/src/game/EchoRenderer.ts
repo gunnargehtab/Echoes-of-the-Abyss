@@ -843,7 +843,8 @@ const REFUSAL_MS = 4000;
  * Not a victory and not a defeat: nobody was beaten, so nothing here reads
  * `winnerSlot`, which a mission never sets. Partial is drawn in the ink that
  * tells rather than the ink that warns, because the doc is explicit that it
- * is a result and not a soft failure.
+ * is a result and not a soft failure. It says *partial* in so many words:
+ * "the mission ends" told a player only what they could already see (#1883).
  *
  * A function rather than a table because it reads the palette: a table built at
  * import time would hold whichever ink was active when the module loaded, and
@@ -854,7 +855,7 @@ function missionBanner(outcome: MissionOutcome): { text: string; fill: number } 
     case MissionOutcome.Complete:
       return { text: 'MISSION COMPLETE', fill: UI.friendly };
     case MissionOutcome.Partial:
-      return { text: 'THE MISSION ENDS', fill: UI.accent };
+      return { text: 'PARTIAL RESULT', fill: UI.accent };
     case MissionOutcome.Lost:
       return { text: 'MISSION LOST', fill: UI.threat };
   }

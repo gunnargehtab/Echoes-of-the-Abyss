@@ -311,7 +311,7 @@ export const ATTENDING_ATTENDANCE: MissionDefinition = {
     { ability: 'depthCharges', reason: 'nothing is left in the water the cohorts sleep over' },
     {
       ability: 'activeSonar',
-      reason: 'aboard, live, and not used — the Directorate does not ask',
+      reason: 'aboard and not used — the Directorate does not ask',
     },
     { ability: 'construction', reason: 'a shift produces nothing' },
   ],

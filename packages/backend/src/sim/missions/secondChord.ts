@@ -701,7 +701,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     },
     {
       id: 'the-mouth',
-      label: 'The interval. Thirty seconds at the hundredth, bow to the south, held.',
+      label: 'The interval. Thirty seconds at the hundredth, bow to the Mouth, held.',
       name: 'The sounding point',
       x: 4800,
       y: 3550,
@@ -1043,7 +1043,8 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       predicate: { kind: 'survive', role: 'tender', count: 1 },
       reading: {
         met: 'The Choirmaster is above the line, or under the Chord, and answers.',
-        unmet: 'The Choirmaster is entered. There is nobody left to say the name to the house.',
+        unmet:
+          'The Choirmaster did not come home. There is nobody left to say the name to the house.',
       },
     },
     {
@@ -1054,7 +1055,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       predicate: { kind: 'survive', role: 'escort', count: 3 },
       reading: {
         met: 'The escort answers.',
-        unmet: 'A hull of the escort is entered. Say the name to the house yourself.',
+        unmet: 'A hull of the escort did not come home. Say the name to the house yourself.',
       },
     },
     {
@@ -1065,7 +1066,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       predicate: { kind: 'survive', role: 'carrier', count: 2 },
       reading: {
         met: 'The carriers answer.',
-        unmet: 'A carrier is entered. Say the name to the house yourself.',
+        unmet: 'A carrier did not come home. Say the name to the house yourself.',
       },
     },
     {

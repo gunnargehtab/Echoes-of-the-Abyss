@@ -429,11 +429,11 @@ arrangement):
   Order raised two nodes on attended ground to learn that."*
 - `load-one-home` … `load-five-home` — met: *"The [nth] cut of the [face] is home."* Unmet: *"The
   [nth] cut of the [face] is on the rim, or in the rim."*
-- `the-cutters` — met: *"The cutters are home."* Unmet: *"A cutter is entered. Say the name to
-  the house yourself."* ([mission-aptitude.md](mission-aptitude.md) §8's refusal, and
+- `the-cutters` — met: *"The cutters are home."* Unmet: *"A cutter did not come home. Say the name
+  to the house yourself."* ([mission-aptitude.md](mission-aptitude.md) §8's refusal, and
   [mission-nineteen.md](mission-nineteen.md)'s standard line.)
-- `the-escort` — met: *"The escort is home."* Unmet: *"A hull of the escort is entered. Say the
-  name to the house yourself."*
+- `the-escort` — met: *"The escort is home."* Unmet: *"A hull of the escort did not come home. Say
+  the name to the house yourself."*
 - `the-count` — met: *"The raid is in the Directorate's record at length. So are the nodes, and
   the nodes were there first."* Unmet: *"The raid was heard and classified by nobody for long,
   which on this rim means the lip has stopped listening, and the Order is the reason."*

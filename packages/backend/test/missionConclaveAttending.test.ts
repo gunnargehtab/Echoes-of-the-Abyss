@@ -683,7 +683,7 @@ describe('the called, as docs/mission-conclave-attending.md §2 and §3 seat the
 
   it('withholds the ping, the yard and everything left in the water', () => {
     const locked = new Set(ATTENDING_CONCLAVE.locks.map((lock) => lock.ability));
-    assert.ok(locked.has('activeSonar'), '§2: aboard, live, and not used');
+    assert.ok(locked.has('activeSonar'), '§2: aboard and not used');
     assert.ok(locked.has('construction'), '§2: nothing is built during a calling');
     assert.ok(locked.has('mines'), '§2: nothing is left in the water the cohorts sleep over');
     assert.ok(locked.has('depthCharges'), '§2: the same reason, said once');

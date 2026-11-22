@@ -892,7 +892,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
       kind: 'say',
       speaker: 'Surveyor Ade Bramm, on the works channel',
       voice: 'concern',
-      text: 'Contact filed. Knight hulls at bearing — . The escort defines obstruction from here.',
+      text: 'Contact filed: Knight hulls, bearing logged. The escort defines obstruction from here.',
       note: '§9 — the concern’s documented reflex at thirty seconds of Classification, and nothing else: the column’s legs are the clock, and the relief is scheduled rather than conditional because the works order was written before anybody heard the Order',
       when: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },
     },

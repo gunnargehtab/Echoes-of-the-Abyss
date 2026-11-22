@@ -447,12 +447,13 @@ arrangement), printed at the close in this order:
 - `the-lattice` — met: *"The crystal is set. The Chord is whole."* Unmet: *"The crystal is not set.
   The Chord is a node on a lip, and the Order spent its lattice to reach a node."*
 - `the-choirmaster` — met: *"The Choirmaster is above the line, or under the Chord, and answers."*
-  Unmet: *"The Choirmaster is entered. There is nobody left to say the name to the house."*
-- `the-escort` — met: *"The escort answers."* Unmet: *"A hull of the escort is entered. Say the name
-  to the house yourself."* ([mission-aptitude.md](mission-aptitude.md) §8's refusal, and
+  Unmet: *"The Choirmaster did not come home. There is nobody left to say the name to the
+  house."*
+- `the-escort` — met: *"The escort answers."* Unmet: *"A hull of the escort did not come home. Say
+  the name to the house yourself."* ([mission-aptitude.md](mission-aptitude.md) §8's refusal, and
   [mission-nineteen.md](mission-nineteen.md)'s standard line.)
-- `the-carriers` — met: *"The carriers answer."* Unmet: *"A carrier is entered. Say the name to the
-  house yourself."*
+- `the-carriers` — met: *"The carriers answer."* Unmet: *"A carrier did not come home. Say the name to
+  the house yourself."*
 - `the-transmission` — met: *"Transmitted. The reply is not entered here."* Unmet: *"The Chord
   stood, whole, and was not struck. The Voice did not refuse; the interval passed, which is the
   same thing said courteously."*
@@ -699,7 +700,8 @@ id and nothing else.
 **Named on the chart** (#1617). *The Chord* and *The sounding point* are printed with their
 markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The second
 marker's line opens with the interval, which is a time and belongs to the lip (§1), so its name is
-the place §3 gives 4,800, 3,550: the sounding point.
+the place §3 gives 4,800, 3,550: the sounding point. Its line reads *The interval. Thirty seconds at the hundredth, bow to the
+Mouth, held.*, the same direction the row gives: the briefing's *south* is where the Mouth lies.
 
 ---
 

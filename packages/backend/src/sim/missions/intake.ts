@@ -300,7 +300,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
     {
       ability: 'activeSonar',
       reason:
-        'aboard, live, and not used — and today it is the button that would call what is coming up the Ninth',
+        'aboard and not used — today it is the button that would call what is coming up the Ninth',
     },
     {
       ability: 'construction',

@@ -131,8 +131,8 @@ under the one instrument it has, which is the mission in one distance.
    Cantorate put one sound in the water in mission 3
    ([mission-the-dome.md](mission-the-dome.md)); the ending is the mission where the faction
    does neither of the two things a transmission can be (§13).
-4. **No active sonar.** Carried, live, and locked: *aboard, live, and not used — the rim is
-   attended, not asked.* The campaign's oldest argument, arriving at the place it was always
+4. **No active sonar.** Carried, live, and locked: *aboard and not used — the rim is attended,
+   not asked.* (It said *live* until #1883, beside a button the panel shows as withheld.) The campaign's oldest argument, arriving at the place it was always
    about ([mission-attendance.md](mission-attendance.md) §3). Withheld to mission 3, handed over
    at the Fourth's foot, priced in a basin
    ([mission-trench-awakening.md](mission-trench-awakening.md)), and here a lock with a reason on

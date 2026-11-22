@@ -573,7 +573,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     },
     {
       ability: 'activeSonar',
-      reason: 'aboard, live, and not used — the rim is attended, not asked',
+      reason: 'aboard and not used — the rim is attended, not asked',
     },
     { ability: 'construction', reason: 'the rim is not built on' },
   ],

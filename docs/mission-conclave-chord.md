@@ -599,7 +599,7 @@ has no tick:
 | Condition | Beat |
 | --- | --- |
 | `{ kind: 'sound', count: 1 }` | Three effects on one condition, in authored order: `the-rest` is set **Failed**; the lattice answers — *"The Fifth answers. The Ninth answers. The Seventh —"*; and Vrey says what it costs (§12). No `choiceGroup`: nothing here is exclusive with anything, and every one of the three is due on the same pass |
-| `{ kind: 'tolerance', ticks: 1800, tier: Classification }` | Bramm: *"Contact filed. Knight hulls at bearing — . The escort defines obstruction from here."* The concern's documented reflex ([mission-aptitude.md](mission-aptitude.md) §5) and **nothing else**: the column's legs are the clock, and the relief is scheduled rather than conditional because the works order was written before anybody heard the Order |
+| `{ kind: 'tolerance', ticks: 1800, tier: Classification }` | Bramm: *"Contact filed: Knight hulls, bearing logged. The escort defines obstruction from here."* (It read *at bearing — .* until #1883, which reads as a missing number.) The concern's documented reflex ([mission-aptitude.md](mission-aptitude.md) §5) and **nothing else**: the column's legs are the clock, and the relief is scheduled rather than conditional because the works order was written before anybody heard the Order |
 
 The column's transits are authored, not patrol AI, for the standing reason
 ([mission-sorrowgate.md](mission-sorrowgate.md) §9): a mission's beats happen at the time the

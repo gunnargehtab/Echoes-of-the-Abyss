@@ -127,8 +127,8 @@ thing.
 
 ### What the called do not carry
 
-1. **No active sonar.** Locked, with the reason *aboard, live, and not used — the head of the
-   Ninth is not asked.* The button was handed over three missions ago
+1. **No active sonar.** Locked, with the reason *aboard and not used — the head of the Ninth is
+   not asked.* (It said *live* until #1883, beside a button the panel shows as withheld.) The button was handed over three missions ago
    ([mission-the-dome.md](mission-the-dome.md)) and the campaign has been paying for it since;
    here it is withheld again and by doctrine rather than by
    [campaign.md](campaign.md) §10's schedule. The Ninth's axis aims at the Mouth and pinging it

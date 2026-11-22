@@ -397,7 +397,7 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
   locks: [
     {
       ability: 'activeSonar',
-      reason: 'aboard, live, and not used — the head of the Ninth is not asked',
+      reason: 'aboard and not used — the head of the Ninth is not asked',
     },
     { ability: 'construction', reason: 'nothing is built during a calling' },
     { ability: 'mines', reason: 'nothing is left in the water the cohorts sleep over' },

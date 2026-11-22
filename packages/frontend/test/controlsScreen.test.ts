@@ -118,7 +118,7 @@ describe('the controls screen: §11 full rebinding', () => {
       const before = stored()[REBINDABLE.action];
       await arm(view, REBINDABLE.label);
 
-      // Digit keys recall control groups, "which has no other route (§9)".
+      // Digit keys recall control groups, which have no other route (docs/ui-ux.md §9).
       await press(view, 'Digit1');
 
       assert.equal(stored()[REBINDABLE.action], before, 'the binding is untouched');

@@ -193,6 +193,20 @@ describe('conflict detection', () => {
   it('is quiet on a clean table', () => {
     assert.deepEqual(conflictsIn(DEFAULT_BINDINGS), []);
   });
+
+  it('gives every reserved key a reason a player can read', () => {
+    // The Controls screen prints each reason verbatim after "is reserved — it".
+    // A section number or a doc path there is a reference only this
+    // repository can follow, and the screen shipped "(§9)" until #1883.
+    for (const [code, reason] of RESERVED_CODES) {
+      assert.doesNotMatch(reason, /§|docs\/|\.md\b|#\d/, `${code}: "${reason}"`);
+      assert.match(
+        reason,
+        /^[a-z]/,
+        `${code}: the reason continues "it …", so it starts lower-case`
+      );
+    }
+  });
 });
 
 describe('resolving a stored table', () => {

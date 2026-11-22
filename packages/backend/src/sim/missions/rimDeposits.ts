@@ -843,7 +843,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       predicate: { kind: 'survive', role: 'cutter', count: 3 },
       reading: {
         met: 'The cutters are home.',
-        unmet: 'A cutter is entered. Say the name to the house yourself.',
+        unmet: 'A cutter did not come home. Say the name to the house yourself.',
       },
     },
     {
@@ -853,7 +853,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       predicate: { kind: 'survive', role: 'escort', count: 3 },
       reading: {
         met: 'The escort is home.',
-        unmet: 'A hull of the escort is entered. Say the name to the house yourself.',
+        unmet: 'A hull of the escort did not come home. Say the name to the house yourself.',
       },
     },
     {

@@ -868,7 +868,7 @@ describe('the locks, as §3 reads them', () => {
     assert.match(byAbility.get('noisemakers')!, /the rim is not lied to/);
     assert.equal(
       byAbility.get('activeSonar'),
-      'aboard, live, and not used — the rim is attended, not asked',
+      'aboard and not used — the rim is attended, not asked',
       '§3, §10: the lock is the ending, and the reason is written on it'
     );
     assert.match(byAbility.get('construction')!, /the rim is not built on/);
