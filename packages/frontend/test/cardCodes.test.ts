@@ -3,9 +3,10 @@
  *
  * The card and the own-force readouts abbreviate hulls, structures and refits
  * to three letters, and the squad page prefixes the harvest throttle the same
- * way. One navy can show any two at once: the Knights' Herald read `HLD`
- * beside their Hold refit, and the Directorate's Thurible `THR` beside its
- * Harvester's throttle. So the property is asserted over every code, not the two pairs.
+ * way. A code sits beside any other its navy fields: the Knights' Herald read
+ * `HLD` beside their Hold refit, and the Directorate's Thurible `THR` beside
+ * its Harvester's throttle. So the property is asserted over every code, not
+ * the two pairs.
  */
 
 import assert from 'node:assert/strict';

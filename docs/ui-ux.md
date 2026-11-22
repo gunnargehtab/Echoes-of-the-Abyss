@@ -854,11 +854,12 @@ seconds §7 gives it. Hover rather than a key, because the card is the mouse's r
 hand on it is the one asking.
 
 **A code names one thing.** Every hull, structure and refit code, and the throttle's `THR`,
-is unique across all of them, because one navy can show any two at once (#1886). The
-Knights' Herald read `HLD`, which is their Hold refit, and the Directorate's Thurible read
-`THR`, which is the harvest throttle beside its Harvester. The hull took the new code in both cases,
-`HER` and `THU`: the buttons' codes abbreviate what they do, and a hull's code is only its
-name cut short.
+is unique across all of them (#1886). A code sits beside any other its navy can field, and
+one rule across every navy is simpler to hold than one per navy. The Knights' Herald read
+`HLD`, which is their Hold refit, and the Directorate's Thurible read `THR`, which is the
+harvest throttle beside its Harvester. The hull took the new code in both cases, `HER` and
+`THU`: the buttons' codes abbreviate what they do, and a hull's code is only its name cut
+short.
 
 ### What yields when the card is full
 

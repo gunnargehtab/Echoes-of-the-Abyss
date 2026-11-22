@@ -896,7 +896,8 @@ export const THROTTLE_CODE = 'THR';
 /**
  * Compact unit names for command-bar buttons on narrow screens. Every code here,
  * in REFIT_SHORT, in STRUCTURE_SHORT and THROTTLE_CODE is unique across all four
- * (docs/ui-ux.md §9), because one navy can show any two of them at once.
+ * (docs/ui-ux.md §9): a code sits beside any other its navy fields, and one rule
+ * over every navy is simpler to hold than one per navy.
  */
 export const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.LightScout]: 'SCT',
