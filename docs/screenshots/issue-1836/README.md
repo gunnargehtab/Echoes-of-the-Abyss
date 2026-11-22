@@ -65,7 +65,7 @@ rests at SIG 6, the Corvette at 28 and the Harvester at 18.
 | A hull in a beam | [across the beam](software/poses/09-high-shadow-pool.png) | The Harvester sent into the Corvette's pool, seen square across the beam. The beam comes in from the upper left. The pool's near half is bright, and the pool stops at the Harvester: the ground behind it is dark. The streak at the lower right is the Harvester's own faint pool |
 | The same pool, empty | [control](software/poses/10-high-shadow-pool-empty.png), [difference](software/poses/diff-shadow-pool-vs-empty.png) | The same camera with the Harvester sent 260 m off, out of the frame. The pool is a whole ellipse. In the difference red is light the first frame lacks: under the hull and down the beam to 132 pixels past its model's box, up to 35 of 255 darker. That is the hull's shadow, read from its keel line and half its beam, and it is a blob and not a silhouette. Cyan is what the hull adds: itself, its ring and its own faint pool. The two lines along the top are a mark of the selected Harvester's, which went with it |
 | Rock in a beam | [at the rim's foot](software/poses/14-high-rim-foot.png) | The Corvette alone on the bowl's floor at 1,470 m, its bow at the west rim's wall. Its cone ends on the rock, and the pool climbs the wall unbroken, ribbed by the relief on it. Nothing is lit behind the wall |
-| Rock's shadow on lit ground | [cast edge](software/cast/15-high-cast-edge.png), [control](software/cast/16-high-cast-open.png), [difference](software/cast/diff-cast-edge-vs-open.png) | The Corvette alone in the trench south of the mesas, at 1,075 m and 450 m over the floor, its beam looking 30 m past the west mesa's south-east corner. Seen from the south-south-east, the cone comes in from the left. The pool on the channel floor is lit on its near side and cut on its far side, along an edge run north-east from the corner. The control is the same frame with the walk handed no ground: the pool runs on whole. In the difference red is light the first frame lacks: the floor beyond the edge, up to 172 of 255 darker, and a shaft through the cone behind the corner. Nothing is cyan |
+| Rock's shadow on lit ground | [cast edge](software/cast/15-high-cast-edge.png), [control](software/cast/16-high-cast-open.png), [difference](software/cast/diff-cast-edge-vs-open.png) | The Corvette alone in the trench south of the mesas, at 1,075 m and 450 m over the floor, its beam looking 30 m past the west mesa's south-east corner. Seen from the south-south-east, the cone comes in from the left. The pool on the channel floor is lit on its near side and cut on its far side, along an edge run north-east from the corner. The control is the same frame with the walk handed no ground: the pool runs on whole. In the difference red is light the first frame lacks: the floor beyond the edge and a shaft through the cone behind the corner. Nothing is cyan |
 | Under way | [home](software/10-high-underway-home.png), and [close](software/09-high-underway-close.png) from an earlier take of this tree, at 87a29736 | The fleet ordered along the rim, which takes it down to the floor. The Harvester runs at SIG 40 and its beam rakes the ground ahead of it, white at the lamp; the Corvette's, at 28, is dim; the Light Scout, at 6 to 12, throws none |
 | Silent Running | [home](software/11-high-silent-home.png), [close](software/12-high-silent-close.png) | The same fleet at SIG 3.5 to 5.3: no beam and no pool, and `readings.json` counts none |
 
@@ -111,12 +111,17 @@ stand as they were. `readings.json` holds the second frame's `control`: the lamp
 `python3 docs/screenshots/issue-1836/pairdiff.py docs/screenshots/issue-1836/software/cast cast`
 makes the difference. The control stands 8 or more of 255 over the cast edge on 75,118
 pixels, by 172 at most, and the cast edge stands 8 over the control on none: the walk
-only takes light away.
+only takes light away. The 172 is a mote in the cone. With the motes taken out by a
+7-pixel median, a scratch reading that is not kept, the floor beyond the edge falls from
+20 to 6 of 255 at its median and by 40 at most, about two thirds of its light, and the
+shaft in the cone falls from 65 to 24. The floor's pool is dim at that range, and the
+cut is most of it.
 
-The pose was found by running the JS walk over those heights for the Corvette at every
-place and heading in the crater's south half, from 30 to 700 m over the floor. The
-mesas' corners are where it found the longest edges between lit ground and ground the
-walk cuts, and a sweep about this one put its edge across the pool's middle.
+The pose was found by running the JS walk over the ground's heights on the shadow
+texture's own grid, 15.6 m a pixel, for the Corvette at every place and heading in the
+crater's south half, from 30 to 700 m over the floor. The mesas' corners are where it
+found the longest edges between lit ground and ground the walk cuts, and a sweep about
+this one put its edge across the pool's middle.
 
 The frame's edge is toothed, five or six teeth across the pool. The JS copy draws the
 same teeth at its 12 reads a line, and at 48 they nearly go. Near the edge a line to the
@@ -157,6 +162,10 @@ four cameras and at the shadow pair and the rim frame. The cast pair adds no pas
 work a fragment: its control only hands the walk other heights to read.
 
 ## Low does not move
+
+The cast pair moves nothing at Low, and was not taken there again: Low throws no beam,
+and the switch its control uses is on unless a capture turns it off, so the view hands the
+walk the same heights it did.
 
 `main` at b5af0b95 was taken twice with `QUALITY=low` and read as
 [issue-1801](../issue-1801/README.md#low-does-not-move) reads a pair: the mean, over the
