@@ -61,6 +61,8 @@ Lid and the beams, one plume a stack. Past the survey knee the crater's floors a
 light to the water over them (#1891, `water.ts` `waterColumnDensity`, on the fog sign's
 green), the lit bake's alpha holds the glow its walls hide (`lidShade.ts`), and the ink
 overlay fades by the same column: the one tactical draw High changes, by the owner's call.
+The crater's ground also runs on past the map's edge there (`outerGround.ts`): one more
+lit draw of the world pass, the edge's own ground read on, with no cell under it.
 
 ## Tests run under a Vite shim
 

@@ -10,7 +10,8 @@ with north up, so a place on the map is a place in the frame: the map's
 4,000 m square is found by its rim line, and each floor is read as the mean
 luma of a 12 px square about one of its cell centres
 (docs/free-water-slice.md §3). Luma is Rec. 709 on the encoded bytes, out of
-255, as a screenshot gate measures it.
+255, as a screenshot gate measures it. Two more squares stand west of the
+map, level with its middle: 300 m past its edge, and 2,400 m past it.
 
 It prints the table, and writes `crater-survey.png` beside the frames: the
 map's crop of `main` at High, then the step's, side by side.
@@ -33,6 +34,7 @@ PLACES = [
 ]
 MAP_M = 4000
 HALF_PX = 6
+PAST_M = (300, 2400)
 
 
 def luma(im):
@@ -84,12 +86,17 @@ def read(path, box):
         region = im.crop((int(cx - HALF_PX), int(cy - HALF_PX), int(cx + HALF_PX), int(cy + HALF_PX)))
         hist = region.histogram()
         out.append(sum(i * c for i, c in enumerate(hist)) / sum(hist))
-    # Open water beside the map, 300 m west of its edge.
-    cx = x0 - (x1 - x0) * 300 / MAP_M
-    cy = (y0 + y1) / 2
-    region = im.crop((int(cx - HALF_PX), int(cy - HALF_PX), int(cx + HALF_PX), int(cy + HALF_PX)))
-    hist = region.histogram()
-    out.append(sum(i * c for i, c in enumerate(hist)) / sum(hist))
+    # Past the map: 300 m west of its edge, where the ground runs on at High
+    # since this step, and 2,400 m west of it, which is open water in every
+    # frame.
+    for past in PAST_M:
+        cx = x0 - (x1 - x0) * past / MAP_M
+        cy = (y0 + y1) / 2
+        region = im.crop(
+            (int(cx - HALF_PX), int(cy - HALF_PX), int(cx + HALF_PX), int(cy + HALF_PX))
+        )
+        hist = region.histogram()
+        out.append(sum(i * c for i, c in enumerate(hist)) / sum(hist))
     return out
 
 
@@ -110,7 +117,10 @@ def main(folder):
     print(f'map square in the frame: {box}')
     print('| Place, and its floor | Low on `main` | Low now | High on `main` | High now |')
     print('| --- | --- | --- | --- | --- |')
-    names = [(n, f) for n, _x, _y, f in PLACES] + [('Open water beside the map', None)]
+    names = [(n, f) for n, _x, _y, f in PLACES] + [
+        ('300 m past the west edge', None),
+        ('Open water, 2,400 m west of the map', None),
+    ]
     for i, (name, floor) in enumerate(names):
         label = name if floor is None else f'{name}, {floor:,} m'
         print(f'| {label} | ' + ' | '.join(f'{c[i]:.1f}' for c in columns) + ' |')

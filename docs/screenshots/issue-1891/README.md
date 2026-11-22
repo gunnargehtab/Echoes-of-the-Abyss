@@ -10,8 +10,9 @@ cloud container that built the step. They guide a round and are not offered for
 acceptance. The frames the owner accepts against are taken on the named GPU, with the
 commands under [Who captures](#who-captures).
 
-**This is the step's first part.** The ground past the map's edge is its second, and is
-not built: the ground still stops on the map's square.
+**The step has two parts, and both are here.** The first put water over each floor and
+shade under each wall. The second draws the ground on past the map's edge. A critic read
+the first alone; what it found is under [Calls](#calls).
 
 ## Reproduce
 
@@ -29,7 +30,8 @@ and then High at the target's three cameras and at gate 6's low camera, and writ
 [readings.json](software/readings.json) after every frame. [crater.py](crater.py) reads
 the Survey frames against [main](software/main), the same cameras taken on `main` at
 d24e7588 with the same module, and writes the crop below. [shade.mjs](shade.mjs) prints
-what the column and the shade take, from their own functions.
+what the column and the shade take and how the ground past the edge falls, from their
+own functions.
 
 ## The one cause
 
@@ -54,7 +56,7 @@ the fault.
 | --- | --- | --- | --- |
 | Home | [low](software/01-low-home.png) | [high](software/05-high-home.png) | As on `main`, but for the shade under the garden's scarp. The column takes nothing at this dolly |
 | Close | [low](software/02-low-close.png) | [high](software/06-high-close.png) | As on `main` |
-| Survey | [low](software/04-low-survey.png) | [high](software/08-high-survey.png) | The bowl and the pocket are one basin under water. The pocket reads as deep water, 7.0 beside open water's 7.0, and its coast and isobaths are faint over it. The ring keeps its kelp green and is darker toward its walls. The rim, the garden and the wall are as they were. The ground still stops on the square, and the cut's sides are still ruled |
+| Survey | [low](software/04-low-survey.png) | [high](software/08-high-survey.png) | The bowl and the pocket are one basin under water. The pocket reads as deep water, and its coast and isobaths are faint over it. The ring keeps its kelp green and is darker toward its walls. The rim's ground and its bench lines run on past the rim line and sink into the dark over 2 km, and the exit pool's channel runs out south. The rim line is still a square, as chart ink on ground that goes on. The cut's sides are still ruled |
 
 One more, off the target's three:
 
@@ -77,19 +79,22 @@ out of 255, of a 12 px square about a cell centre of each floor.
 
 | Place, and its floor | Low on `main` | Low now | High on `main` | High now |
 | --- | --- | --- | --- | --- |
-| Outside rim, west, 600 m | 22.4 | 22.4 | 18.0 | 18.1 |
+| Outside rim, west, 600 m | 22.5 | 22.5 | 18.0 | 18.2 |
 | Northern garden, 400 m | 25.4 | 25.4 | 35.7 | 35.7 |
 | Bowl, west ring, 1,500 m | 19.0 | 19.0 | 14.0 | 11.6 |
-| Bowl, east ring, 1,500 m | 16.0 | 16.0 | 10.3 | 10.2 |
+| Bowl, east ring, 1,500 m | 16.0 | 16.0 | 10.4 | 10.3 |
 | Deep pocket, 2,400 m | 7.3 | 7.3 | 1.0 | 7.0 |
-| Southern wall | 16.4 | 16.4 | 10.8 | 11.1 |
-| Exit pool, 1,500 m | 18.2 | 18.2 | 12.0 | 10.6 |
-| Open water beside the map | 7.0 | 7.0 | 7.0 | 7.0 |
+| Southern wall | 16.4 | 16.4 | 11.0 | 11.2 |
+| Exit pool, 1,500 m | 18.3 | 18.3 | 11.9 | 10.5 |
+| 300 m past the west edge | 7.0 | 7.0 | 7.0 | 13.0 |
+| Open water, 2,400 m west of the map | 7.0 | 7.0 | 7.0 | 7.0 |
 
 The order holds: the garden, the rim, the bowl, the pocket, each deeper floor darker.
 On `main` the pocket stood a seventh of the water beside the map. Low's pocket reads 7.3
 by the rule that keeps a trench at its own fill
-([map-visuals.md](../../map-visuals.md) §6), and High's now stands beside it.
+([map-visuals.md](../../map-visuals.md) §6), and High's now stands beside it. Past the
+west edge the rim's 18.2 has fallen to 13.0 at 300 m, and by 2,400 m the frame is the open
+water it was.
 
 What each term takes, by [shade.mjs](shade.mjs):
 
@@ -112,33 +117,54 @@ What each term takes, by [shade.mjs](shade.mjs):
 
 The least open vertex of the ground is 0.25 open and keeps 0.55.
 
+| Past the edge, metres | Off the west rim: depth, kept through the column | Off the exit pool: depth, kept |
+| --- | --- | --- |
+| 0 | 620 m, 0.92 | 1,504 m, 0.60 |
+| 250 | 709 m, 0.89 | 1,547 m, 0.58 |
+| 500 | 977 m, 0.81 | 1,708 m, 0.52 |
+| 1,000 | 1,800 m, 0.48 | 2,250 m, 0.32 |
+| 1,500 | 2,625 m, 0.21 | 2,766 m, 0.18 |
+| 2,000 | 3,000 m, 0.13 | 3,000 m, 0.13 |
+
 ## What is new in the frame
 
 Read off `readings.json`, against `main` taken the same day with the same module.
 
-| Camera | High on `main`: calls, triangles | High now | Lit ground's bytes, both |
+| Camera | High on `main`: calls, triangles | High now | Lit ground's bytes, before and now |
 | --- | --- | --- | --- |
-| Home | 65, 834,689 | the same | 2,796,203 |
-| Close | 65, 834,689 | the same | the same |
-| Low | 46, 827,358 | the same | the same |
-| Survey | 65, 835,327 | the same | the same |
+| Home | 65, 834,689 | 66, 850,817 | 2,796,203; 13,981,014 |
+| Close | 65, 834,689 | 66, 850,817 | the same |
+| Low | 46, 827,358 | 47, 843,486 | the same |
+| Survey | 65, 835,327 | 66, 851,455 | the same |
 
-No draw, no pass, no triangle and no byte is new: the shade is written into the alpha of
-the relief texture the lit ground already reads, which held 255.
+The water and the shade add no draw, pass, triangle or byte: the shade is written into
+the alpha of the relief texture the lit ground already reads, which held 255. The ground
+past the edge is the one new draw, of the world pass: 15,904 triangles of its own and 224
+more in the skirt, which now hangs from its longer boundary. Its lit bake is two textures
+1,024 px a side, 11,184,811 bytes with their mips. The frame stands at up to 851,455 of
+the crater's 900,000 ([free-water-slice.md](../../free-water-slice.md) §7).
 
-Two costs the counts do not show.
+Three costs the counts do not show.
 
 **Per-fragment work.** Three programs gained arithmetic and none a texture read. Every
 fogged draw of the world pass multiplies its swim by one more exponential. The lit ground
 multiplies the Lid's glow by the alpha of a texel it already fetched. The ink overlay adds
-one term to an exponent it already took. By `dev-loop`'s "Look work" that owes one
+one term to an exponent it already took. And the ground past the edge is a new draw of
+the lit ground's program, over the pixels it covers: most of the Survey frame's water,
+and little of the other three. By `dev-loop`'s "Look work" that owes one
 unpaced, queued timing run from the named GPU, which this container cannot take: the
 commands are under [Who captures](#who-captures), and `queued` in its `readings.json` is
 the reading. It is not in this page yet.
 
-**Reading the shade.** 115 to 160 ms in Node on this container, once when the ground is
-built at High and never in a frame: 16,641 vertices, 16 bearings and 26 steps a bearing.
-A stopwatch, not a budget.
+**Reading the shade.** 115 to 160 ms in Node on this container, when the ground is built
+at High: 16,641 vertices, 16 bearings and 26 steps a bearing. A stopwatch, not a budget.
+
+**Baking the ground past the edge.** 831 to 862 ms in Node on this container, when the
+ground is built at High: 794,560 pixels, one read of the drawn ground each.
+
+Both are read again whole on a ground delta, inside the frame it arrives in. The study's
+delta was whole already: its rounded ground re-reads its whole grid
+(`perspectiveTerrain.ts` `patchHeightGrid`). Its fixture authors no delta.
 
 ## Low does not move
 
@@ -149,9 +175,9 @@ world area, of each pixel's largest channel difference, out of 255
 
 | Camera | `main` against `main` | `main`'s first take against these frames | `main`'s second take against these | Calls and triangles |
 | --- | --- | --- | --- | --- |
-| Home | 0.25 | 0.17 | 0.09 | 44 and 593,684, all |
-| Close | 0.43 | 0.33 | 0.20 | 44 and 593,684, all |
-| Low | 0.51 | 0.33 | 0.18 | 26 and 587,001, all |
+| Home | 0.25 | 0.05 | 0.21 | 44 and 593,684, all |
+| Close | 0.43 | 0.12 | 0.38 | 44 and 593,684, all |
+| Low | 0.51 | 0.10 | 0.41 | 26 and 587,001, all |
 | Survey | 0.00 | 0.00 | 0.00 | 45 and 594,970, all |
 
 A take differs from a take by where the marine snow hangs, and by nothing else. These
@@ -159,23 +185,28 @@ frames stand nearer each of `main`'s takes than the two stand to each other.
 [The Survey map](software/low-control/diff-survey-main-vs-branch.png) has no pixel marked,
 and the other three lie beside it. In counted work
 `packages/frontend/test/water.test.ts` holds the column out of the fog's Low half and at
-0 on every shipped map, and `packages/frontend/test/surveyInk.test.ts` holds it out of
-Low's ink.
+0 on every shipped map, `packages/frontend/test/surveyInk.test.ts` holds it out of
+Low's ink, and `packages/frontend/test/rendererSmoke.test.ts` boots the study and a
+shipped map at Low, at High and at Low again: no column and no ground past the edge at
+Low, on either.
 
 ## High at the other cameras
 
-The shade is in the ground's bake, so every camera has it. `main`'s High against these,
+The shade is in the ground's bake and the ground past the edge is a mesh, so every
+camera has both. `main`'s High against these,
 read the same way:
 
 | Camera | Mean difference | Pixels moved by more than 2 |
 | --- | --- | --- |
-| Home | 0.49 | 2.9% |
-| Close | 0.41 | 1.2% |
-| Low | 0.99 | 9.1% |
-| Survey | 0.66 | 7.1% |
+| Home | 0.39 | 2.2% |
+| Close | 0.20 | 0.8% |
+| Low | 0.78 | 8.1% |
+| Survey | 2.78 | 26.3% |
 
 Home and Close stand inside what two takes of one tree differ by. Gate 6's low camera
-looks across the bowl's floor, which the shade darkens, and Survey is the step.
+looks across the bowl's floor, which the shade darkens, and Survey is the step. The
+ground past the edge is in all four, and shows at Survey: at the other three it lies
+behind the eye or past the water's reach.
 
 ## Gate 7 and the limits
 
@@ -195,8 +226,10 @@ below tactical ink. The far bloom's points read 67 of 255 at the 99th percentile
 the column takes nothing, over a bowl whose ink it now thins. The owner left the bloom's
 Survey as it stood on 22 November 2026, before this step. It is not read again here.
 
-Limits 1 to 4 hold by construction. The column and the shade read the drawn ground alone,
-the same for every client. Neither answers a hull. No light is added: both only take
+Limits 1 to 4 hold by construction. The column, the shade and the ground past the edge
+read the map's own cells and the drawn ground alone, the same for every client. None
+answers a hull, and the ground past the edge takes the veil of the edge beside it, so no
+hull is heard out there. No light is added: both only take
 light away, and the water's own light comes back in its biome's hue, at the ramp's
 brightness. No colour-vision palette was captured: those run once, at promotion.
 
@@ -206,9 +239,10 @@ The owner's, in session on 22 November 2026, on a software rasteriser's frames o
 prototypes. Each is written with its other readings in
 [art-direction.md](../../art-direction.md#the-crater-from-above).
 
-- **Water over each floor and shade under each wall, then ground past the edge.**
-  Against water alone, against stopping before the edge, and against reshaping the
-  ground.
+- **Water over each floor and shade under each wall, then ground past the edge,**
+  falling away into the deep. Against water alone, against stopping before the edge, and
+  against reshaping the ground. The owner was told about 8,000 triangles for the ground
+  past the edge. It is 15,904.
 - **The survey ink takes the column at High.** Against leaving the ink as Low draws it.
   It amends "Two layers, two laws" and [map-visuals.md](../../map-visuals.md) §4, rule 6.
 
@@ -223,9 +257,32 @@ open:
 - **The shade takes 0.6 of what the walls hide.** At the whole of it the ring read 7.6
   to 9.2 beside the pocket's 6.7, and depth is luminance.
 - **The shade is the Lid's alone.** A pool and a searchlight are not under it.
+- **The shade is in the ground's bake, at every camera.** The reading not taken: brought
+  in with the column's knee, which leaves Home, Close and gate 6's low camera as `main`
+  draws them and stands the walls' shade up as the camera pulls out. Taken, gate 6's
+  low camera moves 8.1% of its pixels by more than 2, and the named GPU's read covers it.
+- **A ground delta reads the shade and the outer ground again whole.** The reading not
+  taken: only within the shade's 800 m of the change. The study's delta re-read its
+  whole grid before this step, and its fixture authors none.
 - **The sources' volumes do not take the column.** None of the crater's stands deeper
   than 620 m.
+- **Past the edge the ground is the edge's own, held, and falls to the map's floor over
+  2,000 m.** Two readings not taken. A level shelf faded by distance, which needs a fade
+  of its own and ends in a line. And an authored surround, which is a place the world
+  bible does not have.
+- **It is baked at the map's own 7.8125 m a pixel,** 11.2 MB. The reading not taken:
+  half that density, a quarter the bytes, and softer than the map's ground beside it.
+- **No ink is drawn on it, and the rim line stays.** The chart ends at the rim.
+- **It carries no silt detail.** The map's ground beside it does, so near the edge a
+  low camera can tell the two apart.
 - **This page waits on a timing run** it cannot take.
+
+A critic read the first part alone and returned four findings, each mended here. A
+sentence of [ui-ux.md](../../ui-ux.md) §14 still said the tactical layer is drawn the
+same at both qualities. This page said the shade is never read in a frame, and a ground
+delta reads it in one. The shade's reach to every camera was taken with no other reading
+beside it. And [art-direction.md](../../art-direction.md#the-crater-from-above) quoted
+a prototype's figures for the pocket.
 
 ## Who captures
 

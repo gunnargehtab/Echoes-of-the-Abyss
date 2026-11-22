@@ -57,8 +57,18 @@ export interface LitGroundSurface {
  * delta rewrites the touched cells and flags both textures.
  */
 export function litGroundSurface(terrain: TerrainPayload, anisotropy: number): LitGroundSurface {
-  const width = terrain.cols * SEABED_PX_PER_CELL;
-  const height = terrain.rows * SEABED_PX_PER_CELL;
+  return litSurface(
+    terrain.cols * SEABED_PX_PER_CELL,
+    terrain.rows * SEABED_PX_PER_CELL,
+    anisotropy
+  );
+}
+
+/**
+ * The same two textures at a size of the caller's: the ground past the map's
+ * edge bakes a square of its own (outerGround.ts).
+ */
+export function litSurface(width: number, height: number, anisotropy: number): LitGroundSurface {
   const bake: LitBake = {
     albedo: new Uint8Array(width * height * 4),
     relief: new Uint8Array(width * height * 4),

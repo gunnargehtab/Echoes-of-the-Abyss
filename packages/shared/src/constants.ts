@@ -690,6 +690,25 @@ export const HIGH_GRAPHICS = {
     SHADE_REACH_M: 800,
     SHADE_RAYS: 16,
     SHADE: 0.6,
+    /**
+     * The ground past the map's edge (outerGround.ts): the edge's own drawn
+     * ground, read on past it and falling away to the map's floor, so the
+     * ground does not stop on the map's square. `REACH_M` is how far out it
+     * is drawn, and where it has fallen to that floor: under the column above
+     * it then keeps 0.13 of its light, and the rest is the water's.
+     * `RELIEF_M` is how far past the edge the relief stands whole, and where
+     * it has eased out. `RINGS_M` are the distances past the edge its mesh
+     * has vertices at: a shipped ground's 62.5 m while the relief stands, and
+     * wider where the fall has smoothed it. `BAKE_PX` is the side of its lit
+     * bake, which spans the map and the reach round it: on the study's
+     * 4,000 m map that is the map's own 7.8125 m a pixel.
+     */
+    OUTER: {
+      REACH_M: 2000,
+      RELIEF_M: [250, 1000],
+      RINGS_M: [62.5, 125, 187.5, 250, 312.5, 375, 437.5, 500, 625, 750, 1000, 1250, 1500, 2000],
+      BAKE_PX: 1024,
+    },
   },
 } as const;
 

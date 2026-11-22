@@ -128,6 +128,7 @@ import {
   BIOME_FIELDS,
   buildHeightGrid,
   edgeRing,
+  type EdgePoint,
   patchHeightGrid,
   type HeightGrid,
   DEPTH_VISUAL_M_PER_M,
@@ -177,9 +178,11 @@ import {
   installLitRoof,
   litGroundBytes,
   litGroundSurface,
+  litSurface,
   type LitGroundSurface,
 } from './litGround.ts';
 import { lidVisibility, writeLidShade } from './lidShade.ts';
+import { bakeOuterLit, outerMesh } from './outerGround.ts';
 import {
   highRefusal,
   publishGraphicsQualityStatus,
@@ -1203,6 +1206,17 @@ export class PerspectiveView {
   /** The ink overlay's column uniform (surveyInk.ts), written once a frame. */
   private inkColumn: { value: number } | null = null;
   /**
+   * The ground past the map's edge (outerGround.ts): the free-water study's,
+   * at High alone. Its mesh, its lit bake, its triangles for the probe, and
+   * its own outer boundary, which the skirt hangs from while it stands.
+   */
+  private outer: {
+    mesh: Mesh;
+    surface: LitGroundSurface;
+    triangles: number;
+    rim: EdgePoint[];
+  } | null = null;
+  /**
    * The water's hue over this ground, a plan texture (waterMedium.ts), and
    * the light the world's own sources pool on it (worldLights.ts), under
    * High alone. `litPools` is the uniform the lit ground reads the pools
@@ -1583,12 +1597,87 @@ export class PerspectiveView {
   }
 
   /**
+   * Stand the ground past the map's edge (outerGround.ts; docs/art-direction.md,
+   * "The crater from above"): the free-water study's, at High alone, on the
+   * same switch as its water and its eroded ground. One more draw of the
+   * world pass, lit as the map's ground is from a bake of its own, with no
+   * pool on it and no ink: the chart ends at the rim, which stays where it
+   * was. It takes the veil at the edge it runs out from (`shadeOuterGround`).
+   * Low, and every shipped map, stand none and keep the skirt at the edge.
+   */
+  private buildOuterGround(grid: HeightGrid): void {
+    this.disposeOuterGround();
+    const terrain = this.terrain;
+    if (terrain === null || this.renderer === null || !this.high.on || !this.waterStudy) return;
+    const data = outerMesh(terrain, grid, this.groundSeed, this.groundRockTopM);
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(data.positions, 3));
+    geometry.setAttribute('uv', new BufferAttribute(data.uvs, 2));
+    geometry.setAttribute(
+      VEIL_SHADE_ATTRIBUTE,
+      new BufferAttribute(new Float32Array(data.positions.length).fill(1), 3)
+    );
+    geometry.setIndex(new BufferAttribute(data.indices, 1));
+    const side = HIGH_GRAPHICS.CRATER.OUTER.BAKE_PX;
+    const surface = litSurface(
+      side,
+      side,
+      Math.min(4, this.renderer.capabilities.getMaxAnisotropy())
+    );
+    bakeOuterLit(terrain, this.groundSeed, this.groundRockTopM, surface.bake, side);
+    const material = new MeshBasicMaterial({ map: surface.albedo, toneMapped: false });
+    installDisplayVeil(material);
+    installLitGround(material, surface.relief, { value: NO_POOLS });
+    const mesh = new Mesh(geometry, material);
+    mesh.layers.set(WORLD_LAYER);
+    this.scene.add(mesh);
+    this.outer = { mesh, surface, triangles: data.triangles, rim: data.rim };
+    this.shadeOuterGround();
+  }
+
+  private disposeOuterGround(): void {
+    const outer = this.outer;
+    if (outer === null) return;
+    this.scene.remove(outer.mesh);
+    outer.mesh.geometry.dispose();
+    (outer.mesh.material as MeshBasicMaterial).dispose();
+    outer.surface.albedo.dispose();
+    outer.surface.relief.dispose();
+    this.outer = null;
+  }
+
+  /**
+   * The veil on the ground past the edge: each vertex takes the shade of the
+   * point on the map's edge nearest it, so the two grounds drain alike on
+   * the line they share and no hull is heard past the map.
+   */
+  private shadeOuterGround(): void {
+    const outer = this.outer;
+    const terrain = this.terrain;
+    if (outer === null || terrain === null) return;
+    const widthM = terrain.cols * terrain.cellM;
+    const heightM = terrain.rows * terrain.cellM;
+    const positions = outer.mesh.geometry.getAttribute('position') as BufferAttribute;
+    const colors = outer.mesh.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;
+    const shade = this.veilColor;
+    for (let i = 0; i < positions.count; i++) {
+      this.displayShadeAt(
+        Math.min(widthM, Math.max(0, positions.getX(i))),
+        Math.min(heightM, Math.max(0, positions.getZ(i))),
+        shade
+      );
+      colors.setXYZ(i, shade.r, shade.g, shade.b);
+    }
+    colors.needsUpdate = true;
+  }
+
+  /**
    * Shade the lit ground by the Lid's glow its own walls hide (lidShade.ts;
    * docs/art-direction.md, "The crater from above"): the free-water study's
    * alone, on the same switch as its water and its eroded ground. Read off
    * the whole grid and written over every pixel each time, so a ground delta
-   * leaves what a rebuild would. Every other ground keeps the bake's own
-   * alpha, which shades nothing.
+   * leaves what a rebuild would, at a rebuild's cost (`patchTerrain`). Every
+   * other ground keeps the bake's own alpha, which shades nothing.
    */
   private shadeLid(grid: HeightGrid): void {
     const terrain = this.terrain;
@@ -3325,6 +3414,7 @@ export class PerspectiveView {
         this.inkOverlay = null;
         this.inkColumn = null;
       }
+      this.disposeOuterGround();
       this.litMaterial?.dispose();
       this.litMaterial = null;
       this.litSurface?.albedo.dispose();
@@ -3570,6 +3660,7 @@ export class PerspectiveView {
       this.terrainMesh = new Mesh(geometry, material);
     }
     this.scene.add(this.terrainMesh);
+    this.buildOuterGround(grid);
     if (this.apron !== null && this.apron.mesh === null) this.buildApron(grid, baseline);
     this.cutOverview();
     this.terrainGrid = grid;
@@ -3732,6 +3823,13 @@ export class PerspectiveView {
    * The ground delta path (#434): move the vertices within a cell of the
    * change, re-shade those cells and their ring on the existing canvas, and
    * leave the other sixteen thousand vertices and million pixels alone.
+   *
+   * The free-water study is outside that bargain, and was before #1891: its
+   * rounding reads cells several away, so `patchHeightGrid` re-reads its
+   * whole grid. At High its delta now also reads the wall shade over the
+   * whole grid again (`shadeLid`) and stands the ground past the edge again
+   * (`buildOuterGround`), inside the frame the delta arrives in. Its fixture
+   * authors no delta, which is why neither is made local to the change.
    */
   private patchTerrain(touched: CellRect): void {
     const terrain = this.terrain;
@@ -3794,6 +3892,8 @@ export class PerspectiveView {
     if (this.litSurface !== null) {
       // The rebake wrote the touched pixels' shade back to none.
       this.shadeLid(grid);
+      // The ground past the edge is the edge's, read on: built again whole.
+      this.buildOuterGround(grid);
       this.litSurface.albedo.needsUpdate = true;
       this.litSurface.relief.needsUpdate = true;
     }
@@ -3949,13 +4049,16 @@ export class PerspectiveView {
     // A placed mission has no wall: its exterior is ground that fades
     // (docs/world-map.md §7.4). The rim above stays, as chart ink.
     if (this.worldRegion !== null) return;
+    // Where ground is drawn past the edge, the world ends at that ground's
+    // own boundary, and the skirt hangs from there (outerGround.ts).
+    const brink = this.outer?.rim ?? perimeter;
     const skirtBottom = depthToWorldY(DEPTH.MAX_M) - 250;
     const skirtPositions: number[] = [];
     const skirtIndices: number[] = [];
-    for (let i = 0; i < perimeter.length; i++) {
-      const p = perimeter[i]!;
+    for (let i = 0; i < brink.length; i++) {
+      const p = brink[i]!;
       skirtPositions.push(p.x, p.y, p.z, p.x, skirtBottom, p.z);
-      const j = (i + 1) % perimeter.length;
+      const j = (i + 1) % brink.length;
       skirtIndices.push(i * 2, j * 2, i * 2 + 1, j * 2, j * 2 + 1, i * 2 + 1);
     }
     const skirtGeometry = new BufferGeometry();
@@ -4133,6 +4236,7 @@ export class PerspectiveView {
    */
   private shadeRoofs(): void {
     this.shadeExterior();
+    this.shadeOuterGround();
     const shade = this.veilColor;
     for (const roof of this.roofs) {
       const positions = roof.mesh.geometry.getAttribute('position') as BufferAttribute;
@@ -6603,6 +6707,12 @@ export class PerspectiveView {
         drawn: this.qualityState,
         targetBytes: this.high.bytes,
         groundBytes: this.litSurface === null ? 0 : litGroundBytes(this.litSurface),
+        // The ground past the map's edge, where one stands (outerGround.ts):
+        // its triangles, and its own lit bake's bytes.
+        outerGround:
+          this.outer === null
+            ? null
+            : { triangles: this.outer.triangles, bytes: litGroundBytes(this.outer.surface) },
         // The world's own sources lighting this ground and its water.
         worldLights: this.worldLightCount,
         // Own hulls throwing a searchlight this frame (searchlights.ts).

@@ -3,7 +3,8 @@
 // look at, and gate 6's fourth, with the HUD on. Low first, as the control,
 // then High at the same four with the fleet at rest. Survey is the camera
 // this step is judged at: past its dolly the water over each floor takes its
-// light (docs/art-direction.md, "The crater from above").
+// light, and the ground runs on past the map's edge (docs/art-direction.md,
+// "The crater from above").
 //
 //   SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' VIEW_W=1920 VIEW_H=1080 \
 //     node .claude/skills/run-game/scripts/drive.mjs --url 'http://localhost:5173/?study=free-water' \
@@ -205,6 +206,9 @@ export default async ({ page, shot, recordingStartedMs }) => {
         // How far the water reaches from the eye, and the depth of water over
         // a floor that leaves 1/e of its light: 0 where the column takes none.
         water: { reachM: probe.waterReachM, columnM: probe.waterColumnM ?? 0 },
+        // The ground past the map's edge, where one stands: its triangles and
+        // its lit bake's bytes. A tree before #1891 stands none.
+        outerGround: probe.graphicsQuality?.outerGround ?? null,
         // What the crater stands at this quality, and the lights its fry and
         // its jellies carry.
         life: {
@@ -249,6 +253,16 @@ export default async ({ page, shot, recordingStartedMs }) => {
         reading.water.columnM > 0,
         column,
         `${reading.quality}-${reading.name} reads a column of ${reading.water.columnM} m`
+      );
+    }
+  }
+  // And so is the ground past the edge: High's at every camera, never Low's.
+  if (readings.some((reading) => reading.outerGround !== null)) {
+    for (const reading of readings) {
+      assert.equal(
+        reading.outerGround !== null,
+        reading.quality === 'high',
+        `${reading.quality}-${reading.name}: ground past the edge`
       );
     }
   }

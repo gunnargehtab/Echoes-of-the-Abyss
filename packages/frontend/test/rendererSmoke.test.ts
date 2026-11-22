@@ -63,6 +63,7 @@ import { swayAt } from '../src/game/cameraSway.ts';
 import type { MovePreviewReading } from '../src/game/movePreview.ts';
 import type { WorldLook } from '../src/game/tutorialLook.ts';
 import { STUDY_SNOW_NEAR_COUNT, SWIM_COVERAGE_DEFINE, waterReachM } from '../src/game/water.ts';
+import { WORLD_LAYER } from '../src/game/highFrame.ts';
 import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.ts';
 import { VEIL_FLOOR_RGB } from '../src/game/acousticVeil.ts';
 import { HIT_PARTICLES_MIN } from '../src/game/hullHit.ts';
@@ -147,6 +148,7 @@ import {
   MeshBasicMaterial,
   NormalBlending,
   Points,
+  ShaderLib,
   ShaderMaterial,
   type Material,
   type Object3D,
@@ -2374,6 +2376,7 @@ describe('renderer smoke test: the conn view', () => {
           drawn: 'low',
           targetBytes: 0,
           groundBytes: 0,
+          outerGround: null,
           worldLights: 0,
           searchlights: 0,
           beamMotes: 0,
@@ -3053,6 +3056,91 @@ describe('renderer smoke test: the water', () => {
       assert.equal(probes().__perspectiveSeabedM(x, z), eroded);
     } finally {
       study.teardown();
+    }
+  });
+
+  it('stands the study’s crater under its own water and on ground past its edge at High, and nowhere else (#1891)', async () => {
+    // docs/art-direction.md, "The crater from above": in the free-water
+    // study, at High, the water over a floor takes its light past the
+    // column's knee, the ink overlay takes the same column, and the ground is
+    // drawn on past the map's edge as one more lit draw of the world pass.
+    // Low draws none of it, and neither does any other look.
+    type Probes = {
+      __perspectiveQuality?: (quality: 'low' | 'high') => string;
+      __perspectiveSplit: (on: boolean) => string;
+      __perspectiveCamera: (x: number, z: number, distance?: number) => void;
+      __perspectiveProbe: () => {
+        waterColumnM: number;
+        graphicsQuality: { outerGround: { triangles: number; bytes: number } | null };
+      };
+    };
+    const lit = (pass: Iterable<Object3D>): Mesh[] =>
+      [...pass].filter((o) =>
+        ((o as Mesh).material as Material | undefined)
+          ?.customProgramCacheKey?.()
+          .endsWith(':lit-ground-9')
+      ) as Mesh[];
+    const inkColumn = (scene: Scene | null): number | undefined => {
+      let found: number | undefined;
+      scene?.traverse((object) => {
+        const material = (object as Mesh).material as Material | undefined;
+        if (material?.customProgramCacheKey?.().endsWith('-overlay')) {
+          const shader = { ...ShaderLib.basic, uniforms: {} as Record<string, { value: number }> };
+          material.onBeforeCompile(shader as never, {} as never);
+          found = shader.uniforms.uSurveyColumn?.value;
+        }
+      });
+      return found;
+    };
+    const [KNEE_M, WHOLE_M] = HIGH_GRAPHICS.CRATER.COLUMN_KNEE_M;
+    for (const look of ['standard', 'free-water'] as const) {
+      const world = await boot({ look });
+      try {
+        const probes = (globalThis as unknown as { window: Probes }).window;
+        probes.__perspectiveSplit(false);
+        probes.__perspectiveCamera(2000, 2000, WHOLE_M + 1000);
+        world.frame(3);
+        assert.equal(probes.__perspectiveProbe().waterColumnM, 0, `${look}: Low has no column`);
+        assert.equal(probes.__perspectiveProbe().graphicsQuality.outerGround, null);
+
+        assert.equal(probes.__perspectiveQuality!('high'), 'high');
+        world.frame(3);
+        const report = probes.__perspectiveProbe();
+        const grounds = world.gl.frameDraws.flatMap((pass) => lit(pass));
+        if (look === 'standard') {
+          assert.equal(report.waterColumnM, 0, 'a shipped map has no column at High');
+          assert.equal(report.graphicsQuality.outerGround, null);
+          assert.equal(grounds.length, 1, 'and its one lit ground');
+          assert.equal(inkColumn(world.gl.lastScene), 0, 'its ink fades by none');
+        } else {
+          assert.equal(report.waterColumnM, HIGH_GRAPHICS.CRATER.COLUMN_REACH_M);
+          const outer = report.graphicsQuality.outerGround;
+          assert.ok(outer !== null && outer.triangles > 0, 'the study stands ground past its edge');
+          const side = HIGH_GRAPHICS.CRATER.OUTER.BAKE_PX;
+          assert.equal(outer.bytes, Math.round((2 * side * side * 4 * 4) / 3));
+          assert.equal(grounds.length, 2, 'the map’s lit ground and the ground past its edge');
+          assert.ok(
+            grounds.every((mesh) => mesh.layers.mask === 1 << WORLD_LAYER),
+            'both in the world pass'
+          );
+          // The ink overlay reads the density the world pass does.
+          assert.equal(inkColumn(world.gl.lastScene), 1 / HIGH_GRAPHICS.CRATER.COLUMN_REACH_M);
+          // Under the knee, where a player commands from, there is no column.
+          probes.__perspectiveCamera(2000, 2000, KNEE_M);
+          world.frame(3);
+          assert.equal(probes.__perspectiveProbe().waterColumnM, 0);
+          assert.equal(inkColumn(world.gl.lastScene), 0);
+        }
+
+        assert.equal(probes.__perspectiveQuality!('low'), 'low');
+        probes.__perspectiveCamera(2000, 2000, WHOLE_M + 1000);
+        world.frame(3);
+        assert.equal(probes.__perspectiveProbe().waterColumnM, 0, `${look}: Low again has none`);
+        assert.equal(probes.__perspectiveProbe().graphicsQuality.outerGround, null);
+        assert.deepEqual(lit(world.gl.frameDraws[0]!), [], 'and no lit ground');
+      } finally {
+        world.teardown();
+      }
     }
   });
 

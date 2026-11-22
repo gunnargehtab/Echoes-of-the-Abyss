@@ -61,6 +61,7 @@
         "reachM": 1805,
         "columnM": 0
       },
+      "outerGround": null,
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
@@ -84,6 +85,7 @@
         "drawn": "low",
         "targetBytes": 0,
         "groundBytes": 0,
+        "outerGround": null,
         "worldLights": 0,
         "searchlights": 0,
         "beamMotes": 0,
@@ -147,6 +149,7 @@
         "reachM": 630,
         "columnM": 0
       },
+      "outerGround": null,
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
@@ -170,6 +173,7 @@
         "drawn": "low",
         "targetBytes": 0,
         "groundBytes": 0,
+        "outerGround": null,
         "worldLights": 0,
         "searchlights": 0,
         "beamMotes": 0,
@@ -229,6 +233,7 @@
         "reachM": 2457,
         "columnM": 0
       },
+      "outerGround": null,
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
@@ -252,6 +257,7 @@
         "drawn": "low",
         "targetBytes": 0,
         "groundBytes": 0,
+        "outerGround": null,
         "worldLights": 0,
         "searchlights": 0,
         "beamMotes": 0,
@@ -315,6 +321,7 @@
         "reachM": 32000,
         "columnM": 0
       },
+      "outerGround": null,
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
@@ -338,6 +345,7 @@
         "drawn": "low",
         "targetBytes": 0,
         "groundBytes": 0,
+        "outerGround": null,
         "worldLights": 0,
         "searchlights": 0,
         "beamMotes": 0,
@@ -365,8 +373,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 65,
-      "triangles": 834689,
+      "calls": 66,
+      "triangles": 850817,
       "camera": [
         709,
         1710,
@@ -406,6 +414,10 @@
         "reachM": 1805,
         "columnM": 0
       },
+      "outerGround": {
+        "triangles": 15904,
+        "bytes": 11184811
+      },
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
@@ -416,9 +428,9 @@
           "env-deep-fish": 26,
           "env-rim-ray": 1,
           "env-drift-jelly": 125,
+          "env-vent-chimney": 2,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1,
-          "env-vent-chimney": 2
+          "env-rim-manta": 1
         },
         "glints": 624,
         "jellyLights": 41375,
@@ -433,6 +445,10 @@
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
+        "outerGround": {
+          "triangles": 15904,
+          "bytes": 11184811
+        },
         "worldLights": 72,
         "searchlights": 2,
         "beamMotes": 72000,
@@ -460,8 +476,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 65,
-      "triangles": 834689,
+      "calls": 66,
+      "triangles": 850817,
       "camera": [
         542,
         1958,
@@ -501,6 +517,10 @@
         "reachM": 630,
         "columnM": 0
       },
+      "outerGround": {
+        "triangles": 15904,
+        "bytes": 11184811
+      },
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
@@ -511,9 +531,9 @@
           "env-deep-fish": 26,
           "env-rim-ray": 1,
           "env-drift-jelly": 125,
+          "env-vent-chimney": 2,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1,
-          "env-vent-chimney": 2
+          "env-rim-manta": 1
         },
         "glints": 624,
         "jellyLights": 41375,
@@ -528,6 +548,10 @@
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
+        "outerGround": {
+          "triangles": 15904,
+          "bytes": 11184811
+        },
         "worldLights": 72,
         "searchlights": 2,
         "beamMotes": 72000,
@@ -551,8 +575,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 46,
-      "triangles": 827358,
+      "calls": 47,
+      "triangles": 843486,
       "camera": [
         2000,
         2000,
@@ -592,6 +616,10 @@
         "reachM": 2457,
         "columnM": 0
       },
+      "outerGround": {
+        "triangles": 15904,
+        "bytes": 11184811
+      },
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
@@ -602,9 +630,9 @@
           "env-deep-fish": 26,
           "env-rim-ray": 1,
           "env-drift-jelly": 125,
+          "env-vent-chimney": 2,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1,
-          "env-vent-chimney": 2
+          "env-rim-manta": 1
         },
         "glints": 624,
         "jellyLights": 41375,
@@ -619,6 +647,10 @@
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
+        "outerGround": {
+          "triangles": 15904,
+          "bytes": 11184811
+        },
         "worldLights": 72,
         "searchlights": 2,
         "beamMotes": 72000,
@@ -646,8 +678,8 @@
         "split-copy",
         "split"
       ],
-      "calls": 65,
-      "triangles": 835327,
+      "calls": 66,
+      "triangles": 851455,
       "camera": [
         2000,
         2000,
@@ -687,6 +719,10 @@
         "reachM": 32000,
         "columnM": 2100
       },
+      "outerGround": {
+        "triangles": 15904,
+        "bytes": 11184811
+      },
       "life": {
         "bodies": {
           "env-kelp-stand": 56,
@@ -697,9 +733,9 @@
           "env-deep-fish": 26,
           "env-rim-ray": 1,
           "env-drift-jelly": 125,
+          "env-vent-chimney": 2,
           "env-vent-basalt": 3,
-          "env-rim-manta": 1,
-          "env-vent-chimney": 2
+          "env-rim-manta": 1
         },
         "glints": 624,
         "jellyLights": 41375,
@@ -714,6 +750,10 @@
         "drawn": "high",
         "targetBytes": 136145280,
         "groundBytes": 2796203,
+        "outerGround": {
+          "triangles": 15904,
+          "bytes": 11184811
+        },
         "worldLights": 72,
         "searchlights": 2,
         "beamMotes": 72000,

@@ -819,8 +819,9 @@ caps, 720,000 at Low and 900,000 at High (below).
 **At the High graphics quality the frame cap is 900,000 triangles** over every pass, by
 the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent
 stand that Low does not (§5): its frame stood at up to 720,318 after #1837 and at up to
-761,358 with #1856's school, at up to 764,047 with #1867's manta, and stands at up to
-835,327 with #1859's river of 120 lanterns. Low keeps
+761,358 with #1856's school, at up to 764,047 with #1867's manta, at up to 835,327
+with #1859's river of 120 lanterns, and stands at up to 851,455 with the ground #1891
+draws past the map's edge. Low keeps
 720,000, and gate 6's 8 ms of GPU time
 still binds High's frame. The 600,000 reservation above binds the Low list alone, by the
 owner's decision the same day, against binding High's list too and against a second
@@ -1024,9 +1025,10 @@ its ink with them:
 where it still read as built: panels with outlines, a black pocket and a square edge. That
 look is in development and moves no ground. The water over each floor takes its light,
 each wall hides the Lid's glow from the floor under it, and the survey ink fades with the
-ground it lies on ([art-direction.md](art-direction.md#the-crater-from-above)). Ground
-past the map's edge is that step's second part. The roofed cut keeps its ruled sides, by
-the hold above.
+ground it lies on ([art-direction.md](art-direction.md#the-crater-from-above)). The
+ground also runs on 2,000 m past the map's edge and falls away to the map's floor: the
+edge's own ground read on, with no cell under it, in 15,904 triangles of High's frame
+(§7). The roofed cut keeps its ruled sides, by the hold above.
 
 ### Kelp (#1751)
 

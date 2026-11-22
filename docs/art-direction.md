@@ -240,7 +240,7 @@ Built so far:
   ([#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855)). In
   development and not accepted. Below.
 - **From the survey dolly the free-water crater stands under its own water and its own
-  walls' shade** ([#1891](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1891)).
+  walls' shade, on ground that runs on past the map's edge** ([#1891](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1891)).
   In development and not accepted. Below.
 
 Not built yet: a searchlight on a standing prop, a prop's shadow, a hull's shadow on
@@ -1388,26 +1388,25 @@ water's reach follows the dolly ([Reading the Water](#reading-the-water)) and st
 light is shaded a pixel at a time: by the slope under the pixel and by ground within
 45 m of it. So a wall 900 m tall reaches the frame only as its 80 m scarp, a dark band of
 one width round every floor. The pocket's trench floor, with no water drawn over its
-2,400 m, read 0.9 of 255 beside open water at 7.4. And nothing hides where the ground
+2,400 m, read 1.0 of 255 beside open water at 7.0. And nothing hides where the ground
 stops. Home and Close do not show the fault: there the eye's own swim is the medium.
 
 Four things were written against that cause, and the owner took the second.
 
 - **Water over each floor, and shade under each wall.** No ground moves, and Low is
   untouched. Taken, with the next.
-- **Those, then ground past the map's edge.** Taken. The ground past the edge is this
-  step's second part and is not built yet.
+- **Those, then ground past the map's edge,** falling away into the deep. Taken.
 - **Water alone.** It mends the hole and leaves the outlines.
 - **Reshape the ground:** slopes sized by their drop, or a re-cut literal. It moves Low
   and the simulation's ground, so it is no step of High's.
 
-Built so far, in the free-water study alone:
+Built, in the free-water study alone:
 
 - **The water over a floor takes its light.** Past the dolly where the eye has left the
   water, a fragment of the world pass loses light to the column over it as well as to the
   swim from the eye, and the composite gives the water that share back at the floor's
   depth, in its biome's hue. The rim's 600 m keeps 0.92 of its light, the bowl's 1,500 m
-  0.60 and the pocket's 2,400 m 0.27. The pocket then reads 6.7 of 255, as deep water
+  0.60 and the pocket's 2,400 m 0.27. The pocket then reads 7.0 of 255, as deep water
   does. Depth is luminance, in the medium as on the ground. The term comes in between
   2,000 m and 5,000 m of dolly, so it takes nothing at Close, Home and gate 6's low
   camera, at 420 m, 1,200 m and 1,600 m. The sources' volumes and the searchlights'
@@ -1419,7 +1418,13 @@ Built so far, in the free-water study alone:
   reads that off its own drawn heights, at their true scale, along 16 bearings out to
   800 m, and takes 0.6 of what they find hidden. At the whole of it the bowl's ring drew
   as dark as the pocket beside it. It shades the glow alone: a pool and a beam are light
-  from beside the ground. It is in the ground's bake, so every camera has it.
+  from beside the ground. Two readings of where it shows were written. **In the ground's
+  bake, at every camera** is taken: it is the ground's own light, and it does not come and
+  go with the zoom. Home and Close then stand inside what two takes of one tree differ
+  by, and gate 6's low camera, which looks across the bowl's floor, moves 8.1% of its
+  pixels by more than 2 of 255. **Brought in with the column's knee** would leave those
+  three cameras as `main` draws them, and stand the walls' shade up as the camera pulls
+  out.
 - **The survey ink takes the same water.** The tactical layer is drawn as Low draws it,
   and [map-visuals.md](map-visuals.md) §4, rule 6, has the ink fade into the water like
   the ground it lies on. With water over the deep floors the two disagree. Two readings
@@ -1430,13 +1435,32 @@ Built so far, in the free-water study alone:
   the pocket a stroke keeps 0.27 of its strength from the survey dolly, and under the
   knee's 2,000 m of dolly it loses nothing.
 
-Not built: the ground past the map's edge, which is next. The roofed cut keeps its ruled
-sides ([free-water-slice.md](free-water-slice.md) §9).
+- **The ground runs on past the map's edge.** A mission drawn alone ends in the skirt,
+  a wall under the map's rectangle, and from above that is a square tile. The study's
+  ground is now drawn 2,000 m past its edge, as one more draw of the world pass and
+  15,904 triangles, with 224 more in the skirt. It is the edge's own ground and nothing else: past the edge the
+  cells are the edge's, held, so the rim runs out as rim and the exit pool as the pool's
+  channel, and the relief is the field the map's ground reads, so it crosses the edge
+  with no seam. It falls from the edge's depth to the map's 3,000 m floor at the reach,
+  level at both ends. There the column leaves 0.13 of its light and the rest is the
+  water's, so it ends in the colour the open water already is. The relief stands whole
+  for 250 m and has eased out by 1,000 m. Its lit bake is 1,024 px a side at the map's
+  own 7.8125 m a pixel, 11.2 MB with its mips. It takes the veil of the point on the
+  edge nearest it. The skirt hangs from its far boundary. Nothing is asked of it by the
+  simulation: no cell lies under it, a click on it is clamped onto the map as before,
+  and the survey draws no ink on it, since the chart ends at the rim, which stays where
+  it was. Low, and every shipped map, keep the skirt at the edge.
+
+Not built: the roofed cut keeps its ruled sides
+([free-water-slice.md](free-water-slice.md) §9), and the outer ground carries no silt
+detail, which the map's ground beside it does.
 
 `packages/frontend/test/water.test.ts` holds the column to its knee and to the three
 floors, `packages/frontend/test/lidShade.test.ts` holds the shade's order under a taller
-and a nearer wall, and `packages/frontend/test/surveyInk.test.ts` holds the ink's fade to
-taking strength away and never adding it.
+and a nearer wall, `packages/frontend/test/surveyInk.test.ts` holds the ink's fade to
+taking strength away and never adding it, and
+`packages/frontend/test/outerGround.test.ts` holds the outer ground to the map's own on
+the edge, to its fall, and to its triangles.
 
 | What | Constant | Value |
 | --- | --- | --- |
@@ -1445,6 +1469,10 @@ taking strength away and never adding it.
 | How far round a point a wall is looked for, metres | `CRATER.SHADE_REACH_M` | 800 |
 | Bearings it is looked for along | `CRATER.SHADE_RAYS` | 16 |
 | Share taken of the glow the walls hide | `CRATER.SHADE` | 0.6 |
+| How far past the edge the ground is drawn, and falls to the map's floor by, metres | `CRATER.OUTER.REACH_M` | 2000 |
+| Distance past the edge the relief stands whole to, and has eased out by, metres | `CRATER.OUTER.RELIEF_M` | 250, 1000 |
+| Distances past the edge the outer mesh has vertices at, metres | `CRATER.OUTER.RINGS_M` | 62.5, 125, 187.5, 250, 312.5, 375, 437.5, 500, 625, 750, 1000, 1250, 1500, 2000 |
+| Side of the outer ground's lit bake, pixels | `CRATER.OUTER.BAKE_PX` | 1024 |
 
 #### A mark on the lit world
 
