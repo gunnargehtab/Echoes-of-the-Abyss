@@ -86,9 +86,8 @@ tools/             Every harness and gate; tools/CLAUDE.md gives each its line.
 docs/              The design bible, and the source of every SPEC number.
 ```
 
-`tools/`, `packages/backend/`, `packages/frontend/` and `docs/` each have a `CLAUDE.md` for
-what binds that directory only, loaded for a session working under it. What stays here
-binds two or more.
+`tools/`, `packages/backend/`, `packages/frontend/` and `docs/` each have a `CLAUDE.md` for what
+binds that directory only, loaded for a session working under it. What stays here binds two or more.
 
 ### Server-authoritative is a hard rule, not a preference
 
@@ -102,8 +101,7 @@ client anything it has not resolved: not "temporarily", not behind a debug flag 
 
 All tuning numbers belong in `packages/shared/src/constants.ts`, tagged in their comment:
 
-- **SPEC** — taken from a design doc. Change the doc first, then the constant, citing the
-  doc section.
+- **SPEC** — taken from a design doc. Change the doc first, then the constant, citing the doc section.
 - **TUNABLE** — a prototype number the docs do not pin down. Free to move; expected to.
 
 Some are *derived*: `BASE_THRESHOLD` is solved from the spec'd 2,400 m active-sonar
@@ -150,7 +148,9 @@ Every mechanic is an argument about **sound** or **depth**: how loud it makes yo
 going deep commits you to. One anchored to neither is arbitrary — reconsider it before
 implementing it, and aim at dread rather than confusion. `docs/systems-echo.md` and
 `docs/systems-depth.md` are those two systems; `.github/copilot-instructions.md` is the
-design-side companion (SIG scale, biome PF, depth bands, doctrines).
+design-side companion (SIG scale, biome PF, depth bands, doctrines). Text a player reads says what
+to do in plain words beside any in-world voice: every objective row carries a gloss with digits
+and units, and nothing shown carries Markdown or a `§` (`docs/CLAUDE.md`; `missions.test.ts`).
 
 ## CI
 
@@ -168,10 +168,9 @@ to run first. Anything visual also clears `docs/graphics-standards.md` and
 work". The template is `.github/PULL_REQUEST_TEMPLATE.md` — upper case is the only spelling
 here, so a probe for `.github/pull_request_template.md` finds nothing and proves nothing.
 
-- **Push in instalments.** A session can hit a context or session limit and lose its
-  container. Commit and push at every self-contained step; open the pull request once an
-  increment stands on its own and passes the gates, not when the issue is done, and say
-  in it what is left.
+- **Push in instalments.** A session can hit a context or session limit and lose its container.
+  Commit and push at every self-contained step; open the pull request once an increment stands
+  on its own and passes the gates, not when the issue is done, and say in it what is left.
 - **Claim the issue before you touch a file.** Assign it to the repository owner (`get_me`
   gives the login) **before** the first edit, in every session: the assignee is the only
   claim that exists before a branch does (`.claude/skills/work-issue/SKILL.md` §3; §5 keeps
