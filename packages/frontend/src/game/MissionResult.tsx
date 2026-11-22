@@ -19,7 +19,8 @@
  * of the other five parties, and not a score.
  */
 
-import { MissionOutcome, ObjectiveStatus, type MissionResultPayload } from '@echoes/shared';
+import { MissionOutcome, type MissionResultPayload } from '@echoes/shared';
+import { progressWords, statusClass, statusWord } from './objectiveWords.ts';
 
 /**
  * Chrome, not register. The authored words are the epilogue; this line only
@@ -28,7 +29,7 @@ import { MissionOutcome, ObjectiveStatus, type MissionResultPayload } from '@ech
  */
 const OUTCOME_HEADING: Record<MissionOutcome, string> = {
   [MissionOutcome.Complete]: 'Mission complete',
-  [MissionOutcome.Partial]: 'Mission ended',
+  [MissionOutcome.Partial]: 'Partial result',
   [MissionOutcome.Lost]: 'Mission lost',
 };
 
@@ -36,12 +37,6 @@ const OUTCOME_CLASS: Record<MissionOutcome, string> = {
   [MissionOutcome.Complete]: 'mission-result-complete',
   [MissionOutcome.Partial]: 'mission-result-partial',
   [MissionOutcome.Lost]: 'mission-result-lost',
-};
-
-const STATUS_WORD: Record<ObjectiveStatus, string> = {
-  [ObjectiveStatus.Pending]: 'open',
-  [ObjectiveStatus.Met]: 'met',
-  [ObjectiveStatus.Failed]: 'failed',
 };
 
 export interface MissionResultProps {
@@ -75,16 +70,11 @@ export function MissionResult({
 
         <ul className="mission-result-objectives">
           {result.objectives.map((objective) => (
-            <li
-              key={objective.id}
-              className={`mission-result-objective ${STATUS_WORD[objective.status]}`}
-            >
-              <span className="mission-result-status">{STATUS_WORD[objective.status]}</span>
+            <li key={objective.id} className={`mission-result-objective ${statusClass(objective)}`}>
+              <span className="mission-result-status">{statusWord(objective)}</span>
               <span className="mission-result-text">{objective.text}</span>
               {objective.progress !== undefined && (
-                <span className="mission-result-progress">
-                  {objective.progress.done} of {objective.progress.of}
-                </span>
+                <span className="mission-result-progress">{progressWords(objective)}</span>
               )}
             </li>
           ))}
@@ -101,7 +91,7 @@ export function MissionResult({
             Return to port
           </button>
         </div>
-        <p className="mission-result-hint">Same water, from the first tick.</p>
+        <p className="mission-result-hint">Again restarts this mission from the beginning.</p>
       </div>
     </div>
   );

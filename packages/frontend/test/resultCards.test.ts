@@ -259,14 +259,14 @@ async function missionResult(
 }
 
 describe('the mission result: a partial run is a result', () => {
-  it('says a partial mission ended, and never that it was lost', async () => {
+  it('says a partial mission is a partial result, and never that it was lost', async () => {
     // docs/mission-sorrowgate.md §8: "A partial result ends the mission and is
     // a result. It is not a soft failure and the player is not asked to replay
     // it." A heading calling it a loss would be the client overruling the
     // fiction about the one thing the fiction is for.
     const { view } = await missionResult(payload({ outcome: MissionOutcome.Partial }));
     try {
-      assert.ok(view.shows('Mission ended'));
+      assert.ok(view.shows('Partial result'));
       assert.equal(view.text().join(' ').includes('lost'), false);
       assert.equal(
         String(view.root.findByType('h2').props.className),
@@ -324,7 +324,7 @@ describe('the mission result: a partial run is a result', () => {
       const progress = view.allByClass('mission-result-progress');
       assert.equal(progress.length, 1, 'a counter only where the mission sent one');
       assert.equal(
-        (progress[0]!.props.children as unknown[]).join(''),
+        String(progress[0]!.props.children),
         '1 of 2',
         'the counter the mission was already showing, not a score computed here'
       );
@@ -708,7 +708,7 @@ describe('the mission result: an epilogue cannot carry itself out of the card', 
 
           // The heading, the action row and the hint beneath it: all three are
           // templated by the client (`OUTCOME_HEADING`, the three button
-          // labels, and "Same water, from the first tick."), so none of them
+          // labels, and the restart hint beneath them), so none of them
           // may break.
           if (element.tag === 'h2') headings.add(classes.join('.'));
           assert.equal(

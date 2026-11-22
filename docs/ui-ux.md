@@ -1162,6 +1162,22 @@ something new, and a log role would re-announce the whole panel every time a cou
   in that place; a view outside it names it on the outside of the near side, as high on the
   water as there is room. Outside a ring with none of its line on the water, or with no room
   for the name beside it on either side, the chart draws no name, and its row still names it.
+- **A row's status word says what kind of row it is.** A **task** reads `OPEN`, then `MET`
+  or `FAILED`, and a met task's reading dims because it is done. A **rule** — a silence
+  order, a muster, a column that must be home at the close, anything the runtime re-reads
+  every pass rather than latching — reads `KEPT` while it holds and `BROKEN` when it does
+  not, and is never dimmed, because it can still be broken. A **budget** — the seconds of
+  classification a mission tolerates — reads `BUDGET`, counts in seconds (`12 of 30 s`), and
+  reads `SPENT` in amber once it is gone. All three read `MET` until #1883, which is how
+  Sorrowgate's silence order read *met* twenty-one seconds in, and how thirteen missions
+  greeted a spent classification budget with the colour of a success. The server sends the
+  kind as a code (`ObjectiveForm`) read off the literal's own shape, and the shell words it.
+- **A row says whether it decides the result.** A keystone — missed, it loses the mission
+  whatever else came home — carries `CRITICAL` at the foot of its reading, and a row the
+  result does not count carries `OPTIONAL`. A required row carries nothing, because it is
+  the plain case. Nothing said which was which until #1883, and a cold read of ten missions
+  could not tell a must-not-fail row from flavour. The code is `ObjectiveWeight`; at the
+  foot of the reading it costs no line of its own on any row authored today.
 - **A row that runs on a clock says how long is left.** A hold that ends on its own — the
   flight holding at the arch, a sitting, a tide — shows the time remaining under its status
   word, `OPEN` over `10:10`, until the row is met. A player told to hold and not told for how

@@ -32,6 +32,8 @@ import {
   Faction,
   FaunaSpecies,
   MISSION,
+  ObjectiveForm,
+  ObjectiveWeight,
   ambientBandsFor,
   faunaStatsFor,
   ResolutionTier,
@@ -49,6 +51,8 @@ import {
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { MISSIONS, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
+import { LEDGER_EXPOSURE } from '../src/sim/missions/exposure.ts';
+import { Match } from '../src/sim/match.ts';
 import { dueConditionalBeats } from '../src/sim/missions/conditional.ts';
 import { accrueSounding, soundingHolds } from '../src/sim/missions/sounding.ts';
 import { DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
@@ -1568,6 +1572,115 @@ describe('Sorrowgate, as docs/mission-sorrowgate.md states it', () => {
     // through, so the court reads what it took rather than a count it did not.
     assert.match(PROLOGUE_SORROWGATE.epilogue[1], /^One tender is through\./);
     assert.match(PROLOGUE_SORROWGATE.epilogue[2], /^The gate is closed\. Fourteen are behind it\./);
+  });
+});
+
+/**
+ * Every string a mission shows a player, with the path it sits at — the words
+ * the briefing, the orders panel, the chart, the mission log and the close
+ * print verbatim. Authoring keys are skipped by name, and two subtrees whole:
+ * a predicate and a condition are rules the server reads, not sentences.
+ */
+const AUTHORING_KEYS = new Set([
+  'note',
+  'id',
+  'tag',
+  'tags',
+  'role',
+  'region',
+  'kind',
+  'mapId',
+  'scene',
+  'campaign',
+  'missionId',
+  'markerId',
+  'viaMarkerId',
+  'silenceRole',
+  'speakerId',
+  'voice',
+  'cadre',
+  'account',
+  'ability',
+  'objectiveId',
+  'doc',
+  'arrayTag',
+  'loaded',
+  'choiceGroup',
+  'silencedByLift',
+  'species',
+  'pattern',
+  'speaker',
+  'faction',
+  'predicate',
+  'when',
+]);
+function playerStrings(root: unknown): { path: string; text: string }[] {
+  const found: { path: string; text: string }[] = [];
+  const walk = (value: unknown, path: string, key: string): void => {
+    if (AUTHORING_KEYS.has(key)) return;
+    if (typeof value === 'string') found.push({ path, text: value });
+    else if (Array.isArray(value)) value.forEach((v, i) => walk(v, `${path}[${i}]`, key));
+    else if (value !== null && typeof value === 'object') {
+      for (const [k, v] of Object.entries(value)) walk(v, path === '' ? k : `${path}.${k}`, k);
+    }
+  };
+  walk(root, '', '');
+  return found;
+}
+
+describe('the words a player reads', () => {
+  it('carry no markup, no repository reference and no template hole', () => {
+    // The panel, the log and the close print authored text verbatim, in plain
+    // text: `**The Voice** is home.` reached Nineteen's close with its
+    // asterisks on, because the line was copied out of a Markdown table
+    // (#1883). A section sign, a doc path or an issue number is a reference
+    // only this repository can follow, and a dash before a full stop is a
+    // number somebody meant to fill in.
+    const RULES: readonly [RegExp, string][] = [
+      [/\*\*|__|`/, 'Markdown, which the client prints as characters'],
+      [/§|docs\/|\.md\b|#\d/, 'a reference to the repository'],
+      [/\$\{|\{\w+\}|\bTODO\b|\bTBD\b|XXX/, 'a placeholder'],
+      [/—\s*\./, 'a dash where a value was meant to go'],
+      [/\s{2,}|^\s|\s$/, 'stray whitespace'],
+    ];
+    const sources: { id: string; root: unknown }[] = [
+      ...MISSIONS.map((mission) => ({ id: mission.id, root: mission })),
+      ...MISSIONS.map((mission) => ({
+        id: `${mission.id} header`,
+        root: missionHeaderById(mission.id),
+      })),
+    ];
+    let checked = 0;
+    for (const { id, root } of sources) {
+      for (const { path, text } of playerStrings(root)) {
+        checked += 1;
+        for (const [rule, what] of RULES) {
+          assert.doesNotMatch(text, rule, `${id} ${path} carries ${what}: "${text}"`);
+        }
+      }
+    }
+    assert.ok(checked > 1000, `only ${checked} strings were found, so the walk is broken`);
+  });
+
+  it('tells a task, a rule and a budget apart, and says which rows decide the result', () => {
+    // docs/ui-ux.md §10.5 (#1883). Exposure carries all three kinds: the
+    // readings are a task, the return is a rule re-read every pass and the
+    // keystone, and classification is a budget no result counts.
+    const match = new Match(missionMapById(LEDGER_EXPOSURE.mapId)!, {
+      mission: LEDGER_EXPOSURE,
+      fauna: false,
+      seed: 7,
+    });
+    for (let tick = 0; tick < SIM.TICK_HZ / SIM.ECHO_HZ; tick++) match.update(1000 / SIM.TICK_HZ);
+    const view = match.takeMissionView();
+    assert.ok(view, 'the first Echo pass must carry the orders');
+    const row = (id: string) => view.objectives.find((objective) => objective.id === id)!;
+    assert.equal(row('the-readings').form, undefined, 'a task carries no form');
+    assert.equal(row('the-readings').weight, undefined, 'a required row carries no weight');
+    assert.equal(row('the-return').form, ObjectiveForm.Rule);
+    assert.equal(row('the-return').weight, ObjectiveWeight.Critical);
+    assert.equal(row('the-tolerance').form, ObjectiveForm.Budget);
+    assert.equal(row('the-tolerance').weight, ObjectiveWeight.Optional);
   });
 });
 

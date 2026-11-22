@@ -11,7 +11,7 @@
  * Widening it is how this stops being true, so it is the line to defend.
  */
 
-import { ObjectiveStatus, SIM } from '@echoes/shared';
+import { ObjectiveForm, ObjectiveStatus, ObjectiveWeight, SIM } from '@echoes/shared';
 import type {
   AbilityLock,
   CommanderAbilityView,
@@ -22,7 +22,7 @@ import type {
   ObjectiveView,
 } from '@echoes/shared';
 
-import { exposedAtLeast, progressOf, type PairedIds } from './predicates.ts';
+import { exposedAtLeast, isStanding, progressOf, type PairedIds } from './predicates.ts';
 import type {
   MissionDefinition,
   MissionObjective,
@@ -206,6 +206,14 @@ function objectiveView(
     }),
     status: state.statuses.get(objective.id) ?? objective.initial,
   };
+  // What kind of sentence the row is and whether it decides the result
+  // (docs/ui-ux.md §10.5, #1883). Codes, not words: the shell says them. Read
+  // off the literal's own shape, so a row cannot be told it is a rule while
+  // the runtime latches it as a task.
+  const form = formOf(objective);
+  if (form !== ObjectiveForm.Task) view.form = form;
+  if (objective.keystone === true) view.weight = ObjectiveWeight.Critical;
+  else if (objective.terminal !== true) view.weight = ObjectiveWeight.Optional;
   // The plain line beside the reading — docs/ui-ux.md §10.5, #720, #725.
   //
   // Chosen from the literal, never assembled: this is one of the mission's own
@@ -308,6 +316,17 @@ function textFor(
  * this one. A mission that wants another reading gains a paired field here
  * beside it, exactly as `debtGloss` did.
  */
+/**
+ * A budget is a tolerance; a rule is whatever the runtime re-reads every pass
+ * rather than latching — `isStanding`'s predicates and any row authored
+ * `standing`. Everything else is a task, met once and kept.
+ */
+export function formOf(objective: MissionObjective): ObjectiveForm {
+  if (objective.predicate.kind === 'tolerance') return ObjectiveForm.Budget;
+  if (objective.standing === true || isStanding(objective.predicate)) return ObjectiveForm.Rule;
+  return ObjectiveForm.Task;
+}
+
 function glossFor(objective: MissionObjective, state: MissionState): string | undefined {
   if (objective.debtGloss !== undefined && state.debtS > 0) return objective.debtGloss;
   return objective.gloss;
