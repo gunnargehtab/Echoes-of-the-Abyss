@@ -240,7 +240,7 @@ describe('the lit ground’s material (#1801)', () => {
     assert.ok(shader.vertexShader.includes('vLitWorld = ( modelMatrix'));
     const key = material.customProgramCacheKey();
     assert.ok(key.startsWith('survey-ink-carrier'), key);
-    assert.ok(key.endsWith(':lit-ground-8'), key);
+    assert.ok(key.endsWith(':lit-ground-9'), key);
   });
 
   it('lights the ground from the Lid’s glow: from above, from no quarter, dimmed by depth', () => {
@@ -258,11 +258,24 @@ describe('the lit ground’s material (#1801)', () => {
     assert.ok(LIT_GROUND_GLSL.includes(LIT_IRRADIANCE_GLSL));
     // And what the world's own sources pool on the ground is added to it,
     // under the same occlusion: light from beside, which depth does not take.
+    // The glow is first cut by what the ground round the pixel hides of the
+    // water above it, at the crater's scale (lidShade.ts, #1891): the
+    // relief's alpha, which the pools are not under.
     assert.ok(
       LIT_GROUND_GLSL.includes(
-        'echoesLitIrradiance( normal, world.y ) + texture2D( uLitPools, uv ).rgb'
+        'echoesLitIrradiance( normal, world.y ) * relief.a + texture2D( uLitPools, uv ).rgb'
       )
     );
+  });
+
+  it('bakes every relief pixel open to the whole water above', () => {
+    // The shade is a view's to write, for the free-water study alone
+    // (`PerspectiveView.shadeLid`). A bake leaves alpha whole, so every other
+    // ground takes the Lid's glow times one: the light it took before #1891.
+    const { surface } = bakeLit(flatTerrain());
+    for (let i = 3; i < surface.bake.relief.length; i += 4) {
+      assert.equal(surface.bake.relief[i], 255, `relief pixel ${(i - 3) / 4}`);
+    }
   });
 
   /**
@@ -314,7 +327,7 @@ describe('the lit ground’s material (#1801)', () => {
     // under the marks is gone, and nothing replaced it: a mark stands bare
     // on the lit world (#1801, D2).
     const sum = LIT_GROUND_GLSL.indexOf(
-      'vec3 irradiance = echoesLitIrradiance( normal, world.y ) + texture2D( uLitPools, uv ).rgb;'
+      'vec3 irradiance = echoesLitIrradiance( normal, world.y ) * relief.a + texture2D( uLitPools, uv ).rgb;'
     );
     const out = LIT_GROUND_GLSL.indexOf('return albedo * irradiance * relief.g');
     assert.ok(sum > 0 && out > sum);

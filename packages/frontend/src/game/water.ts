@@ -53,7 +53,7 @@ import {
   Vector4,
   type Material,
 } from 'three';
-import { DEPTH, LID, THERMOCLINE } from '@echoes/shared';
+import { DEPTH, HIGH_GRAPHICS, LID, THERMOCLINE } from '@echoes/shared';
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
 import { DREAM_LOOP, dreamSnowNear } from './dreamLoop.ts';
 import { EXTERIOR_FADE_GLSL } from './worldBorder.ts';
@@ -291,6 +291,40 @@ export function waterTransmittance(distanceM: number, reachM: number): number {
   return Math.exp(-t * t);
 }
 
+/**
+ * The water over a floor, at the High graphics quality — TUNABLE,
+ * development-only (docs/art-direction.md, "The crater from above"; #1891).
+ *
+ * The reach above follows the dolly, so that a chart is never a wash. At the
+ * free-water study's survey dolly it stands at 32 km, and every floor keeps
+ * 0.91 of its light whatever lies over it: the pocket's 2,400 m of water hid
+ * as little as the rim's 600 m, and the pocket's bare trench floor drew at an
+ * eighth of the open water beside the map. An eye that far out is not in the
+ * water at all. What it looks through is the column over each floor, so past
+ * `COLUMN_KNEE_M` a fragment of the world pass also loses light by its own
+ * depth, and the composite gives the water that share back at that depth
+ * (highFrame.ts). Depth is luminance, in the medium as on the ground.
+ *
+ * This returns the term's density, one over the depth that leaves 1/e of a
+ * floor's light, eased in by the dolly: 0 at or under the knee's first
+ * figure, so the cameras a player commands from draw exactly as they did.
+ * `waterDensity` is the player's setting, as `fogDensityFor` takes it: at 0
+ * the water hides nothing, the column included. `study` is the free-water
+ * curve's switch, and every shipped map reads 0.
+ */
+export function waterColumnDensity(dollyM: number, waterDensity: number, study = false): number {
+  if (!study || waterDensity <= 0) return 0;
+  const [from, to] = HIGH_GRAPHICS.CRATER.COLUMN_KNEE_M;
+  const eased = smoothstepAt(from, to, dollyM);
+  return (eased * Math.min(1, waterDensity)) / HIGH_GRAPHICS.CRATER.COLUMN_REACH_M;
+}
+
+/** What the column over a point at `depthM` leaves of its light (`waterColumnDensity`). */
+export function waterColumnTransmittance(depthM: number, columnDensity: number): number {
+  const t = Math.max(0, depthM) * columnDensity;
+  return Math.exp(-t * t);
+}
+
 // ------------------------------------------------------------- the fog
 
 let fogInstalled = false;
@@ -378,12 +412,19 @@ export function installWaterFog(): void {
     // water took, per sample. A blended fragment leaves alpha to its blend,
     // unless it blends by a constant (`blendSwimByCoverage`): then its alpha
     // is free to carry its own coverage's survivors.
+    //
+    // Its green is the column's density (`waterColumnDensity`): the water
+    // over the fragment takes light too, by the fragment's own depth, and 0
+    // takes none. One number for the swim and the column, so alpha still
+    // holds what survived both.
     '  if ( fogColor.r < 0.0 ) {',
-    '    gl_FragColor.rgb *= 1.0 - fogFactor;',
+    '    float echoesColumn = fogColor.g * max( 0.0, echoesWaterDepthM( vWaterWorldY ) );',
+    '    float echoesSwim = ( 1.0 - fogFactor ) * exp( - echoesColumn * echoesColumn );',
+    '    gl_FragColor.rgb *= echoesSwim;',
     '    #ifdef OPAQUE',
-    '      gl_FragColor.a = 1.0 - fogFactor;',
+    '      gl_FragColor.a = echoesSwim;',
     `    #elif defined( ${SWIM_COVERAGE_DEFINE} )`,
-    '      gl_FragColor.a *= 1.0 - fogFactor;',
+    '      gl_FragColor.a *= echoesSwim;',
     '    #endif',
     '  } else {',
     '    vec3 waterAtFragment = echoesWaterColor( echoesWaterDepthM( vWaterWorldY ) );',
@@ -430,7 +471,8 @@ export function blendSwimByCoverage(material: Material, coverage: number | null)
 
 /**
  * The sign the High world pass sets on `scene.fog.color` while it draws
- * (`installWaterFog`): any negative red. The pass restores the colour after.
+ * (`installWaterFog`): any negative red. Its green carries the column's
+ * density beside it. The pass restores the colour after.
  */
 export const HIGH_WORLD_FOG_SIGN = -1;
 

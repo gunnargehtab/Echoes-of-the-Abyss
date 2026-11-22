@@ -57,7 +57,10 @@ smoothed across its belly and back, its wings stroke in the vertex program, and 
 that looks down takes the Lid's glow through the body by its thickness there. Over the
 free-water crater's vent stand, and nowhere else yet, a chimney's steam leaves the
 canvas at High: `ventSmoke.ts` draws it in the world pass as matter lit by the vent, the
-Lid and the beams, one plume a stack.
+Lid and the beams, one plume a stack. Past the survey knee the crater's floors also lose
+light to the water over them (#1891, `water.ts` `waterColumnDensity`, on the fog sign's
+green), the lit bake's alpha holds the glow its walls hide (`lidShade.ts`), and the ink
+overlay fades by the same column: the one tactical draw High changes, by the owner's call.
 
 ## Tests run under a Vite shim
 

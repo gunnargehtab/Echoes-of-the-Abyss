@@ -134,7 +134,12 @@ export const LIT_GROUND_GLSL = [
   // The world's own sources pool on it (worldLights.ts): light from beside
   // the ground, which the water above it does not take. Nothing holds the sum
   // down, here or after: a mark stands bare on the lit world (#1801, D2).
-  '  vec3 irradiance = echoesLitIrradiance( normal, world.y ) + texture2D( uLitPools, uv ).rgb;',
+  // The relief's alpha is how much of that water the ground round the pixel
+  // leaves it at the crater's scale (lidShade.ts): 1 from every bake, less
+  // under a wall where a view has written the shade. It is the Lid's alone:
+  // a pool and a beam are light from beside the ground, which no wall
+  // overhead hides.
+  '  vec3 irradiance = echoesLitIrradiance( normal, world.y ) * relief.a + texture2D( uLitPools, uv ).rgb;',
   // And an own hull's searchlight, which the same slope shades by where the
   // beam comes from: a dune's lit face and its lee (searchlights.ts).
   '  irradiance += echoesSearchlight( world, normal );',
@@ -145,7 +150,7 @@ export const LIT_GROUND_GLSL = [
   '}',
 ].join('\n');
 
-const LIT_GROUND_KEY = ':lit-ground-8';
+const LIT_GROUND_KEY = ':lit-ground-9';
 const LIT_ROOF_KEY = ':lit-roof-1';
 
 /** The unlit sum the patch replaces: three's basic material, r187. */

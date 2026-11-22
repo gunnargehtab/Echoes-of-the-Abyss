@@ -1020,6 +1020,14 @@ its ink with them:
   ([map-visuals.md](map-visuals.md) §4, the study's clause). The cells stay the truth the
   simulation plays on and the scope draws.
 
+**At the High graphics quality** the crater is judged again from the survey dolly (#1891),
+where it still read as built: panels with outlines, a black pocket and a square edge. That
+look is in development and moves no ground. The water over each floor takes its light,
+each wall hides the Lid's glow from the floor under it, and the survey ink fades with the
+ground it lies on ([art-direction.md](art-direction.md#the-crater-from-above)). Ground
+past the map's edge is that step's second part. The roofed cut keeps its ruled sides, by
+the hold above.
+
 ### Kelp (#1751)
 
 The prop reservation rose from 400,000 to 600,000 triangles in #1751; §7 carries the

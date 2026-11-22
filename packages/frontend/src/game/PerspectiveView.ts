@@ -179,6 +179,7 @@ import {
   litGroundSurface,
   type LitGroundSurface,
 } from './litGround.ts';
+import { lidVisibility, writeLidShade } from './lidShade.ts';
 import {
   highRefusal,
   publishGraphicsQualityStatus,
@@ -217,6 +218,7 @@ import {
   waterColorAt,
   WaterBackdrop,
   fogDensityFor,
+  waterColumnDensity,
   waterReachM,
   waterTransmittance,
   blendSwimByCoverage,
@@ -1003,6 +1005,13 @@ export class PerspectiveView {
    * by the fog, the backdrop, the snow and the embers, so the four cannot
    * disagree about where the visible world ends. */
   private waterReach = waterReachM(4000);
+  /**
+   * The density of the water over a floor this frame, per metre of its depth
+   * (water.ts `waterColumnDensity`): the High world pass's, and the survey
+   * ink's over it. 0 on every shipped map and at every dolly a player
+   * commands from.
+   */
+  private waterColumn = 0;
 
   private readonly unitGroup = new Group();
   private readonly structureGroup = new Group();
@@ -1191,6 +1200,8 @@ export class PerspectiveView {
   private litMaterial: MeshBasicMaterial | null = null;
   private groundSkin: MeshBasicMaterial | null = null;
   private inkOverlay: Mesh | null = null;
+  /** The ink overlay's column uniform (surveyInk.ts), written once a frame. */
+  private inkColumn: { value: number } | null = null;
   /**
    * The water's hue over this ground, a plan texture (waterMedium.ts), and
    * the light the world's own sources pool on it (worldLights.ts), under
@@ -1569,6 +1580,27 @@ export class PerspectiveView {
       // Under High the bake writes the lit ground's pixels beside the skin.
       ...(this.litSurface !== null ? { lit: this.litSurface.bake } : {}),
     };
+  }
+
+  /**
+   * Shade the lit ground by the Lid's glow its own walls hide (lidShade.ts;
+   * docs/art-direction.md, "The crater from above"): the free-water study's
+   * alone, on the same switch as its water and its eroded ground. Read off
+   * the whole grid and written over every pixel each time, so a ground delta
+   * leaves what a rebuild would. Every other ground keeps the bake's own
+   * alpha, which shades nothing.
+   */
+  private shadeLid(grid: HeightGrid): void {
+    const terrain = this.terrain;
+    if (this.litSurface === null || terrain === null || !this.waterStudy) return;
+    writeLidShade(
+      this.litSurface.bake.relief,
+      terrain.cols * SEABED_PX_PER_CELL,
+      terrain.rows * SEABED_PX_PER_CELL,
+      grid,
+      lidVisibility(grid)
+    );
+    this.litSurface.relief.needsUpdate = true;
   }
 
   /**
@@ -3291,6 +3323,7 @@ export class PerspectiveView {
         this.scene.remove(this.inkOverlay);
         (this.inkOverlay.material as MeshBasicMaterial).dispose();
         this.inkOverlay = null;
+        this.inkColumn = null;
       }
       this.litMaterial?.dispose();
       this.litMaterial = null;
@@ -3508,6 +3541,7 @@ export class PerspectiveView {
         );
       }
       installLitGround(lit, this.litSurface.relief, this.litPools);
+      this.shadeLid(grid);
       this.litMaterial = lit;
       // The water over this ground wears its biomes' hues (waterMedium.ts).
       this.waterHue = waterHueTexture(terrain);
@@ -3525,7 +3559,8 @@ export class PerspectiveView {
         polygonOffsetFactor: -2,
         polygonOffsetUnits: -2,
       });
-      installSurveyInk(ink, terrain, cells, drawnSurvey, 'overlay');
+      this.inkColumn = installSurveyInk(ink, terrain, cells, drawnSurvey, 'overlay').uSurveyColumn;
+      this.inkColumn.value = this.waterColumn;
       this.inkOverlay = new Mesh(geometry, ink);
       // Before every other blended draw of the tactical pass: at Low the ink
       // is part of the opaque ground, under all of them.
@@ -3757,6 +3792,8 @@ export class PerspectiveView {
     );
     texture.needsUpdate = true;
     if (this.litSurface !== null) {
+      // The rebake wrote the touched pixels' shade back to none.
+      this.shadeLid(grid);
       this.litSurface.albedo.needsUpdate = true;
       this.litSurface.relief.needsUpdate = true;
     }
@@ -6018,6 +6055,12 @@ export class PerspectiveView {
     if (this.scene.fog instanceof FogExp2) {
       this.scene.fog.density = fogDensityFor(this.distance, this.waterDensity, this.waterStudy);
     }
+    // The column is High's alone (docs/art-direction.md, "The crater from
+    // above"): Low's ground and its ink never read it.
+    this.waterColumn = this.high.on
+      ? waterColumnDensity(this.distance, this.waterDensity, this.waterStudy)
+      : 0;
+    if (this.inkColumn !== null) this.inkColumn.value = this.waterColumn;
     // The arch study's distance grade breathes with the same dolly (§11).
     if (ARCH_STUDY_ON) setDistanceGrade(this.distance, this.waterDensity);
 
@@ -6163,6 +6206,7 @@ export class PerspectiveView {
               this.scene.fog instanceof FogExp2 && this.scene.fog.density > 0
                 ? 1 / this.scene.fog.density
                 : 0,
+            columnDensity: this.waterColumn,
           })
         );
       } else {
@@ -6492,6 +6536,10 @@ export class PerspectiveView {
       // at different zooms are two different waters.
       waterReachM: Math.round(this.waterReach),
       waterDensity: Number(this.waterDensity.toFixed(2)),
+      // The depth of water that leaves 1/e of a floor's light this frame, or
+      // 0 where the column over a floor takes none: every shipped map, the
+      // Low quality, and the study's High under its knee (#1891).
+      waterColumnM: this.waterColumn > 0 ? Math.round(1 / this.waterColumn) : 0,
       // The particulate this frame: the motes each cloud is drawing, zero for
       // a cloud the eye has climbed out of. The study's near cloud is `near`;
       // a shipped map reports none (docs/free-water-slice.md §9).

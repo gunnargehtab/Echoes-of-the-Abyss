@@ -2335,7 +2335,7 @@ describe('renderer smoke test: the conn view', () => {
         world.frame(3);
         const lit = world.gl.frameDraws.flatMap((pass) => keysOf(pass));
         assert.equal(lit.length, 1, `${look}: one ground carries the detail, in one pass`);
-        assert.ok(lit[0]!.endsWith(':seabed-detail-5-relief-1:lit-ground-8'), lit[0]);
+        assert.ok(lit[0]!.endsWith(':seabed-detail-5-relief-1:lit-ground-9'), lit[0]);
 
         assert.equal(probes.__perspectiveQuality!('low'), 'low');
         world.frame(3);
