@@ -85,10 +85,12 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
   or promotes one.
 - **A Fable session does it.** The owner set this routing on 11 November 2026. Look work,
   like shape work, is authored under Fable, and the Routine is pinned to another model.
-  A look issue stays assigned to the owner until a Fable session takes it, and whoever
-  files the next look step assigns it the same way. A firing that finds its issue is look
-  work stops and releases it. The critic stays `opus`: a model other than the author's
-  grades the frames.
+  A look issue carries the **`look-work`** label, which the Routine skips as it skips
+  `shape-work` (#1880), and stays assigned to the owner until a Fable session takes it.
+  Whoever files the next look step labels and assigns it the same way. A firing that
+  finds its issue is look work without the label applies it, stops and releases it, so
+  the next firing does not take it again. Nothing removes the label but a person. The
+  critic stays `opus`: a model other than the author's grades the frames.
 
 The round, the critic, the cap and "Three things the loop must never do" are unchanged.
 What changes is what a round is graded against.

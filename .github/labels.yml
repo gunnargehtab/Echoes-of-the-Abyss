@@ -63,6 +63,13 @@
   color: f4a6c8
   description: Shape work for the design model of record (asset-prompts-3d.md rule 3); the Routine skips it
 
+# Added on 22 November 2026 (#1880). Until then the only hold on a look issue was
+# the owner as assignee, which also means "taken" and is lost to an unassign. Named
+# for the work, not the model, for shape-work's reason above.
+- name: look-work
+  color: a6d8f4
+  description: Look work against a frame the owner named, for a Fable session (dev-loop); the Routine skips it
+
 - name: routine
   color: 006b75
   description: Opened by the unattended work-issue Routine

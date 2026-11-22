@@ -109,7 +109,9 @@ the rules, `loop-critic` grades the picture before the diff, and
 `docs/graphics-standards.md` gate 6 bounds the High graphics quality by frame time. Since
 20 November 2026 the owner looks once, on the named GPU, when #1637's design work is
 finished; an increment merges on software frames, and one that adds shading cost carries
-a timing run. No gate enforces any of it: a look is judged by looking.
+a timing run. No gate enforces any of it: a look is judged by looking. What keeps a look
+issue from the Routine, which runs another model, is the `look-work` label (#1880), as
+`shape-work` keeps shape work.
 
 ### These files are gated too, and a number in them carries its source
 

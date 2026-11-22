@@ -95,6 +95,7 @@ labelled:
 | `needs-decision` | A person reserved the call, or the rest is inside the balance freeze. |
 | `decision-proposed` | Until its proposal is 24 hours old with no reply; then it is eligible (§7). |
 | `shape-work` | Shape work, authored under the design model of record (`CONTRIBUTING.md`). The Routine is pinned to another model. Never apply or remove it. |
+| `look-work` | Look work, authored by a Fable session against a frame the owner named (`dev-loop` "Look work"). The Routine is pinned to another model. Apply it to look work found without it; never remove it. |
 | `wontfix` | Parked: the finding stands, the build cannot act on it yet. A person's. |
 
 **An assignee means taken, whoever it is.** The loop runs under the owner's login,
@@ -140,7 +141,8 @@ a label: apply `needs-decision` yourself only for the freeze case, and
    per §7 and put the options in the new issue's body.
 4. Open a normal issue per box — epic constraints restated where they bind, the
    box it came from named, labelled by nature (`enhancement`, `docs`, `infra`,
-   `bug`), **never `epic`**, and **unassigned**.
+   `bug`), **never `epic`**, and **unassigned**, unless it is look work: that takes
+   `look-work` and the owner as assignee (`dev-loop` "Look work").
 5. Link each to the epic with the sub-issue API, and put the new issue's number
    on its box, unticked, so a later firing can tick it on close. Without the link
    the next firing files the same box again.
