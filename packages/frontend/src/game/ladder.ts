@@ -64,9 +64,10 @@ import { BIOME_COLOR, scaleRgb, TIER_SHAPE, type Palette } from './palette.ts';
  * The first four are the rung's floor: the quietest outline it draws in each
  * of its three quiet colours — accent, fauna, threat — and the inert hazard
  * site's rim (`furnitureFloorLift`, below). Which of them is quietest depends
- * on the palette — the dormant eruption rim in three of the four, the
- * Tetherjelly rim in protanopia, whose threat red is brighter — so the floor
- * is the least of them. Every other outline here lifts more than that floor
+ * on the palette and the ground — the dormant eruption rim in three of the
+ * four, and in protanopia, whose threat red is brighter, the idle kelp rim
+ * over black and the dormant eruption rim over paler ground — so the floor is
+ * the least of them. Every other outline here lifts more than that floor
  * in every palette, which ladder.test.ts holds, near the eye (see the fog,
  * above) — all but residue's arc at a faint mark's own peak, which it records.
  *
@@ -81,8 +82,13 @@ import { BIOME_COLOR, scaleRgb, TIER_SHAPE, type Palette } from './palette.ts';
 export const FURNITURE_OUTLINE_ALPHA = {
   /** A kelp field's rim while it is not gripping (EchoRenderer `drawHazards`). */
   kelpRimIdle: 0.14,
-  /** A Tetherjelly field's rim (EchoRenderer `drawJellies`). */
-  jellyRim: 0.18,
+  /**
+   * A Tetherjelly field's rim (EchoRenderer `drawJellies`): its 250 m
+   * footprint, where PF falls by 0.10. 0.18 until #1882, when the bells read
+   * and the footprint did not. Kept under `shoalScatterRing`, so it is still
+   * the quietest outline in the fauna colour and one of the floor's four.
+   */
+  jellyRim: 0.3,
   /**
    * A simulated hazard's rim while dormant (EchoRenderer `HAZARD_STYLE`).
    * Weighed in `UI.threat`, the eruption's colour, because it is the quieter

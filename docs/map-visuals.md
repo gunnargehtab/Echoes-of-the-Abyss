@@ -540,7 +540,11 @@ formed and then scattered.
 What stayed on the chart painter is the field's rim, one of rung 5's floor outlines, and a
 scattered shoal's 300 m ring. The disc, the five motes and the halo went. The rim still lies
 on the ground while the bells hang in the water. The −0.10 PF is a plan radius, so the rim is
-the field's footprint and the bells are the life above it. From an oblique camera the bloom
+the field's footprint and the bells are the life above it. The rim is stroked at 0.3, the
+gripping kelp rim's alpha: at 0.18 the bells read on Ventfront Divide and the footprint a
+commander plans by did not (#1882). It is still the quietest outline rung 5 draws in the
+fauna colour, under a scattered shoal's 0.4 ring, so it stays one of the floor's four. From
+an oblique camera the bloom
 stands above its rim, not inside it. The owner ruled on #866 that the bloom, like a shoal's
 cloud, is a mark of its own, weighed by its loudest dot (§5).
 
