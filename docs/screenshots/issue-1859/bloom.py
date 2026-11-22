@@ -51,10 +51,10 @@ CROPS = {
 # Where river.mjs stands the river's bells in each camera's frame at the
 # match's start, and how far a lantern's glow and strands reach past them.
 RIVER = {
-    'home': (1444, 361, 1903, 517),
-    'low': (181, 355, 1124, 452),
-    'survey': (833, 479, 981, 585),
-    'close': (1170, 443, 1919, 484),
+    'home': (1438, 347, 1907, 517),
+    'low': (167, 355, 1167, 450),
+    'survey': (833, 478, 1000, 584),
+    'close': (1189, 443, 1915, 485),
 }
 PAD = 40
 # The staged frame's crop: the water the Corvette is sent to, from Home's eye.

@@ -486,42 +486,62 @@ of High's list, so every slot before them keeps its index, and Low stands none.
 | The far bloom, `env-drift-jelly` | `(2,150, 1,930)`, 950 m and 330 m, 13,500 s | 160 m | 120 over 230 degrees of its phase | 60 m, 60 m |
 
 Its loop is an ellipse along the bowl's north half, the one loop of this fixture that is
-no circle, clockwise seen from above as every loop here is. The band it sweeps in a lap,
-120 m across, lies over `x=1,140..3,160` and `y=1,540..2,320`: every cell under it is the
-bowl's or the pocket's, open to the Lid over a floor of 1,500 m or more, south of the
-garden's row and north of the southern wall. A lantern whose loop the ground under it
-shoals or roofs over keeps its slot and is not drawn, as any slot here. The river hangs
-100 to 220 m deep, a lantern's whole bell over the hulls' 300 m, and its band passes
-517 m in plan from the Light Scout's start at its nearest.
+no circle, clockwise seen from above as every loop here is. The band the river sweeps in
+a lap lies over `x=1,120..3,177` and `y=1,545..2,364`: every cell under it is the bowl's
+or the pocket's, open to the Lid over a floor of 1,500 m or more, south of the garden's
+row and north of the southern wall. A lantern whose loop the ground under it shoals or
+roofs over keeps its slot and is not drawn, as any slot here. The river hangs 100 to
+220 m deep, a lantern's whole bell over the hulls' 300 m, and its band passes 500 m in
+plan from the Light Scout's start at its nearest.
 
-A lantern keeps station on the loop as a schooling fish does: a fixed seeded place along
-the river, up to 60 m across its line and 60 m of depth off it. Where it stands along
-the river is the sum of two draws, so the river is thickest at its middle and thins to
-nothing at its head and its tail, 115 degrees of phase either way. Its middle starts at
-the loop's west end, `(1,200, 1,930)`, the end nearer Home's eye, which is where reduced
-motion holds it and where a still frame finds it. The river is a procession: every
-lantern heads along the loop's own tangent, its strands trailing, and all go round
-together. The loop is 4,261 m round, so a lap in 13,500 s is 0.32 m/s on the average:
-0.44 m/s along its long sides and 0.15 m/s round its ends, against a drifting jelly's
-0.31 m/s on its own loop. Its north side runs east, with the current the kelp leans to,
-and its south side west. A lantern of the river keeps its depth all lap, where one of
-the five rises and sinks 10 m, and leans up to 12 degrees either way, each its own,
-where the five lean into their turn. It hangs by its bell's mid-height, 2.76 m over its
-lowest lobe's tip, as they do.
+**The loop is the bowl's eddy** (the owner's call in session on 22 November 2026, to
+think of the ocean's currents and its turbulence). The fixture has one current, east,
+which the kelp leans to (No rows, above), and it runs along the garden's shelf, the
+bowl's north edge. A stream passing the mouth of a deep basin turns the water in it: the
+water beside the stream is dragged along with it and comes back the other way along the
+far wall. So the eddy turns clockwise, its north side running east with the stream and
+its south side west, as its return flow. Three things make it an eddy and no ring
+turning:
+
+| What | Constant | Value |
+| --- | --- | --- |
+| How much faster than the lap's own pace the stream side runs, and slower the return side | `BLOOM.EDDY.SKEW` | 0.3 |
+| How much wider the return side is, and narrower the stream side | `BLOOM.EDDY.SPREAD` | 0.4 |
+| How far a lantern wanders across the flow, either way, metres: the least and the most | `BLOOM.EDDY.WANDER_M` | 8, 20 |
+| How many times a lap it wanders: the least and the most | `BLOOM.EDDY.WANDER_LAPS` | 9, 22 |
+
+The loop is 4,261 m round, so a lap in 13,500 s is 0.32 m/s on the average, against a
+drifting jelly's 0.31 m/s on its own loop. On the river's own line that is 0.57 m/s at
+the loop's north point and 0.32 at its south, and 0.15 round its two ends. A lantern
+keeps up to 57 m off that line by the north point and up to 104 m by the south. It
+wanders across the flow once in 10 to 25 minutes, a whole number of times a lap, so a
+lap brings it back to where it began.
+
+A lantern stands along the river at a fixed seeded place, and where that is is the sum
+of two draws, so the river is thickest at its middle and thins to nothing at its head
+and its tail, 115 degrees of the lap's phase either way. Its middle starts at the loop's
+west end, `(1,200, 1,930)`, the end nearer Home's eye, which is where reduced motion
+holds it and where a still frame finds it. The river is a procession: every lantern
+heads where the next second carries it, its strands trailing. Its station across the
+flow, up to 60 m at the loop's ends, its depth, up to 60 m off the river's 160 m, its
+wander and its lean are each a draw of its own. A lantern of the river keeps its depth
+all lap, where one of the five rises and sinks 10 m, and leans up to 12 degrees either
+way, where the five lean into their turn. It hangs by its bell's mid-height, 2.76 m over
+its lowest lobe's tip, as they do.
 
 What each camera holds of it when the match starts
 ([river.mjs](screenshots/issue-1859/river.mjs) prints every figure here):
 
 | Camera | Lanterns in the frame, of 120 | How far off | A bell, 6 m across | What the water leaves of its light |
 | --- | --- | --- | --- | --- |
-| Home | 89 | 1,331 to 2,240 m | 4.0 to 6.7 px | 0.21 to 0.58 |
-| Close | 110 | 994 to 1,948 m | 4.6 to 9.0 px | 0.08 at most |
-| Low | 120 | 1,273 to 1,993 m | 4.5 to 7.0 px | 0.52 to 0.76 |
+| Home | 92 | 1,316 to 2,453 m | 3.6 to 6.8 px | 0.16 to 0.59 |
+| Close | 114 | 992 to 2,156 m | 4.1 to 9.0 px | 0.08 at most |
+| Low | 120 | 1,288 to 1,993 m | 4.5 to 6.9 px | 0.52 to 0.76 |
 | Survey | 120 | 10 km | 0.9 px | 0.91 |
 
 It drifts and Home's eye does not: after 10 minutes that eye holds 98 of them, after 30
-minutes 106, and after an hour 78, the river's middle by then on the loop's far north
-side and the lanterns that eye holds 2,128 m off at the median. It is decoration under
+minutes 98, and after an hour 55, the river's middle by then far along the loop's north
+side and the lanterns that eye holds 1,922 m off at the median. It is decoration under
 every rule of this section: no reaction, no collision, no tell, the same river for every
 client, held still under reduced motion. The numbers are TUNABLE in
 `FREE_WATER_HIGH_LIFE.BLOOM` until the owner accepts a frame.

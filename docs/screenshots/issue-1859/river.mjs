@@ -72,7 +72,8 @@ const toScreen = (camera, point) => {
   return [((ndc.x + 1) / 2) * VIEW_W, ((1 - ndc.y) / 2) * VIEW_H, ndc];
 };
 
-// The loop: its length, by walking it, and its pace.
+// The loop: its length, by walking it, and the eddy's pace on the river's own
+// line, a lantern that keeps on it and does not wander.
 let lengthM = 0;
 for (let i = 0; i < 3600; i++) {
   const [a, b] = [i, i + 1].map((k) => (k * Math.PI) / 1800);
@@ -82,32 +83,67 @@ for (let i = 0; i < 3600; i++) {
   );
 }
 console.log(`loop: ${fmt(lengthM)} m round, ${COUNT} lanterns over ${SPAN_DEG} degrees of it`);
+const line = {
+  ...RIVER[0],
+  motion: {
+    ...RIVER[0].motion,
+    phase: Math.PI,
+    eddy: { ...RIVER[0].motion.eddy, acrossM: 0, wanderM: 0 },
+  },
+};
+const lap = Array.from({ length: 2700 }, (_, step) => {
+  const timeS = (MOTION.periodS * step) / 2700;
+  const [now, next] = [timeS, timeS + 1].map((t) => decorationPose(line, t * 1000, () => 0));
+  return { now, mps: Math.hypot(next.x - now.x, next.z - now.z), east: next.x - now.x };
+});
+const north = lap.reduce((a, b) => (b.now.z < a.now.z ? b : a));
+const south = lap.reduce((a, b) => (b.now.z > a.now.z ? b : a));
+const paces = lap.map((one) => one.mps);
 console.log(
-  `pace: ${fmt((2 * Math.PI * RADII_M[0]) / MOTION.periodS, 2)} m/s on the long sides, ` +
-    `${fmt((2 * Math.PI * RADII_M[1]) / MOTION.periodS, 2)} round the ends, ` +
-    `${fmt(lengthM / MOTION.periodS, 2)} mean; a drifting jelly ` +
-    `${fmt((2 * Math.PI * JELLIES.MOTION.radiusM) / JELLIES.MOTION.periodS, 2)} m/s`
+  `pace on the river's line: ${fmt(north.mps, 2)} m/s at the north point, running ` +
+    `${north.east > 0 ? 'east' : 'west'}; ${fmt(south.mps, 2)} at the south point, running ` +
+    `${south.east > 0 ? 'east' : 'west'}; ${fmt(Math.max(...paces), 2)} at the fastest, ` +
+    `${fmt(Math.min(...paces), 2)} at the slowest, ${fmt(lengthM / MOTION.periodS, 2)} mean; ` +
+    `a drifting jelly ${fmt((2 * Math.PI * JELLIES.MOTION.radiusM) / JELLIES.MOTION.periodS, 2)} m/s`
 );
-console.log(
-  `band: x ${fmt(at[0] - RADII_M[0] - STATION.acrossM)}..${fmt(at[0] + RADII_M[0] + STATION.acrossM)}, ` +
-    `y ${fmt(at[1] - RADII_M[1] - STATION.acrossM)}..${fmt(at[1] + RADII_M[1] + STATION.acrossM)}, ` +
-    `${depthM - STATION.depthM}..${depthM + STATION.depthM} m deep`
-);
-// docs/free-water-slice.md §4: where the three hulls start, at 300 m.
+// The band every lantern sweeps in a lap, station, spread and wander with it,
+// and how near it comes to where a hull starts (docs/free-water-slice.md §4).
 const FLEET = { 'Light Scout': [625, 1875], Corvette: [625, 2125], Harvester: [375, 1875] };
+const band = { x: [Infinity, -Infinity], y: [Infinity, -Infinity], north: 0, south: 0 };
 let nearest = { m: Infinity, hull: '' };
-for (let deg = 0; deg < 360; deg += 0.25) {
-  for (const acrossM of [-STATION.acrossM, 0, STATION.acrossM]) {
-    const x = at[0] + (RADII_M[0] + acrossM) * Math.cos((deg * Math.PI) / 180);
-    const y = at[1] + (RADII_M[1] + acrossM) * Math.sin((deg * Math.PI) / 180);
+for (const slot of RIVER) {
+  const still = {
+    ...slot,
+    motion: { ...slot.motion, eddy: { ...slot.motion.eddy, acrossM: 0, wanderM: 0 } },
+  };
+  for (let step = 0; step < 1350; step++) {
+    const ms = (MOTION.periodS * 1000 * step) / 1350;
+    const pose = decorationPose(slot, ms, () => 0);
+    band.x = [Math.min(band.x[0], pose.x), Math.max(band.x[1], pose.x)];
+    band.y = [Math.min(band.y[0], pose.z), Math.max(band.y[1], pose.z)];
+    const on = decorationPose(still, ms, () => 0);
+    const off = Math.hypot(pose.x - on.x, pose.z - on.z);
+    if (on.z < at[1] - RADII_M[1] * 0.95) band.north = Math.max(band.north, off);
+    if (on.z > at[1] + RADII_M[1] * 0.95) band.south = Math.max(band.south, off);
     for (const [hull, [hx, hy]] of Object.entries(FLEET)) {
-      const m = Math.hypot(x - hx, y - hy);
+      const m = Math.hypot(pose.x - hx, pose.z - hy);
       if (m < nearest.m) nearest = { m, hull };
     }
   }
 }
 console.log(
+  `band: x ${fmt(band.x[0])}..${fmt(band.x[1])}, y ${fmt(band.y[0])}..${fmt(band.y[1])}, ` +
+    `${depthM - STATION.depthM}..${depthM + STATION.depthM} m deep; a lantern stands up to ` +
+    `${fmt(band.north)} m off the line by the north point and ${fmt(band.south)} m by the south`
+);
+console.log(
   `the band's nearest point to a hull's start, in plan: ${fmt(nearest.m)} m, the ${nearest.hull}'s`
+);
+const wanders = RIVER.map((slot) => MOTION.periodS / slot.motion.eddy.wanderLaps);
+console.log(
+  `a lantern wanders ${fmt(Math.min(...RIVER.map((slot) => slot.motion.eddy.wanderM)))} to ` +
+    `${fmt(Math.max(...RIVER.map((slot) => slot.motion.eddy.wanderM)))} m either way, once in ` +
+    `${fmt(Math.min(...wanders))} to ${fmt(Math.max(...wanders))} s`
 );
 const depths = RIVER.map((slot) => slot.motion.depthM);
 console.log(
@@ -242,7 +278,7 @@ const shapes = {
 for (const [label, shape] of Object.entries(shapes)) {
   const turn = ((shape.startDeg - BLOOM.startDeg) * Math.PI) / 180;
   const placeOf = (slot, _timeS, out) => {
-    const acrossM = slot.motion.radiusM - RADII_M[0];
+    const acrossM = slot.motion.eddy.acrossM;
     return out.set(
       shape.at[0] + (shape.radii[0] + acrossM) * Math.cos(slot.motion.phase + turn),
       depthToWorldY(slot.motion.depthM),
