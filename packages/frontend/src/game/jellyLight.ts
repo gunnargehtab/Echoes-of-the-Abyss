@@ -47,7 +47,7 @@ import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { HIGH_GRAPHICS } from '@echoes/shared';
 import { JELLY_LANTERN } from './palette.ts';
 
-const { BELL, STRANDS, HALO, SWIM, PULSE, STAGGER_S } = HIGH_GRAPHICS.LIFE.JELLY;
+const { BELL, STRANDS, HALO, SWIM, PULSE, STAGGER_S, FAR } = HIGH_GRAPHICS.LIFE.JELLY;
 const { LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
 
 /** What a membrane's program reads of its jelly; one object a template, driven by the layer. */
@@ -58,6 +58,12 @@ export interface JellyUniforms {
   uJellyMoves: { value: number };
   /** The lip's height and the crown's over the model's origin, and the lip's radius, metres. */
   uJellyShape: { value: Vector3 };
+  /**
+   * How many of the template's instances, from the first, are lanterns by
+   * the fleet and take the whole wave of light. Every instance after them
+   * is a lantern of the far bloom and takes the softer one (#1859).
+   */
+  uJellyNear: { value: number };
 }
 
 /** Where a jelly's lip and crown stand, read off its template: the seats ring the lip. */
@@ -123,6 +129,7 @@ const SHARED = [
   'uniform float uJellyTime;',
   'uniform float uJellyMoves;',
   'uniform vec3 uJellyShape;',
+  'varying float vJellyGain;',
   'varying vec3 vJellyN;',
   'varying vec3 vJellyV;',
   'varying vec3 vJellyP;',
@@ -134,13 +141,17 @@ export function patchJellyMembrane(shader: { vertexShader: string; fragmentShade
   const [vCommon, vBegin, vProject] = JELLY_MEMBRANE_ANCHORS.vertex;
   const [fCommon, fColor] = JELLY_MEMBRANE_ANCHORS.fragment;
   shader.vertexShader = shader.vertexShader
-    .replace(vCommon, `${vCommon}\n${SHARED}`)
+    .replace(vCommon, `${vCommon}\n${SHARED}\nuniform float uJellyNear;`)
     .replace(
       vBegin,
       [
         vBegin,
         // The instance is the jelly's place in its list, as the beads' is.
         `vJellyClock = uJellyTime + float( gl_InstanceID ) * ${glsl(STAGGER_S)};`,
+        // What the wave adds: the whole of it on a lantern by the fleet, and
+        // the softer one on a lantern of the far bloom, which follow them in
+        // the list (`jellyWaveGain`).
+        `vJellyGain = float( gl_InstanceID ) < uJellyNear ? ${glsl(PULSE.GAIN)} : ${glsl(FAR.PULSE_GAIN)};`,
         // The stroke (`jellyStroke`): the lip drawn in, the crown still, and
         // the lobes under the lip carried with it.
         `float jellyBeat = 0.5 - 0.5 * cos( 6.2831853 * vJellyClock / ${glsl(SWIM.PERIOD_S)} );`,
@@ -172,7 +183,7 @@ export function patchJellyMembrane(shader: { vertexShader: string; fragmentShade
         // The wave of light (`jellyPulse`), by metres below the crown.
         `float jellySince = mod( vJellyClock, ${glsl(PULSE.PERIOD_S)} );`,
         `float jellyOff = ( ( uJellyShape.y - vJellyP.y ) - ( ${glsl(PULSE.SPEED_MPS)} * jellySince - ${glsl(PULSE.LEAD * PULSE.WIDTH_M)} ) ) / ${glsl(PULSE.WIDTH_M)};`,
-        `float jellyWave = uJellyMoves * ${glsl(PULSE.GAIN)} * exp( - jellyOff * jellyOff );`,
+        'float jellyWave = uJellyMoves * vJellyGain * exp( - jellyOff * jellyOff );',
         // x: a face square to the eye. y: its edge. z: a canal. w: the lip.
         'diffuseColor.rgb *= ( uJellySkin.x + uJellySkin.y * jellyRim + uJellySkin.z * jellyRib + uJellySkin.w * jellyLip ) * ( 1.0 + jellyWave );',
       ].join('\n')
@@ -185,6 +196,8 @@ export function jellyUniforms(shape: JellyShape): JellyUniforms {
     uJellyTime: { value: 0 },
     uJellyMoves: { value: 1 },
     uJellyShape: { value: new Vector3(shape.lipY, shape.crownY, shape.lipR) },
+    // Every instance, until the layer counts the far bloom's among them.
+    uJellyNear: { value: Number.MAX_SAFE_INTEGER },
   };
 }
 
@@ -222,7 +235,7 @@ export function jellyMembrane(part: 'bell' | 'core', uniforms: JellyUniforms): M
     Object.assign(shader.uniforms, uniforms, { uJellySkin: { value: skin } });
     patchJellyMembrane(shader);
   };
-  material.customProgramCacheKey = () => 'jelly-membrane-1';
+  material.customProgramCacheKey = () => 'jelly-membrane-2';
   // Blended, and still the world pass's (PerspectiveView `enterWorldLayer`).
   material.userData.worldLayer = true;
   return material;
@@ -261,6 +274,73 @@ export function jellyLightCount(seats: number): number {
   return 1 + seats + STRANDS.COUNT * STRANDS.BEADS;
 }
 
+/**
+ * What the wave of light adds to what it passes: the whole of it on a
+ * lantern by the fleet, and the softer one on a lantern of the far bloom,
+ * where 120 whole waves out of step would be a river of flashes (#1859).
+ */
+export function jellyWaveGain(far: boolean): number {
+  return far ? FAR.PULSE_GAIN : PULSE.GAIN;
+}
+
+/**
+ * What of a bead depends only on how far down its strand it hangs, the same
+ * for every strand of every jelly: drawn once. `t` runs from the lip to the
+ * tip. Curve shape, not tuning: a strand bends more toward its tip, holds a
+ * wave and a half along its length, and trails as a hanging line does.
+ */
+const BEAD = Array.from({ length: STRANDS.BEADS }, (_, j) => {
+  const t = (j + 1) / STRANDS.BEADS;
+  return {
+    t,
+    // Hung just inside the lip, gathering toward the tip.
+    radial: STRANDS.ROOT - STRANDS.GATHER * t,
+    bend: STRANDS.SWAY_M * t ** 1.5,
+    waveCos: Math.cos(3 * Math.PI * t),
+    waveSin: Math.sin(3 * Math.PI * t),
+    trailM: STRANDS.TRAIL_M * t * t,
+    sizeM: STRANDS.SIZE_M * (1 - STRANDS.TAPER * t),
+    level: STRANDS.LEVEL * (1 - t) ** STRANDS.FADE,
+  };
+});
+
+/**
+ * What of a jelly's strands depends only on its place in its list: each
+ * strand's bearing, length and phase, and each bead's own share of its
+ * level. Drawn once a jelly and kept: the far bloom hangs 120 lanterns, and
+ * drawing these again every frame cost ten milliseconds of it (#1859).
+ */
+interface StrandTable {
+  /** Four a strand: the cosine and sine of its bearing, its length in metres, its phase. */
+  strands: Float64Array;
+  /** One a bead: no two alike, so three tenths of a bead's level is its own. */
+  beads: Float64Array;
+}
+const STRAND_TABLES = new Map<number, StrandTable>();
+
+function strandTable(index: number): StrandTable {
+  let table = STRAND_TABLES.get(index);
+  if (table !== undefined) return table;
+  table = {
+    strands: new Float64Array(STRANDS.COUNT * 4),
+    beads: new Float64Array(STRANDS.COUNT * STRANDS.BEADS),
+  };
+  for (let k = 0; k < STRANDS.COUNT; k++) {
+    const seed = index * 131 + k;
+    const bearing = (2 * Math.PI * (k + 0.6 * hash(seed + 0.5))) / STRANDS.COUNT;
+    table.strands[k * 4] = Math.cos(bearing);
+    table.strands[k * 4 + 1] = Math.sin(bearing);
+    table.strands[k * 4 + 2] =
+      STRANDS.LENGTH_M * (STRANDS.SHORTEST + (1 - STRANDS.SHORTEST) * hash(seed + 1.5));
+    table.strands[k * 4 + 3] = 2 * Math.PI * hash(seed + 2.5);
+    for (let j = 0; j < STRANDS.BEADS; j++) {
+      table.beads[k * STRANDS.BEADS + j] = 0.7 + 0.3 * hash(seed * 31 + j);
+    }
+  }
+  STRAND_TABLES.set(index, table);
+  return table;
+}
+
 const AT = new Vector3();
 
 /**
@@ -268,7 +348,14 @@ const AT = new Vector3();
  * metres and its level: the glow in the water round the bell, a point on
  * each seat, and the beads of its strands from the lip down. `matrix` is the
  * jelly's own, model to scene; a model swims along +X, so a strand trails
- * toward -X.
+ * toward -X. `gain` is what the wave of light adds as it passes
+ * (`jellyWaveGain`).
+ *
+ * The beads are the inner loop of the frame's own work, 324 a jelly, so
+ * nothing in it is drawn twice: a strand's wave is one sine and one cosine
+ * for the strand, turned along it by each bead's own, and a bead the wave is
+ * nowhere near takes no exponential. Past five of its widths the wave adds
+ * under a hundred-billionth, which is counted as nothing.
  */
 export function writeJellyLights(
   shape: JellyShape,
@@ -277,13 +364,14 @@ export function writeJellyLights(
   index: number,
   timeS: number,
   moves: boolean,
-  light: (at: Vector3, sizeM: number, level: number) => void
+  light: (at: Vector3, sizeM: number, level: number) => void,
+  gain: number = PULSE.GAIN
 ): void {
   const { lipY, lipR, crownY } = shape;
   const bellM = crownY - lipY;
   light(AT.set(0, lipY + bellM / 2, 0).applyMatrix4(matrix), HALO.SIZE_M, HALO.LEVEL);
   const draw = 1 - SWIM.SQUEEZE * jellyStroke(timeS, index, moves);
-  const atLip = 1 + PULSE.GAIN * jellyPulse(bellM, timeS, index, moves);
+  const atLip = 1 + gain * jellyPulse(bellM, timeS, index, moves);
   for (const seat of seats) {
     light(
       AT.set(seat.x * draw, seat.y, seat.z * draw).applyMatrix4(matrix),
@@ -291,36 +379,42 @@ export function writeJellyLights(
       LANTERN.LEVEL * atLip
     );
   }
+  const { strands, beads } = strandTable(index);
   const swayAt = moves ? (2 * Math.PI * clock(timeS, index)) / STRANDS.SWAY_PERIOD_S : 0;
+  // Where the wave's head stands along the body now (`jellyPulse`).
+  const sinceS = ((clock(timeS, index) % PULSE.PERIOD_S) + PULSE.PERIOD_S) % PULSE.PERIOD_S;
+  const headM = PULSE.SPEED_MPS * sinceS - PULSE.LEAD * PULSE.WIDTH_M;
+  const e = matrix.elements;
+  const hungR = lipR * draw;
   for (let k = 0; k < STRANDS.COUNT; k++) {
-    const seed = index * 131 + k;
-    const bearing = (2 * Math.PI * (k + 0.6 * hash(seed + 0.5))) / STRANDS.COUNT;
-    const lengthM =
-      STRANDS.LENGTH_M * (STRANDS.SHORTEST + (1 - STRANDS.SHORTEST) * hash(seed + 1.5));
-    const phase = 2 * Math.PI * hash(seed + 2.5);
-    const cos = Math.cos(bearing);
-    const sin = Math.sin(bearing);
+    const cos = strands[k * 4]!;
+    const sin = strands[k * 4 + 1]!;
+    const lengthM = strands[k * 4 + 2]!;
+    const waveAt = swayAt + strands[k * 4 + 3]!;
+    const waveSin = Math.sin(waveAt);
+    const waveCos = Math.cos(waveAt);
     for (let j = 0; j < STRANDS.BEADS; j++) {
-      const t = (j + 1) / STRANDS.BEADS;
-      const downM = lengthM * t;
-      // Hung just inside the lip, gathering toward the tip; waving across
-      // its own bearing more the further down, and trailing aft.
-      const radiusM = lipR * draw * (STRANDS.ROOT - STRANDS.GATHER * t);
-      // Curve shape, not tuning: a strand bends more toward its tip, holds a
-      // wave and a half along its length, and trails as a hanging line does.
-      const waveM = STRANDS.SWAY_M * t ** 1.5 * Math.sin(swayAt - 3 * Math.PI * t + phase);
-      const x = cos * radiusM - sin * waveM - STRANDS.TRAIL_M * t * t;
+      const bead = BEAD[j]!;
+      const downM = lengthM * bead.t;
+      const radiusM = hungR * bead.radial;
+      // Waving across its own bearing more the further down, and trailing aft.
+      const waveM = bead.bend * (waveSin * bead.waveCos - waveCos * bead.waveSin);
+      const x = cos * radiusM - sin * waveM - bead.trailM;
+      const y = lipY - downM;
       const z = sin * radiusM + cos * waveM;
-      const level =
-        STRANDS.LEVEL *
-        (1 - t) ** STRANDS.FADE *
-        // No two beads alike: three tenths of a bead's level is its own.
-        (0.7 + 0.3 * hash(seed * 31 + j)) *
-        (1 + PULSE.GAIN * jellyPulse(bellM + downM, timeS, index, moves));
+      let passes = 0;
+      if (moves) {
+        const off = (bellM + downM - headM) / PULSE.WIDTH_M;
+        if (off > -5 && off < 5) passes = Math.exp(-off * off);
+      }
       light(
-        AT.set(x, lipY - downM, z).applyMatrix4(matrix),
-        STRANDS.SIZE_M * (1 - STRANDS.TAPER * t),
-        level
+        AT.set(
+          e[0]! * x + e[4]! * y + e[8]! * z + e[12]!,
+          e[1]! * x + e[5]! * y + e[9]! * z + e[13]!,
+          e[2]! * x + e[6]! * y + e[10]! * z + e[14]!
+        ),
+        bead.sizeM,
+        bead.level * beads[k * STRANDS.BEADS + j]! * (1 + gain * passes)
       );
     }
   }

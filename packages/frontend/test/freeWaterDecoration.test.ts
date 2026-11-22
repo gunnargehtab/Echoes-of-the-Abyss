@@ -681,7 +681,9 @@ describe('authored public decoration', () => {
       'env-shoal-fry': FRY_STREAM.SCHOOLS * FRY_STREAM.COUNT,
       'env-outer-fish':
         OUTER_STREAM.SCHOOLS * OUTER_STREAM.COUNT + BACKLIT_STREAM.SCHOOLS * BACKLIT_STREAM.COUNT,
-      'env-drift-jelly': FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length,
+      // The five by the fleet, and the far bloom's river (#1859; farBloom.test.ts).
+      'env-drift-jelly':
+        FREE_WATER_HIGH_LIFE.JELLIES.SLOTS.length + FREE_WATER_HIGH_LIFE.BLOOM.COUNT,
       'env-vent-chimney': FREE_WATER_HIGH_VENTS.CHIMNEYS.length,
       'env-vent-basalt': FREE_WATER_HIGH_VENTS.BASALT.length,
       'env-rim-manta': 1,
@@ -743,7 +745,7 @@ describe('authored public decoration', () => {
     // The drifting bodies: each jelly alone on its own loop, at its authored
     // depth and start, over the outside rim.
     const { JELLIES } = FREE_WATER_HIGH_LIFE;
-    const jellies = own.filter((p) => p.slug === 'env-drift-jelly');
+    const jellies = own.filter((p) => p.slug === 'env-drift-jelly' && p.far !== true);
     assert.deepEqual(
       jellies.map((p) => [
         p.xM,
@@ -798,11 +800,11 @@ describe('authored public decoration', () => {
     const low = freeWaterPlacements(terrain, true);
     const high = freeWaterPlacements(terrain, true, true);
     const { MANTA } = FREE_WATER_HIGH_LIFE;
-    // High alone stands it, once, in the list's last slot: every slot before
-    // it keeps its index, and Low's list has none.
+    // High alone stands it, once, in the last slot before the far bloom's
+    // (#1859): every slot before it keeps its index, and Low's list has none.
     assert.equal(low.filter((p) => p.slug === 'env-rim-manta').length, 0);
     assert.equal(high.filter((p) => p.slug === 'env-rim-manta').length, 1);
-    const manta = high.at(-1)!;
+    const manta = high.filter((p) => p.far !== true).at(-1)!;
     assert.equal(manta.slug, 'env-rim-manta');
     assert.notEqual(manta.disabled, true);
     assert.equal(manta.scale, 1);
@@ -915,8 +917,9 @@ describe('authored public decoration', () => {
     const { MOTION, STATION } = BACKLIT_STREAM;
     const count = BACKLIT_STREAM.SCHOOLS * BACKLIT_STREAM.COUNT;
     // The last slots #1856 stood, so every slot #1837 stood keeps its place
-    // in the list; the one after them is the manta's (#1867).
-    const fish = high.slice(-count - 1, -1);
+    // in the list; the one after them is the manta's (#1867), and the far
+    // bloom's follow that (#1859).
+    const fish = high.filter((p) => p.far !== true).slice(-count - 1, -1);
     for (const p of fish) {
       assert.equal(p.slug, 'env-outer-fish');
       assert.deepEqual([p.xM, p.yM], [...BACKLIT_STREAM.at]);

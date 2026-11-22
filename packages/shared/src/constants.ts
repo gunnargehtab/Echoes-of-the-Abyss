@@ -177,31 +177,34 @@ export const FREE_WATER_HIGH_LIFE = {
     MOTION: { radiusM: 70, periodS: 300, depthM: 165, depthSwingM: 8, axisM: 0.79, bankDeg: 40 },
   },
   /**
-   * The far bloom (#1859): a slow river of small lanterns far out over the
-   * bowl, where Home's eye had empty water beyond the fleet. No body stands
-   * for one: each is points of the lantern's cloud and nothing else
-   * (farBloom.ts). The river's loop is an ellipse along the bowl's north
-   * half, `RADII_M` east-west and north-south about `at`, and the one loop
-   * here that is no circle: a circle the bowl holds whole shows Home's eye a
-   * hook at the frame's edge. `COUNT` lanterns keep station on it over
-   * `SPAN_DEG` of its phase, thickest at the middle and thinning to both
-   * ends, so it is a river with a head and a tail and no ring. `startDeg` is
-   * where its middle stands when the match starts, as the loop's own phase (0
-   * east, 90 south): the west end, the end nearer Home's eye. A lap is
-   * `periodS`, which is a drifting jelly's own pace on the average, 0.32 m/s
-   * against its 0.31, and 0.44 along the loop's long sides.
-   * `STATION` is how far a lantern keeps from the river's own line, across
-   * it and in depth about `depthM`, over the hulls' 300 m.
+   * The far bloom (#1859): a slow river of lanterns far out over the bowl,
+   * where Home's eye had empty water beyond the fleet. Each is a whole
+   * `env-drift-jelly`, as the five by the fleet are, by the owner's call in
+   * session on 22 November 2026. The river's loop is an ellipse along the
+   * bowl's north half, `RADII_M` east-west and north-south about `at`, and
+   * the one loop here that is no circle: a circle the bowl holds whole shows
+   * Home's eye a hook at the frame's edge. `COUNT` lanterns keep station on
+   * it over `SPAN_DEG` of its phase, thickest at the middle and thinning to
+   * both ends, so it is a river with a head and a tail and no ring.
+   * `startDeg` is where its middle stands when the match starts, as the
+   * loop's own phase (0 east, 90 south): the west end, the end nearer Home's
+   * eye. `STATION` is how far a lantern keeps from the river's own line,
+   * across it and in depth about `depthM`, over the hulls' 300 m. A lap is
+   * `MOTION.periodS`, clockwise as every loop here, which is a drifting
+   * jelly's own pace on the average, 0.32 m/s against its 0.31, and 0.44
+   * along the loop's long sides. A lantern keeps its depth as it goes, hangs
+   * by its bell's mid-height as the five do, and leans up to `bankDeg`
+   * either way, each its own.
    */
   BLOOM: {
     at: [2150, 1930],
     RADII_M: [950, 330],
     startDeg: 180,
     SPAN_DEG: 230,
-    COUNT: 260,
-    periodS: 13500,
+    COUNT: 120,
     depthM: 160,
     STATION: { acrossM: 60, depthM: 60 },
+    MOTION: { periodS: 13500, depthSwingM: 0, axisM: 2.76, bankDeg: 12 },
   },
 } as const;
 
@@ -556,15 +559,14 @@ export const HIGH_GRAPHICS = {
       PULSE: { PERIOD_S: 9, SPEED_MPS: 5, WIDTH_M: 3.5, LEAD: 2, GAIN: 0.6 },
       STAGGER_S: 19.75,
       /**
-       * A lantern of the far bloom (farBloom.ts; docs/art-direction.md, "A
-       * far bloom of lanterns"; #1859): no membrane and no strands, two
-       * points of the lantern's cloud. `SIZE_M` is the width of the soft
-       * disc that stands for its lit bell, the widest; the narrowest is that
-       * times `SMALLEST`. `LEVEL` is that disc's light at its centre, in the
-       * renderer's linear units. `HALO` is the glow in the water round it,
-       * as a near lantern's is.
+       * A lantern of the far bloom (docs/art-direction.md, "A far bloom of
+       * lanterns"; #1859): a whole lantern, with one thing its own.
+       * `PULSE_GAIN` is what the wave of light adds as it passes one, in
+       * place of `PULSE.GAIN`: a third of it, by the owner's call in session
+       * on 22 November 2026, since 120 whole waves out of step are about 13
+       * flashes a second along the river.
        */
-      FAR: { SIZE_M: 6, SMALLEST: 0.5, LEVEL: 0.3, HALO: { SIZE_M: 16, LEVEL: 0.03 } },
+      FAR: { PULSE_GAIN: 0.2 },
     },
     /**
      * The manta (mantaWing.ts; docs/art-direction.md, "A manta shows its

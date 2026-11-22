@@ -125,7 +125,8 @@ export function freeWaterPlacements(
     xM: number,
     yM: number,
     motion?: PropPlacement['motion'],
-    yawRad = 0
+    yawRad = 0,
+    far = false
   ) => {
     const col = Math.floor(xM / terrain.cellM);
     const row = Math.floor(yM / terrain.cellM);
@@ -159,10 +160,12 @@ export function freeWaterPlacements(
     // Test the whole swept plan envelope, including neighbouring cells. The
     // footprint's disc holds a turned stand whole: its script fences every
     // vertex within 60 m of its centre (tools/hull-models/props/kelp-stand.mjs).
+    // An ellipse's envelope is its own two radii (the far bloom, #1859).
     const radius = (motion?.radiusM ?? 0) + spec.footprintM / 2;
+    const radiusNs = (motion?.radiusNsM ?? motion?.radiusM ?? 0) + spec.footprintM / 2;
     for (
-      let y = Math.floor((yM - radius) / terrain.cellM);
-      y <= Math.floor((yM + radius) / terrain.cellM);
+      let y = Math.floor((yM - radiusNs) / terrain.cellM);
+      y <= Math.floor((yM + radiusNs) / terrain.cellM);
       y++
     ) {
       for (
@@ -183,6 +186,7 @@ export function freeWaterPlacements(
         scale: 1,
         cellIndex,
         ...(valid ? {} : { disabled: true }),
+        ...(far ? { far: true } : {}),
         ...(motion === undefined ? {} : { motion }),
       });
   };
@@ -350,6 +354,36 @@ export function freeWaterPlacements(
   // eye, its start authored as the ray's is.
   const { at: mantaAt, startDeg: mantaStart, MOTION: manta } = FREE_WATER_HIGH_LIFE.MANTA;
   add('env-rim-manta', mantaAt[0], mantaAt[1], { ...manta, phase: (mantaStart * Math.PI) / 180 });
+  // The far bloom (#1859), last again, so every slot before it keeps its
+  // index and the five lanterns by the fleet stay the first of their file's
+  // list: a river of whole lanterns on one loop over the bowl, an ellipse
+  // where every other loop is a circle. A lantern keeps station on it as a
+  // schooling fish does, drawn from the fixture's seed: where it stands along
+  // the river is the sum of two draws, so the river is thickest at its middle
+  // and thins to nothing at its head and its tail.
+  const bloom = FREE_WATER_HIGH_LIFE.BLOOM;
+  for (let i = 0; i < bloom.COUNT; i++) {
+    const draw = (axis: number) =>
+      propHash([FREE_WATER_LIFE.SEED, bloom.at[0], bloom.at[1], i, axis]);
+    const along = draw(1) + draw(2) - 1;
+    const acrossM = (draw(3) * 2 - 1) * bloom.STATION.acrossM;
+    add(
+      'env-drift-jelly',
+      bloom.at[0],
+      bloom.at[1],
+      {
+        ...bloom.MOTION,
+        radiusM: bloom.RADII_M[0] + acrossM,
+        radiusNsM: bloom.RADII_M[1] + acrossM,
+        phase: ((bloom.startDeg + (along * bloom.SPAN_DEG) / 2) * Math.PI) / 180,
+        depthM: bloom.depthM + (draw(4) * 2 - 1) * bloom.STATION.depthM,
+        // Each leans its own way: on a loop this wide there is no turn to lean into.
+        bankDeg: (draw(5) * 2 - 1) * bloom.MOTION.bankDeg,
+      },
+      0,
+      true
+    );
+  }
   return slots;
 }
 
@@ -378,16 +412,24 @@ export function decorationPose(
     };
   }
   const phase = motion.phase + (((matchMs / 1000) % motion.periodS) / motion.periodS) * Math.PI * 2;
+  const radiusNsM = motion.radiusNsM ?? motion.radiusM;
   const x = placement.xM + Math.cos(phase) * motion.radiusM;
-  const z = placement.yM + Math.sin(phase) * motion.radiusM;
+  const z = placement.yM + Math.sin(phase) * radiusNsM;
   const y =
     motion.depthM === null
       ? groundY(x, z)
       : depthToWorldY(motion.depthM + Math.sin(phase) * motion.depthSwingM) - motion.axisM;
   // Models swim along +X; three's positive yaw turns it toward -Z. Every loop
   // runs clockwise seen from above, so its centre lies to starboard, +Z, and a
-  // positive roll about +X lowers the starboard wing into the turn.
-  return { x, y, z, yaw: -phase - Math.PI / 2, roll: ((motion.bankDeg ?? 0) * Math.PI) / 180 };
+  // positive roll about +X lowers the starboard wing into the turn. On a
+  // circle the heading is a quarter turn behind the phase. On an ellipse it
+  // is the loop's own tangent, which a circle's expression would turn up to
+  // 51 degrees off the way the far bloom's lanterns travel (#1859).
+  const yaw =
+    motion.radiusNsM === undefined
+      ? -phase - Math.PI / 2
+      : Math.atan2(-Math.cos(phase) * radiusNsM, -Math.sin(phase) * motion.radiusM);
+  return { x, y, z, yaw, roll: ((motion.bankDeg ?? 0) * Math.PI) / 180 };
 }
 
 const Y_AXIS = new Vector3(0, 1, 0);

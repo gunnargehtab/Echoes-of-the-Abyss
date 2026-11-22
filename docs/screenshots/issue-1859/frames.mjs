@@ -269,9 +269,8 @@ export default async ({ page, shot, recordingStartedMs }) => {
           glints: probe.lifeGlints ?? 0,
           // The points of a jelly's lantern: its glow, its seats, its beads.
           jellyLights: probe.jellyLights ?? 0,
-          // The far bloom: its lanterns, and the points they hang in that cloud.
+          // The far bloom's lanterns, of the jellies the crater stands.
           farLanterns: probe.farLanterns ?? 0,
-          bloomLights: probe.bloomLights ?? 0,
         },
         // Columns standing over the vent stand's chimneys, and the world's sources.
         vents: { plumes: probe.ventPlumes, worldLights: probe.graphicsQuality?.worldLights ?? 0 },

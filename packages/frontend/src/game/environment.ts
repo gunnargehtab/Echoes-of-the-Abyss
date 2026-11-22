@@ -446,9 +446,19 @@ export interface PropPlacement {
   cellIndex: number;
   /** A fixture retains its slot when public ground no longer admits it. */
   disabled?: boolean;
+  /**
+   * A lantern of the free-water crater's far bloom (#1859): a whole drifting
+   * jelly, whose wave of light is the softer one (jellyLight.ts).
+   */
+  far?: boolean;
   /** Public, fixture-authored motion only; never an entity or a fauna contact. */
   motion?: {
     radiusM: number;
+    /**
+     * The loop's north-south radius where it is an ellipse, `radiusM` then
+     * its east-west: the far bloom's alone (#1859). A circle when absent.
+     */
+    radiusNsM?: number;
     periodS: number;
     phase: number;
     depthM: number | null;
