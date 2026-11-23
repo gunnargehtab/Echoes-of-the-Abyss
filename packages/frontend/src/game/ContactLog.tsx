@@ -20,12 +20,19 @@ import { stamp } from './clock.ts';
 import type { ContactLogEntry } from './EchoRenderer.ts';
 import { PanelFoldButton, foldedOut, usePanelFold } from './panelFold.tsx';
 
+/**
+ * What the player holds, in the words the rest of the screen already uses
+ * (docs/ui-ux.md §10): the exposure rows' `you were heard` and `they have you
+ * classified`, the strip's `TRACKED ×n`, and every objective gloss that asks
+ * for a contact "with a bearing". A tier number is the Echo Layer's word, and
+ * no gloss can point a first-time player at `TIER 3` (#1886).
+ */
 const TIER_LABEL: Record<ResolutionTier, string> = {
   [ResolutionTier.Silent]: '---',
-  [ResolutionTier.Contact]: 'TIER 1',
-  [ResolutionTier.Bearing]: 'TIER 2',
-  [ResolutionTier.Classification]: 'TIER 3',
-  [ResolutionTier.Track]: 'TIER 4',
+  [ResolutionTier.Contact]: 'HEARD',
+  [ResolutionTier.Bearing]: 'BEARING',
+  [ResolutionTier.Classification]: 'CLASSIFIED',
+  [ResolutionTier.Track]: 'TRACKED',
 };
 
 /**

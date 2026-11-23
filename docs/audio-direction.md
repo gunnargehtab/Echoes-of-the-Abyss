@@ -377,7 +377,7 @@ It plays on the same `music` bus the score will, which is how the Music slider a
 
 Because audio carries primary information, every audible fact **must** have a visual equivalent, and the game must be fully playable with the mix muted. This is a hard requirement, not a setting to be added later.
 
-- **Contact log** — a running, timestamped text feed of every detection event, at the fidelity the player earned: `T+04:12 · TIER 1 · bearing unknown`. Specified in [ui-ux.md](ui-ux.md) §10.
+- **Contact log** — a running, timestamped text feed of every detection event, at the fidelity the player earned: `T+04:12 · HEARD · bearing unknown`. Specified in [ui-ux.md](ui-ux.md) §10.
 - **Visual-first preset** — inverts the precedence law: marks appear at ≤ 30 ms and audio follows. One toggle, no other behavioural change.
 - **Exposure indicator** — the "you have been pinged" cue also renders as a screen-edge flash on the bearing of the pinging emitter.
 - **Mono mode and HRTF off** — spatialisation is a rendering choice, never a source of information the mono mix lacks. Tier-2 bearing must remain readable in mono via the contact log and the minimap.

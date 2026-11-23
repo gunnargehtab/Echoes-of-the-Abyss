@@ -106,7 +106,7 @@ describe('the contact log: a row claims exactly what was sent', () => {
     // the emitter's, so there is no direction in the report.
     const { view } = await contactLog([entry({ tier: ResolutionTier.Contact })]);
     try {
-      assert.deepEqual(columns(view), ['T+04:12', 'TIER 1', 'contact', 'bearing unknown']);
+      assert.deepEqual(columns(view), ['T+04:12', 'HEARD', 'contact', 'bearing unknown']);
     } finally {
       await view.unmount();
     }
@@ -153,7 +153,7 @@ describe('the contact log: a row claims exactly what was sent', () => {
     ]);
     try {
       const [, tier, label, detail] = columns(view);
-      assert.equal(tier, 'MARK', 'not TIER 1, though it arrived carrying a tier');
+      assert.equal(tier, 'MARK', 'not HEARD, though it arrived carrying a tier');
       assert.equal(label, 'industrial hum', 'named in systems-echo.md §7’s own words');
       assert.equal(detail, 'bearing 310°   decaying', 'and never a distance');
       assert.match(
@@ -161,6 +161,28 @@ describe('the contact log: a row claims exactly what was sent', () => {
         /\bmark\b/,
         'and it takes the residue layer’s ink rather than a rung of the ramp'
       );
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('names each tier in the player’s words, never by its number', async () => {
+    // §10's tier column. A gloss asks for a contact "with a bearing" or counts
+    // how long a hull "has been classified", and the exposure rows say `they
+    // have you tracked`: the column has to be one a gloss can point at (#1886).
+    const tiers = [
+      ResolutionTier.Contact,
+      ResolutionTier.Bearing,
+      ResolutionTier.Classification,
+      ResolutionTier.Track,
+    ];
+    const { view } = await contactLog(
+      tiers.map((tier, i) => entry({ id: `t-${tier}`, tier, bearingDeg: i * 90 }))
+    );
+    try {
+      const words = tiers.map((_, i) => columns(view, i)[1]);
+      assert.deepEqual(words, ['HEARD', 'BEARING', 'CLASSIFIED', 'TRACKED']);
+      for (const word of words) assert.doesNotMatch(word, /TIER|\d/, 'no number to decode');
     } finally {
       await view.unmount();
     }
