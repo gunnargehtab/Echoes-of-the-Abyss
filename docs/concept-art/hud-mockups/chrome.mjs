@@ -213,13 +213,13 @@ export function scopeFace(size) {
 
 /** §10's feed. DOM in the client, so it is DOM here: rows, not canvas text. */
 export const LOG_ROWS = [
-  ['T+06:12', 'TIER 1', 'contact', 'bearing unknown', TIER[1].ink, 0.75],
-  ['T+06:09', 'TIER 3', '~3 Hadron Knights', '118°  ~2,100m', '#c9a6ff', 1],
+  ['T+06:12', 'HEARD', 'contact', 'bearing unknown', TIER[1].ink, 0.75],
+  ['T+06:09', 'CLASSIFIED', '~3 Hadron Knights', '118°  ~2,100m', '#c9a6ff', 1],
   ['T+06:07', '---', 'you were pinged', '070°', NEON.red, 1],
-  ['T+05:58', 'TIER 4', 'Chorister', '302°  1,180m', TIER[4].ink, 1],
+  ['T+05:58', 'TRACKED', 'Chorister', '302°  1,180m', TIER[4].ink, 1],
   ['T+05:51', 'MARK', 'industrial hum', 'decaying', TIER[1].ink, 0.6],
   ['T+05:44', '---', 'Harvester idle', 'mined out', NEON.amber, 0.9],
-  ['T+05:30', 'TIER 2', 'contact', '245°  ~1,400m', TIER[2].ink, 0.85],
+  ['T+05:30', 'BEARING', 'contact', '245°  ~1,400m', TIER[2].ink, 0.85],
 ];
 
 /** Exactly 20 px a row, so a panel's height is arithmetic rather than a guess. */
@@ -246,6 +246,11 @@ function rowsFor(own) {
   return LOG_ROWS;
 }
 
+/**
+ * The tier column is sized in `em` to its longest word, `CLASSIFIED` (§10's
+ * labels since #1894), so the names start on one line at any row font. At the
+ * old 40 px a long label stretched its own row and pushed only that name right.
+ */
 export function logRows(limit = 7, fontSize = 10, { own = 'bathyarch' } = {}) {
   return rowsFor(own)
     .slice(0, limit)
@@ -253,7 +258,7 @@ export function logRows(limit = 7, fontSize = 10, { own = 'bathyarch' } = {}) {
       ([t, tier, what, detail, ink, op]) => `
       <div class="row" style="gap:8px;height:${LOG_ROW_H}px;padding:0 9px;font-size:${fontSize}px;letter-spacing:0.06em;opacity:${op};border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">${t}</span>
-        <span style="flex:0 0 40px;color:${ink}">${tier}</span>
+        <span style="flex:0 0 6.7em;color:${ink}">${tier}</span>
         <span style="flex:1 1 auto;color:${TEXT.bright};overflow:hidden;text-overflow:ellipsis;text-align:left">${what}</span>
         <span class="dim" style="flex:0 0 auto;text-align:right">${detail}</span>
       </div>`
