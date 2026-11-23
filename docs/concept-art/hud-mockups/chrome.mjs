@@ -249,7 +249,8 @@ function rowsFor(own) {
 /**
  * The tier column is sized in `em` to its longest word, `CLASSIFIED` (§10's
  * labels since #1894), so the names start on one line at any row font. At the
- * old 40 px a long label stretched its own row and pushed only that name right.
+ * old 40 px, `CLASSIFIED` outgrew its column and pushed only its own row's
+ * name right.
  */
 export function logRows(limit = 7, fontSize = 10, { own = 'bathyarch' } = {}) {
   return rowsFor(own)
