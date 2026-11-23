@@ -1310,7 +1310,7 @@ also shoots.
 
 The role line — what a newcomer reads on the card
 
-Every block above opens on a **Role**, and most of them are arguments: *The lie*, *The song*,
+Every hull's block above opens on a **Role**, and most of them are arguments: *The lie*, *The song*,
 *The ears on the move*. They say why the hull exists to someone who already knows the roster.
 A first-time commander resting the pointer on `WVR 150` needed what it does, and the hint line
 gave a name and a price only (#1886). So each hull also carries one **role line**, written to
@@ -1320,13 +1320,14 @@ any number in digits and its unit. It follows the name and the price on the hint
 
 Every figure in it is the stat block's own, and the line is no place to tune one: a block that
 moves takes its line with it. `UnitStats.role` in `packages/shared/src/units.ts` copies this
-table, and `units.test.ts` holds every row to it. A craft is never on the card, and its line is
-here so that every hull has one.
+table, and `units.test.ts` holds every row to it and names the constant behind each figure,
+so a constant that moves without its row fails the build. A craft is never on the card, and
+its line is here so that every hull has one.
 
 | Hull | Role line |
 | --- | --- |
 | Light Scout | Fast, quiet scout with a light gun. |
-| Corvette | Line warship: a gun and torpedoes at 550 m. |
+| Corvette | Line warship: a 550 m gun and torpedoes. |
 | Cruiser | Slow, tough warship: a 900 m gun and torpedoes. |
 | Abyssal Submersible | Deep warship: PR 3, with a gun and torpedoes. |
 | Harvester | Gathers resources and carries them to a Refinery or your Bastion. |
@@ -1337,8 +1338,8 @@ here so that every hull has one.
 | Spinner | Carries 4 mines and lays them silently. |
 | Sower | After 20 s stopped, gives your hulls within 400 m +1 PR. |
 | Precentor | Gives your hulls within 500 m +10 HYD, so they hear further. |
-| Dredge | PR 4 warship that can hold the crystal field at 2,400 m. |
-| Cantus | After 10 s stopped, gives your hulls within 300 m +1 PR. Loud. |
+| Dredge | PR 4 warship: survives at the crystal field, 2,400 m down. |
+| Cantus | After 10 s stopped, gives your hulls within 300 m +1 PR, and is loud while it does. |
 | Reciter | Fragile 1,000 m gun, very loud toward what it faces. |
 | Freighter | Tough, loud transport that carries 6 berths of hulls. |
 | Drifter | Quiet, fast transport that carries 2 berths of hulls. |
@@ -1368,7 +1369,7 @@ here so that every hull has one.
 | Spark | The Gantry's craft: a loud, short-range gun. |
 | Runner | The Rootstock's craft: near silent, with a light gun. |
 | Treble | The Succentor's craft: PR 4, with a light gun. |
-| Versicle | The Offertory's craft: fast, with a heavy gun. |
+| Versicle | The Offertory's craft: tough, with a heavy gun. |
 
 Design notes
 

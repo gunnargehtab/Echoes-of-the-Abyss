@@ -40,7 +40,9 @@ import {
   Faction,
   RefitKind,
   refitOfferedTo,
+  CRYSTAL,
   HULL_EFFECTS,
+  ORDNANCE,
   MAX_UNIT_RADIUS_M,
   OPENING_ESCORT,
   PRODUCIBLE,
@@ -911,4 +913,84 @@ describe('every hull carries the role line docs/units.md writes for it', () => {
       assert.match(stats.role, /\.$/, 'a role line is a sentence, ended');
     });
   }
+});
+
+/**
+ * The figures in a role line are a second copy of constants (root CLAUDE.md,
+ * "Constants live in exactly one place"), and the doc's promise that "a block
+ * that moves takes its line with it" is only kept if a moved constant fails a
+ * gate. So each hull's line names, here, the constant behind every number it
+ * prints, in the order printed: a SPEC change that edits the constant and not
+ * the row turns this red rather than leaving a false sentence on the card.
+ * A hull absent from the table prints no number at all.
+ */
+describe('every number a role line prints is the constant it quotes', () => {
+  const S = (kind: UnitKind) => UNIT_STATS[kind];
+  const E = HULL_EFFECTS;
+  const flight = (kind: UnitKind): number => S(kind).flight?.capacity ?? Number.NaN;
+  const QUOTES: Partial<Record<UnitKind, number[]>> = {
+    [UnitKind.Corvette]: [S(UnitKind.Corvette).attackRangeM],
+    [UnitKind.Cruiser]: [S(UnitKind.Cruiser).attackRangeM],
+    [UnitKind.AbyssalSubmersible]: [S(UnitKind.AbyssalSubmersible).pressureRating],
+    [UnitKind.Clarion]: [S(UnitKind.Clarion).attackRangeM],
+    [UnitKind.Tender]: [E.TENDER.RADIUS_M, E.TENDER.REPAIR_HP_PER_S],
+    [UnitKind.Bulwark]: [S(UnitKind.Bulwark).attackRangeM],
+    [UnitKind.Spinner]: [S(UnitKind.Spinner).mineMagazine ?? Number.NaN],
+    [UnitKind.Sower]: [E.SOWER.STATIONARY_S, E.SOWER.RADIUS_M, E.SOWER.PR_BONUS],
+    [UnitKind.Precentor]: [E.PRECENTOR.RADIUS_M, E.PRECENTOR.HYD_BONUS],
+    [UnitKind.Dredge]: [S(UnitKind.Dredge).pressureRating, CRYSTAL.FIELD_DEPTH_M],
+    [UnitKind.Cantus]: [E.CANTUS.STATIONARY_S, E.CANTUS.RADIUS_M, E.CANTUS.PR_BONUS],
+    [UnitKind.Reciter]: [S(UnitKind.Reciter).attackRangeM],
+    [UnitKind.Freighter]: [S(UnitKind.Freighter).holdBerths ?? Number.NaN],
+    [UnitKind.Drifter]: [S(UnitKind.Drifter).holdBerths ?? Number.NaN],
+    [UnitKind.Verger]: [
+      S(UnitKind.Verger).pressureRating,
+      S(UnitKind.Verger).holdBerths ?? Number.NaN,
+    ],
+    [UnitKind.Antiphon]: [
+      S(UnitKind.Antiphon).holdBerths ?? Number.NaN,
+      E.ANTIPHON.PR_BONUS,
+      E.ANTIPHON.GRANT_S,
+    ],
+    [UnitKind.Beacon]: [S(UnitKind.Beacon).pingCadenceS ?? Number.NaN],
+    [UnitKind.Acolyte]: [S(UnitKind.Acolyte).hydStationary ?? Number.NaN],
+    [UnitKind.Broadside]: [S(UnitKind.Broadside).torpedoMagazine ?? Number.NaN],
+    [UnitKind.Weaver]: [
+      ORDNANCE.LAID_DECOY.MAGAZINE,
+      ORDNANCE.LAID_DECOY.SIG,
+      ORDNANCE.LAID_DECOY.LIFETIME_S,
+    ],
+    [UnitKind.Thurible]: [S(UnitKind.Thurible).pressureRating],
+    [UnitKind.Furnace]: [S(UnitKind.Furnace).attackRangeM],
+    [UnitKind.Blight]: [E.BLIGHT.RANGE_M],
+    [UnitKind.Lure]: [E.LURE.SONG_S, E.LURE.RADIUS_M],
+    [UnitKind.Tocsin]: [S(UnitKind.Tocsin).attackRangeM],
+    [UnitKind.Reed]: [S(UnitKind.Reed).attackRangeM],
+    [UnitKind.Bower]: [E.BOWER.STATIONARY_S, E.BOWER.VEIL_RADIUS_M],
+    [UnitKind.Derrick]: [S(UnitKind.Derrick).attackRangeM],
+    [UnitKind.Responsory]: [
+      S(UnitKind.Responsory).loudTargetDamageMultiplier ?? Number.NaN,
+      S(UnitKind.Responsory).loudTargetSigThreshold ?? Number.NaN,
+    ],
+    [UnitKind.Gantry]: [flight(UnitKind.Gantry)],
+    [UnitKind.Rootstock]: [flight(UnitKind.Rootstock)],
+    [UnitKind.Succentor]: [S(UnitKind.Succentor).pressureRating, flight(UnitKind.Succentor)],
+    [UnitKind.Offertory]: [flight(UnitKind.Offertory)],
+    [UnitKind.Treble]: [S(UnitKind.Treble).pressureRating],
+  };
+
+  for (const stats of roster) {
+    it(`${stats.name}'s figures are its constants`, () => {
+      const printed = [...stats.role.matchAll(/\d[\d,]*(?:\.\d+)?/g)].map((m) =>
+        Number(m[0].replace(/,/g, ''))
+      );
+      assert.deepEqual(printed, QUOTES[stats.kind] ?? [], stats.role);
+    });
+  }
+
+  it("the Lure's twice is its multiplier", () => {
+    // The one figure written as a word, since "2× as loud" reads worse.
+    assert.match(UNIT_STATS[UnitKind.Lure].role, /twice as loud/);
+    assert.equal(HULL_EFFECTS.LURE.AGGRO_MULTIPLIER, 2);
+  });
 });

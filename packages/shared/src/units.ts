@@ -351,7 +351,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Corvette]: {
     kind: UnitKind.Corvette,
     name: 'Corvette',
-    role: 'Line warship: a gun and torpedoes at 550 m.',
+    role: 'Line warship: a 550 m gun and torpedoes.',
     sigIdle: 28,
     sigCruise: 28,
     sigFiringBurst: 25,
@@ -781,7 +781,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Dredge]: {
     kind: UnitKind.Dredge,
     name: 'Dredge',
-    role: 'PR 4 warship that can hold the crystal field at 2,400 m.',
+    role: 'PR 4 warship: survives at the crystal field, 2,400 m down.',
     /**
      * SPEC — docs/units.md, Dredge: "40 / 52 / +25 — loud for a Directorate
      * hull, on purpose: a Dredge at the field is the tell that the field is
@@ -822,7 +822,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Cantus]: {
     kind: UnitKind.Cantus,
     name: 'Cantus',
-    role: 'After 10 s stopped, gives your hulls within 300 m +1 PR. Loud.',
+    role: 'After 10 s stopped, gives your hulls within 300 m +1 PR, and is loud while it does.',
     /**
      * SPEC — docs/units.md, Cantus: "10 / 10 / — moving; 80 while singing —
      * the Spire's figure, for the Spire's reason: rented depth is never
@@ -1925,7 +1925,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Versicle]: {
     kind: UnitKind.Versicle,
     name: 'Versicle',
-    role: "The Offertory's craft: fast, with a heavy gun.",
+    role: "The Offertory's craft: tough, with a heavy gun.",
     /** SPEC — docs/units.md, "The craft": 20 / 50, cone figures like every
      * Order entry's (docs/systems-echo.md §8). */
     sigIdle: 20,
