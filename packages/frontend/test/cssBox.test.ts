@@ -323,10 +323,11 @@ describe('cssBox: what a column track refuses to shrink below', () => {
     // sheet and say nothing at all.
     //
     // The anchor is the whole declaration rather than the `minmax(0, 1fr)` in
-    // it, and that is not fussiness. `.contact-log-row` carries the identical
-    // pair and is written 1,300 lines earlier, so the short anchor strips the
-    // *log's* track and leaves this row's fixed — a control aimed at the wrong
-    // row, passing against a sheet it never changed. The uniqueness assertions
+    // it, and that is not fussiness. `.contact-log-row` carried the identical
+    // pair 1,300 lines earlier until #1893 made it a flex row, so the short
+    // anchor stripped the *log's* track and left this row's fixed — a control
+    // aimed at the wrong row, passing against a sheet it never changed — and
+    // six other rules still carry `minmax(0, 1fr)`. The uniqueness assertions
     // are what turn that into a failure rather than a green tick.
     const TRACK = 'calc(3.2rem * var(--panel-type, 1)) minmax(0, 1fr) auto;';
     const ITEMS = '.objectives-row > * {\n  min-width: 0;\n}\n';
