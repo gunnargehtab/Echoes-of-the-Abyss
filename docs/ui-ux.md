@@ -994,14 +994,22 @@ for a cost that no longer exists is the same lie as no warning for one that does
 A scrolling, timestamped feed of every detection event at the fidelity earned. It is a first-class UI element, not a debug view, and it is the accessible mirror of the audio channel.
 
 ```text
-T+04:12  TIER 1  contact                  bearing unknown
-T+04:09  TIER 3  ~4 Consortium            bearing 118°   ~2,100 m
-T+04:07  ---     you were pinged          bearing 070°
-T+04:02  ---     they have your bearing
-T+03:59  ---     Corvette went loud       bearing 034°   1,050 m
-T+03:58  TIER 2  contact                  bearing 245°   ~1,400 m
-T+03:51  MARK    industrial hum           bearing 310°   decaying
+T+04:12  HEARD       contact              bearing unknown
+T+04:09  CLASSIFIED  ~4 Consortium        bearing 118°   ~2,100 m
+T+04:07  ---         you were pinged      bearing 070°
+T+04:02  ---         they have your bearing
+T+03:59  ---         Corvette went loud   bearing 034°   1,050 m
+T+03:58  BEARING     contact              bearing 245°   ~1,400 m
+T+03:51  MARK        industrial hum       bearing 310°   decaying
 ```
+
+**The second column names what you hold, in the words the rest of the screen uses.** A
+detection row reads `HEARD`, `BEARING`, `CLASSIFIED` or `TRACKED` for Tiers 1 to 4
+([glossary.md](glossary.md), "Resolution Tiers"). Those are the words of the rows that point
+the other way (`you were heard`, `they have you classified`), of the strip's `TRACKED ×n`, and
+of every objective gloss that asks for a contact "with a bearing" or counts how long a hull
+"has been classified". A tier number is the Echo Layer's word, not the player's: `TIER 3`
+told a first-time player nothing a gloss could point at (#1886).
 
 Entries are click-to-focus (camera moves to the last known position) and copy-pasteable, because post-match analysis of *"when did they hear me"* is a real activity this game should support.
 

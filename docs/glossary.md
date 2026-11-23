@@ -46,6 +46,9 @@ Resolution Tiers (0–4)
   There is no tier above Track: it already reveals everything the Echo Layer models,
   so a further "Full Lock" tier would have nothing left to add. (An earlier draft
   listed one; systems-echo.md §4 is the tier table of record.)
+- On screen a player reads what they hold rather than a number: the contact log's tier
+  column says `HEARD`, `BEARING`, `CLASSIFIED` or `TRACKED` for Tiers 1 to 4, the words its
+  exposure rows and the objective glosses already use (ui-ux.md §10).
 
 Active Sonar
 
