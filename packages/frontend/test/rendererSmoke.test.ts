@@ -5859,7 +5859,11 @@ describe('a hull cell says what the hull does under the pointer (#1886)', () => 
       world.chart.setUiScale(2);
       world.frame(2);
       hoverTender(world);
-      assert.equal(textSaying(world.app.stage, line), null, 'the premise: the whole line does not fit');
+      assert.equal(
+        textSaying(world.app.stage, line),
+        null,
+        'the premise: the whole line does not fit'
+      );
       assert.ok(textSaying(world.app.stage, named) !== null, `the price went with the role`);
     } finally {
       world.teardown();
