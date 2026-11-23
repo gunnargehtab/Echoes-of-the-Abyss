@@ -1310,13 +1310,14 @@ also shoots.
 
 The role line — what a newcomer reads on the card
 
-Every hull's block above opens on a **Role**, and most of them are arguments: *The lie*, *The song*,
-*The ears on the move*. They say why the hull exists to someone who already knows the roster.
-A first-time commander resting the pointer on `WVR 150` needed what it does, and the hint line
-gave a name and a price only (#1886). So each hull also carries one **role line**, written to
-be acted on in [ui-ux.md](ui-ux.md) §10.5's register: what the hull does, in plain words, with
-any number in digits and its unit. It follows the name and the price on the hint line
-([ui-ux.md](ui-ux.md) §9) as its own clause, the first one a narrow window drops.
+Every hull's block above opens on a **Role**, and most of them are arguments: *The lie*, *The
+song*, *The ears on the move*. They say why the hull exists to someone who already knows the
+roster. A first-time commander resting the pointer on `WVR 150` needed what it does, and the
+hint line gave a name and a price only (#1886). So each hull also carries one **role line**,
+written to be acted on in [ui-ux.md](ui-ux.md) §10.5's register: what the hull does, in plain
+words, with any number in digits and its unit, save a multiple, which may read as a word
+(*twice*). It follows the name and the price on the hint line ([ui-ux.md](ui-ux.md) §9) as its
+own clause, the first one a narrow window drops.
 
 Every figure in it is the stat block's own, and the line is no place to tune one: a block that
 moves takes its line with it. `UnitStats.role` in `packages/shared/src/units.ts` copies this
@@ -1352,7 +1353,7 @@ its line is here so that every hull has one.
 | Broadside | No gun: 4 torpedoes, then rearm at a Bastion or Foundry. |
 | Weaver | Lays 3 decoys that sound like a hull at SIG 45 for 25 s. |
 | Thurible | PR 3 hull whose depth charges burst above it, at hulls overhead. |
-| Lance | One torpedo, fired only at what the hull is facing. |
+| Lance | 1 torpedo, fired only at what the hull is facing. |
 | Furnace | Siege hull: cuts structures at 320 m; weak against hulls. |
 | Blight | Siege hull: silently rots a structure from 350 m. |
 | Lure | Siege hull: for 60 s, fauna hear all within 500 m twice as loud. |

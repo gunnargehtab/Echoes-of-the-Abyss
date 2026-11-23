@@ -961,6 +961,7 @@ describe('every number a role line prints is the constant it quotes', () => {
       ORDNANCE.LAID_DECOY.LIFETIME_S,
     ],
     [UnitKind.Thurible]: [S(UnitKind.Thurible).pressureRating],
+    [UnitKind.Lance]: [S(UnitKind.Lance).torpedoMagazine ?? Number.NaN],
     [UnitKind.Furnace]: [S(UnitKind.Furnace).attackRangeM],
     [UnitKind.Blight]: [E.BLIGHT.RANGE_M],
     [UnitKind.Lure]: [E.LURE.SONG_S, E.LURE.RADIUS_M],
@@ -989,7 +990,8 @@ describe('every number a role line prints is the constant it quotes', () => {
   }
 
   it("the Lure's twice is its multiplier", () => {
-    // The one figure written as a word, since "2× as loud" reads worse.
+    // The one figure written as a word: docs/units.md lets a multiple read
+    // as one, since "2× as loud" reads worse.
     assert.match(UNIT_STATS[UnitKind.Lure].role, /twice as loud/);
     assert.equal(HULL_EFFECTS.LURE.AGGRO_MULTIPLIER, 2);
   });

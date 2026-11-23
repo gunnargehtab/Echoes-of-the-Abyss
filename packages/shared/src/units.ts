@@ -1326,7 +1326,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Lance]: {
     kind: UnitKind.Lance,
     name: 'Lance',
-    role: 'One torpedo, fired only at what the hull is facing.',
+    role: '1 torpedo, fired only at what the hull is facing.',
     // SPEC — docs/units.md, Lance: "20 / 50 / —", and the figures are cone
     // figures like every Order hull's (docs/systems-echo.md §8): 50 ahead, 17.5
     // on the beam, 5 astern. The hull is loudest exactly where it can shoot.
