@@ -418,17 +418,30 @@
 }
 
 .contact-log-row {
-  display: grid;
-  /* The *label* is the unbounded cell, so it is the one that gives. A hull name
-     is a faction plus a class and can run to `Directorate Abyssal Submersible`;
-     a detail is `bearing 107° ~800 m` and has a width you can predict. Putting
-     the `1fr` on the detail instead made the label take its max-content and
-     starve the detail to about fifteen pixels, which `overflow-wrap: anywhere`
-     then broke one character per line — a bearing column rendered as a vertical
-     stack of digits. So the flexible track is the label's, the detail sits on
-     `auto` at its natural width, and it is the hull name that wraps. */
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
-  gap: 8px;
+  /* A row that wraps, not a grid, because a grid row cannot give up a line.
+     The time, the tier and the detail alone, with their gaps and padding, take
+     211 to 275 px at 100% type, and the panel is at most `32vw / --ui-scale`
+     wide: 230 px at 200% on a 1,440 px window.
+     As a grid with the label on `minmax(0, 1fr)`, the three `auto` tracks took
+     their max-content first and left the label none, so a hull name printed
+     over the bearing (#1893). As a flex row the label's automatic minimum is
+     its longest word, so where time, tier, that word and the detail cannot
+     share one line the detail takes the next one, flush right — §2's "fit what
+     it holds" by a second line rather than by ink on ink. Where they can, the
+     label takes the rest of the line and wraps between words, as it always did.
+     `contactLogRow.test.ts` holds these declarations, and `run-game`'s
+     `logFit.mjs` measures the ink they produce in Chromium.
+
+     The label carries the give rather than the detail for the reason it always
+     has: a hull name is a faction plus a class and can run to `Directorate
+     Abyssal Submersible`, while a detail is `bearing 107°   ~800 m`, a width
+     you can predict. Starving the detail instead once gave it fifteen pixels,
+     and `overflow-wrap: anywhere` broke it one character per line — a bearing
+     column drawn as a vertical stack of digits. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
   width: 100%;
   padding: 3px 8px;
   border: 0;
@@ -441,12 +454,20 @@
   user-select: text;
 }
 
-/* Grid children default to min-content, which lets a long cell push the row
-   wider than the panel. At 200% UI scale the panel is narrow enough for that
-   to happen, and a clipped log row is a log row that stops being the mirror
-   §11 requires it to be. */
-.contact-log-row > * {
-  min-width: 0;
+/* A flex item's automatic minimum is its min-content, and here that is the
+   point: it is what makes the detail wrap rather than crush the label. So no
+   cell takes `min-width: 0`, which the grid needed and which here would let
+   the label be squeezed to nothing again, or the detail be shrunk through its
+   own tokens. The time and the tier are one token each and never give. */
+.contact-log-time,
+.contact-log-tier {
+  flex: none;
+}
+
+/* Basis 0, so the line is decided by the label's longest word rather than
+   its whole name, and grow, so it takes whatever the line has left. */
+.contact-log-label {
+  flex: 1 1 0;
 }
 
 .contact-log-row:disabled {
@@ -521,11 +542,24 @@
 }
 
 /* Never broken mid-token: a bearing split across two lines is not a bearing.
-   The label above it is what wraps when the panel is narrow. */
+   The label above it is what wraps first. When the detail is pushed to a line
+   of its own the auto margin keeps it flush right, in the column it holds on
+   every other row, and on a line still too narrow for all of it, it breaks
+   between its tokens and nowhere else: `bearing 359°` over `~11800 m`.
+
+   That second break is for the band just above the 900 px media query at
+   200%: the panel is 144 px wide there, a 15 px scrollbar and the row's 16 px
+   of padding leave 113, and the widest detail is 133 px (#1893). So the detail may shrink, but no
+   further than its automatic minimum, which is its widest token. */
 .contact-log-detail {
+  flex: 0 1 auto;
+  margin-left: auto;
   opacity: 0.7;
-  white-space: nowrap;
   text-align: right;
+}
+
+.contact-log-detail-part {
+  white-space: nowrap;
 }
 
 /*
@@ -1905,8 +1939,8 @@
    beside it — that is #774, and it is the rule below rather than this one.
    Both of these are about how wide a *box* is, and a box is not ink.
 
-   It is the pair the contact log has carried since its own columns overran
-   each other, and `.mission-result-objective` carries it too since #773.
+   The contact log carried the same pair until its row became a wrapping
+   flex row (#1893), and `.mission-result-objective` carries it since #773.
    `.mission-log-row` has the shape and not this exposure: its `1fr` is the
    *last* column and `.mission-log-text` spans `1 / -1`, and its tracks measure
    the same with a long token in them as without, so no cell is carried
@@ -2503,7 +2537,7 @@ button.objectives-row .objectives-text {
    pushes the `n of m` beside it out of the card — which is a scroll container on
    both axes (`overflow-y: auto` on the panel computes the other to `auto`), so
    the counter goes invisible rather than absent, §2's state. The pair
-   `.objectives-row` and `.contact-log-row` carry, and for the same reason: the
+   `.objectives-row` carries, and for the same reason: the
    track's floor and the item's are two floors, and `minmax(0, …)` alone leaves
    the span inside the track refusing to shrink (#773).
 

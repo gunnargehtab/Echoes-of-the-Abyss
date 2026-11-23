@@ -1409,8 +1409,8 @@ describe('the objectives panel: a row fits the panel that holds it', () => {
     // The track's floor and the item's are two floors, and a grid item's
     // automatic minimum is min-content as well — so `minmax(0, 1fr)` on its
     // own still leaves the span inside it refusing to shrink. Both halves or
-    // neither, which is the pair `.contact-log-row` has carried since its own
-    // columns overran each other.
+    // neither, which is the pair `.contact-log-row` carried from when its own
+    // columns overran each other until #1893 made it a wrapping flex row.
     //
     // Read off the rendered tree rather than from a list of class names here,
     // because the failure is about whatever the panel actually puts in a row:

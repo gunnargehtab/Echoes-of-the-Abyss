@@ -362,6 +362,21 @@ One thing it cannot see: a control laid over a number the strip drew but *refuse
 control. It reads the DOM, and the glyphs underneath are Pixi — that property is held
 headlessly against the `Text` objects themselves.
 
+### The contact log's rows across the scale range
+
+```bash
+SHOW_SCROLLBARS=1 VIEW_W=1440 VIEW_H=1200 node .claude/skills/run-game/scripts/drive.mjs \
+  --out /tmp/log-fit --steps .claude/skills/run-game/scripts/logFit.mjs
+```
+
+Writes five probe rows into the contact log at 75% to 200% and fails if any cell's
+glyphs land on another's or leave the row ([ui-ux.md](../../../docs/ui-ux.md) §2, #1893).
+`npm test` holds the declarations that keep them apart (`contactLogRow.test.ts`); the ink
+they produce is measured only here. The window is 1,200 px tall because 200% needs 1,168
+px (§11); also run it at `VIEW_W=901`, just above the width that hides the log.
+`SHOW_SCROLLBARS=1` keeps the scrollbar Playwright hides by default, and the drive
+refuses to measure without it. `LOG_FIT_OUT=<dir>` saves the panel alone at each scale.
+
 ## 3. Stop the servers
 
 ```bash

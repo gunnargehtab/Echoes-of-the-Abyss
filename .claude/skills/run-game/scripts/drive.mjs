@@ -25,6 +25,9 @@
  * before it boots (settings/store.ts reads `echoes.settings` once), which is
  * how a capture takes a colour-vision palette: the settings panel is Pixi,
  * so no selector reaches it (#1637).
+ * SHOW_SCROLLBARS=1 keeps the scrollbars a player sees. Headless Chromium is
+ * launched with `--hide-scrollbars` by Playwright's defaults, so a scrolling
+ * panel otherwise measures 15 px wider than it is (logFit.mjs, #1893).
  * RECORD_VIDEO=<dir> records the whole session as a WebM in that directory,
  * the viewport's size, and prints its path when the browser closes. It is
  * Playwright's screencast, VP8 at 25 fps and about 1 Mbit/s: a timing
@@ -131,6 +134,7 @@ const browser = await chromium.launch({
     ...(process.env.UNPACED === '1' ? ['--disable-gpu-vsync', '--disable-frame-rate-limit'] : []),
   ],
   headless: !HEADED,
+  ...(process.env.SHOW_SCROLLBARS === '1' ? { ignoreDefaultArgs: ['--hide-scrollbars'] } : {}),
   ...(CHANNEL === null ? {} : { channel: CHANNEL }),
 });
 const viewport = { width: Number(process.env.VIEW_W ?? 1440), height: Number(process.env.VIEW_H ?? 900) };
