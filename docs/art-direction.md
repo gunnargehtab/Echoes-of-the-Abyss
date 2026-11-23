@@ -28,7 +28,9 @@ been read twice. On 11 November 2026 a mark carried a plate, and on 19 November 
 the named GPU's frames, the owner took the plates away: a mark stands bare
 ([A mark on the lit world](#a-mark-on-the-lit-world)). Its wording below is the author's,
 written to carry that out. On 13 November 2026 the owner read limit 2 for a model in the
-world pass ([A model in the world's light](#a-model-in-the-worlds-light)).*
+world pass ([A model in the world's light](#a-model-in-the-worlds-light)). On 22 November
+2026 the owner read the tactical layer's law for the survey ink: at High it fades by the
+water over the ground it lies on ([The crater from above](#the-crater-from-above)).*
 
 The owner turned the look down three times in two weeks. Three proposed designs "seem
 lifeless" (26 October, #1637). The free-water slice was "a map editor, not an ocean" on
@@ -45,7 +47,7 @@ The picture is two layers, and each now has its own law.
 
 | Layer | What is on it | Its law |
 | --- | --- | --- |
-| **Tactical layer** | Rungs 4 to 7 of the ladder ([map-visuals.md](map-visuals.md) §5): survey ink, map furniture, instruments and agents. That is every mark, ring and glyph, public life's field marks and stipple, contacts at every tier, own lamps with their halo and collar, the scope and the Pixi HUD | Unchanged at both graphics qualities: no mark, ring, lamp or glyph is drawn differently at High. Glow is loudness, hue is the faction's, fidelity is asymmetric and the glance test holds ([graphics-standards.md](graphics-standards.md) gates 3, 4, 5 and 7). At High a mark stands bare on the lit world, and the glance test is asked of it there (limit 6) |
+| **Tactical layer** | Rungs 4 to 7 of the ladder ([map-visuals.md](map-visuals.md) §5): survey ink, map furniture, instruments and agents. That is every mark, ring and glyph, public life's field marks and stipple, contacts at every tier, own lamps with their halo and collar, the scope and the Pixi HUD | Unchanged at both graphics qualities: no mark, ring, lamp or glyph is drawn differently at High. Glow is loudness, hue is the faction's, fidelity is asymmetric and the glance test holds ([graphics-standards.md](graphics-standards.md) gates 3, 4, 5 and 7). At High a mark stands bare on the lit world, and the glance test is asked of it there (limit 6). One thing is drawn differently, by the owner's call: the survey ink fades by the water over the ground it lies on, as that ground does ([The crater from above](#the-crater-from-above)) |
 | **World layer** | Rungs 1 to 3 and world light: the water, stone and ground, flora, the modelled bodies of public life with their light, and the surfaces of hulls, structures, props and landmarks | At Low, every rule as written. At High, lit, inside the limits below |
 
 ### What the world layer may do at High
@@ -165,7 +167,8 @@ High draws the one scene as two layers
 5. **The tactical pass** draws everything else on the canvas as Low draws it: the same
    materials, the same per-material curve, the same fog. Every lamp is drawn here, and
    so is a contact's model, whole. The survey ink is drawn here,
-   as a layer of its own over the lit ground. The lamp halo and the chromatic split
+   as a layer of its own over the lit ground, and fades by the water over that ground
+   ([The crater from above](#the-crater-from-above)). The lamp halo and the chromatic split
    follow as they always have. The chain runs before this pass, so no
    mark, ring or lamp is occluded, spread or graded.
 
@@ -236,6 +239,9 @@ Built so far:
 - **The fine snow inside an own hull's beam is lit**
   ([#1855](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1855)). In
   development and not accepted. Below.
+- **From the survey dolly the free-water crater stands under its own water and its own
+  walls' shade, on ground that runs on past the map's edge** ([#1891](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1891)).
+  In development and not accepted. Below.
 
 Not built yet: a searchlight on a standing prop, a prop's shadow, a hull's shadow on
 another hull, and the work lights and floodlights of the player's own structures.
@@ -1361,6 +1367,116 @@ loud hull and none at Low or on Silent Running.
 | The narrowest a mote is drawn, pixels | `MOTES.MIN_PX` | 1.5 |
 | Share of the beam's light the coarsest mote sends to the eye | `MOTES.ALBEDO` | 0.07 |
 | What the finest mote sends, as a share of the coarsest's | `MOTES.FINE_SHARE` | 0.4 |
+
+#### The crater from above
+
+*In development with the rest of High, and not accepted
+([#1891](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1891);
+[issue-1891](screenshots/issue-1891/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.CRATER` (`packages/shared/src/constants.ts`) until a frame of it is
+accepted. **The owner took two calls** in session on 22 November 2026, on a software
+rasteriser's frames of four prototypes: what the step builds, and that the survey ink
+takes the water. Neither is the look's acceptance, which waits on the named GPU's
+frames. The readings not taken stay written under each.*
+
+From the survey dolly the free-water crater read as built: flat panels with dark
+outlines, a black hole in the middle, on a square tile
+([free-water-slice.md](free-water-slice.md) §9, "Crater walls"). One cause produces all
+three. **At that dolly High's light and water do not work at the crater's scale.** The
+water's reach follows the dolly ([Reading the Water](#reading-the-water)) and stands at
+32 km from 10 km out, so every floor keeps 0.91 of its light whatever lies over it. The
+light is shaded a pixel at a time: by the slope under the pixel and by ground within
+45 m of it. So a wall 900 m tall reaches the frame only as its 80 m scarp, a dark band of
+one width round every floor. The pocket's trench floor, with no water drawn over its
+2,400 m, read 1.0 of 255 beside open water at 7.0. And nothing hides where the ground
+stops. Home and Close do not show the fault: there the eye's own swim is the medium.
+
+Four things were written against that cause, and the owner took the second.
+
+- **Water over each floor, and shade under each wall.** No ground moves, and Low is
+  untouched. Taken, with the next.
+- **Those, then ground past the map's edge,** falling away into the deep. Taken.
+- **Water alone.** It mends the hole and leaves the outlines.
+- **Reshape the ground:** slopes sized by their drop, or a re-cut literal. It moves Low
+  and the simulation's ground, so it is no step of High's.
+
+Built, in the free-water study alone:
+
+- **The water over a floor takes its light.** Past the dolly where the eye has left the
+  water, a fragment of the world pass loses light to the column over it as well as to the
+  swim from the eye, and the composite gives the water that share back at the floor's
+  depth, in its biome's hue. The rim's 600 m keeps 0.92 of its light, the bowl's 1,500 m
+  0.60 and the pocket's 2,400 m 0.27. The pocket then reads 7.0 of 255, as deep water
+  does. Depth is luminance, in the medium as on the ground. The term comes in between
+  2,000 m and 5,000 m of dolly, so it takes nothing at Close, Home and gate 6's low
+  camera, at 420 m, 1,200 m and 1,600 m. The sources' volumes and the searchlights'
+  cones do not take it. The crater's kelp stands no deeper than 620 m and its vent stand
+  is on the rim, where the column takes 0.08 at most.
+- **A wall hides the Lid's glow from the floor under it.** The Lid's glow is light from
+  the whole water above (limit 1), so a point under a wall takes less of it than a point
+  on open ground, by more the taller the wall and the nearer it stands. The lit ground
+  reads that off its own drawn heights, at their true scale, along 16 bearings out to
+  800 m, and takes 0.6 of what they find hidden. At the whole of it the bowl's ring drew
+  as dark as the pocket beside it. It shades the glow alone: a pool and a beam are light
+  from beside the ground. Two readings of where it shows were written. **In the ground's
+  bake, at every camera** is taken: it is the ground's own light, and it does not come and
+  go with the zoom. Against `main`, Home then moves 2.2% of its pixels by more than 2 of
+  255, Close 0.8%, and gate 6's low camera, which looks across the bowl's floor, 8.1%. **Brought in with the column's knee** would leave those
+  three cameras as `main` draws them, and stand the walls' shade up as the camera pulls
+  out.
+- **The survey ink takes the same water.** The tactical layer is drawn as Low draws it,
+  and [map-visuals.md](map-visuals.md) §4, rule 6, has the ink fade into the water like
+  the ground it lies on. With water over the deep floors the two disagree. Two readings
+  were written. **The ink stays as Low draws it** keeps the layer's law whole, and
+  redraws every edge at full strength over ground the water has taken. **The ink fades
+  by the column over its ground** is the owner's call: rule 6 holds at High. An ink
+  stroke only loses strength by it, so rung 4 stays under rung 5 wherever it stood. Over
+  the pocket a stroke keeps 0.27 of its strength from the survey dolly, and under the
+  knee's 2,000 m of dolly it loses nothing.
+
+- **The ground runs on past the map's edge.** A mission drawn alone ends in the skirt,
+  a wall under the map's rectangle, and from above that is a square tile. The study's
+  ground is now drawn 2,000 m past its edge, as one more draw of the world pass and
+  15,904 triangles, with 224 more in the skirt. It is the edge's own ground and nothing else: past the edge the
+  cells are the edge's, held, so the rim runs out as rim and the exit pool as the pool's
+  channel, and the relief is the field the map's ground reads, so it crosses the edge
+  with no seam. It falls from the edge's depth to the map's 3,000 m floor at the reach,
+  level at both ends. There the column leaves 0.13 of its light and the rest is the
+  water's, so it ends in the colour the open water already is. The relief stands whole
+  for 250 m and has eased out by 1,000 m. Its lit bake is 1,024 px a side at the map's
+  own 7.8125 m a pixel, 11.2 MB with its mips. It takes the veil of the point on the
+  edge nearest it. The skirt hangs from its far boundary. Nothing is asked of it by the
+  simulation: no cell lies under it, and a click on it is clamped onto the map as before.
+  Two readings of the chart out there were written. **The chart ends at the rim** is
+  taken: the survey draws no ink on it, a ring or a course still stops on the rim
+  ([map-visuals.md](map-visuals.md) §5), and the rim line stays where it was. The rim is
+  where the heard water ends, and a ring laid past it would draw heard water the
+  simulation does not have. **Marks land on it, as on a placed mission's exterior**
+  (#1556) would run the chart on with the ground, over ground with no cells. Low, and
+  every shipped map, keep the skirt at the edge.
+
+Not built: the roofed cut keeps its ruled sides
+([free-water-slice.md](free-water-slice.md) §9), and the outer ground carries no silt
+detail, which the map's ground beside it does.
+
+`packages/frontend/test/water.test.ts` holds the column to its knee and to the three
+floors, `packages/frontend/test/lidShade.test.ts` holds the shade's order under a taller
+and a nearer wall, `packages/frontend/test/surveyInk.test.ts` holds the ink's fade to
+taking strength away and never adding it, and
+`packages/frontend/test/outerGround.test.ts` holds the outer ground to the map's own on
+the edge, to its fall, and to its triangles.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Depth of water that leaves 1/e of a floor's light, metres | `CRATER.COLUMN_REACH_M` | 2100 |
+| Dolly the column comes in over: none at the first, whole from the second, metres | `CRATER.COLUMN_KNEE_M` | 2000, 5000 |
+| How far round a point a wall is looked for, metres | `CRATER.SHADE_REACH_M` | 800 |
+| Bearings it is looked for along | `CRATER.SHADE_RAYS` | 16 |
+| Share taken of the glow the walls hide | `CRATER.SHADE` | 0.6 |
+| How far past the edge the ground is drawn, and falls to the map's floor by, metres | `CRATER.OUTER.REACH_M` | 2000 |
+| Distance past the edge the relief stands whole to, and has eased out by, metres | `CRATER.OUTER.RELIEF_M` | 250, 1000 |
+| Distances past the edge the outer mesh has vertices at, metres | `CRATER.OUTER.RINGS_M` | 62.5, 125, 187.5, 250, 312.5, 375, 437.5, 500, 625, 750, 1000, 1250, 1500, 2000 |
+| Side of the outer ground's lit bake, pixels | `CRATER.OUTER.BAKE_PX` | 1024 |
 
 #### A mark on the lit world
 

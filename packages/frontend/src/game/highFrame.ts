@@ -180,6 +180,11 @@ export interface HighFrameView {
   focusDepthM: number;
   /** How far the water reaches this frame, world units; 0 where it hides nothing. */
   reachM: number;
+  /**
+   * The density of the water over a floor, per metre of its depth
+   * (water.ts `waterColumnDensity`); 0 where the column takes nothing.
+   */
+  columnDensity: number;
 }
 
 /** One texel of one colour, for a sampler nothing has been handed for yet. */
@@ -409,7 +414,7 @@ export class HighFrame {
       // 1. The world, scene-referred. Cleared to nothing kept: open water is
       // all in-scatter, which the composite adds.
       scene.background = null;
-      if (fog !== null) fog.color.setRGB(HIGH_WORLD_FOG_SIGN, 0, 0);
+      if (fog !== null) fog.color.setRGB(HIGH_WORLD_FOG_SIGN, view.columnDensity, 0);
       camera.layers.set(WORLD_LAYER);
       renderer.setRenderTarget(target);
       renderer.setClearColor(0x000000, 0);

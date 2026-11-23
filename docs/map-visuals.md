@@ -114,7 +114,11 @@ Seven rules ride with the ink, and each is a review question:
    survey is what both navies *own*. Gate 7 already asks that the veil's floor still carry the
    ridges and the biome boundaries, and ink is how it does.
 6. **Ink fades into the water like the ground it lies on.** It is drawn before the fog, so the
-   reach rule in "Reading the Water" governs it with no second rule.
+   reach rule in "Reading the Water" governs it with no second rule. At the High graphics
+   quality the ink is a layer of its own over the lit ground, and where that ground takes the
+   water over it the ink takes the same
+   ([art-direction.md](art-direction.md#the-crater-from-above); the owner's call in session on
+   22 November 2026).
 7. **Rock takes no isobaths.** Rock has no floor to measure. It is outlined by its coastline and
    otherwise speaks in stone.
 
@@ -180,7 +184,8 @@ lit world. The Lid's glow lights no ground paler than the palest ground weighed 
 it each tactical floor reads as it does at Low, and over a pool a mark is read by the glance
 test ([art-direction.md](art-direction.md#a-mark-on-the-lit-world)). An
 own model's surface is lit by the world, and a contact's is drawn as Low draws it
-([art-direction.md](art-direction.md#a-model-in-the-worlds-light)). At Low, and on the chart at
+([art-direction.md](art-direction.md#a-model-in-the-worlds-light)). Rung 4's ink fades by the
+water over the ground it lies on (§4, rule 6), which only quiets it. At Low, and on the chart at
 both qualities, the table stands as written.
 
 **A mark on the ground ends at the rim.** The rings, fills and lines rungs 5 and 6 lay on the
@@ -191,7 +196,10 @@ the whole map would then draw nothing, which [systems-echo.md](systems-echo.md) 
 the rim itself is stroked in the reach's ink: the heard water ends at it ([ui-ux.md](ui-ux.md)
 §3.5). A placed
 mission's exterior is ground ([world-map.md](world-map.md) §7.4), so a mark there keeps drawing
-on it (#1556).
+on it (#1556). The free-water study at the High graphics quality also draws ground past its rim
+([art-direction.md](art-direction.md#the-crater-from-above)), and a mark still ends at the rim
+there: no cell lies under that ground, so a ring laid on it would draw heard water the
+simulation does not have.
 
 **A mark on the ground passes behind a model.** The mark layer is painted over the conn view,
 so a ring, a rim or a course that crossed a hull or a structure used to run across its roof,

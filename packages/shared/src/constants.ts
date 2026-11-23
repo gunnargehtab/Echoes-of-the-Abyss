@@ -658,6 +658,58 @@ export const HIGH_GRAPHICS = {
     ALBEDO: 0.07,
     FINE_SHARE: 0.4,
   },
+  /**
+   * TUNABLE: the free-water crater from above (docs/art-direction.md, "The
+   * crater from above"; #1891), until a frame of it is accepted. Two things
+   * that work at the crater's own scale, where the light and the water of
+   * step 1 work a pixel at a time.
+   *
+   * The water over a floor (water.ts `waterColumnDensity`): past the dolly at
+   * which the eye has left the water, a fragment loses light to the column
+   * over it as well as to the swim from the eye. `COLUMN_REACH_M` is the
+   * depth of water that leaves 1/e of a floor's light, so the rim's 600 m
+   * keeps 0.92 of it, the bowl's 1,500 m 0.60 and the pocket's 2,400 m 0.27.
+   * `COLUMN_KNEE_M` is the dolly the term comes in over: none at or under the
+   * first, where the frame is a scene and the eye's own swim hides distance,
+   * and whole from the second, where the study's reach stands at three times
+   * the map's width and hides nothing on it (water.ts `waterReachM`). Eased
+   * out to that reach's own knee at 8,000 m, the pocket stayed a hole for
+   * most of the way up to the survey dolly.
+   *
+   * The Lid's glow a wall hides (lidShade.ts): how much of the water above a
+   * point the ground round it leaves open, read off the drawn heights at
+   * their true scale. `SHADE_REACH_M` is how far that ground is looked for,
+   * `SHADE_RAYS` the bearings it is looked for along, and `SHADE` the share
+   * of what they find hidden that is taken: at the whole of it the bowl's
+   * ring, 250 to 500 m wide under a 900 m wall, drew as dark as the pocket
+   * beside it, and depth is luminance.
+   */
+  CRATER: {
+    COLUMN_REACH_M: 2100,
+    COLUMN_KNEE_M: [2000, 5000],
+    SHADE_REACH_M: 800,
+    SHADE_RAYS: 16,
+    SHADE: 0.6,
+    /**
+     * The ground past the map's edge (outerGround.ts): the edge's own drawn
+     * ground, read on past it and falling away to the map's floor, so the
+     * ground does not stop on the map's square. `REACH_M` is how far out it
+     * is drawn, and where it has fallen to that floor: under the column above
+     * it then keeps 0.13 of its light, and the rest is the water's.
+     * `RELIEF_M` is how far past the edge the relief stands whole, and where
+     * it has eased out. `RINGS_M` are the distances past the edge its mesh
+     * has vertices at: a shipped ground's 62.5 m while the relief stands, and
+     * wider where the fall has smoothed it. `BAKE_PX` is the side of its lit
+     * bake, which spans the map and the reach round it: on the study's
+     * 4,000 m map that is the map's own 7.8125 m a pixel.
+     */
+    OUTER: {
+      REACH_M: 2000,
+      RELIEF_M: [250, 1000],
+      RINGS_M: [62.5, 125, 187.5, 250, 312.5, 375, 437.5, 500, 625, 750, 1000, 1250, 1500, 2000],
+      BAKE_PX: 1024,
+    },
+  },
 } as const;
 
 /** SPEC — docs/art-direction.md, Shared model lighting. Presentation only. */

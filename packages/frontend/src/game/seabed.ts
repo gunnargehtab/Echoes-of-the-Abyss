@@ -969,8 +969,12 @@ export const LIT_ALBEDO_GAIN =
   HIGH_GRAPHICS.GROUND.ALBEDO_LUMINANCE /
   Math.max(...Object.values(BIOME_COLOR).map(linearLuminance));
 
-/** One lit pixel: the fill as an albedo, and the slope and occlusion beside it. */
-function writeLit(
+/**
+ * One lit pixel: the fill as an albedo, and the slope and occlusion beside it.
+ * Exported for the ground past the map's edge, which bakes its own pixels by
+ * the same rule (outerGround.ts).
+ */
+export function writeLit(
   lit: LitBake,
   at: number,
   fill: number,

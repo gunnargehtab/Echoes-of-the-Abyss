@@ -14,7 +14,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { DEPTH, LID, THERMOCLINE } from '@echoes/shared';
+import { DEPTH, HIGH_GRAPHICS, LID, THERMOCLINE } from '@echoes/shared';
 import { CustomBlending, MeshBasicMaterial, NormalBlending, ShaderMaterial, Vector3 } from 'three';
 import {
   blendSwimByCoverage,
@@ -33,6 +33,8 @@ import {
   WATER_REACH_DOLLIES,
   WATER_REACH_MIN_M,
   waterColorAt,
+  waterColumnDensity,
+  waterColumnTransmittance,
   waterLuminanceAt,
   waterReachM,
   waterTransmittance,
@@ -268,19 +270,34 @@ describe('the fog patch', () => {
     const otherwise = fog.indexOf('} else {');
     assert.ok(sign >= 0 && otherwise > sign);
     const high = fog.slice(sign, otherwise);
-    assert.ok(high.includes('gl_FragColor.rgb *= 1.0 - fogFactor;'));
+    // What survives is one number: the swim from the eye, and the column
+    // over the fragment, whose density rides the sign's green (#1891). At 0,
+    // which is every shipped map and every dolly a player commands from, the
+    // exponential is 1 and the number is the swim's alone.
+    assert.ok(
+      high.includes(
+        'float echoesColumn = fogColor.g * max( 0.0, echoesWaterDepthM( vWaterWorldY ) );'
+      )
+    );
+    assert.ok(
+      high.includes(
+        'float echoesSwim = ( 1.0 - fogFactor ) * exp( - echoesColumn * echoesColumn );'
+      )
+    );
+    assert.ok(high.includes('gl_FragColor.rgb *= echoesSwim;'));
     assert.ok(high.includes('#ifdef OPAQUE'), 'a blended fragment leaves alpha to its blend');
-    assert.ok(high.includes('gl_FragColor.a = 1.0 - fogFactor;'));
+    assert.ok(high.includes('gl_FragColor.a = echoesSwim;'));
     // Unless it blends by its coverage as a constant: then alpha carries what
     // of that coverage survived (#1832).
     const own = high.indexOf(`#elif defined( ${SWIM_COVERAGE_DEFINE} )`);
     assert.ok(own > high.indexOf('#ifdef OPAQUE'), 'a constant-blended fragment, apart');
-    assert.ok(high.slice(own).includes('gl_FragColor.a *= 1.0 - fogFactor;'));
+    assert.ok(high.slice(own).includes('gl_FragColor.a *= echoesSwim;'));
     assert.ok(!high.includes('echoesWaterColor'), 'it adds none of the water’s colour');
     const low = fog.slice(otherwise);
     assert.ok(
       low.includes('gl_FragColor.rgb = mix( gl_FragColor.rgb, waterAtFragment, fogFactor );')
     );
+    assert.ok(!low.includes('echoesColumn'), 'Low reads no column');
     assert.ok(HIGH_WORLD_FOG_SIGN < 0);
     const deepest = waterColorAt(DEPTH.MAX_M);
     assert.ok(deepest.r >= 0, 'the colour Low holds there is no sign');
@@ -348,6 +365,51 @@ describe("the free-water study's water (docs/free-water-slice.md §9, water medi
     // default argument is what every caller outside it gets.
     assert.equal(waterReachM(1600), 1600 * WATER_REACH_DOLLIES);
     assert.equal(fogDensityFor(1600, 1), 1 / waterReachM(1600));
+    for (const dollyM of [420, 2600, 10_000, 20_000]) {
+      assert.equal(waterColumnDensity(dollyM, 1), 0, `a shipped map has no column at ${dollyM}`);
+    }
+  });
+
+  it('puts the water over a floor into the frame once the eye has left it (#1891)', () => {
+    // docs/art-direction.md, "The crater from above". At the survey dolly the
+    // reach is 32 km, so the swim from the eye leaves every floor 0.91 of its
+    // light whatever lies over it: the fault this term mends.
+    const SURVEY_M = 10_000;
+    const swim = waterTransmittance(SURVEY_M, waterReachM(SURVEY_M, true));
+    assert.ok(swim > 0.9, 'the premise: the eye’s own swim hides nothing there');
+    const { COLUMN_REACH_M, COLUMN_KNEE_M } = HIGH_GRAPHICS.CRATER;
+    const whole = waterColumnDensity(SURVEY_M, 1, true);
+    assert.equal(whole, 1 / COLUMN_REACH_M, 'whole past the knee');
+    // The crater's three floors, by their authored depths
+    // (docs/free-water-slice.md §3): the rim near whole, the pocket mostly
+    // water, and the bowl between, each deeper floor keeping less.
+    const kept = [600, 1500, 2400].map((depthM) => waterColumnTransmittance(depthM, whole));
+    assert.ok(kept[0]! > 0.9, `the rim keeps ${kept[0]}`);
+    assert.ok(kept[1]! > 0.5 && kept[1]! < 0.7, `the bowl keeps ${kept[1]}`);
+    assert.ok(kept[2]! < 0.3, `the pocket keeps ${kept[2]}`);
+    assert.equal(waterColumnTransmittance(COLUMN_REACH_M, whole), Math.exp(-1));
+    assert.equal(waterColumnTransmittance(-50, whole), 1, 'nothing above the water is under it');
+
+    // The cameras a player commands from sit at or under the knee's first
+    // figure, and draw exactly as they did: Close, Home and gate 6's low.
+    for (const dollyM of [420, 1200, 1600, COLUMN_KNEE_M[0]]) {
+      assert.equal(waterColumnDensity(dollyM, 1, true), 0, `no column at ${dollyM} m`);
+    }
+    let previous = 0;
+    for (let dollyM = COLUMN_KNEE_M[0]; dollyM <= 12_000; dollyM += 100) {
+      const density = waterColumnDensity(dollyM, 1, true);
+      assert.ok(density >= previous, `the column thins between ${dollyM - 100} and ${dollyM}`);
+      assert.ok(density <= whole);
+      previous = density;
+    }
+    assert.equal(waterColumnDensity(COLUMN_KNEE_M[1], 1, true), whole);
+
+    // The player's setting divides into it as into the reach: less water
+    // hides less, and none hides nothing.
+    assert.equal(waterColumnDensity(SURVEY_M, 0, true), 0);
+    assert.equal(waterColumnDensity(SURVEY_M, 0.5, true), whole / 2);
+    assert.equal(waterColumnDensity(SURVEY_M, 3, true), whole, 'and never more than its whole');
+    assert.equal(waterColumnTransmittance(2400, 0), 1);
   });
 
   it('draws a second, nearer cloud that outlasts the far one as the eye climbs', () => {

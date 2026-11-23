@@ -200,6 +200,12 @@ export interface SurveyInkUniforms {
   uSurveyGrid: { value: [number, number, number] };
   /** The ink colour as encoded sRGB, because it is blended in encoded space. */
   uSurveyInk: { value: [number, number, number] };
+  /**
+   * The density of the water over a floor, per metre of its depth (water.ts
+   * `waterColumnDensity`), which only the `overlay` reads: 0 until its view
+   * writes one, and 0 takes nothing.
+   */
+  uSurveyColumn: { value: number };
 }
 
 /**
@@ -456,6 +462,13 @@ const INK_OVERLAY = [
  * drew, fading into the water by coverage rather than by colour; `carrier`
  * draws none, and gives a lit ground the varyings and the encode pair the
  * silt detail reads (seabedDetail.ts).
+ *
+ * The overlay also fades by the water over the ground it lies on
+ * (`uSurveyColumn`), as that ground does in the world pass. The owner's call,
+ * in session on 22 November 2026 (#1891): rule 6, ink fades into the water
+ * like the ground it lies on, holds at High over the rule that the tactical
+ * layer is drawn as Low draws it (docs/map-visuals.md §4;
+ * docs/art-direction.md, "Two layers, two laws").
  */
 export type SurveyInkMode = 'ground' | 'overlay' | 'carrier';
 
@@ -570,6 +583,7 @@ export function installSurveyInk(
         (SURVEY_INK_COLOR & 0xff) / 255,
       ],
     },
+    uSurveyColumn: { value: 0 },
   };
   const vertexPars = drawn ? `${VERTEX_PARS}\n${DRAWN_VERTEX_PARS}` : VERTEX_PARS;
   const vertexMain = drawn ? `${VERTEX_MAIN}\n${DRAWN_VERTEX_MAIN}` : VERTEX_MAIN;
@@ -599,15 +613,21 @@ export function installSurveyInk(
     // The strokes swim out by coverage: mixed toward the water's colour as
     // the ground's fog does, a far stroke would paint that colour over the
     // lit world's own water.
+    // And by the column over them, with the ground they lie on (rule 6):
+    // the fog chunk's own depth, off the varying its vertex half writes.
     if (mode === 'overlay') {
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <fog_fragment>',
-        [
-          '#ifdef USE_FOG',
-          '  gl_FragColor.a *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );',
-          '#endif',
-        ].join('\n')
-      );
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform float uSurveyColumn;')
+        .replace(
+          '#include <fog_fragment>',
+          [
+            '#ifdef USE_FOG',
+            '  float surveyColumn = uSurveyColumn * max( 0.0, echoesWaterDepthM( vWaterWorldY ) );',
+            '  gl_FragColor.a *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth',
+            '    - surveyColumn * surveyColumn );',
+            '#endif',
+          ].join('\n')
+        );
     }
   };
   // Keyed apart from every unpatched MeshBasicMaterial in the scene — three

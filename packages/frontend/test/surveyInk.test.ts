@@ -199,9 +199,36 @@ describe('survey ink levels', () => {
       assert.ok(!overlay.shader.fragmentShader.includes('#include <fog_fragment>'));
       assert.ok(
         overlay.shader.fragmentShader.includes(
-          'gl_FragColor.a *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );'
+          'gl_FragColor.a *= exp( - fogDensity * fogDensity * vFogDepth * vFogDepth'
         )
       );
+    });
+
+    it('fades an overlay stroke by the water over the ground it lies on (#1891)', () => {
+      // docs/map-visuals.md §4, rule 6: ink fades into the water like the
+      // ground it lies on. At High the ground takes the column over it
+      // (water.ts `waterColumnDensity`), so the overlay takes the same one,
+      // off the fog chunk's own depth: the owner's call on 22 November 2026.
+      const overlay = compile('overlay');
+      const source = overlay.shader.fragmentShader;
+      assert.ok(source.includes('uniform float uSurveyColumn;'));
+      assert.ok(
+        source.includes(
+          'float surveyColumn = uSurveyColumn * max( 0.0, echoesWaterDepthM( vWaterWorldY ) );'
+        )
+      );
+      assert.ok(source.includes('- surveyColumn * surveyColumn );'));
+      // It only ever takes ink away, so the ladder's rung 4 stays under rung
+      // 5 wherever it held: the exponent has no positive term.
+      const fade = source.slice(source.indexOf('gl_FragColor.a *= exp('));
+      assert.match(fade, /^gl_FragColor\.a \*= exp\( - [^+]*\);/);
+      // 0 until a view writes one, which is every shipped map: no fade.
+      const uniforms = overlay.shader.uniforms as { uSurveyColumn?: { value: number } };
+      assert.equal(uniforms.uSurveyColumn?.value, 0);
+      // Low's ink, and the lit ground's carrier, read none.
+      for (const mode of ['ground', 'carrier'] as const) {
+        assert.ok(!compile(mode).shader.fragmentShader.includes('uSurveyColumn'), mode);
+      }
     });
 
     it('carries the varyings and the encode pair for a lit ground, and draws no stroke', () => {
