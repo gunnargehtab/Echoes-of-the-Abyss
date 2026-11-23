@@ -1308,6 +1308,68 @@ also shoots.
   would ground a flight whenever the army was full — the deck's own capacity is the honest
   place to charge it, and charging it there is what keeps forty berths worth forty entities.
 
+The role line — what a newcomer reads on the card
+
+Every block above opens on a **Role**, and most of them are arguments: *The lie*, *The song*,
+*The ears on the move*. They say why the hull exists to someone who already knows the roster.
+A first-time commander resting the pointer on `WVR 150` needed what it does, and the hint line
+gave a name and a price only (#1886). So each hull also carries one **role line**, written to
+be acted on in [ui-ux.md](ui-ux.md) §10.5's register: what the hull does, in plain words, with
+any number in digits and its unit. It follows the name and the price on the hint line
+([ui-ux.md](ui-ux.md) §9) as its own clause, the first one a narrow window drops.
+
+Every figure in it is the stat block's own, and the line is no place to tune one: a block that
+moves takes its line with it. `UnitStats.role` in `packages/shared/src/units.ts` copies this
+table, and `units.test.ts` holds every row to it. A craft is never on the card, and its line is
+here so that every hull has one.
+
+| Hull | Role line |
+| --- | --- |
+| Light Scout | Fast, quiet scout with a light gun. |
+| Corvette | Line warship: a gun and torpedoes at 550 m. |
+| Cruiser | Slow, tough warship: a 900 m gun and torpedoes. |
+| Abyssal Submersible | Deep warship: PR 3, with a gun and torpedoes. |
+| Harvester | Gathers resources and carries them to a Refinery or your Bastion. |
+| Chorister | Cheap hull, built in numbers to picket and screen. |
+| Clarion | Line warship: a 700 m gun and torpedoes, loudest ahead. |
+| Tender | Repairs one of your hulls within 300 m at 15 HP/s. |
+| Bulwark | Very tough, slow warship: an 800 m gun to hold a line. |
+| Spinner | Carries 4 mines and lays them silently. |
+| Sower | After 20 s stopped, gives your hulls within 400 m +1 PR. |
+| Precentor | Gives your hulls within 500 m +10 HYD, so they hear further. |
+| Dredge | PR 4 warship that can hold the crystal field at 2,400 m. |
+| Cantus | After 10 s stopped, gives your hulls within 300 m +1 PR. Loud. |
+| Reciter | Fragile 1,000 m gun, very loud toward what it faces. |
+| Freighter | Tough, loud transport that carries 6 berths of hulls. |
+| Drifter | Quiet, fast transport that carries 2 berths of hulls. |
+| Verger | PR 3 transport that carries 4 berths of hulls deep. |
+| Antiphon | Transport for 3 berths; hulls it lands get +1 PR for 20 s. |
+| Beacon | Pings active sonar every 20 s by itself. Loud. |
+| Glider | Fast scout that can coast with its engine off, near silent. |
+| Acolyte | Listening hull that hears best while stopped: HYD 85. |
+| Herald | Fast scout: quiet moving away, loud toward what it faces. |
+| Broadside | No gun: 4 torpedoes, then rearm at a Bastion or Foundry. |
+| Weaver | Lays 3 decoys that sound like a hull at SIG 45 for 25 s. |
+| Thurible | PR 3 hull that drops depth charges on hulls above it. |
+| Lance | One torpedo, fired only at what the hull is facing. |
+| Furnace | Siege hull: cuts structures at 320 m; weak against hulls. |
+| Blight | Siege hull: silently rots a structure from 350 m. |
+| Lure | Siege hull: for 60 s, fauna hear all within 500 m twice as loud. |
+| Tocsin | Siege gun with 1,400 m reach; fires only when stopped. |
+| Caisson | Tough line warship, as loud stopped as moving. |
+| Reed | Fast, quiet line warship with a 420 m gun. |
+| Bower | After 30 s stopped, grows a 175 m cloud that hides and deafens all inside. |
+| Derrick | Heavy 700 m gun that fires at the loudest enemy it hears. |
+| Responsory | Gun that deals 1.5× damage to targets louder than SIG 60. |
+| Gantry | Carrier: launches 2 loud Spark craft. |
+| Rootstock | Carrier: launches 4 near-silent Runner craft. |
+| Succentor | PR 4 carrier: launches 5 Treble craft in deep water. |
+| Offertory | Carrier: launches 2 Versicle craft toward what it faces. |
+| Spark | The Gantry's craft: a loud, short-range gun. |
+| Runner | The Rootstock's craft: near silent, with a light gun. |
+| Treble | The Succentor's craft: PR 4, with a light gun. |
+| Versicle | The Offertory's craft: fast, with a heavy gun. |
+
 Design notes
 
 - Numbers are prototyping intent. Exact costs and timings are tuneable.

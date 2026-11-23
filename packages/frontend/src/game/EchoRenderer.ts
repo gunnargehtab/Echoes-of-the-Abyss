@@ -4256,7 +4256,7 @@ export class EchoRenderer {
           enabled: target !== undefined && berthed && affords(stockpile, price),
           active: false,
           action: () => this.commandProduce(kind),
-          hover: hoverLine(stats.name, price),
+          hover: hoverLine(stats.name, price, stats.role),
           // Greyed for a reason (§7): the account it fell short in, the
           // berths it has not got, or the yard it has not got — and the last
           // names *this page's* yard, since a Slipway hull greyed for a

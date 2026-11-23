@@ -63,10 +63,17 @@ export function priceWords(price: Price): string {
  * makes and what it costs, for the hint bar while the pointer rests on it
  * (docs/ui-ux.md §9, #1589). The cell has room for a code and a `priceTag`;
  * this is the same price with its suffixes spelled out. No `  ·  `
- * separators, so the bar's clause trimming never cuts the price off a name.
+ * separator between the two, so the bar's clause trimming never cuts the
+ * price off a name.
+ *
+ * A hull's cell passes its `role` too (#1886), and that is the one clause
+ * after a separator: the bar trims from the end, so a narrow window loses
+ * what the hull is for and keeps what it costs, which is the half a refused
+ * press is worded in.
  */
-export function hoverLine(name: string, price: Price): string {
-  return `${name} — ${priceWords(price)}`;
+export function hoverLine(name: string, price: Price, role?: string): string {
+  const named = `${name} — ${priceWords(price)}`;
+  return role === undefined ? named : `${named}  ·  ${role}`;
 }
 
 /**

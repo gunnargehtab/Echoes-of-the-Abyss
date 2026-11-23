@@ -876,3 +876,39 @@ describe('the carriers — a deck, and what it may launch (#838)', () => {
     }
   });
 });
+
+/**
+ * docs/units.md, "The role line": one plain line per hull, read on the hint
+ * bar after the name and the price (docs/ui-ux.md §9, #1886). The table is
+ * the source and `UnitStats.role` the copy, so every hull is held to its row
+ * and every row to a hull. A line in a player's hand carries no Markdown and
+ * no `§` (docs/CLAUDE.md), which the doc's own table could otherwise leak.
+ */
+describe('every hull carries the role line docs/units.md writes for it', () => {
+  const doc = readFileSync(new URL('../../../docs/units.md', import.meta.url), 'utf8');
+  const section = doc.split('\nThe role line — what a newcomer reads on the card\n')[1];
+  assert.ok(section !== undefined, 'docs/units.md has no "The role line" section');
+  const rows = new Map<string, string>();
+  for (const [, hull, line] of section
+    .split('\nDesign notes\n')[0]
+    .matchAll(/^\| ([^|]+?) \| ([^|]+?) \|$/gm)) {
+    if (hull === 'Hull' || hull === '---') continue;
+    rows.set(hull, line);
+  }
+
+  it('has a row for every hull and a hull for every row', () => {
+    assert.deepEqual(
+      [...rows.keys()].sort(),
+      roster.map((stats) => stats.name).sort(),
+      'the table and the roster name different hulls'
+    );
+  });
+
+  for (const stats of roster) {
+    it(`${stats.name} reads its row, in plain text`, () => {
+      assert.equal(stats.role, rows.get(stats.name));
+      assert.doesNotMatch(stats.role, /[*_`§[\]]|#\d/, 'a role line carries Markdown or a §');
+      assert.match(stats.role, /\.$/, 'a role line is a sentence, ended');
+    });
+  }
+});

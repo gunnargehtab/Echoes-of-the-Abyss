@@ -52,6 +52,7 @@ import {
   type MissionView,
   ObjectiveStatus,
   type OwnUnit,
+  UNIT_STATS,
 } from '@echoes/shared';
 import {
   FOCUS_DRAG_M_PER_PX,
@@ -103,6 +104,7 @@ import {
   collarRadius,
   EchoRenderer,
   SELECTION_GAP_M,
+  UNIT_SHORT,
   YIELD,
   yieldToCells,
   type RendererCallbacks,
@@ -5800,6 +5802,65 @@ describe('a priced cell names what it makes under the pointer (#1589)', () => {
       const refusal = `${stats.name}: ${price.nodules} nodules short`;
       assert.ok(textSaying(world.app.stage, refusal) !== null, `no "${refusal}" on the bar`);
       assert.equal(textSaying(world.app.stage, line), null, 'the hover line covered the refusal');
+    } finally {
+      world.teardown();
+    }
+  });
+});
+
+/**
+ * #1886 — a hull's code and name say what to call it and not what it is for.
+ * docs/ui-ux.md §9: a hull's cell adds its role line from docs/units.md as a
+ * clause after the price, the last one, so a window too narrow for it drops
+ * what the hull does and keeps what it costs.
+ */
+describe('a hull cell says what the hull does under the pointer (#1886)', () => {
+  // The Consortium's repair hull, on the Foundry page a fresh boot's navy opens.
+  const tender = UNIT_STATS[UnitKind.Tender];
+  const price = priceOf(tender);
+  const named = `${tender.name} — ${priceWords(price)}`;
+  const line = `${named}  ·  ${tender.role}`;
+
+  const hoverTender = (world: Awaited<ReturnType<typeof boot>>): void => {
+    const tab = barLabel(world.app, 'FOUNDRY');
+    const press = { pointerId: 1, pointerType: 'mouse', button: 0 };
+    world.app.canvas.dispatch('pointerdown', { ...press, clientX: tab.x, clientY: tab.y });
+    world.app.canvas.dispatch('pointerup', { ...press, clientX: tab.x, clientY: tab.y });
+    world.frame(1);
+    const cell = barLabel(world.app, `${UNIT_SHORT[UnitKind.Tender]} ${priceTag(price)}`);
+    world.app.canvas.dispatch('pointermove', {
+      pointerId: 1,
+      pointerType: 'mouse',
+      clientX: cell.x,
+      clientY: cell.y,
+    });
+    world.frame(1);
+  };
+
+  it('reads the name, the price and the role line, in that order', async () => {
+    const world = await boot();
+    try {
+      world.frame(2);
+      assert.equal(textSaying(world.app.stage, line), null, 'the premise: not said unhovered');
+      hoverTender(world);
+      assert.ok(textSaying(world.app.stage, line) !== null, `the bar never said "${line}"`);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('drops the role before the price when the line has no room', async () => {
+    const world = await boot();
+    try {
+      world.chartHost.clientWidth = 800;
+      world.chartHost.clientHeight = 1200;
+      world.app.resize(800, 1200);
+      fireResizeObservers();
+      world.chart.setUiScale(2);
+      world.frame(2);
+      hoverTender(world);
+      assert.equal(textSaying(world.app.stage, line), null, 'the premise: the whole line fits');
+      assert.ok(textSaying(world.app.stage, named) !== null, `the price went with the role`);
     } finally {
       world.teardown();
     }
