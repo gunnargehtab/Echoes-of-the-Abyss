@@ -1289,7 +1289,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Thurible]: {
     kind: UnitKind.Thurible,
     name: 'Thurible',
-    role: 'PR 3 hull that drops depth charges on hulls above it.',
+    role: 'PR 3 hull whose depth charges burst above it, at hulls overhead.',
     // SPEC — docs/units.md, Thurible: "16 / 28 / 85 firing". The firing figure
     // is the charge's own detonation, heard a band away.
     sigIdle: 16,

@@ -1350,7 +1350,7 @@ here so that every hull has one.
 | Herald | Fast scout: quiet moving away, loud toward what it faces. |
 | Broadside | No gun: 4 torpedoes, then rearm at a Bastion or Foundry. |
 | Weaver | Lays 3 decoys that sound like a hull at SIG 45 for 25 s. |
-| Thurible | PR 3 hull that drops depth charges on hulls above it. |
+| Thurible | PR 3 hull whose depth charges burst above it, at hulls overhead. |
 | Lance | One torpedo, fired only at what the hull is facing. |
 | Furnace | Siege hull: cuts structures at 320 m; weak against hulls. |
 | Blight | Siege hull: silently rots a structure from 350 m. |
