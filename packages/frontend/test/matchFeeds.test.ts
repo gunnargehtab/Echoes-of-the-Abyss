@@ -22,6 +22,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import { createElement } from 'react';
+import type { ReactTestInstance } from 'react-test-renderer';
 import { ResolutionTier, SIM, type MissionLine } from '@echoes/shared';
 import { clearStorage, installStorage } from './support/headless.ts';
 import { click, render, type Rendered } from './support/screen.ts';
@@ -66,10 +67,21 @@ async function contactLog(
   return { view, focused };
 }
 
+/**
+ * The text a cell renders, as a copied row would carry it. The detail is its
+ * tokens in spans with the separator between them as text (#1893), so this
+ * walks what was rendered and joins it with nothing: the separator is already
+ * in the tree.
+ */
+function textOf(node: ReactTestInstance | string | undefined): string {
+  if (node === undefined) return '';
+  if (typeof node === 'string') return node;
+  return node.children.map(textOf).join('');
+}
+
 /** The four columns of one row, in the order §10's sample prints them. */
 function columns(view: Rendered, index = 0): string[] {
-  const pick = (className: string): string =>
-    String(view.allByClass(className)[index]?.props.children ?? '');
+  const pick = (className: string): string => textOf(view.allByClass(className)[index]);
   return [
     pick('contact-log-time'),
     pick('contact-log-tier'),

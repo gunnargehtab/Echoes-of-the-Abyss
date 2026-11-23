@@ -2,7 +2,8 @@
  * The contact log's rows across docs/ui-ux.md §11's scales, in a real engine,
  * as a `--steps` module (#1893).
  *
- *   VIEW_W=1440 VIEW_H=1200 node .claude/skills/run-game/scripts/drive.mjs \
+ *   SHOW_SCROLLBARS=1 VIEW_W=1440 VIEW_H=1200 \
+ *     node .claude/skills/run-game/scripts/drive.mjs \
  *     --out /tmp/log-fit --steps .claude/skills/run-game/scripts/logFit.mjs
  *
  * §2 asks a panel to fit what it holds across 75–200%, and for a log row that
@@ -14,8 +15,14 @@
  *
  * `VIEW_H` 1200 because §11 holds the HUD's scale to what the window carries:
  * 200% needs 1,168 px of height, so the default 900 px window measures 154%
- * when asked for 200%. Try a narrow width too (`VIEW_W=1000`): the log is
- * hidden below 900 px, and the rows crowd most just above that.
+ * when asked for 200%. Run it at `VIEW_W=901` too: the log is hidden at
+ * 900 px and below, and the rows crowd most just above that.
+ *
+ * `SHOW_SCROLLBARS=1` because Playwright launches headless Chromium with
+ * `--hide-scrollbars`, and a player's log, 300 rows deep, always shows one: on
+ * a 950 px window at 200% its 15 px were the difference between the widest
+ * detail fitting and running 9 px past the row. So the drive fills the log
+ * until it scrolls and refuses to measure if the scrollbar takes no width.
  *
  * Deliberately not part of `npm test`, for `escFocus.mjs`'s reasons. It fails
  * loudly — a thrown error, which drive.mjs turns into a non-zero exit. With
@@ -24,13 +31,23 @@
 
 const SCALES = [0.75, 1, 1.25, 1.5, 2];
 
-/** Class, time, tier, label and detail, in `ContactLog.tsx`'s words. */
+/**
+ * Class, time, tier, label and the detail's tokens, in `ContactLog.tsx`'s
+ * words and markup: each token a `contact-log-detail-part`, three spaces of
+ * text between them.
+ */
 const PROBES = [
-  ['tier-1', 'T+04:12', 'HEARD', 'contact', 'bearing unknown'],
-  ['tier-2', 'T+03:58', 'BEARING', 'contact', 'bearing 245°   ~1400 m'],
-  ['tier-3', 'T+04:09', 'CLASSIFIED', 'Directorate Abyssal Submersible', 'bearing 118°   ~2100 m'],
-  ['tier-4', 'T+12:40', 'TRACKED', 'Consortium Corvette', 'bearing 359°   ~11800 m'],
-  ['tier-1 mark', 'T+03:51', 'MARK', 'industrial hum', 'bearing 310°   decaying'],
+  ['tier-1', 'T+04:12', 'HEARD', 'contact', ['bearing unknown']],
+  ['tier-2', 'T+03:58', 'BEARING', 'contact', ['bearing 245°', '~1400 m']],
+  [
+    'tier-3',
+    'T+04:09',
+    'CLASSIFIED',
+    'Directorate Abyssal Submersible',
+    ['bearing 118°', '~2100 m'],
+  ],
+  ['tier-4', 'T+12:40', 'TRACKED', 'Consortium Corvette', ['bearing 359°', '~11800 m']],
+  ['tier-1 mark', 'T+03:51', 'MARK', 'industrial hum', ['bearing 310°', 'decaying']],
 ];
 
 function check(ok, message) {
@@ -60,18 +77,36 @@ async function atScale(page, scale) {
 /** Every probe row's ink: overlap between cells, and ink past the row's edge. */
 function measure(probes) {
   const list = document.querySelector('.contact-log-entries');
-  for (const [cls, ...texts] of probes) {
+  const write = ([cls, time, tier, label, parts], probe) => {
     const row = document.createElement('button');
-    row.className = `contact-log-row ${cls} probe`;
-    ['time', 'tier', 'label', 'detail'].forEach((cell, i) => {
+    row.className = `contact-log-row ${cls}${probe ? ' probe' : ''}`;
+    for (const [cell, text] of [
+      ['time', time],
+      ['tier', tier],
+      ['label', label],
+    ]) {
       const span = document.createElement('span');
       span.className = `contact-log-${cell}`;
-      span.textContent = texts[i];
+      span.textContent = text;
       row.appendChild(span);
+    }
+    const detail = document.createElement('span');
+    detail.className = 'contact-log-detail';
+    parts.forEach((part, i) => {
+      if (i > 0) detail.appendChild(document.createTextNode('   '));
+      const span = document.createElement('span');
+      span.className = 'contact-log-detail-part';
+      span.textContent = part;
+      detail.appendChild(span);
     });
+    row.appendChild(detail);
     list.appendChild(row);
-  }
+  };
+  // Filler first, so the probes are the newest rows and the list scrolls.
+  for (let i = 0; i < 40 && list.scrollHeight <= list.clientHeight; i++) write(probes[0], false);
+  for (const probe of probes) write(probe, true);
   list.scrollTop = list.scrollHeight;
+  const scrollbar = list.offsetWidth - list.clientWidth;
   const ink = (el) => {
     const range = document.createRange();
     range.selectNodeContents(el);
@@ -84,6 +119,7 @@ function measure(probes) {
   return {
     drawn: Number(root.getPropertyValue('--ui-scale')),
     panel: document.querySelector('.contact-log').clientWidth,
+    scrollbar,
     rows: [...list.querySelectorAll('.probe')].map((row) => {
       const cells = [...row.children];
       const edge = row.getBoundingClientRect();
@@ -112,8 +148,13 @@ export default async ({ page, shot }) => {
   for (const scale of SCALES) {
     // Unconditionally, 100% included: `readoutGuards.mjs` says why.
     await atScale(page, scale);
-    const { drawn, panel, rows } = await page.evaluate(measure, PROBES);
+    const { drawn, panel, scrollbar, rows } = await page.evaluate(measure, PROBES);
     const label = `${scale * 100}% (drawn ${Math.round(drawn * 100)}%, ${panel} px panel)`;
+    check(
+      scrollbar > 0,
+      `${label}: the log's scrollbar takes ${scrollbar} px, as a player's does` +
+        (scrollbar > 0 ? '' : ' — run the drive with SHOW_SCROLLBARS=1')
+    );
     for (const row of rows) {
       check(
         row.overlap === 0 && row.outside === 0,

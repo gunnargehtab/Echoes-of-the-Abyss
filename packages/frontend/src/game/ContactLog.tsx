@@ -14,7 +14,7 @@
  * exists for — reasoning about what was knowable at the time.
  */
 
-import { useEffect, useId, useRef } from 'react';
+import { Fragment, useEffect, useId, useRef } from 'react';
 import { ResolutionTier } from '@echoes/shared';
 import { stamp } from './clock.ts';
 import type { ContactLogEntry } from './EchoRenderer.ts';
@@ -47,26 +47,49 @@ function tierLabel(entry: ContactLogEntry): string {
   return entry.mark === true ? 'MARK' : TIER_LABEL[entry.tier];
 }
 
-function detail(entry: ContactLogEntry): string {
+/**
+ * The detail column, as the tokens it is made of: a bearing, then a range or
+ * `decaying` where the row has one. Each token is drawn whole, and the row may
+ * break between them when the panel is too narrow for both on one line (#1893).
+ */
+function detail(entry: ContactLogEntry): string[] {
   if (entry.bearingDeg === undefined) {
     // Tier 1 carries the listener's own position, not the emitter's. There is
     // no bearing in the report, so the log says so rather than inventing one.
-    return 'bearing unknown';
+    return ['bearing unknown'];
   }
-  const bearing = String(entry.bearingDeg).padStart(3, '0');
+  const bearing = `bearing ${String(entry.bearingDeg).padStart(3, '0')}°`;
   // A mark spends the range column on `decaying` instead (§10's sample row).
   // Not a withholding — the stain's position is drawn on both the world layer
   // and the scope — but a judgement about which number is worth the column:
   // how far away residue is says little, while watching it fade is the whole
   // reading, and for the industrial hum that fade is an economy slowing down.
-  if (entry.mark === true) return `bearing ${bearing}°   decaying`;
+  if (entry.mark === true) return [bearing, 'decaying'];
   // A bearing without a range is the "you were pinged" row (docs/ui-ux.md
   // §10): the server sent a direction and nothing else, and the log shows
   // exactly that much.
-  if (entry.rangeM === undefined) return `bearing ${bearing}°`;
+  if (entry.rangeM === undefined) return [bearing];
   // Range is approximate at Tier 2 by design (15% blur) and exact at 3+; the
   // tilde is on both because a player should not have to remember which.
-  return `bearing ${bearing}°   ~${Math.round(entry.rangeM / 100) * 100} m`;
+  return [bearing, `~${Math.round(entry.rangeM / 100) * 100} m`];
+}
+
+/**
+ * The tokens with the column's three-space separator between them, as text,
+ * so a copied row reads as it always has. The separator is the only break
+ * opportunity: each token sits in a span that never wraps.
+ */
+function DetailParts({ parts }: { parts: string[] }) {
+  return (
+    <>
+      {parts.map((part, i) => (
+        <Fragment key={part}>
+          {i > 0 && '   '}
+          <span className="contact-log-detail-part">{part}</span>
+        </Fragment>
+      ))}
+    </>
+  );
 }
 
 export interface ContactLogProps {
@@ -139,7 +162,9 @@ export function ContactLog({ entries, onFocus }: ContactLogProps) {
               <span className="contact-log-time">{stamp(entry.tick)}</span>
               <span className="contact-log-tier">{tierLabel(entry)}</span>
               <span className="contact-log-label">{entry.label}</span>
-              <span className="contact-log-detail">{detail(entry)}</span>
+              <span className="contact-log-detail">
+                <DetailParts parts={detail(entry)} />
+              </span>
             </button>
           );
         })}

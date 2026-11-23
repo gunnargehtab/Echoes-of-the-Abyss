@@ -489,8 +489,8 @@ describe('the mission result: a mission’s words cannot carry the counter out',
   it('lets every child of a result row shrink to its track', async () => {
     // Two floors, not one: a grid item's automatic minimum is min-content as
     // well, so `minmax(0, 1fr)` on the track still leaves the span inside it
-    // refusing to shrink. Both halves or neither — the pair `.contact-log-row`
-    // and `.objectives-row` carry.
+    // refusing to shrink. Both halves or neither — the pair `.objectives-row`
+    // carries, as `.contact-log-row` did until #1893.
     //
     // Walked off the rendered tree rather than a list of class names, because
     // the regression is a child added later with no `min-width`.

@@ -429,6 +429,8 @@
      share one line the detail takes the next one, flush right — §2's "fit what
      it holds" by a second line rather than by ink on ink. Where they can, the
      label takes the rest of the line and wraps between words, as it always did.
+     `contactLogRow.test.ts` holds these declarations, and `run-game`'s
+     `logFit.mjs` measures the ink they produce in Chromium.
 
      The label carries the give rather than the detail for the reason it always
      has: a hull name is a faction plus a class and can run to `Directorate
@@ -455,8 +457,8 @@
 /* A flex item's automatic minimum is its min-content, and here that is the
    point: it is what makes the detail wrap rather than crush the label. So no
    cell takes `min-width: 0`, which the grid needed and which here would let
-   the label be squeezed to nothing again. The time and the tier are one token
-   each and never give. */
+   the label be squeezed to nothing again, or the detail be shrunk through its
+   own tokens. The time and the tier are one token each and never give. */
 .contact-log-time,
 .contact-log-tier {
   flex: none;
@@ -540,15 +542,24 @@
 }
 
 /* Never broken mid-token: a bearing split across two lines is not a bearing.
-   The label above it is what wraps when the panel is narrow, and when the
-   detail is pushed to a line of its own the auto margin keeps it flush right,
-   in the column it holds on every other row. */
+   The label above it is what wraps first. When the detail is pushed to a line
+   of its own the auto margin keeps it flush right, in the column it holds on
+   every other row, and on a line still too narrow for all of it, it breaks
+   between its tokens and nowhere else: `bearing 359°` over `~11800 m`.
+
+   That second break is for the band just above the 900 px media query at
+   200%: the panel is 144 px wide there, a 15 px scrollbar and the row's 16 px
+   of padding leave 113, and the widest detail is 133 px (#1893). So the detail may shrink, but no
+   further than its automatic minimum, which is its widest token. */
 .contact-log-detail {
-  flex: none;
+  flex: 0 1 auto;
   margin-left: auto;
   opacity: 0.7;
-  white-space: nowrap;
   text-align: right;
+}
+
+.contact-log-detail-part {
+  white-space: nowrap;
 }
 
 /*
