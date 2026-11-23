@@ -107,10 +107,17 @@ function measure(probes) {
   for (const probe of probes) write(probe, true);
   list.scrollTop = list.scrollHeight;
   const scrollbar = list.offsetWidth - list.clientWidth;
+  // Text nodes only: a range over the cell would also return each token
+  // span's own box, and count every detail token twice.
   const ink = (el) => {
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    return [...range.getClientRects()];
+    const rects = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      rects.push(...range.getClientRects());
+    }
+    return rects;
   };
   const area = (p, q) =>
     Math.max(0, Math.min(p.right, q.right) - Math.max(p.left, q.left)) *

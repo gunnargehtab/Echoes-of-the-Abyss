@@ -21,8 +21,10 @@
  *   longest word and it takes what is left;
  * - the time and the tier never give, and the detail may break **only between
  *   its tokens**: each token's span is `nowrap`, the detail itself is not. With
- *   the whole detail `nowrap`, a 901 px window at 200% with its 15 px scrollbar
- *   put `bearing 359°   ~11800 m` 9 px past the row.
+ *   the whole detail `nowrap`, a 950 px window at 200% with its 15 px scrollbar
+ *   put `bearing 359°   ~11800 m` 9 px past the row. Breaking between tokens
+ *   also needs the detail to **shrink**: under `flex: none` its base size is
+ *   its whole width and its spans are never asked to wrap.
  *
  * Each of those has a negative control below: the declaration taken away, and
  * the check asserted to bite.
@@ -133,6 +135,7 @@ function rowFaults(css: string): string[] {
   ] as const) {
     if (flexOf(declared(css, element, 'flex')).shrink !== 0) faults.push(`the ${name} shrinks`);
   }
+  if (flexOf(declared(css, DETAIL, 'flex')).shrink <= 0) faults.push('the detail cannot shrink');
   if (lineBreakingOff(css, DETAIL)) faults.push('the detail cannot break between its tokens');
   if (!lineBreakingOff(css, PART)) faults.push('a detail token can break inside itself');
   return faults;
@@ -175,6 +178,13 @@ describe('a contact log row gives up a line rather than print one cell over anot
       )
     );
     assert.ok(faults.includes('the detail cannot break between its tokens'), faults.join('; '));
+  });
+
+  it('fails when the detail may not shrink to its widest token', () => {
+    const faults = rowFaults(
+      without('  flex: 0 1 auto;\n  margin-left: auto;\n', '  flex: none;\n  margin-left: auto;\n')
+    );
+    assert.ok(faults.includes('the detail cannot shrink'), faults.join('; '));
   });
 
   it('fails when a token may break inside itself', () => {
