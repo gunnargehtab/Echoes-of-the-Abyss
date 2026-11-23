@@ -1315,9 +1315,9 @@ song*, *The ears on the move*. They say why the hull exists to someone who alrea
 roster. A first-time commander resting the pointer on `WVR 150` needed what it does, and the
 hint line gave a name and a price only (#1886). So each hull also carries one **role line**,
 written to be acted on in [ui-ux.md](ui-ux.md) §10.5's register: what the hull does, in plain
-words, with any number in digits and its unit, save a multiple, which may read as a word
-(*twice*). It follows the name and the price on the hint line ([ui-ux.md](ui-ux.md) §9) as its
-own clause, the first one a narrow window drops.
+words, with any number in digits and its unit, save a multiple or a single target, which may
+read as a word (*twice*, *one of your hulls*). It follows the name and the price on the hint
+line ([ui-ux.md](ui-ux.md) §9) as its own clause, the first one a narrow window drops.
 
 Every figure in it is the stat block's own, and the line is no place to tune one: a block that
 moves takes its line with it. `UnitStats.role` in `packages/shared/src/units.ts` copies this

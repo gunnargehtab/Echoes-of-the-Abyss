@@ -990,8 +990,9 @@ describe('every number a role line prints is the constant it quotes', () => {
   }
 
   it("the Lure's twice is its multiplier", () => {
-    // The one figure written as a word: docs/units.md lets a multiple read
-    // as one, since "2× as loud" reads worse.
+    // The one multiple written as a word: docs/units.md lets a multiple read
+    // as one, since "2× as loud" reads worse. The Tender's "one of your hulls"
+    // is the doc's other exception, a single target, and no constant holds it.
     assert.match(UNIT_STATS[UnitKind.Lure].role, /twice as loud/);
     assert.equal(HULL_EFFECTS.LURE.AGGRO_MULTIPLIER, 2);
   });
