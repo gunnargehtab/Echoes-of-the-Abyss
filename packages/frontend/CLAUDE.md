@@ -54,10 +54,10 @@ slots of High's list on the fixture's one elliptical loop: no draw of its own, a
 softer wave of light, told to the membrane by where the river starts in its instances.
 The manta is a lit body with three things more (#1867, `mantaWing.ts`): its skin is
 smoothed across its belly and back, its wings stroke in the vertex program, and a face
-that looks down takes the Lid's glow through the body by its thickness there. Over the
-free-water crater's vent stand, and nowhere else yet, a chimney's steam leaves the
-canvas at High: `ventSmoke.ts` draws it in the world pass as matter lit by the vent, the
-Lid and the beams, one plume a stack. Past the survey knee the crater's floors also lose
+that looks down takes the Lid's glow through the body by its thickness there. A
+chimney's steam leaves the canvas wherever High draws, since #1853: `ventSmoke.ts`
+draws it in the world pass as matter lit by the vent, the Lid and the beams, one plume
+a stack. Past the survey knee the crater's floors also lose
 light to the water over them (#1891, `water.ts` `waterColumnDensity`, on the fog sign's
 green), the lit bake's alpha holds the glow its walls hide (`lidShade.ts`), and the ink
 overlay fades by the same column: the one tactical draw High changes, by the owner's call.

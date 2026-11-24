@@ -194,9 +194,9 @@ export class EnvironmentLayer {
    */
   readonly lantern = new LifeGlow(JELLY_LANTERN, 1, 'jelly_lantern');
   /**
-   * What the crater's vent stand breathes at High, one draw in the world
-   * pass, in place of `plume`; in the group while a column stands there and
-   * the view draws a world pass (ventSmoke.ts, #1837).
+   * What a chimney breathes at High, one draw in the world pass, in place of
+   * `plume`; in the group while a column stands and the view draws a world
+   * pass (ventSmoke.ts, #1837; every map's chimneys since #1853).
    */
   readonly smoke = new VentSmoke();
   /**
@@ -473,15 +473,14 @@ export class EnvironmentLayer {
 
   /**
    * Stand a column on each chimney's mouth: the steam on the canvas
-   * (ventPlume.ts), or, over the free-water crater's stand at High, the same
-   * column as lit matter in the world pass (ventSmoke.ts). One or the other,
-   * never both. Every other map keeps the steam at High too: a Thermal Vein
-   * has no frame of the smoke yet, and look work starts from a frame
-   * (docs/art-direction.md, "The vents at work").
+   * (ventPlume.ts) at Low, or the same column as lit matter in the world pass
+   * (ventSmoke.ts) at High. One or the other, never both, and on every map
+   * the same: the crater's stand breathed smoke alone until a vent field had
+   * a frame of it (docs/art-direction.md, "The vents at work"; #1853).
    */
   private breathe(sites: readonly PlumeSite[]): void {
     this.group.remove(this.plume.points, this.smoke.points);
-    if (this.worldPass && this.look === 'free-water') {
+    if (this.worldPass) {
       this.plume.clear();
       this.smoke.build(sites, this.shade);
       if (sites.length > 0) this.group.add(this.smoke.points);
