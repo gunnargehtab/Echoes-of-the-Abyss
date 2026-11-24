@@ -72,7 +72,8 @@ gesture serves a mouse and a finger with no mode switch.
 **What the break buys.** Chrome at rest falls from about 22% of the frame to about 11%,
 and the centre is clear the whole time nobody is giving an order. The argument is that §2
 was written against resident chrome, and a ring that exists only while a button is held is
-a different kind of object.
+a different kind of object. Both figures were measured before the log's rows wrapped as the
+client's do (#1901), which adds about a point of the frame to each.
 
 **Costs.** Eight wedges is the ceiling, so a twelve-command set has to nest or shed. A
 ring cannot hold a production queue, so yards still need somewhere to live. And nothing is
@@ -113,6 +114,10 @@ space loses both arguments at once.
 | Console height | 236 px | 208 px |
 | Console share of frame | 21.9% | 19.3% |
 | Whole interface | 32.5% | 29.9% |
+
+Both columns were measured with the log's old 20 px rows. Since its rows wrap as the
+client's do (#1901), the log plate is 58 px taller, and the whole interface takes about
+30.9%.
 
 Three changes, in the order they matter.
 

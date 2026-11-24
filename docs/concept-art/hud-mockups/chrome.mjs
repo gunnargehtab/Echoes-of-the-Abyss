@@ -40,6 +40,8 @@ export const CSS = `
     box-shadow: 0 0 10px rgba(255,61,166,0.28), inset 0 0 22px rgba(3,8,14,0.6);
     backdrop-filter: blur(2px);
   }
+  .stack { position: absolute; display: flex; flex-direction: column; gap: 12px; }
+  .stack > .plate { position: relative; }
   .plate.quiet { border-color: rgba(255,61,166,0.22); box-shadow: inset 0 0 22px rgba(3,8,14,0.6); }
   .plate > .tick { position: absolute; width: 7px; height: 7px; pointer-events: none;
     border-color: ${NEON.magenta}; opacity: 0.9; }
@@ -211,22 +213,37 @@ export function scopeFace(size) {
   </svg>`;
 }
 
-/** §10's feed. DOM in the client, so it is DOM here: rows, not canvas text. */
+/**
+ * §10's feed. DOM in the client, so it is DOM here: rows, not canvas text.
+ *
+ * The detail column is a list of the tokens `ContactLog.tsx`'s `detail()`
+ * returns — `bearing NNN°`, then `~N m` or `decaying` where the row has one —
+ * in §10's sample's words. Every range carries the tilde, as the client's do:
+ * it rounds to 100 m and marks both tiers' ranges approximate. A row that
+ * prints `302°  1,180m` is a column the client has never drawn (#1901).
+ */
 export const LOG_ROWS = [
-  ['T+06:12', 'HEARD', 'contact', 'bearing unknown', TIER[1].ink, 0.75],
-  ['T+06:09', 'CLASSIFIED', '~3 Hadron Knights', '118°  ~2,100m', '#c9a6ff', 1],
-  ['T+06:07', '---', 'you were pinged', '070°', NEON.red, 1],
-  ['T+05:58', 'TRACKED', 'Chorister', '302°  1,180m', TIER[4].ink, 1],
-  ['T+05:51', 'MARK', 'industrial hum', 'decaying', TIER[1].ink, 0.6],
-  ['T+05:44', '---', 'Harvester idle', 'mined out', NEON.amber, 0.9],
-  ['T+05:30', 'BEARING', 'contact', '245°  ~1,400m', TIER[2].ink, 0.85],
+  ['T+06:12', 'HEARD', 'contact', ['bearing unknown'], TIER[1].ink, 0.75],
+  ['T+06:09', 'CLASSIFIED', '~3 Hadron Knights', ['bearing 118°', '~2,100 m'], '#c9a6ff', 1],
+  ['T+06:07', '---', 'you were pinged', ['bearing 070°'], NEON.red, 1],
+  ['T+05:58', 'TRACKED', 'Chorister', ['bearing 302°', '~1,200 m'], TIER[4].ink, 1],
+  ['T+05:51', 'MARK', 'industrial hum', ['bearing 310°', 'decaying'], TIER[1].ink, 0.6],
+  ['T+05:44', '---', 'Harvester idle — mined out', ['bearing 196°', '~600 m'], NEON.amber, 0.9],
+  ['T+05:30', 'BEARING', 'contact', ['bearing 245°', '~1,400 m'], TIER[2].ink, 0.85],
 ];
 
-/** Exactly 20 px a row, so a panel's height is arithmetic rather than a guess. */
+/** A row's floor: one line of the log is 20 px, a row that wraps is taller. */
 export const LOG_ROW_H = 20;
 export const HEAD_H = 26;
-export function logHeight(rows) {
-  return HEAD_H + rows * LOG_ROW_H + 4;
+
+/**
+ * The right-hand column — the log, then the objectives under it — stacked by
+ * the browser rather than by a sum. A log row wraps as the client's does, so
+ * its height is the text's to decide, and a panel placed at a hand-added top
+ * would sit on the log the moment a row took a second line.
+ */
+export function stack(style, ...plates) {
+  return `<div class="stack" style="${style}">${plates.join('')}</div>`;
 }
 
 /**
@@ -251,17 +268,27 @@ function rowsFor(own) {
  * labels since #1894), so the names start on one line at any row font. At the
  * old 40 px, `CLASSIFIED` outgrew its column and pushed only its own row's
  * name right.
+ *
+ * The detail's tokens are joined as `DetailParts` joins them, three spaces
+ * between spans that never break, so the space is the only place a detail
+ * can split. The row transcribes `.contact-log-row` since #1899: a flex row
+ * that wraps, where a name whose longest word cannot share the line with time,
+ * tier and detail sends the detail to a second line, flush right, and a name
+ * that can takes the rest of the line. Every frame draws the row the same way,
+ * because only the chrome changes between them.
  */
 export function logRows(limit = 7, fontSize = 10, { own = 'bathyarch' } = {}) {
   return rowsFor(own)
     .slice(0, limit)
     .map(
       ([t, tier, what, detail, ink, op]) => `
-      <div class="row" style="gap:8px;height:${LOG_ROW_H}px;padding:0 9px;font-size:${fontSize}px;letter-spacing:0.06em;opacity:${op};border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
+      <div class="row" style="flex-wrap:wrap;align-items:baseline;column-gap:8px;min-height:${LOG_ROW_H}px;padding:3px 9px;font-size:${fontSize}px;letter-spacing:0.06em;opacity:${op};border-bottom:1px solid rgba(214,230,240,0.04)">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">${t}</span>
         <span style="flex:0 0 6.7em;color:${ink}">${tier}</span>
-        <span style="flex:1 1 auto;color:${TEXT.bright};overflow:hidden;text-overflow:ellipsis;text-align:left">${what}</span>
-        <span class="dim" style="flex:0 0 auto;text-align:right">${detail}</span>
+        <span style="flex:1 1 0;color:${TEXT.bright};text-align:left">${what}</span>
+        <span class="dim" style="flex:0 1 auto;margin-left:auto;text-align:right">${detail
+          .map((part) => `<span style="white-space:nowrap">${part}</span>`)
+          .join('   ')}</span>
       </div>`
     )
     .join('');

@@ -15,7 +15,7 @@
 import { BLACK, FONT, NEON, TEXT } from './tokens.mjs';
 import {
   logRows,
-  logHeight,
+  stack,
   objectiveRows,
   objHeight,
   plate,
@@ -125,17 +125,13 @@ function resident({ hint }) {
     </div>
   </div>`;
 
-  const logTop = 60;
-  const logH = logHeight(6);
-  const log = plate(
-    `right:14px;top:${logTop}px;width:352px;height:${logH}px;overflow:hidden;`,
-    logRows(6),
-    { title: 'Contact Log', sub: '4 HEARD' }
-  );
-  const obj = plate(
-    `right:14px;top:${logTop + logH + 12}px;width:352px;height:${objHeight(3)}px;overflow:hidden;`,
-    objectiveRows(),
-    { title: 'The Sorrowgate', sub: 'T+06:12' }
+  const side = stack(
+    'right:14px;top:60px;width:352px;',
+    plate('', logRows(6), { title: 'Contact Log', sub: '4 HEARD' }),
+    plate(`height:${objHeight(3)}px;overflow:hidden;`, objectiveRows(), {
+      title: 'The Sorrowgate',
+      sub: 'T+06:12',
+    })
   );
   const scope = plate(
     'left:14px;bottom:14px;width:204px;',
@@ -158,7 +154,7 @@ function resident({ hint }) {
     { cls: 'quiet' }
   );
 
-  return `${strip}${depthRibbon({ top: 72, height: 600 })}${log}${obj}${scope}${sel}
+  return `${strip}${depthRibbon({ top: 72, height: 600 })}${side}${scope}${sel}
   <div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);font-size:11px;letter-spacing:0.18em;color:${TEXT.dim};text-align:center">${hint}</div>`;
 }
 
