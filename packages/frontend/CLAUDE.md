@@ -55,7 +55,7 @@ softer wave of light, told to the membrane by where the river starts in its inst
 The manta is a lit body with three things more (#1867, `mantaWing.ts`): its skin is
 smoothed across its belly and back, its wings stroke in the vertex program, and a face
 that looks down takes the Lid's glow through the body by its thickness there. A
-chimney's steam leaves the canvas at High, on every map since #1853: `ventSmoke.ts`
+chimney's steam leaves the canvas wherever High draws, since #1853: `ventSmoke.ts`
 draws it in the world pass as matter lit by the vent, the Lid and the beams, one plume
 a stack. Past the survey knee the crater's floors also lose
 light to the water over them (#1891, `water.ts` `waterColumnDensity`, on the fog sign's

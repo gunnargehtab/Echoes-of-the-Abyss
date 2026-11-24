@@ -1235,10 +1235,11 @@ another way.
   named the target frame and its camera
   ([issue-1853](screenshots/issue-1853/README.md)). That names the target and is not the
   look's acceptance. Kept for good, the crater's stand alone would leave two readings of a
-  vent at High. So at High every chimney breathes lit smoke and at Low every chimney
-  breathes the steam: one plume a stack, never both. The column's numbers are the
-  crater's, unmoved. Over a field no hull listens to, a column reads faint: the acoustic
-  veil drains it, as it drains the steam.
+  vent at High. So wherever High draws, every chimney breathes lit smoke, and at Low every
+  chimney breathes the steam: one plume a stack, never both. A view High does not reach
+  draws Low, steam and all ([graphics-standards.md](graphics-standards.md) gate 6). The
+  column's numbers are the crater's, unmoved. Over a field no hull listens to, a column
+  reads faint: the acoustic veil drains it, as it drains the steam.
 - **The crater's stand is between two hulls.** The fixture stands two chimneys and three
   basalt boulders ([free-water-slice.md](free-water-slice.md) §5, "High's own vents").
   Both chimneys lie in one 80 m cell of the `vent` family's lattice, so the stand is one

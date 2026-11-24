@@ -712,7 +712,7 @@ Both are placed by the fixture's authored loops and answer nothing a match does
 
 **A vent's breath at High.** *In development with #1837 and #1853, and not accepted.*
 The steam over a chimney's mouth is world light in `vent-ember`, as the table says, at
-Low. At High, over every chimney a map stands, it is drawn as matter
+Low. Wherever High draws, over every chimney standing, it is drawn as matter
 and takes no token of its own: a column shows by the light that falls on
 it, which is `vent-ember` from the mouth under it, `lid-glow` above, and an own hull's
 searchlight in its navy's glow where one crosses

@@ -84,7 +84,7 @@ No draw, triangle or pass more. At High the smoke's one `Points` stands where th
 steam's one `Points` stood, and the passes are the 8 and 12 they were. The map stands 34
 chimneys: 476 puffs of steam, 14 a column, become 1,020 of smoke, 30 a column. One call
 comes and goes with the live match at Close and Survey, in both directions and at both
-qualities: Low's Close read 34 and 34 on `main` and 33 here.
+qualities: Low's Close read 34 on `main` and 33 here.
 
 ## Low does not move
 
@@ -117,12 +117,13 @@ steam at Low, never both.
   were shown beside it.
 - **The Ventfront Divide's middle field stands for every map.** One field of one map is
   framed. The other Thermal Veins have no frame.
-- **No timing run from the named GPU.** "Look work" asks one of an increment that adds a
-  pass or per-fragment work, and none of placement alone. This is taken as placement: the
-  draw, its program and its counts are #1837's, stood on more chimneys. The other reading
-  is that 1,020 puffs up to 24 m wide are more fragments than the crater's 60, which only
-  the named GPU can price. The command is below, and gate 6's 8 ms is read at #1637's
-  one run.
+- **No timing run from the named GPU, by the owner's waiver.** "Look work" asks one of
+  an increment that adds a pass or per-fragment work. This step was first read as
+  placement alone, and the round's critic overturned that: Ventfront at High draws 1,020
+  lit puffs up to 24 m wide where it drew 476 of steam, and the smoke's program has never
+  been timed. The owner waived the run in session on 24 November 2026, to #1637's one
+  run, where gate 6's 8 ms is read. The other readings were the owner taking the run now,
+  and the pull request waiting as a draft with the finding open. The command is below.
 
 ## Who captures
 
