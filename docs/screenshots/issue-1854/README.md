@@ -31,8 +31,8 @@ to a leaf green, and the seam a shade bluer.
 
 - **The standard palette does not move.** [control.json](software/control.json) compares
   the standard column before and after, cell by cell. The most pixels that differ by more
-  than 8 in a channel is 114 of 196,000, over the crystal, the same count at both
-  qualities. They lie scattered across the whole cell in 36 separate places, a few pixels
+  than 8 in a channel is 113 of 196,000, over the crystal, the same count at both
+  qualities. They lie scattered across the whole cell in 38 separate places, a few pixels
   each, which is how two sessions' drifting motes differ and not how a light would.
 - **A palette changed mid-match is followed.** [frames.mjs](frames.mjs) writes the palette
   and the quality through the settings store with no reload, and reads back what the view
@@ -40,8 +40,8 @@ to a leaf green, and the seam a shade bluer.
   stood in another palette a moment before.
 - **An ember only half follows at Low.** A dressing rebuild leaves the old ember cloud in
   the scene ([#1906](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1906)), and
-  a stale cloud keeps the palette it was last written in. The steam, the props and High's
-  pools follow whole. A palette chosen before the match is right everywhere.
+  a stale cloud keeps the palette it was last written in. The steam, the props, High's
+  pools and its smoke follow whole. A palette chosen before the match is right everywhere.
 - **No frame shows ore or a lamp.** `ore-trace` moves by 8.7 dE to a normal eye and stands
   on fields the room places; `civic-lamp` does not move in any palette.
 
@@ -55,7 +55,8 @@ SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}' \
 ```
 
 The same against `?map=abyssal-rift-corridor`, the one skirmish map that stands a crystal.
-The before set is the same module against servers started at the base commit, 6e520464.
+The before set is the same module against servers started at the base commit, 4f6a48b2,
+which has #1853's lit smoke over every chimney at High.
 Then `python3 docs/screenshots/issue-1854/sheet.py <before> <after> docs/screenshots/issue-1854/software`
 lays the two beside each other. [sites.json](sites.json) is every licensed prop the
 default placement stands on the two maps, by family.
