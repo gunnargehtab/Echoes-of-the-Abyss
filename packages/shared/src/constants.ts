@@ -584,8 +584,11 @@ export const HIGH_GRAPHICS = {
       FAR: { PULSE_GAIN: 0.2 },
     },
     /**
-     * The manta (mantaWing.ts; docs/art-direction.md, "A manta shows its
-     * belly"; #1867): the owner's target is one seen from below, a smooth
+     * SPEC: the manta (mantaWing.ts; docs/art-direction.md, "A manta shows its
+     * belly"; #1867), accepted by the owner on 24 November 2026 on the named
+     * GPU's Close frame, so the doc's table moves first and highSpec.test.ts
+     * holds the two together. The rest of `LIFE` stays TUNABLE. The owner's
+     * target is one seen from below, a smooth
      * pale belly on wings at work. `STROKE` is the wings' beat about the
      * file's still pose: one a `PERIOD_S`, a wave from the body's edge,
      * `ROOT_M` from the centreline, out to the tip, lifting the tip `LIFT_M`

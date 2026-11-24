@@ -895,8 +895,8 @@ terracotta, the biolight from teal to a leaf green, the seam a shade bluer and t
 a shade redder. `civic-lamp` clears as it stands and does not move. The four are SPEC by that
 rule and not by a frame: rule 5 is a gate, the floor is its measure, and the owner took
 them as a correction to it on 24 November 2026, at both graphics qualities. No target
-frame was named for them. Whether each still reads as its family is the owner's glance,
-at the frames in [screenshots/issue-1854](screenshots/issue-1854/README.md). The nearest
+frame was named for them. The owner read each as its family on 24 November 2026, at the
+frames in [screenshots/issue-1854](screenshots/issue-1854/README.md). The nearest
 held ink to each, to the eye its palette serves:
 
 | Token | Deuteranopia | Protanopia |

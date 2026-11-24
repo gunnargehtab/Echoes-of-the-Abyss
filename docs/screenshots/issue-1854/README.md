@@ -6,8 +6,8 @@ protanopia palettes, before the change and after it.
 
 **A software rasteriser drew every frame here**: SwiftShader, in headless Chromium, in the
 cloud container that built the change. They guide a round and are not offered for
-acceptance. Whether the four new tokens read as an ember, a biolight, a seam and a trace
-is the owner's glance.
+acceptance. The owner read the four new tokens as an ember, a biolight, a seam and a
+trace on 24 November 2026.
 
 ## The sheets
 
