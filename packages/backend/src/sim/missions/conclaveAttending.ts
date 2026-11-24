@@ -418,14 +418,16 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
     {
       id: 'the-calling',
       text: 'The calling closes at the cycle. What is assigned descends. Eight of sixteen is a column, and the Undermarshalcy does not round up.',
-      gloss: 'Bring 8 of your 16 hulls into the axis.',
+      gloss: 'Have 8 of your 16 hulls inside the axis when the mission closes at T+20:00.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
-      // §8, §9 — revealed on Korrin's own beat at 17:00, for Intake §9's
-      // reason: `extract` is not standing, the runtime never re-derives a Met
-      // non-standing row, and a column that stood in the axis at 05:00 and
-      // left would otherwise have met a calling that had not yet closed.
+      // §8, §9 — revealed on Korrin's own beat at 17:00, and read when the
+      // cycle closes at 20:00 rather than latched: `extract` is not standing,
+      // the runtime never re-derives a Met non-standing row, and a column that
+      // stood in the axis at 05:00, or at 17:00, and left would otherwise have
+      // met a calling that had not yet closed (#1886).
       revealAtTick: T(17),
+      standing: true,
       markerId: 'axis',
       predicate: { kind: 'extract', role: 'called', region: 'the-axis', count: 8 },
     },

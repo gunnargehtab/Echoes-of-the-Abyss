@@ -20,11 +20,11 @@
  *   court's default rule resolves there, and 19:30, 20:30 and 21:00 — the
  *   withdrawal, the count, and the silence the whole campaign has been walking
  *   toward — never happen. Omitted is the default, and most literals omit it.
- * - **The rim is held by standing on it, and the hold is read late** (§8).
- *   `extract` latches Met the first pass it is satisfied and the runtime never
- *   re-derives a Met non-standing row (`predicates.ts`, `isStanding`), so a
- *   hold read *at the tide's turn* has to be revealed at the tick the close
- *   asks the question. `the-rim` carries `revealAtTick` T(19) and the stalls'
+ * - **The rim is held by standing on it, and the hold is read at the close**
+ *   (§8). `extract` latches Met the first pass it is satisfied and the runtime
+ *   never re-derives a Met non-standing row (`predicates.ts`, `isStanding`),
+ *   so a hold read *at the tide's turn* is authored `standing` and read at
+ *   21:00 (#1886). `the-rim` carries `revealAtTick` T(19) and the stalls'
  *   beat shares that tick, because a reveal needs a beat under it
  *   (`missions.test.ts`) — Intake's roll idiom, at its third spender.
  * - **The count is the lip's own, and the loudest sound on the rim cannot be
@@ -595,14 +595,16 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       id: 'the-rim',
       text: "The rim is held at the tide's turn. Eight of twelve on the terraces is a hold, and the Undermarshalcy does not round up.",
-      gloss: 'Have 8 of your 12 Choristers on the terraces.',
+      gloss: 'Have 8 of your 12 Choristers on the terraces when the mission closes at T+21:00.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
-      // §8, §9, §13 — revealed on the stalls' own beat at 19:00. `extract` is
-      // not standing, the runtime never re-derives a Met non-standing row, and
-      // a cohort that crossed the bench at 04:00 and walked back off it would
-      // otherwise have latched a hold the tide had not yet asked about.
+      // §8, §9, §13 — revealed on the stalls' own beat at 19:00, and read at
+      // the tide's turn at 21:00 rather than latched. `extract` is not
+      // standing, the runtime never re-derives a Met non-standing row, and a
+      // cohort on the faces at 19:00 that drifted off them would otherwise
+      // have held a rim nobody was standing on when the tide turned (#1886).
       revealAtTick: T(19),
+      standing: true,
       markerId: 'terraces',
       predicate: { kind: 'extract', role: 'cohort', region: 'the-terraces', count: HOLD },
     },

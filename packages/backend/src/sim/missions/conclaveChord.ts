@@ -42,11 +42,12 @@
  *    the *hulls* and not the *lattice*: a formation the column cored at 05:00,
  *    with a Knight hull in its cell at 14:00, reads as stood. The mission's
  *    argument survives because §6's real defence is at the column's legs.
- * 2. **An `extract` latches** (`isStanding`), so each voice row reads *a hull
- *    of the party was inside this cell at some tick between 13:30 and the
- *    close* — sixty seconds of window, not sixty seconds of standing. The
- *    reveal at 13:30 is what makes even that honest: without it, every voice
- *    the party crossed during the tide would already be Met.
+ * 2. **An `extract` latches** (`isStanding`), so each voice row is authored
+ *    `standing` and reads *a hull of the party is inside this cell at 14:30*
+ *    (#1886) — an instant at the close, not sixty seconds of standing. Latched,
+ *    it would read *at some tick between 13:30 and the close*, and a Corvette
+ *    clipping a cell's corner at 13:40 would stand it. The reveal at 13:30
+ *    still withholds the row from the panel and from derivation.
  * 3. **No predicate reads the player's own transmissions** (§13, off
  *    docs/mission-the-dome.md §9). `sound` counts the authored `soundings` and
  *    no other emission, so a ping — SIG 95 omnidirectional, at the one moment
@@ -285,10 +286,12 @@ const stood = (id: string, text: string, gloss: string, keystone?: true): Missio
     terminal: true,
     ...(keystone === true ? { keystone } : {}),
     // §8: withheld from the panel *and* from derivation until the interval is
-    // thirty seconds out, which is the latch the whole row depends on — a hull
-    // that happened to be at the Bass at 04:00 has not stood the Bass at the
-    // interval.
+    // thirty seconds out — a hull that happened to be at the Bass at 04:00
+    // has not stood the Bass at the interval.
     revealAtTick: T(13, 30),
+    // §8: and read at the close rather than latched, so a hull that crossed
+    // the cell at 13:40 and left has not stood it either (#1886).
+    standing: true,
     predicate: { kind: 'extract', role: 'party', region: id, count: 1 },
     reading: {
       met: `${voice.name} was stood.`,
@@ -606,16 +609,32 @@ export const CHORD_CONCLAVE: MissionDefinition = {
     stood(
       'descant',
       'Descant is stood. A hull at the voice, under the ceiling, for the interval.',
-      'Have one of your hulls inside the Descant marker.'
+      'Have one of your hulls inside the Descant marker when the mission closes at T+14:30.'
     ),
-    stood('tenor', 'Tenor is stood.', 'Have one hull inside the Tenor marker.'),
-    stood('treble', 'Treble is stood.', 'Have one hull inside the Treble marker.'),
-    stood('alto', 'Alto is stood.', 'Have one hull inside the Alto marker.'),
-    stood('bass', 'Bass is stood.', 'Have one hull inside the Bass marker.'),
+    stood(
+      'tenor',
+      'Tenor is stood.',
+      'Have one hull inside the Tenor marker when the mission closes at T+14:30.'
+    ),
+    stood(
+      'treble',
+      'Treble is stood.',
+      'Have one hull inside the Treble marker when the mission closes at T+14:30.'
+    ),
+    stood(
+      'alto',
+      'Alto is stood.',
+      'Have one hull inside the Alto marker when the mission closes at T+14:30.'
+    ),
+    stood(
+      'bass',
+      'Bass is stood.',
+      'Have one hull inside the Bass marker when the mission closes at T+14:30.'
+    ),
     stood(
       'the-drone',
       'The Drone is stood. The chord does not certify without it.',
-      'Have one hull inside the Drone marker.',
+      'Have one hull inside the Drone marker when the mission closes at T+14:30.',
       true
     ),
     {

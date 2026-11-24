@@ -94,6 +94,7 @@ import {
   statsFor,
   structureStatsFor,
   thermoclineFactor,
+  type EchoSnapshot,
 } from '@echoes/shared';
 import {
   FOURTH_FOOT,
@@ -241,11 +242,14 @@ interface Run {
 /**
  * Play the tide out with nobody at the panel, on a variant of the literal.
  *
- * Nothing here gives an order: the picket is seated where §11 seats it, silent
- * from tick zero by the mission's own beats, and everything that happens is the
- * convoy's clock arriving.
+ * Nothing here gives an order unless `drive` does: the picket is seated where
+ * §11 seats it, silent from tick zero by the mission's own beats, and
+ * everything that happens is the convoy's clock arriving.
  */
-function runOut(mission: MissionDefinition): Run {
+function runOut(
+  mission: MissionDefinition,
+  drive?: (own: EchoSnapshot, match: Match) => void
+): Run {
   const match = new Match(missionMapById(mission.mapId)!, { mission, fauna: false, seed: 3 });
   const losses: Run['losses'] = [];
   const lines: Run['lines'] = [];
@@ -255,6 +259,7 @@ function runOut(mission: MissionDefinition): Run {
     lines.push(...match.takeMissionLines());
     const own = snapshots?.get(PLAYER);
     if (own !== undefined) {
+      drive?.(own, match);
       const watch = own.units.filter((u) => u.kind === UnitKind.AbyssalSubmersible).length;
       if (watch !== alive) {
         alive = watch;
@@ -1399,7 +1404,7 @@ describe('the objective, as docs/mission-the-dome.md §8 chooses it', () => {
     assert.equal(objective('the-picket').debtText, 'The picket owes the stalls a silence.', '§12');
   });
 
-  it('asks the mouth at the whistle, because an extract latches and never un-latches', () => {
+  it('reveals the mouth with the stalls’ count, over a watch already seated in it', () => {
     const mouth = objective('the-mouth');
     assert.equal(mouth.revealAtTick, T(19), '§9: revealed with the stalls’ beat');
     assert.equal(mouth.markerId, 'mouth');
@@ -1407,7 +1412,7 @@ describe('the objective, as docs/mission-the-dome.md §8 chooses it', () => {
       beatsAt(T(19)).some((b) => b.kind === 'say'),
       '§9: the stalls call the count on the same tick'
     );
-    // §8's own reason, as geometry: revealed at 00:00 it would be met at 00:00
+    // §8's own reason, as geometry: latched, it would be met at 00:00
     // by the second watch sitting in its own seat.
     const region = ATTENDING_THE_DOME.regions.find((r) => r.id === 'the-mouth')!;
     const inside = unitsOf(ATTENDING_THE_DOME, PLAYER).filter(
@@ -1423,6 +1428,33 @@ describe('the objective, as docs/mission-the-dome.md §8 chooses it', () => {
       ['watch-three', 'watch-four'],
       '§8: two hulls, at tick zero, in the region the count is taken over'
     );
+  });
+
+  it('reads the mouth at the whistle, so a watch that leaves it after the reveal has not attended', () => {
+    // §8 (#1886): `the-mouth` is authored `standing`. Latched, two hulls in
+    // the mouth on the 19:00 reveal would meet it for good, and the close
+    // would read "attended at the whistle" over an empty mouth.
+    const mouth = ATTENDING_THE_DOME.regions.find((r) => r.id === 'the-mouth')!;
+    let sent = false;
+    const run = runOut(peaceable(true), (own, match) => {
+      if (sent || match.world.tick < T(19, 5)) return;
+      for (const unit of own.units) {
+        if (unit.kind !== UnitKind.AbyssalSubmersible) continue;
+        if (unit.y < mouth.y || unit.y > mouth.y + mouth.heightM) continue;
+        match.orderMove(PLAYER, unit.id, unit.x, mouth.y - 400, false);
+      }
+      sent = true;
+    });
+    assert.equal(run.closedAtTick, T(20), '§9: the whistle at 20:00');
+    const status = (id: string) => run.objectives.find((o) => o.id === id)!.status;
+    assert.equal(
+      status('the-mouth'),
+      ObjectiveStatus.Pending,
+      'the mouth was left before the whistle'
+    );
+    assert.equal(status('the-picket'), ObjectiveStatus.Met, 'the picket is whole, only elsewhere');
+    assert.equal(run.outcome, MissionOutcome.Partial, '§8: Sufficient, one of the two');
+    assert.equal(objective('the-mouth').standing, true, '§8: read at the close');
   });
 
   it('runs its length, which §13 says it does not — and this is the minute at stake', () => {

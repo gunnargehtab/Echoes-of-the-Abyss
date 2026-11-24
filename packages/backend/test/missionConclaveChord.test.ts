@@ -725,14 +725,16 @@ describe('the six voices, stood — docs/mission-conclave-chord.md §6 and §8',
     CHORD_CONCLAVE.objectives.find((o) => o.id === `${id}-stood`)!
   );
 
-  it('asks one hull of the party into each cell, revealed at thirteen-thirty', () => {
+  it('asks one hull of the party into each cell at the close, revealed at thirteen-thirty', () => {
     // §8: `revealAtTick` withholds an objective from the panel *and* from
-    // derivation, which is the latch the whole row depends on — an `extract`
-    // latches Met and is never re-derived, so a hull that happened to be at the
-    // Bass at 04:00 must not have stood the Bass at the interval.
+    // derivation, so a hull that happened to be at the Bass at 04:00 has not
+    // stood the Bass at the interval. And an `extract` latches Met unless it is
+    // authored `standing`, so each voice is read at 14:30 and a hull that
+    // crossed the cell at 13:40 has not stood it either (#1886).
     for (const row of voiceRows) {
       assert.equal(row.terminal, true);
       assert.equal(row.revealAtTick, T(13, 30), `${row.id}: not scored before it is asked for`);
+      assert.equal(row.standing, true, `${row.id}: read at the close, not latched`);
       assert.deepEqual(row.predicate, {
         kind: 'extract',
         role: 'party',

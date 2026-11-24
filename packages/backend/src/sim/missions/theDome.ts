@@ -29,12 +29,12 @@
  *   `silenceRole: 'watch'` at ceiling 30, cap 30 s, with `arrayTag: 'dome'` —
  *   so the guns that owe the debt are four kilometres from the six hulls that
  *   lose the ears (§4.2). Attendance's mechanism, aimed sideways.
- * - **The count is taken at the whistle and not during the gate.** `the-mouth`
- *   is revealed at 19:00 — Intake's roll idiom — because `extract` is not a
- *   standing predicate and latches Met on the first pass it is true
- *   (`predicates.ts`, `isStanding`). Revealed at 00:00 it would be met at
- *   00:00 by the second watch sitting in its own seat, and the mouth would be
- *   "attended" by two hulls the flagship destroyed at 14:00 (§8).
+ * - **The count is taken at the whistle and not during the gate.** `extract`
+ *   is not a standing predicate and latches Met on the first pass it is true
+ *   (`predicates.ts`, `isStanding`), so `the-mouth` is authored `standing`
+ *   and read at 20:00 (§8, #1886). Latched, it would be met at 00:00 by the
+ *   second watch sitting in its own seat, or at 19:00 by two hulls that then
+ *   fled the pack. It is revealed at 19:00, with the stalls' beat.
  *
  * And three authoring findings against the document, stated here rather than
  * discovered, in the manner `intake.ts` states its own:
@@ -43,7 +43,7 @@
  *    "no `runsItsLength`" among the definition's fields. Both terminal rows
  *    can be Met on the very pass `the-mouth` is revealed: `the-picket` is
  *    `survive` at three of four and is trivially true from tick zero, and
- *    `the-mouth` latches the moment the second watch is found in its own seat
+ *    `the-mouth` reads Met the moment the second watch is found in its own seat
  *    at 19:00 — which is exactly where §11 seats `watch-three` and
  *    `watch-four`, inside the region's north half. Without the flag
  *    `deriveObjectives` resolves at T(19) and the mission closes a minute
@@ -531,16 +531,17 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
     {
       id: 'the-mouth',
       text: 'The trench is closed while the inquiry is open. The mouth is attended at the whistle.',
-      gloss: 'Have 2 of your Submersibles inside the mouth.',
+      gloss: 'Have 2 of your Submersibles inside the mouth when the mission closes at T+20:00.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       markerId: 'mouth',
-      // §9 — revealed with the stalls' beat at 19:00. `extract` is not a
-      // standing predicate, so it latches Met the first pass it is true and
-      // never un-latches: revealed at 00:00 it would be met at 00:00 by the
-      // second watch sitting in its own seat, and the mouth would be
-      // "attended" by two hulls that were destroyed at 14:00 (§8).
+      // §9 — revealed with the stalls' beat at 19:00.
       revealAtTick: T(19),
+      // §8 — read at the whistle and not latched. `extract` is not a standing
+      // predicate, so latched it would be met by two hulls that stood in the
+      // mouth at 19:00 and fled the pack before 20:00, and the close would
+      // read "attended at the whistle" over an empty mouth (#1886).
+      standing: true,
       predicate: { kind: 'extract', role: 'watch', region: 'the-mouth', count: 2 },
     },
     {

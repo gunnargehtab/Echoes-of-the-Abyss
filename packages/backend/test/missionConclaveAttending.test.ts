@@ -1311,10 +1311,9 @@ describe('the objective, as docs/mission-conclave-attending.md §8 counts it', (
   });
 
   it('reveals the calling on Korrin’s own beat and points at the axis with it', () => {
-    // §8, §9: an `extract` is not standing, so it latches Met the first pass it
-    // is true — and a column that stood in the axis at 05:00 and left would
-    // otherwise have met a calling that had not yet closed. Revealing it with
-    // the beat that closes the calling makes the count what the count is.
+    // §8, §9: shown on the beat that closes the calling, the order Korrin
+    // gives. The count itself is read at 20:00 (`standing`, #1886), which the
+    // test below drives.
     const calling = byId('the-calling');
     assert.equal(calling.revealAtTick, T(17), '§9: Korrin closes the calling at 17:00');
     assert.equal(calling.markerId, 'axis');
@@ -1348,6 +1347,34 @@ describe('the objective, as docs/mission-conclave-attending.md §8 counts it', (
     assert.deepEqual(conditionals[0]!.when, { kind: 'attend', count: 1 });
     assert.equal(conditionals[0]!.kind, 'say');
     assert.equal(conditionals[0]!.choiceGroup, undefined, 'nothing retires it');
+  });
+
+  it('counts the column in the axis when the cycle closes, not the one that passed through it', () => {
+    // §8 (#1886): `the-calling` is authored `standing`. Latched, a column in
+    // the axis on the 17:00 reveal would meet it for good, and one that then
+    // climbed out of the axis would still be the column at 20:00.
+    const axis = ATTENDING_CONCLAVE.regions.find((r) => r.id === 'the-axis')!;
+    let phase = 0;
+    const run = runOut((own, match) => {
+      if (phase === 0 && match.world.tick >= T(1)) {
+        for (const unit of own.units) {
+          match.setSilentRunning(PLAYER, unit.id, false);
+          match.orderMove(PLAYER, unit.id, AXIS.x + (unit.id % 5) * 50 - 100, AXIS.y, false);
+        }
+        phase = 1;
+      } else if (phase === 1 && match.world.tick >= T(17, 5)) {
+        for (const unit of own.units) {
+          match.orderMove(PLAYER, unit.id, unit.x, axis.y - 400, false);
+        }
+        phase = 2;
+      }
+    });
+    assert.equal(run.resolvedAtTick, T(20), '§9: the calling closes when the cycle closes');
+    const status = (id: string) => run.objectives.find((o) => o.id === id)!.status;
+    assert.equal(status('the-calling'), ObjectiveStatus.Pending, 'the column left the axis');
+    assert.equal(status('the-muster'), ObjectiveStatus.Met, 'twelve of sixteen, only elsewhere');
+    assert.equal(run.outcome, MissionOutcome.Partial, '§8: the muster, and no column');
+    assert.equal(byId('the-calling').standing, true, '§8: read at the close');
   });
 
   it('runs its length over a column that is already standing in the axis', () => {

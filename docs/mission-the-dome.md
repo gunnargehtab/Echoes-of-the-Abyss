@@ -420,18 +420,21 @@ Four objective rows, two of them terminal, stated as the format carries them (`t
 
 | Objective | Text | Predicate | Terminal |
 | --- | --- | --- | --- |
-| `the-mouth` | *The trench is closed while the inquiry is open. The mouth is attended at the whistle.* | `{ kind: 'extract', role: 'watch', region: 'the-mouth', count: 2 }` | **Yes.** Not a keystone. `revealAtTick` T(19), `markerId: 'mouth'` |
+| `the-mouth` | *The trench is closed while the inquiry is open. The mouth is attended at the whistle.* | `{ kind: 'extract', role: 'watch', region: 'the-mouth', count: 2 }` | **Yes.** Not a keystone. Read at the close (`standing`), `revealAtTick` T(19), `markerId: 'mouth'` |
 | `the-picket` | *Three of four attend. The Undermarshalcy does not round up.* — `debtText` *The picket owes the stalls a silence.* | `{ kind: 'survive', role: 'watch', count: 3 }` | **Yes.** Standing, re-derived every tick |
 | `the-count` | *What enters is counted. What is heard is entered.* | `{ kind: 'attend', count: 2 }` | No. Read out, never ranked |
 | `the-record` | *What is heard of the picket is entered elsewhere.* | `{ kind: 'tolerance', ticks: 180, tier: ResolutionTier.Track }` | No. Read out, never ranked |
 
-`the-mouth` is revealed late, at T(19), with the stalls' beat sharing the tick. That is
-Intake's roll idiom and it is load-bearing rather than decorative: an `extract` is not a
-standing predicate, so it latches Met the first pass it is true and never un-latches
-(`predicates.ts`, `isStanding`; `runtime.ts`, `deriveObjectives`). Revealed at 00:00 it would
-be met at 00:00 by the second watch sitting in its own seat, and the mouth would be "attended"
-by two hulls that were destroyed at 14:00. Revealed at 19:00 it asks the question the mission
-means: *is the mouth attended at the whistle?*
+`the-mouth` is read at the close, and revealed late. An `extract` is not a standing predicate,
+so left to itself it latches Met the first pass it is true and never un-latches (`predicates.ts`,
+`isStanding`; `runtime.ts`, `deriveObjectives`). Latched, it would be met at 00:00 by the second
+watch sitting in its own seat, and the mouth would be "attended" by two hulls that were destroyed
+at 14:00. Revealed at 19:00 and still latched, it would be met by two hulls that stood in the
+mouth at 19:00 and fled the pack at 19:10. So the row is authored `standing`, re-derived every
+pass, as [Prospect](mission-prospect.md)'s return is (#1210): it is met at the whistle only if two
+of the watch are in the mouth at the whistle, which is the question the mission means. The reveal
+at T(19), with the stalls' beat sharing the tick, is when the panel and the marker give the
+player that question, and the panel reads it `OPEN` until the close ([ui-ux.md](ui-ux.md) §10.5).
 
 `the-picket` is `survive` and therefore standing, which is the correction Intake made to the
 runtime ([mission-intake.md](mission-intake.md) §13): it reads what is true now rather than
@@ -850,7 +853,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `the-mouth` | Have 2 of your Submersibles inside the mouth. |
+| `the-mouth` | Have 2 of your Submersibles inside the mouth when the mission closes at T+20:00. |
 | `the-picket` | Keep at least 3 of your 4 Submersibles afloat. |
 | `the-picket`, while the debt runs | A Submersible went over SIG 30, so the dome's ears are withdrawn until the debt pays itself off. |
 | `the-count` | Hear both sounds below the mouth; each counts once your contact log shows it with a bearing. |
@@ -900,7 +903,7 @@ Drift Health and the mix are the other two, and neither is this mission's to bui
 | `move` beats carrying a depth | **Built** — the `move` effect's optional `depthM` issues a depth order alongside the move, which is what lets the scripted convoy dive into the trench at 02:30 rather than skating over it at 1,000 m |
 | `attend` over exactly two attendable emitters | **Built** — `attend` counts emitters carrying a `reading` that this observer resolved at Bearing or better *while they were sounding*, and the test bounds `count` by the number of emitters that carry one. The literal's two are `yard-plant` and `call-a`, in that order, and the count is two, which means the row is met by a picket that hears both and by nobody else |
 | The map, eleven regions, seven of them another mission's to the metre | **Built** (#392, registered in `MISSION_MAPS` in #393). `fourth-foot` is one row of the literal per row of §11's table, in the document's paint order; rows 2–8 are `fourthTrench.ts`'s unchanged — asserted against that literal itself rather than against §11's numbers — and row 1 is its Margin run a thousand metres south. Drawn in shapes since #1143 and #1154 (§11); no new biome, no hazard site, no resource node, and nothing repaints mid-tide: this mission authors no `ground` beat at all. Two things the verifier corrected are the literal's and not this document's: the header said *Baffle*'s chart stopped a thousand metres below the berths, where in fact that chart's last 250 m are the head of the Fan here; and the two lay-bys state `ceilingM: 0`, which clears the metre of rock ceiling the wall painted over them (#1105) — `fourth-trench`'s own arrangement |
-| The mission definition `attending-the-dome` | **Built** (#394), **and it carries one flag this row said it did not need.** Four parties on slots 0, 2, 3 and 4 with slot 1 the empty court; ten player hulls in two roles plus one structure; `sigBudget: 28`, `arrayTag: 'dome'`, `silenceRole: 'watch'`, `silenceCeilingSig: 30`, `debtCapS: 30`, `escortRadiusM: 0`, `fauna: false` and no `startingNodules` — all as written. What this row got wrong is the last field: it asked for **no** `runsItsLength`, and the literal authors `runsItsLength: true`. Both terminal rows can be Met on the very pass `the-mouth` is revealed — `the-picket` is `survive` at three of four and true from tick zero, and `the-mouth` latches the moment `watch-three` and `watch-four` are found in the seats §11 already gives them, inside the region's north half — so without the flag the runtime resolves at T(19) and closes the mission a minute early, taking the pack's last sixty seconds, Korrin's 20:00 line and §8's "the close at 20:00 is **not** a conclusion" with it. The minute is exactly `MISSION.FAILURE_TELEGRAPH_S`. The document is the side that moved; the literal records the correction in its own header where a reviewer can overrule it, and the test plays the tide with the flag and without it so the minute is visible rather than argued |
+| The mission definition `attending-the-dome` | **Built** (#394), **and it carries one flag this row said it did not need.** Four parties on slots 0, 2, 3 and 4 with slot 1 the empty court; ten player hulls in two roles plus one structure; `sigBudget: 28`, `arrayTag: 'dome'`, `silenceRole: 'watch'`, `silenceCeilingSig: 30`, `debtCapS: 30`, `escortRadiusM: 0`, `fauna: false` and no `startingNodules` — all as written. What this row got wrong is the last field: it asked for **no** `runsItsLength`, and the literal authors `runsItsLength: true`. Both terminal rows can be Met on the very pass `the-mouth` is revealed — `the-picket` is `survive` at three of four and true from tick zero, and `the-mouth` reads Met the moment `watch-three` and `watch-four` are found in the seats §11 already gives them, inside the region's north half — so without the flag the runtime resolves at T(19) and closes the mission a minute early, taking the pack's last sixty seconds, Korrin's 20:00 line and §8's "the close at 20:00 is **not** a conclusion" with it. The minute is exactly `MISSION.FAILURE_TELEGRAPH_S`. The document is the side that moved; the literal records the correction in its own header where a reviewer can overrule it, and the test plays the tide with the flag and without it so the minute is visible rather than argued |
 | Cross-mission Drift Health | **Built** (#379) — a map's damage carries to the next mission on it, which is [campaign.md](campaign.md) §2 rule 5 finally spent. It is the second of the three sibling keys `Progression` was shaped to receive (`packages/frontend/src/progression/store.ts`), after the seen-scene set and before a spent roster that has not landed, and the room now writes and reads it. Nothing is asked of this document: §11 states what this mission leaves behind, the mission itself still reads no cell — and the row two above corrects *which side* leaves it |
 | Campaign progression, and the briefing that reads it back | **Built**, including §12's paired closure briefing with [Baffle](mission-baffle.md). The common 04:00 `say` earns a side-specific scene stamp only when the line fires, beside the existing sweep-earned scenes; the close carries it independently of outcome. The existing seen-scene set and client-side `MissionHeader.briefingVariants` selector read the other side's stamp. The room is never told which briefing was read, and neither the sweep filing nor merely completing a mission counts as hearing this line |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
