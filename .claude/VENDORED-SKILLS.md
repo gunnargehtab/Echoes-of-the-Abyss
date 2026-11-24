@@ -338,7 +338,7 @@ Recorded so the next search does not repeat this one.
   probe on a shader-patch issue.
 - **The six collections #1916 searched**, 209 skills, from which the four
   `mattpocock/skills` copies above were taken:
-  - `cloudflare/skills` (24) is Cloudflare's products, and nothing here runs on them:
+  - `cloudflare/skills` (24) covers Cloudflare's own products, and nothing here runs on them:
     the playtest goes to one VPS (`.github/workflows/deploy.yml`), the roadmap to Pages.
   - `Dimillian/Skills` (16): nine are Swift, iOS or macOS. Its review skills repeat the
     built-in `/code-review` and `/simplify`, and `bug-hunt-swarm` sends up to four
