@@ -43,7 +43,7 @@
  *    "no `runsItsLength`" among the definition's fields. Both terminal rows
  *    can be Met on the very pass `the-mouth` is revealed: `the-picket` is
  *    `survive` at three of four and is trivially true from tick zero, and
- *    `the-mouth` latches the moment the second watch is found in its own seat
+ *    `the-mouth` reads Met the moment the second watch is found in its own seat
  *    at 19:00 — which is exactly where §11 seats `watch-three` and
  *    `watch-four`, inside the region's north half. Without the flag
  *    `deriveObjectives` resolves at T(19) and the mission closes a minute

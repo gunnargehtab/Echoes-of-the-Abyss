@@ -521,8 +521,8 @@ One system, per [campaign.md](campaign.md) §10: **information into tempo** — 
 what the slowest hulls in the game can turn that into. It lands in order across the beat table:
 the record handed over in the briefing (00:00), the returns entered from the seat before an
 order is given (00:00), the walk west (00:30 onward), the climb that is free and the descent
-that is not (§4), the arrival of a navy that is faster and later (16:00), and the count taken on
-ground the column has been standing on for eighteen minutes (19:00).
+that is not (§4), the arrival of a navy that is faster and later (16:00), and the count taken at
+the tide's turn on ground the column has been standing on since it reached it (21:00).
 
 Underneath it, the campaign's argument, finished: **attendance is owed to what speaks, and the
 Directorate is the navy that never asks.** Attendance taught that doing nothing is sufficient.
