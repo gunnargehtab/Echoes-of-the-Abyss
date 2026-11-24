@@ -40,9 +40,10 @@ import type {
  * names the six and counts them by these names.
  *
  * One table rather than a `callsign` on every literal, because a cadre id is
- * one hull across five missions (`MissionUnit.cadre`): authored per mission,
- * the First could read *The First* in Nineteen and something else in The
- * Three, and the record would be keeping a name the card never printed.
+ * one hull across every mission that seats it (`MissionUnit.cadre`): authored
+ * per mission, the First could read *The First* in Nineteen and something
+ * else in The Three, and the record would be keeping a name the card never
+ * printed.
  * `missions.test.ts` holds every authored cadre id to an entry here.
  */
 export const CADRE_CALLSIGNS: Readonly<Record<string, string>> = {
