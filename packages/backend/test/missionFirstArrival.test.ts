@@ -749,12 +749,13 @@ describe('the objective — §8’s four rows', () => {
     assert.equal(objectiveBy('the-rim').debtText, undefined, '§8: no second reading is authored');
   });
 
-  it('reveals the hold at the tick the close asks the question, and not before', () => {
-    // §8, §13: `extract` latches Met the first pass it is satisfied and is
-    // never re-derived, so a hold read "at the tide's turn" must be revealed
-    // by a beat at the tick the tide turns on the count. The stalls' line and
-    // the reveal share 19:00 because a reveal needs a beat under it.
+  it('reads the hold at the tide’s turn, and reveals it at the count', () => {
+    // §8, §13: `extract` latches Met the first pass it is satisfied unless it
+    // is authored `standing`, so a hold read "at the tide's turn" is standing
+    // and read at 21:00 (#1886). The stalls' line and the reveal share 19:00
+    // because a reveal needs a beat under it.
     const rim = objectiveBy('the-rim');
+    assert.equal(rim.standing, true, '§8: read at the close, not latched');
     assert.equal(rim.revealAtTick, T(19), '§9: the reveal tick');
     assert.equal(rim.markerId, 'terraces');
     assert.ok(

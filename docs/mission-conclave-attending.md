@@ -382,7 +382,7 @@ cross.**
 
 | Id | Text, as the player reads it | Predicate | Terminal |
 | --- | --- | --- | --- |
-| `the-calling` | *The calling closes at the cycle. What is assigned descends. Eight of sixteen is a column, and the Undermarshalcy does not round up.* | `extract`, role `called`, region `the-axis`, count 8 | Yes |
+| `the-calling` | *The calling closes at the cycle. What is assigned descends. Eight of sixteen is a column, and the Undermarshalcy does not round up.* | `extract`, role `called`, region `the-axis`, count 8 | Yes, and read at the close (`standing`) |
 | `the-muster` | *Twelve of sixteen. The Undermarshalcy does not round up.* | `survive`, role `called`, count 12 | Yes, and standing |
 | `the-cells` | *The calling is put. Who attends it is entered, and who does not.* | `attend`, count 3 | **No.** Read out, never ranked |
 | `the-crossing` | *The stalls are under the terraces. A hull under way between them is the only sound there is.* | `quiet`, role `called`, ceilingSig 25 | **No**, and standing. Read out, never ranked |
@@ -390,13 +390,15 @@ cross.**
 **No keystone**, and one marker. `the-calling` is revealed at **T(17)**, on Korrin's own beat, and
 carries the marker `axis` at 2500, 3625, radius 500; the other three carry no `revealAtTick` and
 no marker and stand on the panel from the first tick, because a calling that had to be discovered
-would not be a calling. It is revealed late for the reason
-[mission-intake.md](mission-intake.md) §9 settled: an `extract` is not a standing predicate, so
-it latches Met the first pass it is true and never re-derives, and a column that stood in the axis
-at 05:00 and left would otherwise have met a calling that had not yet closed. Revealing it with
-the beat that closes the calling makes the count what the count is: eight hulls in the axis when
-the cycle ends. `the-muster` is standing and reads the hulls that are alive at the moment it is
-asked.
+would not be a calling. An `extract` is not a standing predicate, so left to itself it latches Met
+the first pass it is true and never re-derives: a column that stood in the axis at 05:00 and left
+would have met a calling that had not yet closed, and so would one that stood there at 17:00 and
+left at 18:00. So `the-calling` is authored `standing`, re-derived every pass as
+[Prospect](mission-prospect.md)'s return is (#1210), and the count is what the count is: eight
+hulls in the axis when the cycle ends at 20:00. It is revealed on the beat that closes the calling
+because that is when Korrin gives the order, and the panel reads it `OPEN` until the close
+([ui-ux.md](ui-ux.md) §10.5). `the-muster` is standing and reads the hulls that are alive at the
+moment it is asked.
 
 `the-crossing` carries `debtText`: *The called owe the stalls a silence.* It replaces the
 objective's own line for as long as the debt stands.
@@ -817,7 +819,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `the-calling` | Bring 8 of your 16 hulls into the axis. |
+| `the-calling` | Have 8 of your 16 hulls inside the axis when the mission closes at T+20:00. |
 | `the-muster` | Keep at least 12 of your 16 hulls afloat. |
 | `the-cells` | Hear 3 of the cells across the trench; each counts once your contact log shows it with a bearing. |
 | `the-crossing` | Keep every hull at SIG 25 or less, all mission long. |
@@ -861,7 +863,7 @@ no scene to key on — one carry between missions that it does ask for, and a mi
 | **The missing half as sound** | **Built** (#396, `MissionEmitter` with a `reading` pair), **and a finding.** A friendly scripted party carrying hulls is not authorable while auto-acquire fires on the nearest live enemy on any other slot, and every party is an enemy of every other. So "never assigned" cohorts have to be sounds — which is also the truer reading of [habitats.md](habitats.md) §6, and the row is a finding rather than a request because the design is better for the constraint. Six emitters, each with its own ordinal reading, and the close prints two objective readings with the six rows' own lines beneath them, which is where §5's argument about the count being a count survives contact with the runtime. A mission that genuinely needed a non-hostile second party of its own faction would want an alliance term on `MissionParty`, and this one does not |
 | **§4's sentence about who can enter the cells** | **Was wrong, corrected, and the finding the transcription paid for.** §4 argued the cells "can be entered only by a hull that has crossed more than three quarters of that water". `attend` counts what the observer's *slot* resolved, and the dome is on that slot: an ear at HYD 80 standing 527 and 631 m from the second and third rows through cut structure, so **two of the six rows are entered on the first mission pass with nothing having moved**, and §9's condition-fired line fires on that same pass rather than on the first crossing. §8's count of three therefore buys one crossing rather than three; the third row still costs a hull, so it is an objective and not a formality. The literal transcribes the three unchanged, because §8 owns the count, and the test names both entered rows so that the day the count or the dome's seat moves it is a failing assertion rather than a surprise in a playthrough. **§4 and §9 now carry the correction, and this row is where it was found** |
 | **A calling that runs its length** | **Built** — `MissionDefinition.runsItsLength`, and this mission needs it as much as [Intake](mission-intake.md) did. `the-muster` is met from tick zero, sixteen being at least twelve, so the moment `the-calling` is revealed at 17:00 over a column already standing in the axis, both terminal rows are met on one pass and the court's default rule resolves there — costing 19:00, 20:00, and the line the whole campaign has been walking toward. Played exactly that way the mission still resolves on the `resolve` beat at 20:00, with all four rows Met and Ossary's last line in the log and out of the count. Omitted is the default, and every other literal omits it |
-| The calling as an extract revealed late | **Built** — [Intake](mission-intake.md) §9's roll idiom. `extract` is not standing, `runtime.ts` never re-derives a Met non-standing row, and an objective is not scored before its `revealAtTick`, so `the-calling` is revealed on Korrin's own beat at 17:00 and counts the column that is in the axis when the cycle closes — eight of sixteen on the counter, over a column ordered there at 01:00 |
+| The calling as an extract read at the close | **Built** — `extract` is not standing and `runtime.ts` never re-derives a Met non-standing row, so `the-calling` is authored `standing` (`MissionObjective.standing`, #1886) and counts the column that is in the axis when the cycle closes at 20:00, not the one that passed through it after 17:00. An objective is not scored before its `revealAtTick` ([Intake](mission-intake.md) §9), so it is shown on Korrin's own beat at 17:00: eight of sixteen on the counter, over a column ordered there at 01:00 |
 | **A predicate over a breach that happened** | **Not built, and named rather than asked for.** `quiet` is standing and reads the water at the tick it is asked; nothing in the union asks whether a ceiling was ever exceeded. Demonstrated now rather than argued: a column taken out of Silent Running at 01:00 and run across at cruise reads `the-crossing` **Met** at the close. §8 says so, and the debt is what carries the history — imperfectly, because it repays a second for a second. The shape a real one would take is a monotone sibling (`{ kind: 'breached'; role; ceilingSig }`), and this document does not want it: a faction whose sanction is the record should be read on the record, and the record here is the debt and Ossary's line |
 | A predicate over another party's stillness | **Not expressible, by construction, and correctly so.** `MissionPredicate` carries no `party`, `slot` or `group` field and `predicates.ts` is handed nothing it could turn into somebody else's position. The Cantorate's refusal is therefore authored as the absence of any beat that would move a cantor, and read out rather than counted. Stated because a mission about somebody else not moving is the case that makes a reader reach for the field |
 | The dome's aura, and what it is worth to whom | **Built** — `STRUCTURE_AURAS.CANTOR`, +25 HYD capped at 95 within 1,200 m, granted through `Structure.grantSlot` and measured horizontally (`auras.ts`, `Math.hypot` over x and y), which is why the dome's depth moves the transit and not the disc. §3's arithmetic is a consequence of the shipped cap and this mission's roster rather than a change to either, and it reproduces: sixteen per cent of range on a Chorister's 75, seven on a Submersible's 85, and nothing at all on a row of hulls too far off to be in the disc. **One correction, and §3 is the loose side:** its 2,875 and 3,025 m are read up the chart, and an aura is measured as a range — the nearest seated hull is 2,879 m from the dome. Nothing turns on it, because the disc is 1,200 |
