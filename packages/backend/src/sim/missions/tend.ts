@@ -305,6 +305,7 @@ export const SEEDING_TEND: MissionDefinition = {
       units: [
         {
           tag: 'tender-one',
+          callsign: 'Tender One',
           kind: UnitKind.Harvester,
           x: 2560,
           y: 420,
@@ -315,6 +316,7 @@ export const SEEDING_TEND: MissionDefinition = {
         },
         {
           tag: 'tender-two',
+          callsign: 'Tender Two',
           kind: UnitKind.Harvester,
           x: 2690,
           y: 420,
@@ -325,6 +327,7 @@ export const SEEDING_TEND: MissionDefinition = {
         },
         {
           tag: 'tender-three',
+          callsign: 'Tender Three',
           kind: UnitKind.Harvester,
           x: 2625,
           y: 480,
@@ -338,6 +341,7 @@ export const SEEDING_TEND: MissionDefinition = {
         // theirs to drift.
         {
           tag: 'watch-one',
+          callsign: 'Watch One',
           kind: UnitKind.LightScout,
           x: 2560,
           y: 340,
@@ -348,6 +352,7 @@ export const SEEDING_TEND: MissionDefinition = {
         },
         {
           tag: 'watch-two',
+          callsign: 'Watch Two',
           kind: UnitKind.LightScout,
           x: 2690,
           y: 340,
@@ -433,7 +438,7 @@ export const SEEDING_TEND: MissionDefinition = {
       id: 'jellies',
       text: "The jellies would sit better off the lane. It's loud work; the water's ours for another hour.",
       gloss:
-        'Hold both Light Scouts on the West Lane for 90 s; one of them moves the jellies, loudly, at SIG 45.',
+        'Hold Watch One, a Light Scout, on the West Lane for 90 s to move the jellies, loudly, at SIG 45.',
       initial: ObjectiveStatus.Pending,
       markerId: 'west-lane',
       terminal: true,
@@ -451,7 +456,7 @@ export const SEEDING_TEND: MissionDefinition = {
       id: 'gift',
       text: "Teel's landing is short of bread. We're not asking. We're saying it's short.",
       gloss:
-        'Pass your Harvesters by the ovens beside the Holdfast; the one that picks up the bread takes it to the landing.',
+        'Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing.',
       initial: ObjectiveStatus.Pending,
       markerId: 'landing',
       terminal: true,

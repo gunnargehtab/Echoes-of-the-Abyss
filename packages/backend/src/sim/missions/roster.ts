@@ -34,6 +34,32 @@ import type {
   MissionUnit,
 } from './types.ts';
 
+/**
+ * The name the selection card prints for each cadre id — docs/ui-ux.md §9,
+ * "The card names a mission's hull", and docs/mission-nineteen.md §8, which
+ * names the six and counts them by these names.
+ *
+ * One table rather than a `callsign` on every literal, because a cadre id is
+ * one hull across five missions (`MissionUnit.cadre`): authored per mission,
+ * the First could read *The First* in Nineteen and something else in The
+ * Three, and the record would be keeping a name the card never printed.
+ * `missions.test.ts` holds every authored cadre id to an entry here.
+ */
+export const CADRE_CALLSIGNS: Readonly<Record<string, string>> = {
+  voice: 'The Voice',
+  first: 'The First',
+  second: 'The Second',
+  third: 'The Third',
+  fourth: 'The Fourth',
+  fifth: 'The Fifth',
+};
+
+/** The name the card prints for a hull, or undefined for one its mission does not name. */
+export function callsignOf(unit: MissionUnit): string | undefined {
+  if (unit.callsign !== undefined) return unit.callsign;
+  return unit.cadre === undefined ? undefined : CADRE_CALLSIGNS[unit.cadre];
+}
+
 /** The hulls a mission would seat for the player, before the record is consulted. */
 function playerUnits(definition: MissionDefinition): readonly MissionUnit[] {
   return definition.parties.find((party) => party.slot === definition.playerSlot)?.units ?? [];

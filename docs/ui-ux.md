@@ -606,6 +606,22 @@ The point is not tidiness. Each of those loses to a *mouse* interaction, so a pl
 rebound one would not find a key that stopped working — they would find that clicking had
 quietly changed meaning, with nothing to press and notice.
 
+### The card names a mission's hull
+
+The selection card's first line is the hull's class, and in a mission it is the hull's name
+first: `THE FIRST · CORVETTE`, `TENDER THREE · HARVESTER`. A mission names a hull when a row
+counts that one hull, or a load rides it, and the party holds others of its class. Without
+the name, a gloss that says *keep the First afloat* points at nothing when four Corvettes all
+read `CORVETTE` (#1886). With several selected, the card names the first and counts the
+rest, as it does for a class: `THE FIRST · CORVETTE +2`.
+
+A Knight hull's name is its cadre's, one table for every mission that seats it
+([mission-nineteen.md](mission-nineteen.md) §8 names the six), so the First reads *The First*
+in each of them. Any other hull's name is authored on its mission's literal, and its document
+says so in §3: Tend's *Tender Three* carries the gift. Only the player's own hulls are named.
+The name rides the own-force list beside the class and the hull's health, so nothing on the
+wire tells a player which of another party's hulls is which.
+
 ### A click is a point in the water
 
 Depth is ordered with the click rather than beside it (#1132). The cursor's ray is followed
@@ -1243,7 +1259,8 @@ something new, and a log role would re-announce the whole panel every time a cou
   was optional and 7 of 121 rows carried one; a cold read of ten missions could not say what
   most of the rest asked. So it is **required** now, on every row and on every alternate
   reading a row authors (`debtGloss`, `stallGloss`, a `states` entry's `gloss`). A gloss names
-  the action, the player's own hulls by class (*Harvester*, *Corvette*), the number with its
+  the action, the player's own hulls by class (*Harvester*, *Corvette*) or by the name the
+  selection card prints for one (*the First*, §9), the number with its
   unit (*SIG 20*, *400 m*, *60 s*, *T+14:00*) and the place by its marker's name. A row with no
   counter states its number in the gloss: a silence order its `SIG n`, a hold when it ends.
   Each mission document lists its glosses in §12's *Plain lines in the panel* table, and the

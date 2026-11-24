@@ -184,6 +184,7 @@ import { readMovePreview, type MovePreview, type MovePreviewReading } from './mo
 import { DEPTH_VISUAL_M_PER_M } from './perspectiveTerrain.ts';
 import { FACTION_NAME } from './factions.ts';
 import { DREDGE_STRUCK_TEXT, NO_DECOY_TEXT, carriesDecoy, dredgeStruck, fights } from './dredge.ts';
+import { cardTitle } from './cardTitle.ts';
 import { heldWholly, missionLineFor, movableIn } from './movementHolds.ts';
 import { hoverLine, priceTag, priceWords, shortfallLine } from './price.ts';
 import {
@@ -11030,10 +11031,14 @@ export class EchoRenderer {
     const name =
       structure !== undefined ? structureStatsFor(structure.kind).name : statsFor(unit!.kind).name;
     this.infoName.visible = true;
-    // The display voice is uppercase (docs/style-neon-noir.md "Typography");
-    // canvas text has no text-transform, so the transform happens here.
-    const shownName = this.selected.size > 1 ? `${name} +${this.selected.size - 1}` : name;
-    this.infoName.text = shownName.toUpperCase();
+    // A mission's name for the hull leads, when it has one (§9, "The card
+    // names a mission's hull"): a gloss that says *the First* has to be able
+    // to point at one Corvette of four.
+    this.infoName.text = cardTitle(
+      name,
+      structure === undefined ? unit!.callsign : undefined,
+      this.selected.size
+    );
     this.infoName.position.set(x + 12, y + 10);
 
     const barX = x + 12;
