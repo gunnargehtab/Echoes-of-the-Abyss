@@ -104,7 +104,7 @@ import {
   PUBLIC_LANDMARKS,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { CIVIC_LAMP, FACTION_PALETTE, sigColor, UI, VENT_EMBER } from './palette.ts';
+import { FACTION_PALETTE, sigColor, UI, WORLD_LIGHT, type PaletteName } from './palette.ts';
 import { DepthCues } from './depthCues.ts';
 import {
   bakeSeabed,
@@ -554,8 +554,9 @@ function lampMeshesScreen(
   });
   return { sitesPx, areaPx: Number(areaPx.toFixed(1)) };
 }
-const EMBER_COLOR = new Color(VENT_EMBER);
-const LAMP_COLOR = new Color(CIVIC_LAMP);
+/** Scratch for the ember cloud's two tokens, set from the active palette each bucket. */
+const EMBER_COLOR = new Color();
+const LAMP_COLOR = new Color();
 /** Screen corners in NDC, the order `groundQuad` has always returned them in. */
 const QUAD_CORNERS: ReadonlyArray<readonly [number, number]> = [
   [-1, 1],
@@ -1227,6 +1228,11 @@ export class PerspectiveView {
   private pools: DataTexture | null = null;
   private readonly litPools: { value: Texture } = { value: NO_POOLS };
   private worldLightCount = 0;
+  /**
+   * The palette the standing pools and volumes were built in. They bake each
+   * family's token, so the frame stands them again when the active one moves.
+   */
+  private worldLightPalette: PaletteName = ACTIVE_PALETTE.name;
   /**
    * The drawn ground's heights under High, which an own hull's searchlight
    * reads for what stands between a point and its lamp (searchlights.ts):
@@ -3795,6 +3801,7 @@ export class PerspectiveView {
    * (docs/art-direction.md, "Two layers, two laws", limit 4).
    */
   private standWorldLights(terrain: TerrainPayload): void {
+    this.worldLightPalette = ACTIVE_PALETTE.name;
     this.pools?.dispose();
     this.pools = null;
     this.litPools.value = NO_POOLS;
@@ -4144,6 +4151,7 @@ export class PerspectiveView {
     });
     installDisplayVeil(emberMaterial);
     this.embers = new Points(emberGeometry, emberMaterial);
+    this.embers.name = 'vent_embers';
     this.embers.renderOrder = 1;
     this.scene.add(this.embers);
     this.emberBucket = -1;
@@ -6178,6 +6186,16 @@ export class PerspectiveView {
     // The arch study's distance grade breathes with the same dolly (§11).
     if (ARCH_STUDY_ON) setDistanceGrade(this.distance, this.waterDensity);
 
+    // High's pools and volumes hold each family's token in a texture and in
+    // instances, so a palette changed mid-match stands them again, once
+    // (docs/style-neon-noir.md "Rule 5 in the colour-vision palettes"). Low
+    // holds none: its embers read the token on their bucket below, and the
+    // layer lays its props' own (environmentLayer.ts `wearWorldLight`).
+    if (this.worldLightPalette !== ACTIVE_PALETTE.name && this.terrain !== null) {
+      this.standWorldLights(this.terrain);
+      this.emberBucket = -1;
+    }
+
     // Ember flicker steps on the 5 Hz sonar bucket, never smoothly — the
     // seabed's one light keeps the register (docs/art-direction.md).
     if (this.embers !== null) {
@@ -6185,7 +6203,12 @@ export class PerspectiveView {
       if (bucket !== this.emberBucket) {
         this.emberBucket = bucket;
         const colors = this.embers.geometry.getAttribute('color') as BufferAttribute;
-        const ember = EMBER_COLOR;
+        // The active palette's tokens, read on the bucket as a mark's ink is
+        // read on its draw (palette.ts): this cloud follows a palette changed
+        // mid-match within one step of its own flicker. A cloud an earlier
+        // dressing left in the scene does not (#1906).
+        const ember = EMBER_COLOR.setHex(WORLD_LIGHT.vent);
+        LAMP_COLOR.setHex(WORLD_LIGHT.civic);
         const eye = this.camera.position;
         const reach = this.waterReach;
         for (let i = 0; i < this.emberPositions.length; i++) {

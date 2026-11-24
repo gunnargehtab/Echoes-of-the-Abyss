@@ -34,8 +34,8 @@ import {
 } from '../src/game/seabed.ts';
 import {
   BIOME_COLOR,
-  CIVIC_LAMP,
-  VENT_EMBER,
+  PALETTE_NAMES,
+  PALETTES,
   RELIEF_REFERENCE_M,
   ROCK_FACE,
   ROCK_SHADOW,
@@ -424,8 +424,16 @@ describe('civic lamps', () => {
         n++;
       }
     }
-    const emberMean = EMBER_GAIN * (sum / n) * luminance(VENT_EMBER);
-    const lamp = CIVIC_LAMP_LEVEL * luminance(CIVIC_LAMP);
-    assert.ok(lamp < emberMean, `lamp ${lamp.toFixed(4)} ≥ ember mean ${emberMean.toFixed(4)}`);
+    // In every palette: a family's token is a palette's own (#1854), and each
+    // keeps the standard one's luminance so this order is not a palette's to move.
+    for (const name of PALETTE_NAMES) {
+      const { vent, civic } = PALETTES[name].worldLight;
+      const emberMean = EMBER_GAIN * (sum / n) * luminance(vent);
+      const lamp = CIVIC_LAMP_LEVEL * luminance(civic);
+      assert.ok(
+        lamp < emberMean,
+        `${name}: lamp ${lamp.toFixed(4)} ≥ ember mean ${emberMean.toFixed(4)}`
+      );
+    }
   });
 });

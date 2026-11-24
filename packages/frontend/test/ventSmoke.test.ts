@@ -20,7 +20,7 @@ import {
   type BufferAttribute,
 } from 'three';
 import { HIGH_GRAPHICS } from '@echoes/shared';
-import { VENT_EMBER } from '../src/game/palette.ts';
+import { PALETTES, setActivePalette } from '../src/game/palette.ts';
 import type { PlumeSite } from '../src/game/ventPlume.ts';
 import { patchVentSmoke, VENT_SMOKE_ANCHORS, VentSmoke } from '../src/game/ventSmoke.ts';
 
@@ -66,12 +66,11 @@ describe('a vent at work (#1837)', () => {
     // Straight up, and wider with height along the puff's own bearing.
     assert.match(v, /transformed\.y \+= smokeRise;/);
     assert.match(v, /transformed\.xz \+= vec2\( cos\( aSmoke\.z \), sin\( aSmoke\.z \) \)/);
-    // The three lights: the vent's own from the mouth, in its family's token;
-    // the Lid's glow; and each own beam, less what stands in its way.
-    const ember = new Color(VENT_EMBER).multiplyScalar(SPEC.GLOW);
-    assert.ok(
-      v.includes(`vec3( ${ember.r.toFixed(6)}, ${ember.g.toFixed(6)}, ${ember.b.toFixed(6)} )`)
-    );
+    // The three lights: the vent's own from the mouth, a uniform the cloud
+    // writes in its family's token; the Lid's glow; and each own beam, less
+    // what stands in its way.
+    assert.match(v, /uniform vec3 uSmokeEmber;/);
+    assert.match(v, /vec3 smokeLit = uSmokeEmber \/ \( 1\.0 \+ smokeOver \* smokeOver \);/);
     assert.ok(v.includes(`smokeRise / ${SPEC.GLOW_REACH_M.toFixed(6)}`));
     assert.match(v, /smokeLit \+= echoesLitIrradiance\(/);
     assert.match(v, /smokeLit \+= smokeBeam \* echoesSearchShadeCoarse\( i, smokeAt \)/);
@@ -151,6 +150,23 @@ describe('a vent at work (#1837)', () => {
     smoke.tick(99_000);
     assert.equal(smoke.clockS, held);
     smoke.dispose();
+  });
+
+  it('is lit from its mouth in the active palette’s ember, read each tick (#1854)', () => {
+    // style-neon-noir.md "Rule 5 in the colour-vision palettes": the vent's
+    // light on its own smoke is the family's token, and that is a palette's.
+    const smoke = new VentSmoke();
+    const lit = (token: number) => new Color(token).multiplyScalar(SPEC.GLOW);
+    try {
+      smoke.tick(0);
+      assert.ok(smoke.emberLight.equals(lit(PALETTES.standard.worldLight.vent)));
+      setActivePalette('protanopia');
+      smoke.tick(16);
+      assert.ok(smoke.emberLight.equals(lit(PALETTES.protanopia.worldLight.vent)));
+      assert.ok(!smoke.emberLight.equals(lit(PALETTES.standard.worldLight.vent)));
+    } finally {
+      setActivePalette('standard');
+    }
   });
 
   it('takes the veil a site at a time, as the steam does', () => {

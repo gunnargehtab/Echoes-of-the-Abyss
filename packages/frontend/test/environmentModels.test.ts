@@ -17,8 +17,18 @@ import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { Box3, MeshStandardMaterial, ShaderLib, Vector3, type Group } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { ENVIRONMENT_PROPS } from '../src/game/environment.ts';
-import { buildTemplate, type EnvTemplate } from '../src/game/environmentModels.ts';
+import { terrainFor } from '../../backend/src/sim/maps/index.ts';
+import { FREE_WATER_SLICE } from '../../backend/src/sim/maps/freeWaterSlice.ts';
+import { ENVIRONMENT_PROPS, type PropPlacement } from '../src/game/environment.ts';
+import { EnvironmentLayer } from '../src/game/environmentLayer.ts';
+import {
+  buildTemplate,
+  primeEnvTemplate,
+  resetEnvironmentModels,
+  wearWorldLight,
+  type EnvTemplate,
+} from '../src/game/environmentModels.ts';
+import { PALETTES, setActivePalette } from '../src/game/palette.ts';
 import { keepsGlowOutsideToneMapping, TONED_SURFACE } from '../src/game/modelLighting.ts';
 import { readsPropVeil } from '../src/game/veilShading.ts';
 
@@ -94,6 +104,106 @@ describe('glowing props keep their hue: art-direction, gates 3 and 4', () => {
       if (spec.worldLight !== 'none') assert.ok(glowing > 0, 'a licensed light must reach a part');
     });
   }
+});
+
+/**
+ * docs/style-neon-noir.md "Rule 5 in the colour-vision palettes" (#1854): a
+ * family's token is a palette's own. The files keep the standard palette's,
+ * which is what intake checks, and the client lays the active palette's over
+ * a licensed emissive as it stands and when the palette changes.
+ */
+describe('a licensed prop wears its palette’s world light (#1854)', () => {
+  const LICENSED = ENVIRONMENT_PROPS.filter((spec) => spec.worldLight !== 'none');
+  const lights = (template: EnvTemplate) =>
+    template.parts
+      .map((part) => part.material)
+      .filter(
+        (material): material is MeshStandardMaterial =>
+          material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0
+      );
+
+  for (const spec of LICENSED) {
+    it(`${spec.slug}: the file holds the standard token, and wears another at the file’s strength`, async () => {
+      const family = spec.worldLight as Exclude<typeof spec.worldLight, 'none'>;
+      const template = buildTemplate(await parse(spec.slug), spec.footprintM, spec.swayM);
+      const lit = lights(template);
+      assert.ok(lit.length > 0);
+      const strengths = lit.map((material) => material.emissiveIntensity);
+      for (const material of lit) {
+        assert.equal(material.emissive.getHex(), PALETTES.standard.worldLight[family]);
+      }
+      wearWorldLight(template.parts, PALETTES.deuteranopia.worldLight[family]);
+      for (const material of lit) {
+        assert.equal(material.emissive.getHex(), PALETTES.deuteranopia.worldLight[family]);
+      }
+      // Only the colour: the strength is the export's, and the doc's level with it.
+      assert.deepEqual(
+        lit.map((material) => material.emissiveIntensity),
+        strengths
+      );
+    });
+  }
+
+  it('leaves a prop with no licence alone: no emissive appears on it', async () => {
+    const spec = ENVIRONMENT_PROPS.find((prop) => prop.slug === 'env-open-boulder')!;
+    const template = buildTemplate(await parse(spec.slug), spec.footprintM, spec.swayM);
+    wearWorldLight(template.parts, 0xff00ff);
+    assert.equal(lights(template).length, 0);
+  });
+
+  it('a layer lays the active palette’s token on what it stands, and again when the palette changes', async () => {
+    const terrain = terrainFor(FREE_WATER_SLICE).serialize();
+    const placements: PropPlacement[] = [];
+    const templates = new Map<string, EnvTemplate>();
+    for (const [i, spec] of LICENSED.entries()) {
+      const template = buildTemplate(await parse(spec.slug), spec.footprintM, spec.swayM);
+      templates.set(spec.slug, template);
+      primeEnvTemplate(spec.slug, template);
+      placements.push({
+        slug: spec.slug,
+        xM: 500 + i * 250,
+        yM: 500,
+        yawRad: 0,
+        scale: 1,
+        cellIndex: 0,
+      });
+    }
+    const worn = (name: 'standard' | 'deuteranopia' | 'protanopia') => {
+      for (const spec of LICENSED) {
+        const family = spec.worldLight as Exclude<typeof spec.worldLight, 'none'>;
+        for (const material of lights(templates.get(spec.slug)!)) {
+          assert.equal(
+            material.emissive.getHex(),
+            PALETTES[name].worldLight[family],
+            `${spec.slug} under ${name}`
+          );
+        }
+      }
+    };
+    const layer = new EnvironmentLayer();
+    try {
+      layer.rebuild(terrain, () => -100, placements);
+      assert.equal(layer.stats().props, LICENSED.length, 'every licensed prop stands');
+      worn('standard');
+      // Mid-match: the next tick lays it, with no rebuild.
+      setActivePalette('deuteranopia');
+      layer.tick(0);
+      worn('deuteranopia');
+      setActivePalette('standard');
+      layer.tick(16);
+      worn('standard');
+      // And a layer that stands its props under a palette starts in it.
+      setActivePalette('protanopia');
+      const late = new EnvironmentLayer();
+      late.rebuild(terrain, () => -100, placements);
+      worn('protanopia');
+      late.destroy();
+    } finally {
+      setActivePalette('standard');
+      layer.destroy();
+      resetEnvironmentModels();
+    }
+  });
 });
 
 describe('props take the veil on their surface light alone (#1536)', () => {

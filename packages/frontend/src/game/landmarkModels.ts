@@ -35,11 +35,16 @@ import {
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { LandmarkState } from '@echoes/shared';
 import type { LandmarkSpec } from './environment.ts';
-import { loadEnvModel, normaliseLuminance, propFootprint } from './environmentModels.ts';
+import {
+  loadEnvModel,
+  normaliseLuminance,
+  propFootprint,
+  wearWorldLight,
+} from './environmentModels.ts';
 import { installPropSurface, type WorldLook } from './tutorialLook.ts';
 import { keepGlowOutsideToneMapping } from './modelLighting.ts';
 import { installPropVeil } from './veilShading.ts';
-import { CIVIC_LAMP } from './palette.ts';
+import { WORLD_LIGHT } from './palette.ts';
 import { bakeTransform } from './bakeTransform.ts';
 import {
   FALL_ATTRIBUTE,
@@ -56,6 +61,7 @@ import {
   LANDMARK_LUMINANCE_CEILING,
   landmarkUniforms,
   RIB_ROUGHNESS,
+  setPoolColor,
   type LandmarkUniforms,
 } from './landmarkLight.ts';
 
@@ -166,7 +172,8 @@ export function buildLandmarkTemplate(
   // `loadRegionDetail`), stands the landmark still on its own materials:
   // no pool, no guttering, no sway, the glass at its steady emissive level,
   // so the session's clocks never reach it.
-  const uniforms = look === 'sorrowgate' && !still ? landmarkUniforms(lampHue()) : null;
+  const uniforms =
+    look === 'sorrowgate' && !still ? landmarkUniforms(lampHue(WORLD_LIGHT.civic)) : null;
   for (const material of clones.values()) {
     if (look === 'sorrowgate') installPropSurface(material);
     if (uniforms !== null) {
@@ -213,13 +220,27 @@ export function buildLandmarkTemplate(
   return { slug: spec.slug, states, uniforms };
 }
 
-/** The civic lamp's hue, linear, for the stone under it (palette.ts `CIVIC_LAMP`). */
-function lampHue(): [number, number, number] {
-  const r = ((CIVIC_LAMP >> 16) & 0xff) / 255;
-  const g = ((CIVIC_LAMP >> 8) & 0xff) / 255;
-  const b = (CIVIC_LAMP & 0xff) / 255;
+/** A civic lamp token's hue, linear, for the stone under it (palette.ts `WORLD_LIGHT.civic`). */
+function lampHue(token: number): [number, number, number] {
+  const r = ((token >> 16) & 0xff) / 255;
+  const g = ((token >> 8) & 0xff) / 255;
+  const b = (token & 0xff) / 255;
   const linear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
   return [linear(r), linear(g), linear(b)];
+}
+
+/**
+ * Lay a `civic-lamp` token on a landmark template: its glass, and the pools
+ * the stone takes under the study's licence. The layer that stands the
+ * landmark calls it with the active palette's token, on standing and when
+ * the palette changes (docs/style-neon-noir.md "Rule 5 in the colour-vision
+ * palettes"), as it lays a prop's (environmentModels.ts `wearWorldLight`).
+ * Both states share their materials, so both are walked and nothing is
+ * laid twice to any effect.
+ */
+export function wearCivicLamp(template: LandmarkTemplate, token: number): void {
+  for (const state of Object.values(template.states)) wearWorldLight(state.parts, token);
+  if (template.uniforms !== null) setPoolColor(template.uniforms, lampHue(token));
 }
 
 function emptyState(): LandmarkStateTemplate {

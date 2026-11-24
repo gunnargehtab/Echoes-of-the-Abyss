@@ -417,10 +417,11 @@ Three rules govern all three:
    `neon-magenta`, the text ramp — is identical in every palette. "Cyan tells
    you, magenta asks you" survives every deficiency here: under the red-green
    palettes both sit on the preserved blue axis, and under tritanopia cyan
-   reads cool and magenta reads warm. A bevel is not information. One thing
-   that is not information moves all the same: a jelly's lantern at the High
-   graphics quality ([World light](#world-light--the-terrain-carve-outs)), so
-   that no eye can take it for an ink that is.
+   reads cool and magenta reads warm. A bevel is not information. World light
+   is not information either and moves all the same, so that no eye can take it
+   for an ink that is: a jelly's lantern at the High graphics quality in every
+   palette, and four of the five families in the red-green pair
+   ([World light](#rule-5-in-the-colour-vision-palettes)).
 2. **Biome fills and Echo Mark residue do not move either.** The seafloor is
    deliberately desaturated to 5–10 % luminance and carries no hue-only
    meaning — propagation is read from the overlay and the numbers, never from
@@ -458,6 +459,10 @@ difference than that would be decoration.
 | Resonance Crystal | `#B98CFF` | `#7FA0F5` | `#7FA0F5` |
 | Fauna | `#5FA88A` | `#6E8C84` | `#6E8C84` |
 | Jelly lantern (world light, High) | `#C56BC7` | `#7F00FF` | `#9900FF` |
+| `vent-ember` (world light) | `#E06A2B` | `#CC7656` | `#CC7656` |
+| `flora-biolight` (world light) | `#2E8C74` | `#4E8B4C` | `#4E8B4C` |
+| `crystal-seam` (world light) | `#5B4A8C` | `#584996` | `#584996` |
+| `ore-trace` (world light) | `#7A5634` | `#7A5643` | `#7A5643` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F5C542` · `#8C8378` | `#FFCF5C` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#2E9BD6` · `#9BE0FF` | `#2E9BD6` · `#9BE0FF` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#5E3A0F` · `#A8701C` | `#7A5218` · `#C98A2E` |
@@ -673,8 +678,9 @@ bloom over the free-water crater's bowl, which is the same jelly 120 times
 jelly as a lantern of pink-violet light, and its brightest pixels are `#BFA6E2`, at a hue
 of 265 degrees: the hue of Hadron's glow, `#C9A6FF`, within a degree. A world light takes
 no agent's token (rule 5), and violet is reserved, so that hue does not transfer, as the
-target's cyan ring did not. It is the one world light a palette owns, as a navy's inks
-are:
+target's cyan ring did not. It was the first world light a palette owned, as a navy's
+inks are, and four of the families followed it
+([Rule 5 in the colour-vision palettes](#rule-5-in-the-colour-vision-palettes)):
 
 | Palette | `jelly-lantern` | Nearest of a navy's inks, a contact tier, a chrome neon or `neon-violet`, to the eye it serves |
 | --- | --- | --- |
@@ -703,8 +709,8 @@ lie on the ground, where no lantern hangs. The lantern carries no information: i
 so that it cannot be taken for an ink that does. It is not `neon-violet`, which is the menu's and
 never shares a frame with it, and it stands for nothing unresolved. Whether it reads
 apart from a lamp and from a panel's bevel in play is still the owner's glance. The five
-families above are held to no such floor in any palette; #1854 asks whether rule 5 binds
-them in the colour-vision palettes.
+families above keep a floor of their own, 15 dE:
+[Rule 5 in the colour-vision palettes](#rule-5-in-the-colour-vision-palettes).
 
 Both are placed by the fixture's authored loops and answer nothing a match does
 (rule 4). `LIFE_GLINT` and each palette's `lantern` in
@@ -823,6 +829,86 @@ High a schooling fry carries one point of world light, `life-glint`, a deep fish
 seats carry that token in place of their dots, and a drifting
 jelly is drawn as a lantern, `jelly-lantern`, both above, the far bloom's 120 over the
 bowl among them (#1859).
+
+### Rule 5 in the colour-vision palettes
+
+Rule 5 binds in every palette, and a floor says what it asks. To the eye its palette
+serves, a family's token stands **15 dE or more** from every navy's primary, accent and
+glow, every contact tier, the chrome's two neons and `neon-violet`. The standard palette
+and the red-green pair hold it today; tritanopia's five do not yet, and wait, as this
+section ends by saying. The owner set it on
+24 November 2026 ([#1854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1854)).
+It is the floor the fauna colour keeps from a navy, and the standard palette clears it as
+it stands: its tightest is `flora-biolight`, 16.6 dE from Pelagia's primary. The lantern's
+25 is out of a family's reach. At its own luminance and in its own hue, the furthest a
+protanopia ember can stand is 22.2 dE, and a biolight 21.3.
+
+The standard tokens did not hold it for a red-green eye: `flora-biolight` stood 3.2 dE
+from Bathyarch's accent under protanopia, and `vent-ember` 10.1 from the Directorate's
+glow under deuteranopia. So a family's token is a palette's own, as the lantern is:
+
+| Token | Standard | Deuteranopia | Protanopia | Tritanopia |
+| --- | --- | --- | --- | --- |
+| `vent-ember` | `#E06A2B` | `#CC7656` | `#CC7656` | `#E06A2B` |
+| `flora-biolight` | `#2E8C74` | `#4E8B4C` | `#4E8B4C` | `#2E8C74` |
+| `crystal-seam` | `#5B4A8C` | `#584996` | `#584996` | `#5B4A8C` |
+| `ore-trace` | `#7A5634` | `#7A5643` | `#7A5643` | `#7A5634` |
+| `civic-lamp` | `#B8875A` | `#B8875A` | `#B8875A` | `#B8875A` |
+
+The red-green pair shares its four, as it shares its SIG ramp. Each is the nearest colour
+to the standard token that keeps its luminance and its family's hue and stands 18 dE
+clear for both eyes, by the test's simulation and by a second one (Machado, Oliveira and
+Fernandes 2009), which agree within 2 dE on these. The ember goes from orange to a dusty
+terracotta, the biolight from teal to a leaf green, the seam a shade bluer and the trace
+a shade redder. `civic-lamp` clears as it stands and does not move. The four are SPEC by that
+rule and not by a frame: rule 5 is a gate, the floor is its measure, and the owner took
+them as a correction to it on 24 November 2026, at both graphics qualities. No target
+frame was named for them. Whether each still reads as its family is the owner's glance,
+at the frames in [screenshots/issue-1854](screenshots/issue-1854/README.md). The nearest
+held ink to each, to the eye its palette serves:
+
+| Token | Deuteranopia | Protanopia |
+| --- | --- | --- |
+| `vent-ember` `#CC7656` | The Directorate's accent, 19.9 dE | Bathyarch's accent, 18.5 dE |
+| `flora-biolight` `#4E8B4C` | Bathyarch's accent, 19.2 dE | The Directorate's primary, 18.9 dE |
+| `crystal-seam` `#584996` | A Tier 1 contact, 21.9 dE | `neon-magenta`, 18.3 dE |
+| `ore-trace` `#7A5643` | Bathyarch's accent, 18.6 dE | Bathyarch's accent, 18.4 dE |
+| `civic-lamp` `#B8875A` | The Directorate's accent, 22.4 dE | Bathyarch's accent, 21.9 dE |
+
+**Luminance does not move.** Every token keeps its standard luminance within 1.5%, so each
+level in this section is every palette's: the exports' 0.18, 0.14 and 0.11, the ember's gain
+against the lamp's, High's powers, and rule 2's order with them. Only the hue moves. A
+prop's file keeps the standard token, which is what intake checks, and the client lays
+the palette's over it as it draws.
+
+The floor leaves out what the lantern's does: the SIG band, the threat ink, the resource
+inks and the fauna colour. It leaves out the console accents too, which are the console's
+and are never drawn in the world. What that costs, each to the eye its palette serves. In
+the red-green pair every left-out information ink stands 20 dE or more from every family.
+A console accent comes nearer three times: the standard `crystal-seam` 9.4 dE from the
+Directorate's, the deuteranopia `flora-biolight` 12.7 from the Directorate's, and the
+protanopia `civic-lamp` 12.9 from the Directorate's. The standard `flora-biolight` stands
+12.1 from the fauna colour, as it always has.
+
+Nor does it hold the families apart from each other, which rule 5 never asked. To a
+red-green eye the ember and the lamp are one colour, 2.5 dE apart under deuteranopia and
+5.0 under protanopia, where the standard pair stood 26.7 and 16.9. A protanope's biolight
+joins them, 5.1 dE from the lamp and 7.3 from the ember. All three have to stand clear of
+the Directorate's ambers on one side and Bathyarch's grey on the other at about one
+luminance, and that gap is 45 to 48 dE wide. Place and behaviour hold them apart: an ember
+flickers in the cracks of a Thermal Vein, a lamp stands steady on the Upper Concourse, and
+biolight tips kelp and living coral.
+
+**Tritanopia waits.** Its five are the standard palette's and are held to no floor yet.
+The test's tritanopia projection is in question
+([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)): by it
+`civic-lamp` stands 5.2 dE from the Directorate's glow and `ore-trace` 6.3 from its
+primary, and by Machado's 42.6 and 44.6. `vent-ember` and `flora-biolight` are near by
+both: 2.3 and 6.8 dE from that glow, and 6.9 and 10.0 from Pelagia's primary. Tokens chosen
+against a projection that may be replaced would move twice, so all five wait on it.
+
+`WORLD_LIGHT` in `packages/frontend/src/game/palette.ts` is the active palette's five, and
+`packages/frontend/test/palette.test.ts` holds the floor and the luminance.
 
 ### The arch study's licence
 

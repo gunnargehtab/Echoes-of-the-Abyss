@@ -167,6 +167,24 @@ export function normaliseLuminance(
 }
 
 /**
+ * Lay a world-light token on a template's licensed emissive
+ * (docs/style-neon-noir.md "Rule 5 in the colour-vision palettes"). A prop's
+ * file carries its family's standard token, which is what intake checks, and
+ * a family's token is a palette's own, so the layer that stands the prop lays
+ * the active palette's over it (environmentLayer.ts). Only the colour moves:
+ * every palette's token keeps the standard one's luminance, so the strength
+ * the file was exported at still gives the level the doc names. The emission
+ * is the material's own uniform, so no program is rebuilt.
+ */
+export function wearWorldLight(parts: readonly { material: Material }[], token: number): void {
+  for (const { material } of parts) {
+    if (material instanceof MeshStandardMaterial && material.emissive.getHex() !== 0) {
+      material.emissive.setHex(token);
+    }
+  }
+}
+
+/**
  * The sway patch. The displacement is object-space, before the instance
  * matrix, so each instance's random yaw turns one current into as many
  * directions as there are clusters — a forest moving, not a chorus line.
@@ -513,6 +531,15 @@ export function whenEnvTemplatesReady(
         })
     )
   ).then(() => undefined);
+}
+
+/** For tests: hand the cache a template built from a parsed file, as Low's of `look`. */
+export function primeEnvTemplate(
+  slug: string,
+  template: EnvTemplate,
+  look: WorldLook = 'standard'
+): void {
+  templates.set(`${slug}:${look}`, template);
 }
 
 /** For tests and teardown: forget every cached template. */

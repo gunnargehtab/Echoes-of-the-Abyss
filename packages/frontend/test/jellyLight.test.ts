@@ -40,13 +40,7 @@ import {
   tintJellyMembrane,
   writeJellyLights,
 } from '../src/game/jellyLight.ts';
-import {
-  JELLY_LANTERN,
-  LIFE_GLINT,
-  PALETTES,
-  setActivePalette,
-  WORLD_LIGHT,
-} from '../src/game/palette.ts';
+import { JELLY_LANTERN, LIFE_GLINT, PALETTES, setActivePalette } from '../src/game/palette.ts';
 
 const { BELL, STRANDS, HALO, SWIM, PULSE, STAGGER_S } = HIGH_GRAPHICS.LIFE.JELLY;
 const { LANTERN } = HIGH_GRAPHICS.LIFE.GLOW;
@@ -81,7 +75,7 @@ describe('a jelly is a lantern (#1837)', () => {
     // each stands from a navy, a contact and a neon, as its palette's eye
     // sees them, is palette.test.ts's, where the simulation lives.
     for (const palette of Object.values(PALETTES)) {
-      assert.ok(!Object.values(WORLD_LIGHT).includes(palette.lantern));
+      assert.ok(!Object.values(palette.worldLight).includes(palette.lantern));
       assert.notEqual(palette.lantern, LIFE_GLINT);
       assert.notEqual(palette.lantern, palette.fauna);
     }

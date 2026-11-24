@@ -16,7 +16,9 @@
  * pure function of the public ground and the props standing on it, so it is
  * identical for every client and answers no activity, occupancy or proximity
  * (limit 4); nothing of a contact or an enemy is in it (limit 2); and every
- * colour is its family's own token, away from the neons (limit 3).
+ * colour is its family's own token, away from the neons (limit 3). The token
+ * is the active palette's (palette.ts `WORLD_LIGHT`, #1854), read as the list
+ * is built, so the view stands the lights again when the palette changes.
  *
  * Every number is SPEC since the owner accepted step 1 (#1801;
  * docs/art-direction.md, "Step 1's numbers — SPEC"), and

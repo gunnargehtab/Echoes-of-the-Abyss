@@ -115,8 +115,52 @@ export interface Palette {
    * (palette.test.ts).
    */
   lantern: number;
+  /**
+   * The five world-light families' tokens (docs/style-neon-noir.md "Rule 5 in
+   * the colour-vision palettes", #1854). A palette's own, as the lantern is:
+   * to a red-green eye the standard biolight is Bathyarch's cladding and the
+   * standard ember the Directorate's glow. Each stands 15 dE or more from
+   * every navy's primary, accent and glow, every contact tier, the chrome's
+   * two neons and `neon-violet`, to the eye its palette serves, and keeps its
+   * standard luminance, so every level a family is drawn at is every
+   * palette's (palette.test.ts). Tritanopia's wait on #1905.
+   */
+  worldLight: Record<WorldLightFamily, number>;
   ui: UiInk;
 }
+
+/** The five families of docs/style-neon-noir.md "World light". */
+export type WorldLightFamily = 'vent' | 'flora' | 'crystal' | 'ore' | 'civic';
+
+/**
+ * The families' tokens as the "World light" table gives them (SPEC): the
+ * standard palette's, and what every prop's file carries, which intake checks.
+ * Vent ember is deliberately redder than Bathyarch's #F2B233 hazard amber so
+ * a vent field never reads as somebody's base lights; the civic lamp is
+ * tallow, yellower than the ember and greyer than every faction's warm glow,
+ * so a terminus lamp reads as the city's and never as a Bathyarch hull at
+ * rest on it (#1533).
+ */
+const STANDARD_WORLD_LIGHT: Record<WorldLightFamily, number> = {
+  vent: 0xe06a2b,
+  flora: 0x2e8c74,
+  crystal: 0x5b4a8c,
+  ore: 0x7a5634,
+  civic: 0xb8875a,
+};
+
+/**
+ * The red-green pair's (SPEC, #1854), shared as their SIG ramp is: the
+ * nearest colour to each standard token, at its luminance and in its hue,
+ * that stands 18 dE clear for both eyes. The lamp clears as it stands.
+ */
+const RED_GREEN_WORLD_LIGHT: Record<WorldLightFamily, number> = {
+  vent: 0xcc7656,
+  flora: 0x4e8b4c,
+  crystal: 0x584996,
+  ore: 0x7a5643,
+  civic: 0xb8875a,
+};
 
 /**
  * The fidelity encoding, identical in every palette.
@@ -223,6 +267,7 @@ const STANDARD: Palette = {
   },
   fauna: 0x5fa88a,
   lantern: 0xc56bc7,
+  worldLight: STANDARD_WORLD_LIGHT,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -283,6 +328,7 @@ const DEUTERANOPIA: Palette = {
   },
   fauna: 0x6e8c84,
   lantern: 0x7f00ff,
+  worldLight: RED_GREEN_WORLD_LIGHT,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -342,6 +388,7 @@ const PROTANOPIA: Palette = {
   },
   fauna: 0x6e8c84,
   lantern: 0x9900ff,
+  worldLight: RED_GREEN_WORLD_LIGHT,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -403,6 +450,8 @@ const TRITANOPIA: Palette = {
   },
   fauna: 0x7a7a88,
   lantern: 0x8026d9,
+  // The standard five, held to no floor yet: #1905.
+  worldLight: STANDARD_WORLD_LIGHT,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
@@ -475,6 +524,19 @@ export let FAUNA_COLOR: number = STANDARD.fauna;
 export let JELLY_LANTERN: number = STANDARD.lantern;
 
 /**
+ * The five world-light families' tokens in the active palette
+ * (`Palette.worldLight`): what an ember, a lamp, a chimney's steam and a
+ * prop's licensed emissive are drawn in at both graphics qualities, and what
+ * pools on the ground and scatters in the water at High (worldLights.ts).
+ * Read at draw time like every ink here, never copied into a constant. What
+ * holds a token between frames is laid again when the palette changes: a
+ * prop's emissive and the arch's lamps by the layer (environmentLayer.ts
+ * `wearWorldLight`), High's pools and volumes by the view (PerspectiveView.ts
+ * `standWorldLights`).
+ */
+export let WORLD_LIGHT: Record<WorldLightFamily, number> = STANDARD.worldLight;
+
+/**
  * HUD chrome — neon-noir, transcribed from docs/style-neon-noir.md.
  * Cyan tells you, magenta asks you, red warns you.
  */
@@ -506,6 +568,7 @@ export function setActivePalette(name: unknown): Palette {
   RESOURCE_COLOR = palette.resource;
   FAUNA_COLOR = palette.fauna;
   JELLY_LANTERN = palette.lantern;
+  WORLD_LIGHT = palette.worldLight;
   UI = palette.ui;
   return palette;
 }
@@ -620,16 +683,6 @@ export const KEY_LIGHT = { x: LIGHT_X, y: LIGHT_Y, z: LIGHT_Z } as const;
 export const RELIEF_REFERENCE_M = 550;
 
 /**
- * Vent ember orange, docs/art-direction.md "Reading the Sea Floor" (SPEC):
- * one of the five world-light families in docs/style-neon-noir.md "World
- * light" — deliberately redder than Bathyarch's #F2B233 hazard amber so a vent
- * field never reads as somebody's base lights. Flora biolight and the crystal
- * seam arrive with the environment props that carry them; nothing else on
- * terrain emits.
- */
-export const VENT_EMBER = 0xe06a2b;
-
-/**
  * The Lid's glow, docs/style-neon-noir.md "World light" (SPEC by token): the
  * light the ground takes from above at the High graphics quality
  * (litGround.ts). It is the colour of the rig's cold ambient,
@@ -637,22 +690,6 @@ export const VENT_EMBER = 0xe06a2b;
  * it stand in one colour of light; its level is the ground's own.
  */
 export const LID_GLOW = 0x5a6b80;
-
-/**
- * The five world-light families' tokens, docs/style-neon-noir.md "World light"
- * (SPEC): the colour each family's light is at the High graphics quality,
- * where it pools on the ground and scatters in the water (worldLights.ts). At
- * Low the props carry three of them in their own emissive, and the other two
- * are `VENT_EMBER` and `CIVIC_LAMP` below.
- */
-export type WorldLightFamily = 'vent' | 'flora' | 'crystal' | 'ore' | 'civic';
-export const WORLD_LIGHT: Record<WorldLightFamily, number> = {
-  vent: 0xe06a2b,
-  flora: 0x2e8c74,
-  crystal: 0x5b4a8c,
-  ore: 0x7a5634,
-  civic: 0xb8875a,
-};
 
 /**
  * Life's own light at the High graphics quality, docs/style-neon-noir.md
@@ -682,14 +719,6 @@ export const WATER_HUE: Record<Biome, number> = {
   [Biome.ResonanceField]: 0x443961,
   [Biome.CoralRuins]: 0x334148,
 };
-
-/**
- * Civic lamp, docs/style-neon-noir.md "World light" (SPEC): the fourth family,
- * on the Upper Concourse only (#1533). Tallow rather than amber — yellower than
- * the ember, greyer than every faction's warm glow — so a terminus lamp reads as
- * the city's, never as a Bathyarch hull at rest on it.
- */
-export const CIVIC_LAMP = 0xb8875a;
 
 /**
  * The stone ramp, docs/style-neon-noir.md "The stone" (SPEC): ground that

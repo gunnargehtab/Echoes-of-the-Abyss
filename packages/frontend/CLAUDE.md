@@ -64,6 +64,13 @@ overlay fades by the same column: the one tactical draw High changes, by the own
 The crater's ground also runs on past the map's edge there (`outerGround.ts`): one more
 lit draw of the world pass, the edge's own ground read on, with no cell under it.
 
+A world-light family's token is the active palette's (`palette.ts` `WORLD_LIGHT`, #1854),
+at both qualities, and nothing copies one into a constant. The ember cloud reads it on its
+5 Hz bucket, the steam and the smoke on a tick, and the view stands High's pools again when
+the palette changes. A prop's file holds the standard token, so the layer lays the palette's
+on its licensed emissive as it stands and again on that change (`environmentLayer.ts`
+`wearWorldLight`).
+
 ## Tests run under a Vite shim
 
 Two Vite idioms are build-time transforms, not runtime APIs: `import url from

@@ -16,7 +16,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { Group, MeshStandardMaterial, type Material } from 'three';
+import { Color, Group, MeshStandardMaterial, type Material } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { paintGround, PUBLIC_LANDMARKS, SIM, SORROWGATE_GROUND } from '@echoes/shared';
 import { PUBLIC_LANDMARK_SPECS, standLandmarks } from '../src/game/environment.ts';
@@ -26,6 +26,7 @@ import {
   primeLandmarkTemplate,
   resetLandmarkModels,
   siftSites,
+  wearCivicLamp,
 } from '../src/game/landmarkModels.ts';
 import {
   DIP_WINDOW_BUCKETS,
@@ -39,8 +40,10 @@ import {
   LAMP_DIP,
   LAMP_INDEX_ATTRIBUTE,
   lampLevels,
+  POOL_LEVEL,
   POOL_RADIUS_M,
 } from '../src/game/landmarkLight.ts';
+import { PALETTES } from '../src/game/palette.ts';
 import {
   CLOUD_MOTE_CAP,
   CLOUD_OUT_M,
@@ -188,6 +191,38 @@ describe('the template’s light and motion', () => {
         `${material.name} under the standard look`
       );
     }
+  });
+
+  it('wears a civic-lamp token on its glass and its pools together (#1854)', async () => {
+    // style-neon-noir.md "Rule 5 in the colour-vision palettes": the lamp is
+    // a palette's own, though no palette moves it yet. The file's glass holds
+    // the standard token, and the stone under it takes that hue at POOL_LEVEL.
+    const template = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate');
+    const glass = template.states.intact.parts
+      .map((part) => part.material)
+      .filter((m): m is MeshStandardMaterial => m instanceof MeshStandardMaterial)
+      .filter((m) => m.emissive.getHex() !== 0);
+    assert.deepEqual(
+      glass.map((m) => m.name),
+      ['civic_lamp']
+    );
+    const civic = PALETTES.standard.worldLight.civic;
+    assert.equal(glass[0]!.emissive.getHex(), civic);
+    const pool = () => Array.from(template.uniforms!.uPoolColor.value);
+    const expected = (token: number) =>
+      new Color(token).multiplyScalar(POOL_LEVEL).toArray() as number[];
+    const same = (got: number[], want: number[]) =>
+      got.every((c, i) => Math.abs(c - want[i]!) < 1e-6);
+    assert.ok(same(pool(), expected(civic)));
+    const strength = glass[0]!.emissiveIntensity;
+    wearCivicLamp(template, 0x929377);
+    assert.equal(glass[0]!.emissive.getHex(), 0x929377);
+    assert.equal(glass[0]!.emissiveIntensity, strength);
+    assert.ok(same(pool(), expected(0x929377)));
+    // A still template has no pools to lay, and still takes the glass.
+    const still = buildLandmarkTemplate(await parseArch(), SPEC, 'sorrowgate', { still: true });
+    wearCivicLamp(still, 0x929377);
+    assert.equal(still.uniforms, null);
   });
 
   it('weights each hung fitting from its pivot to its free end on its own axis and period', async () => {

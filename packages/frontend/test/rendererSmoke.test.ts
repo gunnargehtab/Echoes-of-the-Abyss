@@ -141,10 +141,18 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { lampHaloStatus } from '../src/game/lampHaloStatus.ts';
 import { graphicsQualityStatus } from '../src/game/graphicsQuality.ts';
 import { AGENT_STIPPLE_LABEL } from '../src/game/faunaAgentStipple.ts';
-import { FACTION_PALETTE, FAUNA_COLOR, TIER_STYLE, UI } from '../src/game/palette.ts';
+import {
+  FACTION_PALETTE,
+  FAUNA_COLOR,
+  PALETTES,
+  setActivePalette,
+  TIER_STYLE,
+  UI,
+} from '../src/game/palette.ts';
 import { RING_FAR_ALPHA, RING_NEAR_ALPHA } from '../src/game/scopeSweep.ts';
 import {
   BufferAttribute,
+  Color,
   FogExp2,
   Mesh,
   MeshBasicMaterial,
@@ -2347,6 +2355,78 @@ describe('renderer smoke test: the conn view', () => {
       } finally {
         world.teardown();
       }
+    }
+  });
+
+  it('lays a palette changed mid-match on the ember cloud and on High’s own lights (#1854)', async () => {
+    // docs/style-neon-noir.md "Rule 5 in the colour-vision palettes": a
+    // family's token is the active palette's. The ember cloud reads it on its
+    // 5 Hz bucket, and High's volumes hold it in their instances, so the view
+    // stands them again. The canned ground stands vent embers and nothing
+    // else that is lit, so every source here is `vent-ember`.
+    type Probes = {
+      __perspectiveProbe: () => Record<string, unknown>;
+      __perspectiveQuality?: (quality: 'low' | 'high') => string;
+    };
+    const world = await boot();
+    const drawn = (find: (object: Object3D) => boolean) =>
+      world.gl.frameDraws.flatMap((pass) => [...pass]).find(find);
+    // A token's green and blue against its red, which no level or power moves.
+    const hue = (r: number, g: number, b: number) => [g / r, b / r];
+    const hueOf = (token: number) => {
+      const c = new Color(token);
+      return hue(c.r, c.g, c.b);
+    };
+    const same = (got: number[], want: number[], what: string) =>
+      got.forEach((v, i) =>
+        assert.ok(Math.abs(v - want[i]!) < 1e-4, `${what}: ${got} for ${want}`)
+      );
+    const emberHue = () => {
+      const cloud = drawn((object) => object.name === 'vent_embers') as Points | undefined;
+      assert.ok(cloud, 'the ember cloud is drawn');
+      const colors = cloud.geometry.getAttribute('color');
+      // The brightest ember of this bucket: one at the foot of its flicker is black.
+      let lit = 0;
+      for (let i = 1; i < colors.count; i++) if (colors.getX(i) > colors.getX(lit)) lit = i;
+      assert.ok(colors.getX(lit) > 0, 'an ember is lit');
+      return hue(colors.getX(lit), colors.getY(lit), colors.getZ(lit));
+    };
+    const volumeHue = () => {
+      const volumes = drawn(
+        (object) => (object as Mesh).geometry?.getAttribute('aColour') !== undefined
+      ) as Mesh | undefined;
+      assert.ok(volumes, 'the world’s own lights scatter');
+      const colour = volumes.geometry.getAttribute('aColour');
+      return hue(colour.getX(0), colour.getY(0), colour.getZ(0));
+    };
+    const { standard, deuteranopia } = PALETTES;
+    assert.notEqual(deuteranopia.worldLight.vent, standard.worldLight.vent);
+    try {
+      const probes = (globalThis as unknown as { window: Probes }).window;
+      world.frame(3);
+      same(emberHue(), hueOf(standard.worldLight.vent), 'Low, standard');
+      world.chart.setPalette('deuteranopia');
+      world.frame(2);
+      same(emberHue(), hueOf(deuteranopia.worldLight.vent), 'Low, changed mid-match');
+
+      assert.equal(probes.__perspectiveQuality!('high'), 'high');
+      world.frame(3);
+      const lights = (probes.__perspectiveProbe().graphicsQuality as { worldLights: number })
+        .worldLights;
+      assert.ok(lights > 0);
+      same(volumeHue(), hueOf(deuteranopia.worldLight.vent), 'High, stood under the palette');
+      world.chart.setPalette('standard');
+      world.frame(2);
+      same(volumeHue(), hueOf(standard.worldLight.vent), 'High, changed mid-match');
+      same(emberHue(), hueOf(standard.worldLight.vent), 'and its ember cloud');
+      assert.equal(
+        (probes.__perspectiveProbe().graphicsQuality as { worldLights: number }).worldLights,
+        lights,
+        'the same lights, stood again'
+      );
+    } finally {
+      setActivePalette('standard');
+      world.teardown();
     }
   });
 

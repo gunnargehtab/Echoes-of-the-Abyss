@@ -36,7 +36,7 @@ import {
 } from 'three';
 import { SIM } from '@echoes/shared';
 import { propSpec, type PropPlacement } from './environment.ts';
-import { VENT_EMBER } from './palette.ts';
+import { WORLD_LIGHT } from './palette.ts';
 import { installDisplayVeil, VEIL_SHADE_ATTRIBUTE } from './veilShading.ts';
 
 /**
@@ -65,7 +65,7 @@ const BUCKET_MS = 1000 / SIM.ECHO_HZ;
  */
 const PLUME_HOLD_S = 3.1;
 
-const EMBER = new Color(VENT_EMBER);
+const EMBER = new Color();
 
 /** One chimney's mouth, in the layer's own space: where its steam leaves. */
 export interface PlumeSite {
@@ -116,6 +116,8 @@ export class VentPlume {
   };
   private sites: readonly PlumeSite[] = [];
   private reducedMotion = false;
+  /** The `vent-ember` token the standing puffs were coloured in (palette.ts `WORLD_LIGHT`). */
+  private token = WORLD_LIGHT.vent;
 
   constructor() {
     this.material = new PointsMaterial({
@@ -211,19 +213,23 @@ diffuseColor.a *= 1.0 - plumeR * plumeR;`
     this.points.geometry = geometry;
     geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
     geometry.setAttribute('aPlume', new Float32BufferAttribute(plume, 2));
-    const color = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      color[i * 3] = EMBER.r * VENT_PLUME_LEVEL;
-      color[i * 3 + 1] = EMBER.g * VENT_PLUME_LEVEL;
-      color[i * 3 + 2] = EMBER.b * VENT_PLUME_LEVEL;
-    }
-    geometry.setAttribute('color', new Float32BufferAttribute(color, 3));
+    geometry.setAttribute('color', new Float32BufferAttribute(new Float32Array(n * 3), 3));
+    this.colour();
     geometry.setAttribute(
       VEIL_SHADE_ATTRIBUTE,
       new Float32BufferAttribute(new Float32Array(n * 3).fill(1), 3)
     );
     this.setShade(shade);
     this.points.visible = n > 0;
+  }
+
+  /** Every puff in the active palette's `vent-ember`, at the plume's level. */
+  private colour(): void {
+    this.token = WORLD_LIGHT.vent;
+    EMBER.setHex(this.token).multiplyScalar(VENT_PLUME_LEVEL);
+    const colors = this.points.geometry.getAttribute('color') as Float32BufferAttribute;
+    for (let i = 0; i < colors.count; i++) colors.setXYZ(i, EMBER.r, EMBER.g, EMBER.b);
+    colors.needsUpdate = true;
   }
 
   /**
@@ -251,9 +257,12 @@ diffuseColor.a *= 1.0 - plumeR * plumeR;`
 
   /**
    * Per frame: the clock, stepped to the sonar bucket, and how far the water
-   * reaches. Two uniform writes, and nothing else.
+   * reaches. Two uniform writes, and the puffs' colour again only on the
+   * frame the palette changed (docs/style-neon-noir.md "Rule 5 in the
+   * colour-vision palettes").
    */
   tick(nowMs: number, reachM?: number): void {
+    if (this.token !== WORLD_LIGHT.vent) this.colour();
     this.uniforms.uPlumeTime.value = this.reducedMotion
       ? PLUME_HOLD_S
       : (Math.floor(nowMs / BUCKET_MS) * BUCKET_MS) / 1000;
