@@ -40,7 +40,9 @@ import {
   Faction,
   RefitKind,
   refitOfferedTo,
+  CRYSTAL,
   HULL_EFFECTS,
+  ORDNANCE,
   MAX_UNIT_RADIUS_M,
   OPENING_ESCORT,
   PRODUCIBLE,
@@ -874,5 +876,124 @@ describe('the carriers — a deck, and what it may launch (#838)', () => {
       assert.ok(c.hullLengthM < statsFor(c.launchedFrom!).hullLengthM / 4, c.name);
       assert.ok(c.maxHp < corvette.maxHp / 2, `${c.name} is not expendable`);
     }
+  });
+});
+
+/**
+ * docs/units.md, "The role line": one plain line per hull, read on the hint
+ * bar after the name and the price (docs/ui-ux.md §9, #1886). The table is
+ * the source and `UnitStats.role` the copy, so every hull is held to its row
+ * and every row to a hull. A line in a player's hand carries no Markdown and
+ * no `§` (docs/CLAUDE.md), which the doc's own table could otherwise leak.
+ */
+describe('every hull carries the role line docs/units.md writes for it', () => {
+  const doc = readFileSync(new URL('../../../docs/units.md', import.meta.url), 'utf8');
+  const section = doc.split('\nThe role line — what a newcomer reads on the card\n')[1];
+  assert.ok(section !== undefined, 'docs/units.md has no "The role line" section');
+  const rows = new Map<string, string>();
+  for (const [, hull, line] of section
+    .split('\nDesign notes\n')[0]
+    .matchAll(/^\| ([^|]+?) \| ([^|]+?) \|$/gm)) {
+    if (hull === 'Hull' || hull === '---') continue;
+    rows.set(hull, line);
+  }
+
+  it('has a row for every hull and a hull for every row', () => {
+    assert.deepEqual(
+      [...rows.keys()].sort(),
+      roster.map((stats) => stats.name).sort(),
+      'the table and the roster name different hulls'
+    );
+  });
+
+  for (const stats of roster) {
+    it(`${stats.name} reads its row, in plain text`, () => {
+      assert.equal(stats.role, rows.get(stats.name));
+      assert.doesNotMatch(stats.role, /[*_`§[\]]|#\d/, 'a role line carries Markdown or a §');
+      assert.match(stats.role, /\.$/, 'a role line is a sentence, ended');
+    });
+  }
+});
+
+/**
+ * The figures in a role line are a second copy of constants (root CLAUDE.md,
+ * "Constants live in exactly one place"), and the doc's promise that "a block
+ * that moves takes its line with it" is only kept if a moved constant fails a
+ * gate. So each hull's line names, here, the constant behind every number it
+ * prints, in the order printed: a SPEC change that edits the constant and not
+ * the row turns this red rather than leaving a false sentence on the card.
+ * A hull absent from the table prints no number at all.
+ */
+describe('every number a role line prints is the constant it quotes', () => {
+  const S = (kind: UnitKind) => UNIT_STATS[kind];
+  const E = HULL_EFFECTS;
+  const flight = (kind: UnitKind): number => S(kind).flight?.capacity ?? Number.NaN;
+  const QUOTES: Partial<Record<UnitKind, number[]>> = {
+    [UnitKind.Corvette]: [S(UnitKind.Corvette).attackRangeM],
+    [UnitKind.Cruiser]: [S(UnitKind.Cruiser).attackRangeM],
+    [UnitKind.AbyssalSubmersible]: [S(UnitKind.AbyssalSubmersible).pressureRating],
+    [UnitKind.Clarion]: [S(UnitKind.Clarion).attackRangeM],
+    [UnitKind.Tender]: [E.TENDER.RADIUS_M, E.TENDER.REPAIR_HP_PER_S],
+    [UnitKind.Bulwark]: [S(UnitKind.Bulwark).attackRangeM],
+    [UnitKind.Spinner]: [S(UnitKind.Spinner).mineMagazine ?? Number.NaN],
+    [UnitKind.Sower]: [E.SOWER.STATIONARY_S, E.SOWER.RADIUS_M, E.SOWER.PR_BONUS],
+    [UnitKind.Precentor]: [E.PRECENTOR.RADIUS_M, E.PRECENTOR.HYD_BONUS],
+    [UnitKind.Dredge]: [S(UnitKind.Dredge).pressureRating, CRYSTAL.FIELD_DEPTH_M],
+    [UnitKind.Cantus]: [E.CANTUS.STATIONARY_S, E.CANTUS.RADIUS_M, E.CANTUS.PR_BONUS],
+    [UnitKind.Reciter]: [S(UnitKind.Reciter).attackRangeM],
+    [UnitKind.Freighter]: [S(UnitKind.Freighter).holdBerths ?? Number.NaN],
+    [UnitKind.Drifter]: [S(UnitKind.Drifter).holdBerths ?? Number.NaN],
+    [UnitKind.Verger]: [
+      S(UnitKind.Verger).pressureRating,
+      S(UnitKind.Verger).holdBerths ?? Number.NaN,
+    ],
+    [UnitKind.Antiphon]: [
+      S(UnitKind.Antiphon).holdBerths ?? Number.NaN,
+      E.ANTIPHON.PR_BONUS,
+      E.ANTIPHON.GRANT_S,
+    ],
+    [UnitKind.Beacon]: [S(UnitKind.Beacon).pingCadenceS ?? Number.NaN],
+    [UnitKind.Acolyte]: [S(UnitKind.Acolyte).hydStationary ?? Number.NaN],
+    [UnitKind.Broadside]: [S(UnitKind.Broadside).torpedoMagazine ?? Number.NaN],
+    [UnitKind.Weaver]: [
+      ORDNANCE.LAID_DECOY.MAGAZINE,
+      ORDNANCE.LAID_DECOY.SIG,
+      ORDNANCE.LAID_DECOY.LIFETIME_S,
+    ],
+    [UnitKind.Thurible]: [S(UnitKind.Thurible).pressureRating],
+    [UnitKind.Lance]: [S(UnitKind.Lance).torpedoMagazine ?? Number.NaN],
+    [UnitKind.Furnace]: [S(UnitKind.Furnace).attackRangeM],
+    [UnitKind.Blight]: [E.BLIGHT.RANGE_M],
+    [UnitKind.Lure]: [E.LURE.SONG_S, E.LURE.RADIUS_M],
+    [UnitKind.Tocsin]: [S(UnitKind.Tocsin).attackRangeM],
+    [UnitKind.Reed]: [S(UnitKind.Reed).attackRangeM],
+    [UnitKind.Bower]: [E.BOWER.STATIONARY_S, E.BOWER.VEIL_RADIUS_M],
+    [UnitKind.Derrick]: [S(UnitKind.Derrick).attackRangeM],
+    [UnitKind.Responsory]: [
+      S(UnitKind.Responsory).loudTargetDamageMultiplier ?? Number.NaN,
+      S(UnitKind.Responsory).loudTargetSigThreshold ?? Number.NaN,
+    ],
+    [UnitKind.Gantry]: [flight(UnitKind.Gantry)],
+    [UnitKind.Rootstock]: [flight(UnitKind.Rootstock)],
+    [UnitKind.Succentor]: [S(UnitKind.Succentor).pressureRating, flight(UnitKind.Succentor)],
+    [UnitKind.Offertory]: [flight(UnitKind.Offertory)],
+    [UnitKind.Treble]: [S(UnitKind.Treble).pressureRating],
+  };
+
+  for (const stats of roster) {
+    it(`${stats.name}'s figures are its constants`, () => {
+      const printed = [...stats.role.matchAll(/\d[\d,]*(?:\.\d+)?/g)].map((m) =>
+        Number(m[0].replace(/,/g, ''))
+      );
+      assert.deepEqual(printed, QUOTES[stats.kind] ?? [], stats.role);
+    });
+  }
+
+  it("the Lure's twice is its multiplier", () => {
+    // The one multiple written as a word: docs/units.md lets a multiple read
+    // as one, since "2× as loud" reads worse. The Tender's "one of your hulls"
+    // is the doc's other exception, a single target, and no constant holds it.
+    assert.match(UNIT_STATS[UnitKind.Lure].role, /twice as loud/);
+    assert.equal(HULL_EFFECTS.LURE.AGGRO_MULTIPLIER, 2);
   });
 });

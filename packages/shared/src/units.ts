@@ -42,6 +42,15 @@ export interface FlightDeck {
 export interface UnitStats {
   kind: UnitKind;
   name: string;
+  /**
+   * What the hull does, in plain words: the hint line reads it after the name
+   * and the price while the pointer rests on the hull's cell (docs/ui-ux.md §9).
+   * Copied from docs/units.md, "The role line", and held to it by
+   * `units.test.ts`. The doc's own `Role:` entries are arguments for why a hull
+   * exists — *The lie*, *The song* — and a newcomer reading `WVR 150` needed
+   * what it is for (#1886). Its figures are the stat block's, never its own.
+   */
+  role: string;
   /** Acoustic signature when powered but stationary. */
   sigIdle: number;
   /** Acoustic signature at cruise speed. */
@@ -317,6 +326,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.LightScout]: {
     kind: UnitKind.LightScout,
     name: 'Light Scout',
+    role: 'Fast, quiet scout with a light gun.',
     sigIdle: 6,
     sigCruise: 12,
     sigFiringBurst: 15,
@@ -341,6 +351,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Corvette]: {
     kind: UnitKind.Corvette,
     name: 'Corvette',
+    role: 'Line warship: a 550 m gun and torpedoes.',
     sigIdle: 28,
     sigCruise: 28,
     sigFiringBurst: 25,
@@ -364,6 +375,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Cruiser]: {
     kind: UnitKind.Cruiser,
     name: 'Cruiser',
+    role: 'Slow, tough warship: a 900 m gun and torpedoes.',
     sigIdle: 55,
     sigCruise: 65,
     sigFiringBurst: 30,
@@ -385,6 +397,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.AbyssalSubmersible]: {
     kind: UnitKind.AbyssalSubmersible,
     name: 'Abyssal Submersible',
+    role: 'Deep warship: PR 3, with a gun and torpedoes.',
     sigIdle: 22,
     sigCruise: 28,
     sigFiringBurst: 20,
@@ -406,6 +419,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Chorister]: {
     kind: UnitKind.Chorister,
     name: 'Chorister',
+    role: 'Cheap hull, built in numbers to picket and screen.',
     // The floor of the 16-35 band every Directorate hull sits in
     // (docs/habitats-art-brief.md): grown chitin has no engine to speak of.
     // Quiet alone and loud in company — four idling in one Drift cell sum
@@ -456,6 +470,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Clarion]: {
     kind: UnitKind.Clarion,
     name: 'Clarion',
+    role: 'Line warship: a 700 m gun and torpedoes, loudest ahead.',
     /**
      * SPEC — docs/systems-echo.md §8's balance clause, solved rather than
      * chosen. The listed figure is the hull's loudness *in the cone*; over the
@@ -523,6 +538,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Harvester]: {
     kind: UnitKind.Harvester,
     name: 'Harvester',
+    role: 'Gathers resources and carries them to a Refinery or your Bastion.',
     sigIdle: 18,
     // Mining is loud: economy is a noise source by design.
     sigCruise: 40,
@@ -567,6 +583,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Tender]: {
     kind: UnitKind.Tender,
     name: 'Tender',
+    role: 'Repairs one of your hulls within 300 m at 15 HP/s.',
     /**
      * SPEC — docs/units.md, Tender: "48 / 55 / — (no weapon). +12 while
      * working". A floating workshop is pumps, welding and hull plate, and a
@@ -601,6 +618,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Bulwark]: {
     kind: UnitKind.Bulwark,
     name: 'Bulwark',
+    role: 'Very tough, slow warship: an 800 m gun to hold a line.',
     /**
      * SPEC — docs/units.md, Bulwark: "70 / 75 / +30 — the loudest hull in the
      * game, and the Klaxon is never off it": +12% damage while SIG > 60 is a
@@ -649,6 +667,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Spinner]: {
     kind: UnitKind.Spinner,
     name: 'Spinner',
+    role: 'Carries 4 mines and lays them silently.',
     /**
      * SPEC — docs/units.md, Spinner: "8 / 14 / — no weapon; a Spinner is
      * quieter running than a Light Scout idling". Laying is silent too: the
@@ -680,6 +699,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Sower]: {
     kind: UnitKind.Sower,
     name: 'Sower',
+    role: 'After 20 s stopped, gives your hulls within 400 m +1 PR.',
     /**
      * SPEC — docs/units.md, Sower: "20 / 26 / — (no weapon). 45 while
      * seeding" — the bloom is a chemical roar, and a Commune force that has
@@ -726,6 +746,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Precentor]: {
     kind: UnitKind.Precentor,
     name: 'Precentor',
+    role: 'Gives your hulls within 500 m +10 HYD, so they hear further.',
     // SPEC — docs/units.md, Precentor: "12 / 18 / — (no weapon)".
     sigIdle: 12,
     sigCruise: 18,
@@ -760,6 +781,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Dredge]: {
     kind: UnitKind.Dredge,
     name: 'Dredge',
+    role: 'PR 4 warship: survives at the crystal field, 2,400 m down.',
     /**
      * SPEC — docs/units.md, Dredge: "40 / 52 / +25 — loud for a Directorate
      * hull, on purpose: a Dredge at the field is the tell that the field is
@@ -800,6 +822,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Cantus]: {
     kind: UnitKind.Cantus,
     name: 'Cantus',
+    role: 'After 10 s stopped, gives your hulls within 300 m +1 PR, and is loud while it does.',
     /**
      * SPEC — docs/units.md, Cantus: "10 / 10 / — moving; 80 while singing —
      * the Spire's figure, for the Spire's reason: rented depth is never
@@ -839,6 +862,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Reciter]: {
     kind: UnitKind.Reciter,
     name: 'Reciter',
+    role: 'Fragile 1,000 m gun, very loud toward what it faces.',
     /**
      * SPEC — docs/units.md, Reciter: "90 / 90 / +10 — cone figures, like the
      * Clarion's: 90 ahead, 31.5 on the beam, 9 astern, 40.5 over the compass".
@@ -893,6 +917,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Freighter]: {
     kind: UnitKind.Freighter,
     name: 'Freighter',
+    role: 'Tough, loud transport that carries 6 berths of hulls.',
     /**
      * SPEC — docs/units.md, Freighter: "30 / 50 / — (no weapon), empty; 48 /
      * 68 full". A loaded Freighter under way is louder than a Cruiser under
@@ -928,6 +953,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Drifter]: {
     kind: UnitKind.Drifter,
     name: 'Drifter',
+    role: 'Quiet, fast transport that carries 2 berths of hulls.',
     /**
      * SPEC — docs/units.md, Drifter: "4 / 10 / — (no weapon), empty; 10 / 16
      * full". A full Drifter at cruise is a Light Scout at idle.
@@ -961,6 +987,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Verger]: {
     kind: UnitKind.Verger,
     name: 'Verger',
+    role: 'PR 3 transport that carries 4 berths of hulls deep.',
     /** SPEC — docs/units.md, Verger: "14 / 26 / — (no weapon), empty; 26 / 38 full". */
     sigIdle: 14,
     sigCruise: 26,
@@ -995,6 +1022,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Antiphon]: {
     kind: UnitKind.Antiphon,
     name: 'Antiphon',
+    role: 'Transport for 3 berths; hulls it lands get +1 PR for 20 s.',
     /**
      * SPEC — docs/units.md, Antiphon: "12 / 35 / — (no weapon), empty; 21 /
      * 44 full — and the figures are cone figures, as every Order hull's are".
@@ -1038,6 +1066,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Beacon]: {
     kind: UnitKind.Beacon,
     name: 'Beacon',
+    role: 'Pings active sonar every 20 s by itself. Loud.',
     // SPEC — docs/units.md, Beacon: "30 / 42 / — (no weapon)". Loud at rest
     // for a scout, which is the Klaxon's whole account of scouting: this hull
     // was never going to sneak.
@@ -1076,6 +1105,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Glider]: {
     kind: UnitKind.Glider,
     name: 'Glider',
+    role: 'Fast scout that can coast with its engine off, near silent.',
     // SPEC — docs/units.md, Glider: "8 / 16 / — (no weapon)". The figures that
     // matter are not these: with the drive cut it sits at 1.8, half its Silent
     // Running figure, and it is the only hull that is still moving there.
@@ -1116,6 +1146,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Acolyte]: {
     kind: UnitKind.Acolyte,
     name: 'Acolyte',
+    role: 'Listening hull that hears best while stopped: HYD 85.',
     // SPEC — docs/units.md, Acolyte: "10 / 20 / — (no weapon)".
     sigIdle: 10,
     sigCruise: 20,
@@ -1151,6 +1182,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Herald]: {
     kind: UnitKind.Herald,
     name: 'Herald',
+    role: 'Fast scout: quiet moving away, loud toward what it faces.',
     // SPEC — docs/units.md, Herald: "14 / 45 / — (no weapon)". The cruise
     // figure is the loudest of the four scouts and means the least: it is a
     // cone figure, and the Order emits it forward (docs/systems-echo.md §8).
@@ -1190,6 +1222,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Broadside]: {
     kind: UnitKind.Broadside,
     name: 'Broadside',
+    role: 'No gun: 4 torpedoes, then rearm at a Bastion or Foundry.',
     // SPEC — docs/units.md, Broadside: "42 / 58 / — (no gun)". The burst that
     // matters is not here: four launches at ORDNANCE.TORPEDO.LAUNCH_SIG apiece,
     // on a hull already in the sixties.
@@ -1223,6 +1256,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Weaver]: {
     kind: UnitKind.Weaver,
     name: 'Weaver',
+    role: 'Lays 3 decoys that sound like a hull at SIG 45 for 25 s.',
     // SPEC — docs/units.md, Weaver: "12 / 22 / — (no weapon)". The hull is
     // quiet and the things it leaves behind are not, which is the whole trick.
     sigIdle: 12,
@@ -1255,6 +1289,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Thurible]: {
     kind: UnitKind.Thurible,
     name: 'Thurible',
+    role: 'PR 3 hull whose depth charges burst above it, at hulls overhead.',
     // SPEC — docs/units.md, Thurible: "16 / 28 / 85 firing". The firing figure
     // is the charge's own detonation, heard a band away.
     sigIdle: 16,
@@ -1291,6 +1326,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Lance]: {
     kind: UnitKind.Lance,
     name: 'Lance',
+    role: '1 torpedo, fired only at what the hull is facing.',
     // SPEC — docs/units.md, Lance: "20 / 50 / —", and the figures are cone
     // figures like every Order hull's (docs/systems-echo.md §8): 50 ahead, 17.5
     // on the beam, 5 astern. The hull is loudest exactly where it can shoot.
@@ -1332,6 +1368,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Furnace]: {
     kind: UnitKind.Furnace,
     name: 'Furnace',
+    role: 'Siege hull: cuts structures at 320 m; weak against hulls.',
     // SPEC — docs/units.md, Furnace: "40 / 55 / 75 cutting".
     sigIdle: 40,
     sigCruise: 55,
@@ -1383,6 +1420,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Blight]: {
     kind: UnitKind.Blight,
     name: 'Blight',
+    role: 'Siege hull: silently rots a structure from 350 m.',
     // SPEC — docs/units.md, Blight: "10 / 20 / — (no weapon)". The hull is
     // quiet and what it leaves behind makes no sound at all.
     sigIdle: 10,
@@ -1417,6 +1455,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Lure]: {
     kind: UnitKind.Lure,
     name: 'Lure',
+    role: 'Siege hull: for 60 s, fauna hear all within 500 m twice as loud.',
     // SPEC — docs/units.md, Lure: "14 / 24 / 55 singing".
     sigIdle: 14,
     sigCruise: 24,
@@ -1445,6 +1484,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Tocsin]: {
     kind: UnitKind.Tocsin,
     name: 'Tocsin',
+    role: 'Siege gun with 1,400 m reach; fires only when stopped.',
     // SPEC — docs/units.md, Tocsin: "22 / 55 / 88 firing", and the hull
     // figures are cone figures like every Order hull's.
     sigIdle: 22,
@@ -1482,6 +1522,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Caisson]: {
     kind: UnitKind.Caisson,
     name: 'Caisson',
+    role: 'Tough line warship, as loud stopped as moving.',
     /**
      * SPEC — docs/units.md, Caisson: "64 / 64 / +25 — flat, like the
      * Corvette's, because there is nothing aboard to throttle."
@@ -1522,6 +1563,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Reed]: {
     kind: UnitKind.Reed,
     name: 'Reed',
+    role: 'Fast, quiet line warship with a 420 m gun.',
     /**
      * SPEC — docs/units.md, Reed: "12 / 20 / +25 — 20 at 100 m/s against the
      * Corvette's 28 at 85", which is the Veil's argument written out as one
@@ -1564,6 +1606,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Bower]: {
     kind: UnitKind.Bower,
     name: 'Bower',
+    role: 'After 30 s stopped, grows a 175 m cloud that hides and deafens all inside.',
     /**
      * SPEC — docs/units.md, Bower: "10 / 16 / — , and 45 while it is grown
      * out". The working figure is the Sower's, because a bloom is a bloom —
@@ -1603,6 +1646,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Derrick]: {
     kind: UnitKind.Derrick,
     name: 'Derrick',
+    role: 'Heavy 700 m gun that fires at the loudest enemy it hears.',
     /**
      * SPEC — docs/units.md, "The mid-tier". Under the Klaxon's line at rest
      * and over it the moment the drive turns, which is the figure that is a
@@ -1636,6 +1680,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Responsory]: {
     kind: UnitKind.Responsory,
     name: 'Responsory',
+    role: 'Gun that deals 1.5× damage to targets louder than SIG 60.',
     /**
      * SPEC — docs/systems-echo.md §8's balance clause, and cone figures like
      * every Order hull's: 78 ahead, 27.3 on the beam, 7.8 astern, and 35.1
@@ -1678,6 +1723,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Gantry]: {
     kind: UnitKind.Gantry,
     name: 'Gantry',
+    role: 'Carrier: launches 2 loud Spark craft.',
     /**
      * SPEC — docs/units.md, Gantry: "52 / 66, and +35 at every launch". Over
      * the Klaxon's line under way, which is where every Consortium hull that
@@ -1707,6 +1753,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Rootstock]: {
     kind: UnitKind.Rootstock,
     name: 'Rootstock',
+    role: 'Carrier: launches 4 near-silent Runner craft.',
     /** SPEC — docs/units.md, Rootstock: "8 / 16, and +35 at every launch". */
     sigIdle: 8,
     sigCruise: 16,
@@ -1730,6 +1777,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Succentor]: {
     kind: UnitKind.Succentor,
     name: 'Succentor',
+    role: 'PR 4 carrier: launches 5 Treble craft in deep water.',
     /** SPEC — docs/units.md, Succentor: "20 / 30, and +35 at every launch". */
     sigIdle: 20,
     sigCruise: 30,
@@ -1761,6 +1809,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Offertory]: {
     kind: UnitKind.Offertory,
     name: 'Offertory',
+    role: 'Carrier: launches 2 Versicle craft toward what it faces.',
     /**
      * SPEC — docs/units.md, Offertory: "18 / 48 cone figures, as every Order
      * entry's are" (docs/systems-echo.md §8).
@@ -1793,6 +1842,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Spark]: {
     kind: UnitKind.Spark,
     name: 'Spark',
+    role: "The Gantry's craft: a loud, short-range gun.",
     /**
      * SPEC — docs/units.md, "The craft": 40 / 62. Over the Klaxon's 60 under
      * way, so a Spark's gun carries the +12% and a Spark is what a seeker
@@ -1823,6 +1873,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Runner]: {
     kind: UnitKind.Runner,
     name: 'Runner',
+    role: "The Rootstock's craft: near silent, with a light gun.",
     /**
      * SPEC — docs/units.md, "The craft": 4 / 9. Under the Glider's floor, and
      * under every threshold in docs/systems-echo.md §3 at the ranges a fight
@@ -1849,6 +1900,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Treble]: {
     kind: UnitKind.Treble,
     name: 'Treble',
+    role: "The Succentor's craft: PR 4, with a light gun.",
     /** SPEC — docs/units.md, "The craft": 8 / 14. */
     sigIdle: 8,
     sigCruise: 14,
@@ -1873,6 +1925,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.Versicle]: {
     kind: UnitKind.Versicle,
     name: 'Versicle',
+    role: "The Offertory's craft: tough, with a heavy gun.",
     /** SPEC — docs/units.md, "The craft": 20 / 50, cone figures like every
      * Order entry's (docs/systems-echo.md §8). */
     sigIdle: 20,

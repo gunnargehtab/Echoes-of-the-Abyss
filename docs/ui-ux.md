@@ -849,7 +849,12 @@ rather than going quiet.
 and a price — `SUB 260+80c`, `BAF 600+120c` — and a newcomer met those with nothing saying what
 they built or what the `c` was (#1589). So the hint line, while the pointer is on a priced cell
 of the production pages or the build page, reads its whole name and the price in words:
-*Baffle Barge — 600 nodules, 120 crystal*. A refusal still takes the line first, for the four
+*Baffle Barge — 600 nodules, 120 crystal*. A hull's cell adds what the hull does, as a clause
+of its own after the price: *Weaver — 150 nodules  ·  Lays 3 decoys that sound like a hull at
+SIG 45 for 25 s.* The code and the name said what to call a hull and not what it is for (#1886),
+so the line is the hull's role line from [units.md](units.md), "The role line", in plain words.
+It is the last clause because the price is the one a press is refused on: a narrow window drops
+the role and keeps the price. A refusal still takes the line first, for the four
 seconds §7 gives it. Hover rather than a key, because the card is the mouse's route (§2) and the
 hand on it is the one asking.
 
