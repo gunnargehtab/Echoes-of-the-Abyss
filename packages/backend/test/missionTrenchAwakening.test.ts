@@ -428,9 +428,13 @@ describe('the ground the row stands on — §11, drawn in shapes (#1155)', () =>
     }
   });
 
-  it('names no region and no marker, so no predicate reads a cell', () => {
+  it('names no region, so no predicate reads a cell, and marks the two walls', () => {
     assert.deepEqual(ATTENDING_TRENCH_AWAKENING.regions, [], '§13: no predicate names a region');
-    assert.deepEqual(ATTENDING_TRENCH_AWAKENING.markers ?? [], []);
+    // §8 (#1886): a marker is a place the chart names, never a rule.
+    assert.deepEqual(
+      ATTENDING_TRENCH_AWAKENING.markers.map((marker) => marker.id),
+      ['west-overhang', 'east-overhang']
+    );
   });
 
   it('admits differently only on the 12 cells §11 names, between 2,150 and 2,400 m', () => {
@@ -1239,7 +1243,7 @@ describe('the objective, as docs/mission-trench-awakening.md §8 chooses it', ()
     );
     for (const row of terminal) {
       assert.notEqual(row.keystone, true, '§8: neither terminal objective is a keystone');
-      assert.equal(row.revealAtTick, undefined, '§8: no reveal ticks and no markers');
+      assert.equal(row.revealAtTick, undefined, '§8: no reveal ticks');
     }
     assert.deepEqual(objective('the-band').predicate, {
       kind: 'deliver',
@@ -1252,7 +1256,10 @@ describe('the objective, as docs/mission-trench-awakening.md §8 chooses it', ()
       count: 6,
     });
     assert.deepEqual(ATTENDING_TRENCH_AWAKENING.regions, [], '§13: no predicate names a rectangle');
-    assert.deepEqual(ATTENDING_TRENCH_AWAKENING.markers, []);
+    // §8 (#1886): the band's row names both walls; the muster names none.
+    assert.equal(objective('the-band').markerId, 'west-overhang');
+    assert.equal(objective('the-band').viaMarkerId, 'east-overhang');
+    assert.equal(objective('the-row').markerId, undefined);
   });
 
   it('makes the band the called thing, rendered, by arithmetic rather than by fiat', () => {
