@@ -175,7 +175,7 @@ here, so a probe for `.github/pull_request_template.md` finds nothing and proves
   gives the login) **before** the first edit, in every session: the assignee is the only
   claim that exists before a branch does (`.claude/skills/work-issue/SKILL.md` §3; §5 keeps
   the claim *comment* for firings). Unassign if the work stops without a pull request.
-- **Vendored skills are read-only.** Ten of `.claude/skills/` are upstream copies, and
+- **Vendored skills are read-only.** Fourteen of `.claude/skills/` are upstream copies, and
   reformatting one destroys what makes a re-sync cheap: `.claude/VENDORED-SKILLS.md`.
 
 ## The agentic loop

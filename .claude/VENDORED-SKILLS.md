@@ -1,6 +1,6 @@
 # Vendored skills
 
-Ten of the skills in `.claude/skills/` were not written here. They are copies
+Fourteen of the skills in `.claude/skills/` were not written here. They are copies
 of public Agent Skills, taken from the marketplaces indexed by
 [skills.sh](https://skills.sh), and they sit beside this repository's own workflows.
 The authoritative authored/vendor split is in `tools/claude-docs/check.mjs`; the
@@ -9,13 +9,19 @@ art, unit, material, map, world and game design workflows are authored here, not
 ## Why they are copied rather than installed
 
 A skill costs context whether or not it fires: every installed skill's
-`description` is loaded into every session. The PixiJS collection is
+`description` is loaded into every session, unless the skill sets
+`disable-model-invocation: true`. Then only a person typing its name can start it,
+and its description is never loaded; `grill-me` is the one here. The listing is
+also capped, at 1% of the context window, and past the cap Claude Code drops the
+least-used skills' descriptions first
+([skills docs](https://code.claude.com/docs/en/skills)). The PixiJS collection is
 twenty-six skills, and several of its descriptions run to a hundred and fifty
 words of trigger keywords. Installing it as a plugin is all-or-nothing — both
 `pixijs/pixijs-skills` and `addyosmani/web-quality-skills` declare a single
 plugin covering their whole tree — so the only way to take the five that match
 this codebase and leave the other twenty-one is to copy them. #1187 dropped the
-router, so four remain.
+router, so four remain. `mattpocock/skills` is likewise one plugin, of twenty-seven
+skills, and four are copied.
 
 The selection rule was **what the code actually imports**, not what looked
 useful. `packages/frontend` imports exactly five names from `pixi.js`
@@ -24,10 +30,15 @@ off `app.ticker`; its three.js side loads GLBs through `GLTFLoader` and merges
 geometry through `BufferGeometryUtils`, and the tree's `EffectComposer` chain —
 render, bloom and output passes — is the inspect rig, `tools/hull-renders/inspect.html`
 (#947); `tools/hull-renders/scene.html` dropped its own for the game's frame in #1015.
-The vendored set is those surfaces and nothing else. The client's shader
+The library copies are those surfaces and nothing else. The client's shader
 patching, which since #974 includes the glow-after-tone-mapping hook in
 `packages/frontend/src/game/modelLighting.ts`, has no vendored skill; its rules
 are repo-authored, in the `material-design` skill.
+
+The four workflow copies (#1916) import nothing, so no import can select them. They
+were taken for work no skill here covered: finding a bug's cause, cutting agent prose,
+and interviewing the owner about a design. Together they cost 59 description words a
+session, since `grill-me` loads none.
 
 ## What is here
 
@@ -43,6 +54,10 @@ are repo-authored, in the `material-design` skill.
 | `threejs-postprocessing` | `cloudai-x/threejs-skills` | `0e18186` | MIT |
 | `accessibility` | `addyosmani/web-quality-skills` | `afa8da9` | MIT |
 | `colyseus` | `colyseus/skill` | `9e3ce13` | MIT |
+| `diagnosing-bugs` | `mattpocock/skills` | `d653911` | MIT |
+| `writing-for-agents` | `mattpocock/skills` | `d653911` | MIT |
+| `grilling` | `mattpocock/skills` | `d653911` | MIT |
+| `grill-me` | `mattpocock/skills` | `d653911` | MIT |
 
 Licence texts are in `.claude/vendor-licenses/`. `cloudai-x/threejs-skills`
 ships a `LICENSE` file at `0e18186` (added in `9652c10`), so it replaced the README
@@ -108,6 +123,29 @@ Why each one earns its context:
   installed here, and its examples import from it;
   `packages/backend/CLAUDE.md`'s Colyseus notes give the local names, plus the
   decorator flag the skill does not cover.
+- **diagnosing-bugs** is the debugging method no skill here had: `run-game` reproduces
+  a gameplay bug and `dev-loop` builds toward a target, but nothing said how to find a
+  cause. Its first phase is one command that goes red on the bug before any hypothesis,
+  and this tree already holds the commands it lists: an Echo scenario in
+  `tools/echo-sim/scenarios/` against its committed `.expected.json`, a seeded balance
+  run, `run-game`'s headless drive and `git bisect run`. It reads a root `GLOSSARY.md`
+  where one exists; this repository's is `docs/glossary.md`, which it does not look
+  for. superpowers' `systematic-debugging` was the alternative. It hands off to two
+  sibling skills not vendored here, and its description fires on any failing test, so
+  it would load on every red gate `steward` meets.
+- **writing-for-agents** is the reference for the prose this repository writes about
+  itself, which `tools/claude-docs/check.mjs` holds to lengths and paths but not to
+  what to cut. It names the cuts: one source of truth per meaning, prose that caches a
+  lookup the tree answers, sediment, and sentences the model obeys by default.
+  `.claude/skills/writing-for-agents/SKILL-MECHANICS.md` says when a skill should be
+  user-invoked. It is a reviewer's vocabulary, not a rule over `CLAUDE.md`; it would
+  question the root Commands table, which restates `package.json`.
+- **grilling** and **grill-me** are for a design session with the owner at the
+  keyboard. `grilling` asks in rounds: every question whose prerequisites are settled,
+  numbered, each with a recommended answer, and it sends subagents for facts rather
+  than asking for them. It waits for answers by design, so it belongs to an attended
+  session, and nothing in `work-issue` loads it. It costs 25 words a session;
+  `grill-me` is its `/grill-me` entry point and costs none.
 
 ### The BitmapText argument, measured
 
@@ -298,3 +336,26 @@ Recorded so the next search does not repeat this one.
   reached r187 in #1800, which was the second revisit trigger; both objections
   hold at any version, so #1804 left it out. Revisit with a `.claude/skill-eval/`
   probe on a shader-patch issue.
+- **The six collections #1916 searched**, 209 skills, from which the four
+  `mattpocock/skills` copies above were taken:
+  - `cloudflare/skills` (24) covers Cloudflare's own products, and nothing here runs on them:
+    the playtest goes to one VPS (`.github/workflows/deploy.yml`), the roadmap to Pages.
+  - `Dimillian/Skills` (16): nine are Swift, iOS or macOS. Its review skills repeat the
+    built-in `/code-review` and `/simplify`, and `bug-hunt-swarm` sends up to four
+    subagents after one bug.
+  - `obra/superpowers` (15) is a second loop. `brainstorming` runs before any creative
+    work and asks one question at a time, which stalls an unattended firing; its plan,
+    execute and review skills repeat `dev-loop`, `loop-critic` and `steward`.
+  - `mattpocock/skills`' other 35: `tdd` has the user confirm test seams before any
+    test, `pr` brings its own body template, `domain-modeling` starts a root
+    `GLOSSARY.md` and an ADR folder beside `docs/glossary.md`, and the tracker skills
+    bring labels that `.github/labels.yml`, being exhaustive, would delete.
+  - `anthropics/skills` (20): a cloud session already loads the useful ones, namespaced,
+    as the `anthropic-skills` plugin. `frontend-design` makes the calls
+    `docs/art-direction.md` makes, and `webapp-testing` is a generic `run-game`.
+  - `tech-leads-club/agent-skills` (95) is mostly sales, other clouds, Nx, Rails and
+    Shopify. `harness-eval`'s scripted track is what `tools/claude-docs/check.mjs`
+    does, and its judged tracks are what `.claude/skill-eval/` does per skill. Its
+    `accessibility` is an older copy of the one above, at WCAG 2.1.
+    `security-threat-model` is worth one run from a clone before the playtest deploy
+    is switched on, not 61 words in every session.
