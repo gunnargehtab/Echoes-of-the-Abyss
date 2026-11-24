@@ -5,9 +5,10 @@
  *
  * A test that only asserted "the table has four factions in it" would pass on
  * any four hexes, including four that a deuteranope sees as one. So this file
- * carries a dichromat simulation (Viénot–Brettel–Mollon 1999, the standard
- * LMS-projection model) and a CIE76 ΔE, and every threshold below is a
- * perceptual distance rather than a shape assertion.
+ * carries a dichromat simulation and a CIE76 ΔE, and every threshold below is
+ * a perceptual distance rather than a shape assertion. The simulation is the
+ * standard LMS projection: Viénot, Brettel & Mollon (1999) for the red-green
+ * pair, and Brettel, Viénot & Mollon (1997) for tritanopia.
  *
  * ΔE76 rules of thumb: under 2 is invisible, ~10 is "a shade of the same
  * colour", 25+ is unambiguously a different colour at a glance. The floors here
