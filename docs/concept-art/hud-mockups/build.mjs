@@ -203,7 +203,7 @@ KEEPS
 BREAKS §2 — "the centre 60% is always clear". The ring opens in it.
 
 WHAT THE BREAK BUYS
-Chrome at rest drops from about 22% of the frame to about 11%, and the centre is clear the entire time nobody is giving an order. The argument is that §2 was written against resident chrome, and a ring that exists only while a button is held is a different kind of thing.
+Chrome at rest drops from about 22% of the frame to about 11%, and the centre is clear the entire time nobody is giving an order. Both were measured before the log's rows wrapped as the client's do, which adds about a point to each. The argument is that §2 was written against resident chrome, and a ring that exists only while a button is held is a different kind of thing.
 
 COSTS, HONESTLY
 Eight wedges is the ceiling, so a twelve-cell command set has to nest or shed. A ring cannot hold a production queue, so yards still need somewhere to live. And nothing is visible to learn from until you already know to hold the button.`,
