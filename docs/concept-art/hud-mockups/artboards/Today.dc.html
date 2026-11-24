@@ -37,6 +37,8 @@
     box-shadow: 0 0 10px rgba(255,61,166,0.28), inset 0 0 22px rgba(3,8,14,0.6);
     backdrop-filter: blur(2px);
   }
+  .stack { position: absolute; display: flex; flex-direction: column; gap: 12px; }
+  .stack > .plate { position: relative; }
   .plate.quiet { border-color: rgba(255,61,166,0.22); box-shadow: inset 0 0 22px rgba(3,8,14,0.6); }
   .plate > .tick { position: absolute; width: 7px; height: 7px; pointer-events: none;
     border-color: #ff3da6; opacity: 0.9; }
@@ -293,47 +295,47 @@
   </div><div style="position:absolute;right:10px;top:38px;width:340px;border:1px solid rgba(255,61,166,0.45);border-radius:4px;background:#0d1c28">
     <div style="padding:4px 8px;font-family:'Big Shoulders Display', 'Arial Narrow', 'Helvetica Neue', Impact, sans-serif;font-size:13px;font-weight:600;letter-spacing:0.16em;color:#a8d0e0;border-bottom:1px solid rgba(255,61,166,0.3);text-align:center">CONTACT LOG</div>
     
-      <div class="row" style="gap:8px;height:20px;padding:0 9px;font-size:10px;letter-spacing:0.06em;opacity:0.75;border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
+      <div class="row" style="flex-wrap:wrap;align-items:baseline;column-gap:8px;min-height:20px;padding:3px 9px;font-size:10px;letter-spacing:0.06em;opacity:0.75;border-bottom:1px solid rgba(214,230,240,0.04)">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">T+06:12</span>
         <span style="flex:0 0 6.7em;color:#4a7a8c">HEARD</span>
-        <span style="flex:1 1 auto;color:#d6e6f0;overflow:hidden;text-overflow:ellipsis;text-align:left">contact</span>
-        <span class="dim" style="flex:0 0 auto;text-align:right">bearing unknown</span>
+        <span style="flex:1 1 0;color:#d6e6f0;text-align:left">contact</span>
+        <span class="dim" style="flex:0 1 auto;margin-left:auto;text-align:right"><span style="white-space:nowrap">bearing unknown</span></span>
       </div>
-      <div class="row" style="gap:8px;height:20px;padding:0 9px;font-size:10px;letter-spacing:0.06em;opacity:1;border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
+      <div class="row" style="flex-wrap:wrap;align-items:baseline;column-gap:8px;min-height:20px;padding:3px 9px;font-size:10px;letter-spacing:0.06em;opacity:1;border-bottom:1px solid rgba(214,230,240,0.04)">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">T+06:09</span>
         <span style="flex:0 0 6.7em;color:#c9a6ff">CLASSIFIED</span>
-        <span style="flex:1 1 auto;color:#d6e6f0;overflow:hidden;text-overflow:ellipsis;text-align:left">~3 Hadron Knights</span>
-        <span class="dim" style="flex:0 0 auto;text-align:right">118°  ~2,100m</span>
+        <span style="flex:1 1 0;color:#d6e6f0;text-align:left">~3 Hadron Knights</span>
+        <span class="dim" style="flex:0 1 auto;margin-left:auto;text-align:right"><span style="white-space:nowrap">bearing 118°</span>   <span style="white-space:nowrap">~2,100 m</span></span>
       </div>
-      <div class="row" style="gap:8px;height:20px;padding:0 9px;font-size:10px;letter-spacing:0.06em;opacity:1;border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
+      <div class="row" style="flex-wrap:wrap;align-items:baseline;column-gap:8px;min-height:20px;padding:3px 9px;font-size:10px;letter-spacing:0.06em;opacity:1;border-bottom:1px solid rgba(214,230,240,0.04)">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">T+06:07</span>
         <span style="flex:0 0 6.7em;color:#ff3b30">---</span>
-        <span style="flex:1 1 auto;color:#d6e6f0;overflow:hidden;text-overflow:ellipsis;text-align:left">you were pinged</span>
-        <span class="dim" style="flex:0 0 auto;text-align:right">070°</span>
+        <span style="flex:1 1 0;color:#d6e6f0;text-align:left">you were pinged</span>
+        <span class="dim" style="flex:0 1 auto;margin-left:auto;text-align:right"><span style="white-space:nowrap">bearing 070°</span></span>
       </div>
-      <div class="row" style="gap:8px;height:20px;padding:0 9px;font-size:10px;letter-spacing:0.06em;opacity:1;border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
+      <div class="row" style="flex-wrap:wrap;align-items:baseline;column-gap:8px;min-height:20px;padding:3px 9px;font-size:10px;letter-spacing:0.06em;opacity:1;border-bottom:1px solid rgba(214,230,240,0.04)">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">T+05:58</span>
         <span style="flex:0 0 6.7em;color:#ff6b5b">TRACKED</span>
-        <span style="flex:1 1 auto;color:#d6e6f0;overflow:hidden;text-overflow:ellipsis;text-align:left">Chorister</span>
-        <span class="dim" style="flex:0 0 auto;text-align:right">302°  1,180m</span>
+        <span style="flex:1 1 0;color:#d6e6f0;text-align:left">Chorister</span>
+        <span class="dim" style="flex:0 1 auto;margin-left:auto;text-align:right"><span style="white-space:nowrap">bearing 302°</span>   <span style="white-space:nowrap">~1,200 m</span></span>
       </div>
-      <div class="row" style="gap:8px;height:20px;padding:0 9px;font-size:10px;letter-spacing:0.06em;opacity:0.6;border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
+      <div class="row" style="flex-wrap:wrap;align-items:baseline;column-gap:8px;min-height:20px;padding:3px 9px;font-size:10px;letter-spacing:0.06em;opacity:0.6;border-bottom:1px solid rgba(214,230,240,0.04)">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">T+05:51</span>
         <span style="flex:0 0 6.7em;color:#4a7a8c">MARK</span>
-        <span style="flex:1 1 auto;color:#d6e6f0;overflow:hidden;text-overflow:ellipsis;text-align:left">industrial hum</span>
-        <span class="dim" style="flex:0 0 auto;text-align:right">decaying</span>
+        <span style="flex:1 1 0;color:#d6e6f0;text-align:left">industrial hum</span>
+        <span class="dim" style="flex:0 1 auto;margin-left:auto;text-align:right"><span style="white-space:nowrap">bearing 310°</span>   <span style="white-space:nowrap">decaying</span></span>
       </div>
-      <div class="row" style="gap:8px;height:20px;padding:0 9px;font-size:10px;letter-spacing:0.06em;opacity:0.9;border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
+      <div class="row" style="flex-wrap:wrap;align-items:baseline;column-gap:8px;min-height:20px;padding:3px 9px;font-size:10px;letter-spacing:0.06em;opacity:0.9;border-bottom:1px solid rgba(214,230,240,0.04)">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">T+05:44</span>
         <span style="flex:0 0 6.7em;color:#f2b233">---</span>
-        <span style="flex:1 1 auto;color:#d6e6f0;overflow:hidden;text-overflow:ellipsis;text-align:left">Harvester idle</span>
-        <span class="dim" style="flex:0 0 auto;text-align:right">mined out</span>
+        <span style="flex:1 1 0;color:#d6e6f0;text-align:left">Harvester idle — mined out</span>
+        <span class="dim" style="flex:0 1 auto;margin-left:auto;text-align:right"><span style="white-space:nowrap">bearing 196°</span>   <span style="white-space:nowrap">~600 m</span></span>
       </div>
-      <div class="row" style="gap:8px;height:20px;padding:0 9px;font-size:10px;letter-spacing:0.06em;opacity:0.85;border-bottom:1px solid rgba(214,230,240,0.04);white-space:nowrap">
+      <div class="row" style="flex-wrap:wrap;align-items:baseline;column-gap:8px;min-height:20px;padding:3px 9px;font-size:10px;letter-spacing:0.06em;opacity:0.85;border-bottom:1px solid rgba(214,230,240,0.04)">
         <span class="dim" style="opacity:0.55;flex:0 0 46px">T+05:30</span>
         <span style="flex:0 0 6.7em;color:#6fa8bf">BEARING</span>
-        <span style="flex:1 1 auto;color:#d6e6f0;overflow:hidden;text-overflow:ellipsis;text-align:left">contact</span>
-        <span class="dim" style="flex:0 0 auto;text-align:right">245°  ~1,400m</span>
+        <span style="flex:1 1 0;color:#d6e6f0;text-align:left">contact</span>
+        <span class="dim" style="flex:0 1 auto;margin-left:auto;text-align:right"><span style="white-space:nowrap">bearing 245°</span>   <span style="white-space:nowrap">~1,400 m</span></span>
       </div>
   </div>
   <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:rgba(13,28,40,0.92)">

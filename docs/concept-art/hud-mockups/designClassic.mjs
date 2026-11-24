@@ -39,7 +39,7 @@
 import { ACCENT, FONT, NEON, TEXT, FACTION, GLYPH } from './tokens.mjs';
 import {
   logRows,
-  logHeight,
+  stack,
   objectiveRows,
   objHeight,
   plate,
@@ -284,8 +284,14 @@ function consoleShell(inner) {
 function sideChrome(own = 'bathyarch') {
   return `
   ${depthRibbon({ top: 68, height: 700, plated: true })}
-  ${plate(`right:14px;top:68px;width:352px;height:${logHeight(7)}px;overflow:hidden;`, logRows(7, 10, { own }), { title: 'Contact Log', sub: '4 HEARD' })}
-  ${plate(`right:14px;top:${68 + logHeight(7) + 12}px;width:352px;height:${objHeight(3)}px;overflow:hidden;`, objectiveRows(), { title: 'The Sorrowgate', sub: 'T+06:12' })}`;
+  ${stack(
+    'right:14px;top:68px;width:352px;',
+    plate('', logRows(7, 10, { own }), { title: 'Contact Log', sub: '4 HEARD' }),
+    plate(`height:${objHeight(3)}px;overflow:hidden;`, objectiveRows(), {
+      title: 'The Sorrowgate',
+      sub: 'T+06:12',
+    })
+  )}`;
 }
 
 function hint(text, ink = TEXT.dim) {

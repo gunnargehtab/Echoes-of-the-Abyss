@@ -31,7 +31,7 @@
 import { FONT, NEON, TEXT, FACTION } from './tokens.mjs';
 import {
   logRows,
-  logHeight,
+  stack,
   objectiveRows,
   objHeight,
   plate,
@@ -81,8 +81,14 @@ function topStrip() {
 function sideChrome() {
   return `
   ${depthRibbon({ top: 82, height: 660, plated: true })}
-  ${plate(`right:14px;top:82px;width:352px;height:${logHeight(7)}px;overflow:hidden;`, logRows(7), { title: 'Contact Log', sub: '4 HEARD' })}
-  ${plate(`right:14px;top:${82 + logHeight(7) + 12}px;width:352px;height:${objHeight(3)}px;overflow:hidden;`, objectiveRows(), { title: 'The Sorrowgate', sub: 'T+06:12' })}
+  ${stack(
+    'right:14px;top:82px;width:352px;',
+    plate('', logRows(7), { title: 'Contact Log', sub: '4 HEARD' }),
+    plate(`height:${objHeight(3)}px;overflow:hidden;`, objectiveRows(), {
+      title: 'The Sorrowgate',
+      sub: 'T+06:12',
+    })
+  )}
   ${plate(`left:14px;bottom:${BAR_H + YARD_H + 16}px;width:214px;`, `<div style="padding:6px;line-height:0">${scopeFace(200)}</div>`, { title: 'Scope' })}`;
 }
 
