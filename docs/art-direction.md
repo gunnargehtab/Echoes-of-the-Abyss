@@ -144,7 +144,10 @@ two faults mended by
 [#1844](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1844)) and **an own
 hull's searchlight** ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836))
 are the other three. The numbers of all four are SPEC, each printed by the section that
-owns it. Every later step is not accepted, and its numbers stay TUNABLE in
+owns it. **A manta**
+([#1867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1867)) was accepted
+on 24 November 2026, on the named GPU's Close frame, and its numbers are SPEC too. Every
+later step is not accepted, and its numbers stay TUNABLE in
 `HIGH_GRAPHICS` (`packages/shared/src/constants.ts`) until a frame of it is.*
 
 High draws the one scene as two layers
@@ -657,8 +660,10 @@ does, and nothing Low draws is built, patched or keyed differently.
   Corvette's lamp, at SIG 28, at 165. Light adds, so where a dense school's lights overlap
   the peak is 160, level with the Harvester's lamp at SIG 18. A quiet hull's lamp is
   dimmer than one fry: the Light Scout's, at SIG 6, reads 130. World light is not loudness
-  at High ([What it releases at High](#what-it-releases-at-high)), and whether a school
-  beside a hull muddies gate 3's reading of it is the owner's glance. **A light on every
+  at High ([What it releases at High](#what-it-releases-at-high)). A fry over a quiet
+  hull's lamp is kept as built: the owner read a school beside a hull as clear of gate
+  3's reading of it on 24 November 2026, on the named GPU's Close frame (#1863).
+  **A light on every
   body** would make the ray and the outer fish lamps of their own. A light far enough to
   draw under 1.6 pixels is drawn at 1.6 with its level cut by the area gained, so a far
   school fades instead of sparkling.
@@ -736,7 +741,10 @@ does, and nothing Low draws is built, patched or keyed differently.
   the frame filled instead.
 - **A school stands before a light, to read dark against it**
   ([#1856](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1856);
-  [issue-1856](screenshots/issue-1856/README.md)). *In development, and not accepted.*
+  [issue-1856](screenshots/issue-1856/README.md)). *The owner accepted its look on
+  24 November 2026, on the named GPU's Close frame
+  ([issue-1891](screenshots/issue-1891/README.md#on-the-named-gpu)). Its slot stays
+  TUNABLE with the rest of this section until step 3 is accepted.*
   The target's schools are dark masses against lit water. No model, material or light
   is new to get one. A source's volume stops at what the world pass draws, a body as
   the ground ([What is built at High](#what-is-built-at-high)), so a body before a
@@ -745,8 +753,8 @@ does, and nothing Low draws is built, patched or keyed differently.
   over the floor, as a hull's is
   ([A model in the world's light](#a-model-in-the-worlds-light)). On the software
   frames a body before the vent stand reads at 0.65 of the water behind it, darker than
-  the glow and paler than the target's near black. A silhouette is the aim, and whether
-  this is one is the owner's glance on the named GPU. Three readings were written. **A
+  the glow and paler than the target's near black. A silhouette is the aim, and the
+  owner read it as one on the named GPU. Three readings were written. **A
   third stream, of outer fish, before the vent stand** is taken: a mill of 120 between
   the Close eye and the stand's light ([free-water-slice.md](free-water-slice.md) §5).
   **Move the rim's outer stream there** would change frames #1837 already shows. **Dim
@@ -844,8 +852,9 @@ over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
   the frame, and over every lamp beside it, which read 165, 159 and 130. The first cut
   held a seat under the lamps; that was the author's bar and not a rule. World light is
   not loudness at High, and what tells a lantern from a lamp is its hue and its form.
-  The held frames show no wave, which adds 60% as it passes. Whether five lanterns over
-  the fleet muddy gate 3's reading of a hull is the owner's glance, on the named GPU.
+  The held frames show no wave, which adds 60% as it passes. A lantern at 189 of 255 over
+  every lamp beside it is kept as built: the owner read five lanterns over the fleet as
+  clear of gate 3's reading of a hull on 24 November 2026, on the named GPU (#1863).
 - **It is not the Tetherjelly's figure.** A shallow bell over trailing strands is also
   what a Tetherjelly field's stipple draws ([map-visuals.md](map-visuals.md) §8), and
   [free-water-slice.md](free-water-slice.md) §5 keeps the two apart. Three readings were
@@ -854,8 +863,8 @@ over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
   the target has them** is taken, on the owner's call for the target. What still stands
   between the two: a lantern is a lit skin and not a figure in dots, in its own hue and
   not the fauna colour, a seventh as wide, over eighteen strands and not six, alone and
-  adrift where a field's bells stand. Whether one could be read as a field's bell is the
-  owner's glance.
+  adrift where a field's bells stand. The owner kept the figure as built on 24 November
+  2026 (#1863).
 - **Low draws none of it, and no mark, lamp or halo is touched.** A jelly is not stood
   at Low, and Low's template of its file is the stone it always was. A lantern hangs
   inside the Harvester's ring at Home and the Corvette's at Close, and along every
@@ -1073,16 +1082,18 @@ Where the river runs, its count and its pace are
 
 #### A manta shows its belly
 
-*In development with the rest of High, and not accepted
-([#1867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1867);
-[issue-1867](screenshots/issue-1867/README.md)). Every number is TUNABLE in
-`HIGH_GRAPHICS.LIFE.MANTA` (`packages/shared/src/constants.ts`) until a frame of it is
-accepted. The owner named its target in session on 21 November 2026
-([target-manta.jpg](screenshots/issue-1867/target-manta.jpg)), a manta seen from below,
+*Accepted on 24 November 2026, by the owner in session, on the named GPU's Close frame
+([#1867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1867), #1870;
+[issue-1891](screenshots/issue-1891/README.md#on-the-named-gpu)). Its numbers are SPEC:
+the table at this section's foot and `HIGH_GRAPHICS.LIFE.MANTA`
+(`packages/shared/src/constants.ts`) say the same thing, and
+`packages/frontend/test/highSpec.test.ts` holds them together. The owner named its
+target in session on 21 November 2026 ([target-manta.jpg](screenshots/issue-1867/target-manta.jpg)), a manta seen from below,
 and took three calls before any frame: the photograph is committed, the manta is a new
 model that High alone stands, and it keeps the rim ray's 18 m. Five more were taken in
-the open on the way, and wait on the owner: its belly's register, the light through its
-wings, its smoothed skin, its stroke, and its triangles.*
+the open on the way: its belly's register, the light through its wings, its smoothed
+skin, its stroke, and its triangles. The owner kept all five with the frame, and the
+pale belly on darker water that reverses the target's figure.*
 
 The target's manta is a pale belly over the eye, its gill slits and blotches dark on it
 and its thin margins the palest of it. At High `env-rim-manta` is a body in the world's
@@ -1101,9 +1112,9 @@ things a fish has not. Where it glides is
   **The belly's own albedo, 0.7** is taken: a manta's underside is white, and it is the
   one skin of the crater's life over a vessel's cladding. Its back and its marks keep
   the file's ratio, 0.2 of the belly, so the back stands at 0.14, under a fish's flank.
-  Whether a belly that pale beside a hull muddies gate 3's reading of the hull is the
-  owner's glance: it is paler than a hull's cladding and it is no lamp, with no glow, no
-  halo and no ring. A silver flank at 0.4 was turned down for a fish because it blooms
+  The owner read a belly that pale beside a hull as clear of gate 3's reading of the
+  hull: it is paler than a hull's cladding and it is no lamp, with no glow, no halo and
+  no ring. A silver flank at 0.4 was turned down for a fish because it blooms
   white in a beam. A beam is thrown down off a hull's bow and the manta swims 131 to
   199 m deep, over the hulls' 300 m, so at rest none reaches it. A hull ordered above it
   can put it in one, where a belly at 0.7 takes half the beam, and no frame of that is
@@ -1121,7 +1132,7 @@ things a fish has not. Where it glides is
   water. It is the Lid's own light in the Lid's token, on a face only by how far it looks down. No
   source is new, and nothing answers a hull (limits 3 and 4). The thickness is read off
   the file once, a plumb line through each vertex, when the template is built.
-- **Its skin is smooth**, a call that waits on the owner, with the fine unpushed
+- **Its skin is smooth**, a call the owner kept, with the fine unpushed
   facets Block 4 lets its file have for it. Three readings were written. **Flat facets
   under 800 triangles**, as every prop's, are plates on a body 280 px across. **Normals
   authored in the file** would leave the kit's one way of writing a prop, flat and
@@ -1266,7 +1277,9 @@ another way.
   by a 60 m radius, where the stand's pool has fallen to a twenty-fifth of its peak: 16
   of 4,173 cleared every ring at Home and Close by that measure, none by more than
   18 px, and the frames show the light reaching well past it.
-- **A mark over the stand's light is the owner's glance** (limit 6, gate 7). Nothing
+- **A mark over the stand's light is kept as built** (limit 6, gate 7): the owner kept
+  the stand's light under the Light Scout's and the Corvette's rings on 24 November 2026,
+  on the named GPU's Close frame (#1863). Nothing
   holds a mark over a volume by construction, and the limit refuses only a light a mark
   cannot be read over. The stand is the frame's brightest light, 231 to 234 of 255 at its
   core over four takes.
@@ -1474,7 +1487,9 @@ Built, in the free-water study alone:
 
 Not built: the roofed cut keeps its ruled sides
 ([free-water-slice.md](free-water-slice.md) §9), and the outer ground carries no silt
-detail, which the map's ground beside it does.
+detail, which the map's ground beside it does. The owner called on 24 November 2026 for
+the edge's silt to be carried on past the map
+([#1904](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1904)).
 
 `packages/frontend/test/water.test.ts` holds the column to its knee and to the three
 floors, `packages/frontend/test/lidShade.test.ts` holds the shade's order under a taller

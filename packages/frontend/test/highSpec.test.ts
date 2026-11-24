@@ -9,6 +9,10 @@
  * a navy's surface (#1811) and an own hull's searchlight (#1836). Each of
  * those is one block, printed as a table by the section that owns it, and
  * held here the same way.
+ *
+ * On 24 November 2026 the owner accepted the manta (#1867), whose block sits
+ * inside `LIFE` while the rest of `LIFE` stays TUNABLE, so a block is named
+ * by its dotted path.
  */
 
 import assert from 'node:assert/strict';
@@ -26,6 +30,8 @@ const HEADINGS = {
   SEARCHLIGHT: "#### An own hull's searchlight",
   // In development (#1837): its numbers are TUNABLE, and no table here holds them.
   LIFE: "#### Life in the world's light",
+  MANTA: '#### A manta shows its belly',
+  VENTS: '#### The vents at work',
 } as const;
 
 /** A section's text, from its heading to the next one this file names. */
@@ -91,13 +97,15 @@ const STEP_1 = ['SAMPLES', 'EXPOSURE', 'LID', 'GROUND', 'WATER', 'AO', 'BLOOM', 
 const FAMILIES = ['vent', 'flora', 'crystal', 'ore', 'civic'] as const;
 
 /**
- * The steps accepted after step 1 (#1814, #1811, #1836): a block each, printed
- * by the section that owns it, which ends where the next of the doc's begins.
+ * The steps accepted after step 1 (#1814, #1811, #1836, #1867): a block each,
+ * printed by the section that owns it, which ends where the next of the doc's
+ * begins.
  */
 const LATER_STEPS = [
   { block: 'HULL_LIGHT', heading: HEADINGS.HULL_LIGHT, next: HEADINGS.HULL_SURFACE },
   { block: 'HULL_SURFACE', heading: HEADINGS.HULL_SURFACE, next: HEADINGS.SEARCHLIGHT },
   { block: 'SEARCHLIGHT', heading: HEADINGS.SEARCHLIGHT, next: HEADINGS.LIFE },
+  { block: 'LIFE.MANTA', heading: HEADINGS.MANTA, next: HEADINGS.VENTS },
 ] as const;
 
 describe("High's step 1, as SPEC", () => {
@@ -148,7 +156,7 @@ for (const { block, heading, next } of LATER_STEPS) {
       const printed = rows('What', sectionOf(heading, next)).map(([, cell]) =>
         cell!.replace(/`/g, '')
       );
-      assert.deepEqual([...printed].sort(), leaves(HIGH_GRAPHICS[block], block).sort());
+      assert.deepEqual([...printed].sort(), leaves(constant(block), block).sort());
     });
   });
 }
