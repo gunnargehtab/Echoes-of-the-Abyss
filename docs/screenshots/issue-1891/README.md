@@ -154,7 +154,8 @@ the lit ground's program, over the pixels it covers: most of the Survey frame's 
 and little of the other three. By `dev-loop`'s "Look work" that owes one
 unpaced, queued timing run from the named GPU, which this container cannot take: the
 commands are under [Who captures](#who-captures), and `queued` in its `readings.json` is
-the reading. It is not in this page yet.
+the reading. It is under [On the named GPU](#on-the-named-gpu): 3.27 ms at most, inside
+gate 6's 8 ms.
 
 **Reading the shade.** 115 to 160 ms in Node on this container, when the ground is built
 at High: 16,641 vertices, 16 bearings and 26 steps a bearing. A stopwatch, not a budget.
@@ -314,6 +315,28 @@ CLIP=1 RECORD_VIDEO=docs/screenshots/issue-1891/gpu VIEW_W=1920 VIEW_H=1080 \
 The first writes eight frames and `readings.json`, whose `queued` GPU time at each camera
 is gate 6's reading and this step's timing run. The second records the clip and prints
 where the move starts and ends in it.
+
+## On the named GPU
+
+Taken on 24 November 2026 at f46957ff, on the GTX 1070 (ANGLE, Direct3D 11), headed
+Edge, unpaced, 1920 × 1080 at DPR 1, with the commands above. The tree holds both #1892
+and the manta (#1868), so one reading bounds both
+([issue-1867](../issue-1867/README.md#on-the-named-gpu)).
+
+| Camera | Low queued | High queued | High worst | Queue load |
+| --- | --- | --- | --- | --- |
+| Home | 1.64 ms | 3.27 ms | 6.15 ms | 3.60 ms |
+| Close | 1.59 ms | 3.23 ms | 4.75 ms | 3.59 ms |
+| Low | 1.32 ms | 2.65 ms | 3.31 ms | 3.56 ms |
+| Survey | 1.28 ms | 2.73 ms | 3.37 ms | 3.59 ms |
+
+Every High camera is inside gate 6's 8 ms, and `insideBudget` is true at each. Survey,
+the camera this step adds most to, reads 2.73 ms with the column at 2,100 m and the
+ground past the edge drawn (15,904 triangles). The frames and the readings are in
+[gpu](gpu/readings.json). It is a reading and not acceptance.
+
+The clip is [clip-home-to-survey.mp4](gpu/clip-home-to-survey.mp4), 1280 × 720: the move
+runs from 1.2 s to 9.6 s. The recording ended 2.5 s into the hold, short of its 6 s.
 
 ## Related
 
