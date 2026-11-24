@@ -11,9 +11,9 @@
  * an own hull's searchlight crosses it, shadowed by the ground and by a hull
  * as anything in a beam is (searchlights.ts).
  *
- * Drawn over the free-water crater's vent stand alone (environmentLayer.ts
- * `breathe`): every other map keeps Low's steam at High until a Thermal Vein
- * has a frame of this, since look work starts from a frame.
+ * Drawn over every chimney a map stands (environmentLayer.ts `breathe`). The
+ * free-water crater's stand breathed it alone until a vent field had a frame
+ * of it (#1853, docs/screenshots/issue-1853).
  *
  * One `Points` for every chimney it is handed, in the world pass (highFrame.ts):
  * scene-referred, so the water takes it with distance, the bloom spreads what

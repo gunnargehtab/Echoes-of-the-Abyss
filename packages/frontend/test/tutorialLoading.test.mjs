@@ -345,19 +345,30 @@ describe('a vent at work at High (#1837)', () => {
     });
   };
 
-  it('keeps the steam on the canvas at High on a map that is not the crater', async () => {
+  it('breathes lit smoke over a Thermal Vein at High, one plume a stack, and steam at Low', async () => {
     controlLoads();
     const vents = { ...terrain(), biomes: Array(64).fill(Biome.ThermalVein) };
     const all = placeProps(vents);
     const chimneys = all.filter((p) => p.slug === 'env-vent-chimney');
+    assert.ok(chimneys.length > 0);
     const layer = new EnvironmentLayer();
     try {
-      // docs/art-direction.md, "The vents at work": the crater's stand alone
-      // breathes smoke; a Thermal Vein has no frame of it yet.
+      // docs/art-direction.md, "The vents at work": every chimney a map
+      // stands breathes smoke at High (#1853), where the crater's stand did alone.
       layer.setWorldPass(true);
       layer.rebuild(vents, () => -200, all);
+      assert.equal(layer.stats().ventPlumes, 0, 'a chimney still loading breathes nothing');
       await settle(() => layer.stats().props === all.length);
-      assert.equal(layer.plume.plumes, chimneys.length);
+      assert.equal(layer.smoke.plumes, chimneys.length);
+      assert.equal(layer.plume.plumes, 0);
+      assert.equal(layer.stats().ventPlumes, chimneys.length);
+      assert.ok(layer.group.children.includes(layer.smoke.points));
+      assert.ok(!layer.group.children.includes(layer.plume.points));
+
+      // Back at Low the same stacks breathe the steam, and no smoke stands.
+      layer.setWorldPass(false);
+      layer.rebuild(vents, () => -200, all);
+      await settle(() => layer.plume.plumes === chimneys.length);
       assert.equal(layer.smoke.plumes, 0);
       assert.ok(layer.group.children.includes(layer.plume.points));
       assert.ok(!layer.group.children.includes(layer.smoke.points));
