@@ -62,7 +62,7 @@ def main() -> None:
             a = frame(before / map_name, f"{quality}-standard-{family}")
             b = frame(after / map_name, f"{quality}-standard-{family}")
             diff = ImageChops.difference(a, b)
-            changed = sum(1 for px in diff.getdata() if max(px) > 8)
+            changed = sum(1 for px in diff.get_flattened_data() if max(px) > 8)
             control[f"{quality}-{map_name}-{family}"] = {
                 "maxChannelDifference": max(hi for _, hi in diff.getextrema()),
                 "pixelsOver8": changed,
