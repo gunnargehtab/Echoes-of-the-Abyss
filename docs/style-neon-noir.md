@@ -318,11 +318,11 @@ resolves the rest (§11).
 #### Console accent, per colour-vision palette
 
 The palettes below cannot reuse their own faction accents here. Under the eye each palette
-is for, four of them land on an ink the console already speaks in: Pelagia's sky blue reads
-as `neon-cyan` (2.8 ΔE under protanopia), the Directorate's ochre as the threat ink (4.6
-under deuteranopia) or `SIG mid` (5.3 under protanopia), and its tritanopia crimson as
-`SIG high` (8.3). Neither does `directorate-console`, which falls on `neon-magenta` under
-protanopia (7.3).
+is for, four of them land on or near an ink the console already speaks in: Pelagia's sky
+blue reads as `neon-cyan` (2.8 ΔE under protanopia), the Directorate's ochre as the threat
+ink (4.6 under deuteranopia) or `SIG mid` (5.3 under protanopia), and its tritanopia crimson
+stands 22.6 from `SIG high`, under the floor below. Neither does `directorate-console`,
+which falls on `neon-magenta` under protanopia (7.3).
 
 | Faction | Standard | Deuteranopia | Protanopia | Tritanopia |
 | --- | --- | --- | --- | --- |
@@ -332,8 +332,10 @@ protanopia (7.3).
 | Hadron Knights | `#C9A6FF` | `#6454D8` | `#6660D8` | `#04749C` |
 
 Each row is measured the way `packages/frontend/test/palette.test.ts` measures the
-palettes: the Viénot–Brettel–Mollon simulation and CIE76 ΔE, for the eye the palette is for.
-Every accent but the Consortium's, below, clears its palette's SIG bands, threat, Tier-4
+palettes: a dichromat simulation and CIE76 ΔE, for the eye the palette is for. The
+simulation is Viénot, Brettel and Mollon's (1999) for the red-green pair and Brettel,
+Viénot and Mollon's (1997) for tritanopia. Every accent but the Consortium's and three of
+tritanopia's, all below, clears its palette's SIG bands, threat, Tier-4
 track, nodules and friendly ink by 25 ΔE (26 under the red-green pair), the SIG floor in
 that test; clears `neon-cyan`, `neon-magenta` and `text-dim` by 15; sits 30 from every
 other navy's accent, the faction floor; and holds 3:1 against `abyss-glass`, the fill the
@@ -343,7 +345,8 @@ amber and neutral for the red-green pair; red, teal, blue and neutral for tritan
 Consortium keeps its iron grey in all four, as its cladding does.
 
 The margins are thin, and that is the finding: a dichromat's few hues are already spoken
-for by the console's information inks. Nine of the twelve sit within 2 ΔE of a floor.
+for by the console's information inks. Six of the twelve clear their tightest floor by
+under 2 ΔE.
 The Consortium's grey misses three: under deuteranopia it is 23.7 from the friendly teal
 and 14.7 from `neon-magenta`, and under protanopia 25.5 from the friendly teal. The nearest
 greys that clear them sit 3.1 ΔE (deuteranopia) and 1.3 ΔE (protanopia) from `#8C8378`,
@@ -351,11 +354,20 @@ too close to read as a different colour, so the row keeps the cladding grey and 
 the miss. On the deuteranopia console its rule barely differs from the magenta it
 replaces, and the glyph carries identity there, as it does everywhere (§11).
 
+**Tritanopia's accents miss four floors.** The three that are not the Consortium's were
+chosen against a tritanopia projection that had no red-green axis, the one axis that eye
+keeps ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By the projection that replaced it, the Commune's `#A0ECE8`
+stands 13.6 ΔE from the friendly teal and 27.3 from the Directorate's accent, the
+Directorate's `#E8CCFC` 5.1 from nodules, and the Knights' `#04749C` 17.1 from `SIG low`.
+The row keeps the three until they are chosen again for this eye, and the test pins each
+miss.
+
 **The tritanopia Directorate is violet, and that is the one exception to its table.**
 Tritanopia makes red the warning family — `SIG mid`, `SIG high`, threat and the track — so
 no red accent clears them. The table bars violet because, to this eye, violet drifts toward
 the Directorate. For the Directorate's own accent that drift is the point. Pale violet
-`#E8CCFC` clears nodules by 25.8 and the Consortium's grey by 30.7.
+`#E8CCFC` stands 30.6 from the Consortium's grey. It was taken as clearing nodules by 25.8,
+by the projection since replaced; that argument is read again with the accent.
 
 §12.5's "Doctrine marks" is the accent's argument in sound or depth: the accent marks
 where a navy's doctrine bends a sound or depth number. These rows are its inks.
@@ -498,6 +510,13 @@ red-green axis intact — so this palette is nearly the inverse of the two above
 Crimson and algae teal are *already* correct and do not move. Amber and violet
 both go, save one proposed violet: the Directorate's console accent, under
 "Console accent, per colour-vision palette" above.
+
+This table and the reasons under it were drawn against a projection of this eye
+that had no red-green axis ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By
+the one that replaced it every pair below still clears its floor but one:
+nodules stand 37.8 ΔE from Resonance Crystal, under their 40. The pair keeps
+its inks until the table is read again for this eye, and
+`packages/frontend/test/palette.test.ts` pins the miss.
 
 | Role | Standard | Tritanopia |
 | --- | --- | --- |
@@ -687,22 +706,31 @@ inks are, and four of the families followed it
 | Standard | `#C56BC7` | Hadron's glow, 25.4 dE |
 | Deuteranopia | `#7F00FF` | `neon-violet`, 30.5 dE |
 | Protanopia | `#9900FF` | `neon-violet`, 34.3 dE |
-| Tritanopia | `#8026D9` | Bathyarch's accent, 31.1 dE |
+| Tritanopia | `#8026D9` | Bathyarch's accent, 15.4 dE, under the floor below |
 
 The standard palette's is an orchid pink at 299 degrees, in the gap between the two hues
 that flank it: 35 degrees pinker than Hadron's violet, and 29 bluer than `neon-magenta`
 at under half its saturation. No one pink holds for every eye. The first cut's
-`#CC7AD4` stood 1.7 dE from the Directorate's glow to a tritanope, 4.2 from a Tier 2
-contact to a deuteranope and 8.2 from Pelagia's primary to a protanope. So the lantern
+`#CC7AD4` stood 4.2 dE from a Tier 2 contact to a deuteranope and 8.2 from Pelagia's
+primary to a protanope. So the lantern
 moves with the palette, to a saturated violet in each colour-vision palette, and its
 floor is the one an information ink keeps: 25 dE from every navy's primary, accent, glow
 and console accent, every contact tier, the chrome's two neons and `neon-violet`, as the
-eye its palette serves sees them. `packages/frontend/test/palette.test.ts` holds it.
+eye its palette serves sees them. `packages/frontend/test/palette.test.ts` holds it for
+the standard palette and the red-green pair.
+
+**Tritanopia's lantern stands under it.** Its violet was chosen against a projection of
+that eye with no red-green axis ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)),
+by which the first cut stood 1.7 dE from the Directorate's glow. By the projection that
+replaced it the first cut stands 19.5 dE from Bathyarch's accent, its nearest, and
+`#8026D9` stands under the floor at four inks: 15.4 dE from Bathyarch's accent and
+console accent, 15.6 from `neon-violet` and 20.4 from a Tier 1 contact. It keeps the
+token until one is chosen for this eye, and the test pins the four.
 
 The floor leaves out the resource inks, the SIG band, the fauna colour and the other
 world lights, because no pink or violet clears all of those at once in a colour-vision
 palette. What that costs, each to the eye its palette serves: the tritanopia lantern
-stands 16.1 dE from that palette's fauna colour and 20.2 from `crystal-seam`, and the
+stands 11.5 dE from that palette's fauna colour and 6.1 from `crystal-seam`, and the
 standard lantern 22.1 from the Resonance Crystal ink. Place and form hold those apart:
 a fauna mark is a figure in dots on the chart, and a crystal's seam and a field's ink
 lie on the ground, where no lantern hangs. The lantern carries no information: it moves
@@ -835,7 +863,7 @@ bowl among them (#1859).
 Rule 5 binds in every palette, and a floor says what it asks. To the eye its palette
 serves, a family's token stands **15 dE or more** from every navy's primary, accent and
 glow, every contact tier, the chrome's two neons and `neon-violet`. The standard palette
-and the red-green pair hold it today; tritanopia's five do not yet, and wait, as this
+and the red-green pair hold it today; three of tritanopia's five do, and two wait, as this
 section ends by saying. The owner set it on
 24 November 2026 ([#1854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1854)).
 It is the floor the fauna colour keeps from a navy, and the standard palette clears it as
@@ -899,13 +927,15 @@ luminance, and that gap is 45 to 48 dE wide. Place and behaviour hold them apart
 flickers in the cracks of a Thermal Vein, a lamp stands steady on the Upper Concourse, and
 biolight tips kelp and living coral.
 
-**Tritanopia waits.** Its five are the standard palette's and are held to no floor yet.
-The test's tritanopia projection is in question
-([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)): by it
-`civic-lamp` stands 5.2 dE from the Directorate's glow and `ore-trace` 6.3 from its
-primary, and by Machado's 42.6 and 44.6. `vent-ember` and `flora-biolight` are near by
-both: 2.3 and 6.8 dE from that glow, and 6.9 and 10.0 from Pelagia's primary. Tokens chosen
-against a projection that may be replaced would move twice, so all five wait on it.
+**Tritanopia's ember and biolight wait.** Its five are the standard palette's still. They
+waited on the test's tritanopia projection, which had no red-green axis and has been
+replaced ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By the new one
+`crystal-seam` stands 16.7 dE from a Tier 1 contact, and `ore-trace` 21.4 and `civic-lamp`
+20.1 from Bathyarch's accent, so the three hold the floor as they stand. `vent-ember`
+stands 4.3 dE from the Directorate's accent and `flora-biolight` 9.1 from Hadron's.
+Machado's model agrees on all five: it clears the same three and puts the ember 6.8 dE
+from that accent and the biolight 10.0 from Pelagia's primary. Those two tokens are still
+to be chosen ([#1854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1854)).
 
 `WORLD_LIGHT` in `packages/frontend/src/game/palette.ts` is the active palette's five, and
 `packages/frontend/test/palette.test.ts` holds the floor and the luminance.
