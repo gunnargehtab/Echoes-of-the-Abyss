@@ -908,6 +908,11 @@ and no row below is open.
 | A hull nudged by separation turning to face the nudge | [#1840](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1840) |
 | Contact log rows overflowing their panel at 200% UI scale | [#1893](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1893) |
 | HUD mockups still printing the contact log’s old tier column | [#1895](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1895) |
+| HUD mockups' contact log detail column dropping the bearing | [#1901](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1901) |
+| The two logs ignoring the floating-panel type rule | [#1898](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1898) |
+| The contact log printing a range without its thousands comma | [#1903](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1903) |
+| A palette test's tritanopia projection with no red-green axis | [#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905) |
+| A dressing rebuild leaving the old ember cloud in the scene | [#1906](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1906) |
 
 **How the project runs**
 
@@ -1038,6 +1043,7 @@ A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shi
 | A manta over the rim, seen from below | [#1867](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1867) |
 | The manta’s findings left open at merge: a timing run and a mid-tone belly | [#1870](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1870) |
 | A deep fish’s far aft light showing through its body from abeam | [#1876](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1876) |
+| A vent field's own light filling a low camera's frame | [#1908](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1908) |
 
 Look work under [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) at High. Most wait on a target frame or an owner call.
 
