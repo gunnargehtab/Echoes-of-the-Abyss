@@ -1175,9 +1175,9 @@ something new, and a log role would re-announce the whole panel every time a cou
   at screen size where the next bullet's rule places it: over the ring's far side, off the
   hulls the ring is drawn round. A row may name a
   second marker: the place on its way, Sorrowgate's service lock for its tenders (#1594) or
-  Face Six for Asset Recovery's lifts, or the other of two places the row sends the player to,
-  Trench Awakening's east wall (#1886). The chart draws it beside the row's own, and focusing
-  the row still goes to the row's own.
+  the Working Edge for Asset Recovery's lifts, or the other of two places the row sends the
+  player to, Trench Awakening's east wall (#1886). The chart draws it beside the row's own, and
+  focusing the row still goes to the row's own.
   The row that names it going met or failed takes it off the chart, so the chart says where
   the mission is sending the player now, never where it once did. The ring is an instrument
   ([map-visuals.md](map-visuals.md) §5, rung 6): it is the player's own orders drawn on the

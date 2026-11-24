@@ -412,8 +412,8 @@ resolved by mission id and nothing else ([maps.md](maps.md)).
 with their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The
 last two lines are a request and a complaint rather than a place, so their names are the places they
 are about: the lane the jellies sit off, and the landing that is short. *The Gardens* is printed
-with a 500 m ring centred on the mid rows' node at 1125, 625, which takes in all three garden nodes.
-The share's row names it as the place on its way to the Holdfast, so the chart shows where to load
+with a 375 m ring centred on the mid rows' node at 1125, 625, the widest circle inside the Gardens'
+750 m depth, so every point of the ring is a place a share load runs. The share's row names it as the place on its way to the Holdfast, so the chart shows where to load
 as well as where to deliver (#1886).
 
 ---

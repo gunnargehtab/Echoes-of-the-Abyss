@@ -391,14 +391,15 @@ read out and never ranked.
 No reveal ticks and no regions: no predicate here addresses a rectangle, so the mission authors no
 `MissionRegion`. **Two markers, one per wall** (#1886). `the-band` is answered by hunting, so the
 row is sent to the two overhangs where the six Hollows lie (§5), and the chart names them while the
-row is open: *The West Overhang*, a 600 m ring centred at 625, 2000, and *The East Overhang*, its
-mirror at 4375, 2000 (§11). Each ring takes in its wall's three Hollows. The row's marker is the
-west wall, the nearer to the row and the one the shift's own line names, and the east
-wall is its second place ([ui-ux.md](ui-ux.md) §10.5). A ring names the wall and never an animal:
-the Hollows lie coiled at SIG 3, out of the row's hearing, and it still goes out to listen for
-them. `the-second` shows from 00:00, because a row that
-reads *nobody said how many would answer* at the start of a tide and finds out at 16:30 has been
-told something.
+row is open: *The West Overhang*, a 500 m ring centred at 525, 1850, and *The East Overhang*, a 500
+m ring at 4475, 1900 (§11). Each stands on its wall's painted polygon, centred on the polygon's
+centroid to the nearest 25 m and inside its outline, so the ring is the wall and is placed from
+nothing but the map. The row's marker is the west wall, the nearer to the row and the one the
+shift's own line names, and the east wall is its second place ([ui-ux.md](ui-ux.md) §10.5). A ring
+names the wall and never an animal: the Hollows lie coiled at SIG 3, out of the row's hearing, and
+it still goes out to listen for them. `the-second` shows from 00:00, because a row that reads
+*nobody said how many would answer* at the start of a tide and finds out at 16:30 has been told
+something.
 
 **`the-band` is a floor that latches.** An objective is monotone unless it is standing and only
 `quiet` and `survive` are standing, so the first pass on which the stockpile reaches 260 sets Met.
@@ -611,11 +612,11 @@ West Overhang, is three cells where it was six, and beside the stalls one where 
 
 Every hull, structure and emitter, the spawn, all six Hollows, and both colossi's spawns and drives
 stand on the ground they stood on in rectangles, and so do the apron and the two points the colossi
-park at. The mission authors no region, and its two markers came later (§8). Each colossus's drive, asked from every 25 m
-of its line at every 25 m of its depth span, has the straight segment and the route it had in
-rectangles. Played with no input to the close at 20:00, every hull, structure and creature keeps the
-position and hit points it kept in rectangles, sampled every five seconds, with the same lines and
-the same reading.
+park at. The mission authors no region, and its two markers came later (§8). Each colossus's drive,
+asked from every 25 m of its line at every 25 m of its depth span, has the straight segment and the
+route it had in rectangles. Played with no input to the close at 20:00, every hull, structure and
+creature keeps the position and hit points it kept in rectangles, sampled every five seconds, with
+the same lines and the same reading.
 
 One spawn, at the row: 2,500, 1,000 — a formality, since every party is seated directly. **No
 resources, no hazard sites, and `fauna` off**: the Directorate mines nodules poorly and the band

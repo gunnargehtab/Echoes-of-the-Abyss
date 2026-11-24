@@ -286,26 +286,27 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
   /**
    * §8 — the two walls `the-band` is hunted on (#1886). Not regions: nothing
    * counts a hull inside them. Places the chart names, so the gloss's "West
-   * Overhang" is on the screen and not only in the shift's lines. Each ring
-   * takes in its wall's three Hollows (§5) and draws none of them: an authored
-   * place, never an entity.
+   * Overhang" is on the screen and not only in the shift's lines. Each ring is
+   * placed from its painted polygon alone — on its centroid to the nearest
+   * 25 m, and inside its outline — and never from where a Hollow lies: a
+   * marker is an authored place, never an entity (docs/ui-ux.md §10.5).
    */
   markers: [
     {
       id: 'west-overhang',
       label: "The West Overhang. Hollow country, and half the band's income.",
       name: 'The West Overhang',
-      x: 625,
-      y: 2000,
-      radiusM: 600,
+      x: 525,
+      y: 1850,
+      radiusM: 500,
     },
     {
       id: 'east-overhang',
       label: 'The East Overhang. The other half, four kilometres from the first.',
       name: 'The East Overhang',
-      x: 4375,
-      y: 2000,
-      radiusM: 600,
+      x: 4475,
+      y: 1900,
+      radiusM: 500,
     },
   ],
 

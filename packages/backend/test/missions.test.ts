@@ -51,6 +51,7 @@ import {
   type MissionVoice,
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import { shapeContains } from '../src/sim/terrain.ts';
 import {
   CADRE_CALLSIGNS,
   MISSIONS,
@@ -1028,29 +1029,49 @@ describe('the objectives', () => {
     assert.ok(ringed >= 10, `only ${ringed} lifts were checked, so the walk is broken`);
   });
 
-  it('rings the walls Trench Awakening hunts on, every Hollow inside one (#1886)', () => {
-    // docs/mission-trench-awakening.md §8: the band is hunted on two walls, so
-    // the row names both. Each ring takes in its wall's three Hollows, read off
-    // the creature beats that place them rather than retyped here.
-    const mission = MISSIONS.find((candidate) => candidate === ATTENDING_TRENCH_AWAKENING)!;
-    const band = mission.objectives.find((objective) => objective.id === 'the-band')!;
-    assert.equal(band.markerId, 'west-overhang');
-    assert.equal(band.viaMarkerId, 'east-overhang');
-    const rings = mission.markers.filter((marker) =>
-      [band.markerId, band.viaMarkerId].includes(marker.id)
-    );
-    assert.equal(rings.length, 2);
-    const hollows = mission.beats.flatMap((beat) =>
-      beat.kind === 'creature' && beat.tag.startsWith('hollow-') && beat.spawnAt !== undefined
-        ? [beat.spawnAt]
-        : []
-    );
-    assert.equal(hollows.length, 6, 'the six Hollows of §5');
-    for (const ring of rings) {
-      const held = hollows.filter(
-        (hollow) => Math.hypot(hollow.x - ring.x, hollow.y - ring.y) <= ring.radiusM
-      );
-      assert.equal(held.length, 3, `${ring.id} holds ${held.length} of its wall's three Hollows`);
+  it('stands each ring #1886 added wholly on the ground it names', () => {
+    // A ring is the place the gloss names, so every point of it is that
+    // place: a lift's ring lies inside the rectangle a cut runs in (runtime.ts
+    // loads a carrier only there), and a wall's ring inside the overhang §11
+    // paints under that name. Sampled round the rim, which is where a ring
+    // that spills would draw water a hull waits on for nothing.
+    const RIM = Array.from({ length: 72 }, (_, i) => (i * Math.PI) / 36);
+    const onRim = (marker: { x: number; y: number; radiusM: number }) =>
+      RIM.map((a): [number, number] => [
+        marker.x + marker.radiusM * Math.cos(a),
+        marker.y + marker.radiusM * Math.sin(a),
+      ]);
+    const markerOf = (missionId: string, markerId: string) =>
+      MISSIONS.find((mission) => mission.id === missionId)!.markers.find(
+        (marker) => marker.id === markerId
+      )!;
+    // The lifts' places, against the mission region each lift loads in.
+    for (const [missionId, markerId, regionId] of [
+      ['ledger-asset-recovery', 'working-edge', 'face-cut'],
+      ['seeding-tend', 'gardens', 'gardens'],
+    ] as const) {
+      const mission = MISSIONS.find((candidate) => candidate.id === missionId)!;
+      const region = mission.regions.find((candidate) => candidate.id === regionId)!;
+      for (const [x, y] of onRim(markerOf(missionId, markerId))) {
+        const inside =
+          x >= region.x - 1e-6 &&
+          x <= region.x + region.widthM + 1e-6 &&
+          y >= region.y - 1e-6 &&
+          y <= region.y + region.heightM + 1e-6;
+        assert.ok(inside, `${missionId}: ${markerId}'s ring leaves ${regionId} at ${x}, ${y}`);
+      }
+    }
+    // The walls, against the map's own painted polygons, found by the name
+    // the marker prints: placed from the ground, never from a Hollow (§8).
+    const band = ATTENDING_TRENCH_AWAKENING.objectives.find((o) => o.id === 'the-band')!;
+    const map = missionMapById(ATTENDING_TRENCH_AWAKENING.mapId)!;
+    for (const markerId of [band.markerId!, band.viaMarkerId!]) {
+      const marker = markerOf(ATTENDING_TRENCH_AWAKENING.id, markerId);
+      const wall = map.regions.find((region) => region.note?.startsWith(`${marker.name} — `));
+      assert.ok(wall !== undefined, `no region of ${map.id} is named ${marker.name}`);
+      for (const [x, y] of [[marker.x, marker.y], ...onRim(marker)] as [number, number][]) {
+        assert.ok(shapeContains(wall, x, y), `${markerId}'s ring leaves its wall at ${x}, ${y}`);
+      }
     }
   });
 
