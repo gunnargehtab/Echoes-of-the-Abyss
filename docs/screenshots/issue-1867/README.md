@@ -173,6 +173,18 @@ UNPACED=1 VIEW_W=1920 VIEW_H=1080 node .claude/skills/run-game/scripts/drive.mjs
 `readings.json`'s `queued` GPU time at High is the reading. It is a reading and not
 acceptance.
 
+## On the named GPU
+
+Taken on 24 November 2026 at f46957ff, after this merged, by
+[issue-1891](../issue-1891/README.md#on-the-named-gpu)'s run: the same study, the same
+four cameras and the same unpaced, queued timing, with the manta drawn at High. That
+tree also holds the crater's water and ground past the edge, so the reading bounds the
+manta and the crater together.
+
+High reads 3.27 ms queued at Home and 3.23 ms at Close, the two cameras that see the
+manta, inside gate 6's 8 ms. No `gpu/` folder was taken here: the readings are
+[issue-1891's](../issue-1891/gpu/readings.json).
+
 ## Open for the owner
 
 Eight calls wait, each written with its options in
