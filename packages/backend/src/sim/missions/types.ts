@@ -169,6 +169,20 @@ export interface MissionUnit {
    * nobody's to have spent — Sull's own hull, every Chorister, the watch.
    */
   cadre?: string;
+  /**
+   * The name the selection card prints for this hull — docs/ui-ux.md §9,
+   * "The card names a mission's hull" — for a hull with no `cadre`. A hull
+   * with one takes its cadre's name from `CADRE_CALLSIGNS` and authors none,
+   * so the First reads *The First* in every mission that seats her.
+   *
+   * Player-party hulls only, for `role`'s reason, and `missions.test.ts` holds
+   * the literal to it. A mission authors one when a gloss must point at one
+   * hull among several of its class, and then names the class's others too:
+   * Tend's gift rides one Harvester of three, and its jellies one Light Scout
+   * of two, so all five are named. Absent, a hull with no cadre reads its
+   * class alone.
+   */
+  callsign?: string;
   note: string;
 }
 

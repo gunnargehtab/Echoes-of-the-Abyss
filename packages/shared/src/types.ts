@@ -684,6 +684,18 @@ export interface OwnUnit {
    */
   rank?: number;
   /**
+   * The hull's name in its mission — *The First*, *Tender Three* — which the
+   * selection card prints before the class (docs/ui-ux.md §9, "The card names
+   * a mission's hull"). Absent in a skirmish and on every hull its mission does
+   * not name.
+   *
+   * Own-force only, like everything on this type: a mission names only its
+   * player party's hulls, so nothing here can tell the owner which of another
+   * party's hulls is which. It exists because a gloss that says *keep the First
+   * afloat* points at nothing when four Corvettes all read `CORVETTE` (#1886).
+   */
+  callsign?: string;
+  /**
    * Orders waiting behind the current one, oldest first.
    *
    * Each carries the position it was issued at rather than a live one. For a

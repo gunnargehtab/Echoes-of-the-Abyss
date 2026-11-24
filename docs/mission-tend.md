@@ -79,6 +79,11 @@ mission, no lobby — a mission seats its own parties ([mission-sorrowgate.md](m
 | Tender | 3 | Harvester hull, Commune-grown · **SIG 18 working** / 8 idle · HYD 30 · PR-1 ([units.md](units.md); [economy.md](economy.md) §6) | The bloom's freight. 18 is the Commune's whole economic identity in one number — the figure everyone else harvests at 50 against — and this mission is where the player learns to feel the difference rather than read it |
 | Light Scout — the watch | 2 | SIG 6 idle / 12 cruise · **HYD 70** · PR-1 | The best mobile ears outside the Directorate. The watch's job is the mission's verb: listen down the drop, and give the plateau its minutes of warning |
 
+**Each hull goes by its name on the selection card**: *Tender One*, *Tender Two* and *Tender
+Three*, *Watch One* and *Watch Two* ([ui-ux.md](ui-ux.md) §9, "The card names a mission's
+hull"). Two loads ride one named hull each, so a gloss has to be able to say which: the
+jellies are Watch One's to move, and the gift is Tender Three's to carry (§9, 08:30).
+
 ### What the force does not carry
 
 1. **No weapons** — §2. Nothing in this mission is solved by shooting and nothing shoots, so
@@ -485,8 +490,8 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | Row | Gloss |
 | --- | --- |
 | `share` | Hold each Harvester in the gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast. |
-| `jellies` | Hold both Light Scouts on the West Lane for 90 s; one of them moves the jellies, loudly, at SIG 45. |
-| `gift` | Pass your Harvesters by the ovens beside the Holdfast; the one that picks up the bread takes it to the landing. |
+| `jellies` | Hold Watch One, a Light Scout, on the West Lane for 90 s to move the jellies, loudly, at SIG 45. |
+| `gift` | Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing. |
 | `stillness` | From T+06:00 to the end, keep every Harvester at SIG 20 or less. |
 | `turning` | Nothing more is asked; the tide ends when the countdown does. |
 

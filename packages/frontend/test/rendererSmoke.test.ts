@@ -8938,6 +8938,35 @@ describe('doctrine marks (docs/ui-ux.md §12.5)', () => {
     }
   });
 
+  it("leads the card with a mission's name for the hull, and keeps it off the PR badge", async () => {
+    // docs/ui-ux.md §9, "The card names a mission's hull" (#1886): the name the
+    // own-force list carries, before the class, and nothing added without one.
+    type Card = { infoName: Text; infoBadge: Text };
+    const card = (world: Booted) => world.chart as unknown as Card;
+    const plain = await selected(Faction.Hadron, {});
+    let className: string;
+    try {
+      className = card(plain).infoName.text;
+      assert.ok(!className.includes('·'), `a skirmish hull reads its class alone: ${className}`);
+    } finally {
+      plain.teardown();
+    }
+    // The longest name a mission authors, on purpose.
+    const named = await selected(Faction.Hadron, { callsign: 'Tender Three' });
+    try {
+      const { infoName, infoBadge } = card(named);
+      assert.equal(infoName.text, `TENDER THREE · ${className}`);
+      assert.ok(infoBadge.visible, 'the premise: a PR badge');
+      const badgeLeft = infoBadge.x - infoBadge.width / 2;
+      assert.ok(
+        infoName.x + infoName.width < badgeLeft,
+        `the name runs into the badge (${infoName.x + infoName.width} >= ${badgeLeft})`
+      );
+    } finally {
+      named.teardown();
+    }
+  });
+
   it('lights the Klaxon beside SIG only while the SIG is over 60', async () => {
     const ink = accentOf(Faction.Bathyarch);
     for (const [sig, lit] of [

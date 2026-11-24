@@ -51,7 +51,12 @@ import {
   type MissionVoice,
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
-import { MISSIONS, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
+import {
+  CADRE_CALLSIGNS,
+  MISSIONS,
+  PROLOGUE_SORROWGATE,
+  callsignOf,
+} from '../src/sim/missions/index.ts';
 import { LEDGER_EXPOSURE } from '../src/sim/missions/exposure.ts';
 import { Match } from '../src/sim/match.ts';
 import { dueConditionalBeats } from '../src/sim/missions/conditional.ts';
@@ -274,6 +279,45 @@ describe('the parties a mission seats', () => {
             `${mission.id}: ${unit.tag} is scripted and carries the cadre "${unit.cadre}"`
           );
         }
+      }
+    }
+  });
+
+  it('names a hull for the card on the player’s party and on nobody else’s', () => {
+    // docs/ui-ux.md §9, "The card names a mission's hull": the name rides the
+    // own-force list, and a name on a scripted hull would be the first thing
+    // there to tell one of another party's hulls from the rest (#1886).
+    for (const mission of MISSIONS) {
+      for (const party of mission.parties) {
+        if (party.slot === mission.playerSlot) continue;
+        for (const unit of party.units) {
+          assert.equal(
+            unit.callsign,
+            undefined,
+            `${mission.id}: ${unit.tag} is scripted and named "${unit.callsign}"`
+          );
+        }
+      }
+    }
+  });
+
+  it('names a hull by its cadre, once, and every hull of a party apart', () => {
+    // One table for a cadre's name (`CADRE_CALLSIGNS`), so the First reads the
+    // same in every mission that seats her: a cadre'd hull authors no name
+    // of its own, and every cadre id has an entry. Two hulls of one party under
+    // one name would put the gloss back where #1886 found it.
+    for (const mission of MISSIONS) {
+      for (const party of mission.parties) {
+        for (const unit of party.units) {
+          if (unit.cadre === undefined) continue;
+          assert.equal(unit.callsign, undefined, `${mission.id}: ${unit.tag} names a cadre twice`);
+          assert.ok(
+            CADRE_CALLSIGNS[unit.cadre] !== undefined,
+            `${mission.id}: cadre "${unit.cadre}" has no name for the card`
+          );
+        }
+        const names = party.units.map(callsignOf).filter((n) => n !== undefined);
+        assert.equal(new Set(names).size, names.length, `${mission.id}: two hulls share a name`);
       }
     }
   });
@@ -759,6 +803,9 @@ describe('the objectives', () => {
       for (const party of ours) {
         for (const unit of party.units) {
           for (const word of words(statsFor(unit.kind).name)) mine.add(word);
+          // And the name the card prints for it (§9, #1886): *the Voice* is
+          // the player's Cruiser, whoever else speaks with the word.
+          for (const word of words(callsignOf(unit) ?? '')) mine.add(word);
         }
         for (const structure of party.structures ?? []) {
           for (const word of words(structureStatsFor(structure.kind).name)) mine.add(word);

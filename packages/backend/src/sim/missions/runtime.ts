@@ -82,6 +82,7 @@ import { postureStopsWork } from '../systems/work.ts';
 import { accrueSounding, soundingHolds } from './sounding.ts';
 import { accrueRowHold, accrueStall, insideRow } from './walk.ts';
 import { projectMissionView, type MissionState } from './view.ts';
+import { callsignOf } from './roster.ts';
 import { directionalFactorFor } from '../directional.ts';
 import { dueConditionalBeats } from './conditional.ts';
 import { exposedAtLeast, inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
@@ -271,6 +272,15 @@ export class MissionRuntime {
    */
   private readonly struckTags = new Set<MissionTag>();
   private readonly struckIds = new Set<number>();
+  /**
+   * The player's own hulls the mission names, by tag (`callsignOf`), and the
+   * same names by live id for the snapshot that carries them — docs/ui-ux.md
+   * §9, "The card names a mission's hull". Keyed by tag and resolved through
+   * `eidOf` for the reason `roleTags` is: a recycled id must not inherit a
+   * dead hull's name.
+   */
+  private readonly callsignTags = new Map<MissionTag, string>();
+  private readonly callsignIds = new Map<number, string>();
   /** Tenders held until their release beat. */
   private readonly heldUntil = new Map<MissionTag, number>();
   /** Every tender tag, so an order can be matched to one without a scan. */
@@ -577,6 +587,10 @@ export class MissionRuntime {
           this.tagsFor(unit.role).add(unit.tag);
           if (unit.role === 'tender') this.tenderTags.add(unit.tag);
         }
+        const callsign = callsignOf(unit);
+        if (callsign !== undefined && party.slot === this.definition.playerSlot) {
+          this.callsignTags.set(unit.tag, callsign);
+        }
         if (unit.releaseTick !== undefined) this.heldUntil.set(unit.tag, unit.releaseTick);
       }
 
@@ -833,6 +847,22 @@ export class MissionRuntime {
     const view = this.view;
     this.view = null;
     return view;
+  }
+
+  /**
+   * The name each of the player's living hulls goes by, by entity id — the
+   * snapshot's `OwnUnit.callsign`. Empty for a mission that names none.
+   *
+   * Rebuilt per call into one map rather than allocated, because the own-force
+   * list asks on every Echo pass; it is at most a party's worth of entries.
+   */
+  callsigns(world: SimWorld): ReadonlyMap<number, string> {
+    this.callsignIds.clear();
+    for (const [tag, callsign] of this.callsignTags) {
+      const eid = this.eidOf(world, tag);
+      if (eid !== 0) this.callsignIds.set(eid, callsign);
+    }
+    return this.callsignIds;
   }
 
   /**

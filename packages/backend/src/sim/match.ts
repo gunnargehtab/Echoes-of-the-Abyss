@@ -3468,6 +3468,9 @@ export class Match {
     // in a fresh world; it was not once `maxEid` had climbed through a match's
     // worth of torpedoes and the walk ran fourteen times per Echo pass (#430).
     const hulls = this.inSpawnOrder(this.unitOwners(this.world));
+    // The names a mission gives its player's hulls (docs/ui-ux.md §9). Only
+    // the player party's hulls are named, so another slot's list finds none.
+    const callsigns = this.missionRuntime?.callsigns(this.world);
     for (let i = 0; i < hulls.length; i++) {
       const eid = hulls[i]!;
       if (Owner.slot[eid] !== slot) continue;
@@ -3499,6 +3502,8 @@ export class Match {
       // owner's chevrons. Its hull is in `maxHp` already.
       const rank = Veterancy.rank[eid]!;
       if (rank > 0) unit.rank = rank;
+      const callsign = callsigns?.get(eid);
+      if (callsign !== undefined) unit.callsign = callsign;
       const queue = queueView(this.world, eid);
       if (queue !== undefined) {
         unit.queuedOrders = queue.map((order) =>

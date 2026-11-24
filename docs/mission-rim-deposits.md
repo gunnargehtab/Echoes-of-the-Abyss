@@ -113,8 +113,8 @@ mission would spend its first minute manufacturing a Directorate civil war (§13
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
 | Cruiser hull, Knight-rigged — the Voice | 1 | SIG 55 idle / 65 live in the cone · 19.25 / 22.75 flank · 5.5 / 6.5 wake · HYD 65 · PR-2 · **role `escort`** · armed · 12 souls ([units.md](units.md)) | Kalliso's hull: the ears, the 900 m gun, and the only thing on the party that out-ranges a Chorister by more than a hundred metres |
-| Corvette hulls, Knight-rigged — the cutters | 3 | SIG 28 cone / 9.8 flank / 2.8 wake · HYD 50 · PR-2 · **role `cutter`** · armed · 5 souls each | `cutter-a`, `cutter-b`, `cutter-c`. Three hulls, five loads: two of them take two loads off one face |
-| Corvette hulls, Knight-rigged — the escort | 2 | Identical, **role `escort`** · 5 souls each | `escort-a`, `escort-b`. The Voice carries the same role, which is how §8's `escort` row counts three |
+| Corvette hulls, Knight-rigged — the cutters | 3 | SIG 28 cone / 9.8 flank / 2.8 wake · HYD 50 · PR-2 · **role `cutter`** · armed · 5 souls each | `cutter-a`, `cutter-b`, `cutter-c`: *the First*, *the Second* and *the Third* on the selection card, in the order §6 lists their faces. Three hulls, five loads: two of them take two loads off one face |
+| Corvette hulls, Knight-rigged — the escort | 2 | Identical, **role `escort`** · 5 souls each | `escort-a`, `escort-b`: *the Fourth* and *the Fifth*. The Voice carries the same role, which is how §8's `escort` row counts three |
 | Sounding Spire — the nodes | 2 | SIG **30 idle / 80 active** · HYD 45 · 1,800 HP · PR+1 to allied hulls within **600 m**, horizontal ([units.md](units.md)) | `node-one` and `node-two`, raised at the turn, prebuilt at 2,600 m and 1,154 m apart — inside the pairing range and **not a pair** (§4). The mission |
 
 Thirty-seven souls, and the party still flies Order colours on generic hulls: the roster carries
@@ -769,14 +769,14 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `the-chord` | Bring at least 2 loaded cutter Corvettes back above the Staging line; each face is cut by its own cutter, 240 s a load. |
-| `load-one-home` | First load from the western face, above the Staging line. |
-| `load-two-home` | Second load from the western face, above the Staging line. |
-| `load-three-home` | First load from the middle face, above the Staging line. |
-| `load-four-home` | Second load from the middle face, above the Staging line. |
-| `load-five-home` | The one load from the eastern face, above the Staging line. |
-| `the-cutters` | Keep all 3 cutter Corvettes afloat. |
-| `the-escort` | Keep your Cruiser and both escort Corvettes afloat. |
+| `the-chord` | Bring at least 2 of your 3 cutter Corvettes, the First, Second and Third, back loaded above the Staging line; each cuts its own face, 240 s a load. |
+| `load-one-home` | The First's first load from the western face, above the Staging line. |
+| `load-two-home` | The First's second load from the western face, above the Staging line. |
+| `load-three-home` | The Second's first load from the middle face, above the Staging line. |
+| `load-four-home` | The Second's second load from the middle face, above the Staging line. |
+| `load-five-home` | The Third's one load from the eastern face, above the Staging line. |
+| `the-cutters` | Keep all 3 cutter Corvettes, the First, Second and Third, afloat. |
+| `the-escort` | Keep the Voice, your Cruiser, and the Fourth and Fifth, your escort Corvettes, afloat. |
 | `the-count` | How long your hulls have been classified; the raised nodes give you away, so it fills early. |
 
 `the-count` is authored `record` (#1883): met by 00:30 by design, "not a rule, a recall or a threshold but a reading" (§8), so the panel counts its seconds under
