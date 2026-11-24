@@ -5,9 +5,10 @@
  *
  * A test that only asserted "the table has four factions in it" would pass on
  * any four hexes, including four that a deuteranope sees as one. So this file
- * carries a dichromat simulation (Viénot–Brettel–Mollon 1999, the standard
- * LMS-projection model) and a CIE76 ΔE, and every threshold below is a
- * perceptual distance rather than a shape assertion.
+ * carries a dichromat simulation and a CIE76 ΔE, and every threshold below is
+ * a perceptual distance rather than a shape assertion. The simulation is the
+ * standard LMS projection: Viénot, Brettel & Mollon (1999) for the red-green
+ * pair, and Brettel, Viénot & Mollon (1997) for tritanopia.
  *
  * ΔE76 rules of thumb: under 2 is invisible, ~10 is "a shade of the same
  * colour", 25+ is unambiguously a different colour at a glance. The floors here
@@ -54,24 +55,70 @@ type Deficiency = 'deuteranopia' | 'protanopia' | 'tritanopia' | 'none';
 
 const srgbToLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 
+type Rgb = [number, number, number];
+
+const linearOf = (hex: number): Rgb => [
+  srgbToLinear(((hex >> 16) & 0xff) / 255),
+  srgbToLinear(((hex >> 8) & 0xff) / 255),
+  srgbToLinear((hex & 0xff) / 255),
+];
+
+/** The display's white as cone responses: the rows of `simulateLinear`'s matrix, summed. */
+const WHITE_LMS: Rgb = [
+  17.8824 + 43.5161 + 4.11935,
+  3.45565 + 27.1554 + 3.86714,
+  0.0299566 + 0.184309 + 1.46709,
+];
+
+/**
+ * One half of a tritanope's world, as `S = a·L + b·M`: the plane through the
+ * neutral axis and one hue this eye sees as a trichromat does.
+ *
+ * Brettel, Viénot & Mollon (1997) fold the missing cone onto two half-planes
+ * hinged on the neutral axis, each through an anchor: 485 nm, a blue-green,
+ * and 660 nm, a red. The 1999 paper's one plane serves the red-green pair
+ * because their two halves are nearly one. A tritanope's are not, and it
+ * gives none for this eye. The neutral axis is the display's white here, as
+ * it is for the two planes below, so a grey stays a grey.
+ *
+ * The argument is the CIE 1931 observer's response at the anchor's wavelength, and
+ * the cone responses are Smith and Pokorny's fundamentals as the 1999 paper
+ * scales them, the ones its display matrix below is built from. Only the
+ * ratios matter: the plane passes through black.
+ */
+function tritanHalf([X, Y, Z]: Rgb): readonly [number, number] {
+  const L = 0.15514 * X + 0.54312 * Y - 0.03286 * Z;
+  const M = -0.15514 * X + 0.45684 * Y + 0.03286 * Z;
+  const S = 0.01608 * Z;
+  const [wl, wm, ws] = WHITE_LMS;
+  // The plane's normal is white × anchor; solved for S.
+  const nS = wl * M - wm * L;
+  return [-(wm * S - ws * M) / nS, -(ws * L - wl * S) / nS];
+}
+/** The half that holds the reds and yellows: less M to its L than white has. */
+const TRITAN_LONG = tritanHalf([0.1649, 0.061, 0]);
+/** The half that holds the greens and blues. */
+const TRITAN_SHORT = tritanHalf([0.05795, 0.1693, 0.6162]);
+
 /**
  * What a dichromat sees, as linear RGB.
  *
- * Viénot, Brettel & Mollon (1999): convert to LMS, collapse the missing cone's
- * response onto the plane spanned by the other two, convert back.
+ * Convert to LMS, put the missing cone's response where the other two say a
+ * colour this eye can see would have it, convert back. The red-green pair is
+ * Viénot, Brettel & Mollon (1999), on its display matrix; tritanopia is the
+ * 1997 paper's two half-planes in the same cone space (#1905).
  */
-function simulate(hex: number, kind: Deficiency): [number, number, number] {
-  const r = srgbToLinear(((hex >> 16) & 0xff) / 255);
-  const g = srgbToLinear(((hex >> 8) & 0xff) / 255);
-  const b = srgbToLinear((hex & 0xff) / 255);
-
+function simulateLinear([r, g, b]: Rgb, kind: Deficiency): Rgb {
   let L = 17.8824 * r + 43.5161 * g + 4.11935 * b;
   let M = 3.45565 * r + 27.1554 * g + 3.86714 * b;
   let S = 0.0299566 * r + 0.184309 * g + 1.46709 * b;
 
   if (kind === 'protanopia') L = 2.02344 * M - 2.52581 * S;
   else if (kind === 'deuteranopia') M = 0.494207 * L + 1.24827 * S;
-  else if (kind === 'tritanopia') S = -0.395913 * L + 0.801109 * M;
+  else if (kind === 'tritanopia') {
+    const [perL, perM] = M * WHITE_LMS[0] < L * WHITE_LMS[1] ? TRITAN_LONG : TRITAN_SHORT;
+    S = perL * L + perM * M;
+  }
 
   return [
     0.0809444479 * L + -0.130504409 * M + 0.116721066 * S,
@@ -79,6 +126,8 @@ function simulate(hex: number, kind: Deficiency): [number, number, number] {
     -0.000365296938 * L + -0.00412161469 * M + 0.693511405 * S,
   ];
 }
+
+const simulate = (hex: number, kind: Deficiency): Rgb => simulateLinear(linearOf(hex), kind);
 
 /** CIELAB, D65. */
 function lab(linear: [number, number, number]): [number, number, number] {
@@ -210,6 +259,54 @@ function floorFor(label: string): number {
 
 // --- The tests --------------------------------------------------------------
 
+/**
+ * The simulation itself, held to what a dichromat is. Every floor below is
+ * only as good as the eye that measures it: until #1905 the tritanope here
+ * could not tell red from green, which is the one axis that eye keeps.
+ */
+describe('the simulated eyes', () => {
+  const EYES = ['deuteranopia', 'protanopia', 'tritanopia'] as const;
+  /** The cone each eye lacks, as the linear-RGB step that moves that cone alone. */
+  const MISSING: Record<(typeof EYES)[number], Rgb> = {
+    protanopia: [0.0809444479, -0.0102485335, -0.000365296938],
+    deuteranopia: [-0.130504409, 0.0540193266, -0.00412161469],
+    tritanopia: [0.116721066, -0.113614708, 0.693511405],
+  };
+  /** A spread of colours inside the display's gamut, greys among them. */
+  const SAMPLES: Rgb[] = [];
+  for (const r of [0.05, 0.4, 0.9]) {
+    for (const g of [0.05, 0.4, 0.9]) {
+      for (const b of [0.05, 0.4, 0.9]) SAMPLES.push([r, g, b]);
+    }
+  }
+  const apart = (p: Rgb, q: Rgb) => Math.max(...p.map((c, i) => Math.abs(c - q[i]!)));
+
+  it('a tritanope keeps red from green, the axis that eye has left (#1905)', () => {
+    const [redR, redG] = simulate(0xff0000, 'tritanopia');
+    const [greenR, greenG] = simulate(0x00ff00, 'tritanopia');
+    assert.ok(redR - redG > 0.5, `red reaches a tritanope as r ${redR}, g ${redG}`);
+    assert.ok(greenG - greenR > 0.5, `green reaches a tritanope as r ${greenR}, g ${greenG}`);
+  });
+
+  it('each eye loses its own cone and nothing else', () => {
+    for (const eye of EYES) {
+      for (const sample of SAMPLES) {
+        const seen = simulateLinear(sample, eye);
+        // What the eye sees, it sees the same when shown it again.
+        assert.ok(apart(simulateLinear(seen, eye), seen) < 1e-4, `${eye} moves ${sample} twice`);
+        // Two lights that differ only in the missing cone are one light.
+        const twin = sample.map((c, i) => c + 0.2 * MISSING[eye][i]!) as Rgb;
+        assert.ok(apart(simulateLinear(twin, eye), seen) < 1e-4, `${eye} tells ${sample} apart`);
+      }
+      // And a grey is a grey: the neutral axis is every plane's hinge.
+      for (const grey of [0.02, 0.2, 0.5, 1]) {
+        const seen = simulateLinear([grey, grey, grey], eye);
+        assert.ok(apart(seen, [grey, grey, grey]) < 1e-4, `${eye} tints a ${grey} grey`);
+      }
+    }
+  });
+});
+
 describe('the palette tables', () => {
   it('ships exactly the four palettes §11 names, each labelled', () => {
     assert.deepEqual([...PALETTE_NAMES], ['standard', 'deuteranopia', 'protanopia', 'tritanopia']);
@@ -280,18 +377,26 @@ describe('the palette tables', () => {
 });
 
 describe('what each palette is for', () => {
+  // Tritanopia's tables were drawn against an eye with no red-green axis
+  // (#1905). The eye that replaced it finds the ore's bone white 37.8 dE from
+  // the crystal's blue, under their 40. Pinned exactly, as the console
+  // accent's misses are, so that a second miss fails and a new ink lands
+  // here (#1914).
+  const PAIR_MISSES: Partial<Record<PaletteName, string[]>> = { tritanopia: ['nodule/crystal'] };
   for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
 
-    it(`${name}: every pair it owns stays apart under ${kind}`, () => {
+    it(`${name}: every pair it owns stays apart under ${kind}, bar the recorded misses`, () => {
+      const under: string[] = [];
+      const measured: string[] = [];
       for (const [label, a, b] of pairsOf(PALETTES[name])) {
         const d = deltaE(a, b, kind);
         const floor = floorFor(label);
-        assert.ok(
-          d >= floor,
-          `${name}: ${label} is ${d.toFixed(1)} dE under ${kind}, needs ${floor}`
-        );
+        if (d >= floor) continue;
+        under.push(label);
+        measured.push(`${label} is ${d.toFixed(1)} dE under ${kind}, needs ${floor}`);
       }
+      assert.deepEqual(under, PAIR_MISSES[name] ?? [], `${name}: ${measured.join('; ')}`);
     });
   }
 
@@ -301,12 +406,20 @@ describe('what each palette is for', () => {
   // eye its palette serves it is no navy's ink, no contact tier, neither of
   // the chrome's neons and not the violet the doc reserves for the
   // unresolved, by the floor an information ink keeps.
+  //
+  // The tritanopia lantern does not hold it. Its violet was chosen against the
+  // eye #1905 replaced, and to the one here it stands under the floor at four
+  // inks, 15.4 dE from Bathyarch's cladding at the nearest. Pinned exactly
+  // until a token is chosen for this eye (#1913).
   const LANTERN_FLOOR = 25;
+  const LANTERN_MISSES: Partial<Record<PaletteName, string[]>> = {
+    tritanopia: ['Bathyarch accent', 'Bathyarch console accent', 'tier 1', 'neon violet'],
+  };
   /** `neon-violet`, docs/style-neon-noir.md: the Mouth's, drawn by the menu's CSS token. */
   const NEON_VIOLET = 0x8b5cf6;
   for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
-    it(`${name}: a jelly's lantern is no navy's, no contact's and no neon under ${kind}`, () => {
+    it(`${name}: a jelly's lantern is no navy's, no contact's and no neon under ${kind}, bar the recorded misses`, () => {
       const p = PALETTES[name];
       const agents: Array<[string, number]> = [
         ...FACTIONS.flatMap((f): Array<[string, number]> => [
@@ -320,21 +433,31 @@ describe('what each palette is for', () => {
         ['neon cyan', p.ui.accent],
         ['neon violet', NEON_VIOLET],
       ];
+      const under: string[] = [];
+      const measured: string[] = [];
       for (const [what, ink] of agents) {
         const d = deltaE(p.lantern, ink, kind);
-        assert.ok(
-          d >= LANTERN_FLOOR,
-          `${name}: the lantern is ${d.toFixed(1)} dE from ${what} under ${kind}, needs ${LANTERN_FLOOR}`
-        );
+        if (d >= LANTERN_FLOOR) continue;
+        under.push(what);
+        measured.push(`${d.toFixed(1)} dE from ${what}`);
       }
+      assert.deepEqual(
+        under,
+        LANTERN_MISSES[name] ?? [],
+        `${name}: the lantern is ${measured.join(', ')} under ${kind}, needs ${LANTERN_FLOOR}`
+      );
     });
   }
 
-  it('the standard lantern would be the Directorate’s glow to a tritanope', () => {
-    // Why the lantern is a palette's own: the measurement that refused one token.
-    const directorate = PALETTES.tritanopia.faction[Faction.Directorate];
-    assert.ok(deltaE(0xcc7ad4, directorate.glow, 'tritanopia') < 5);
-    assert.ok(deltaE(PALETTES.standard.lantern, directorate.glow, 'tritanopia') < LANTERN_FLOOR);
+  it('the first cut’s one pink would be a contact or a navy to a red-green eye', () => {
+    // Why the lantern is a palette's own: the measurements that refused one
+    // token. To a tritanope that pink is no ink's, and stands 19.5 dE from
+    // Bathyarch's cladding at the nearest: under the floor, by less.
+    const FIRST_CUT = 0xcc7ad4;
+    const bearing = PALETTES.deuteranopia.tier[ResolutionTier.Bearing].color;
+    assert.ok(deltaE(FIRST_CUT, bearing, 'deuteranopia') < 5);
+    const pelagia = PALETTES.protanopia.faction[Faction.Pelagia].primary;
+    assert.ok(deltaE(FIRST_CUT, pelagia, 'protanopia') < 10);
   });
 
   // docs/style-neon-noir.md, "Rule 5 in the colour-vision palettes" (#1854):
@@ -366,7 +489,7 @@ describe('what each palette is for', () => {
       return { family, what, d };
     });
 
-  // Tritanopia's five wait on #1905, below.
+  // Tritanopia's five are the standard palette's still, below (#1854).
   for (const name of ['standard', 'deuteranopia', 'protanopia'] as const) {
     const kind = FOR[name];
     it(`${name}: no world light is a navy's, a contact's or a neon's under ${kind}`, () => {
@@ -422,16 +545,17 @@ describe('what each palette is for', () => {
     }
   });
 
-  it('tritanopia’s families wait on the projection: the standard five, held to no floor (#1905)', () => {
-    // This file's tritanopia projection has no red-green axis (#1905), and
-    // tokens chosen against it would move twice. By it four of the five sit
-    // under the floor; a second model clears two of those four. Pinned, so
-    // the projection's replacement lands here and takes the decision with it.
+  it('tritanopia’s families are the standard five still, two of them under the floor (#1854)', () => {
+    // They waited on this file's tritanopia eye, which had no red-green axis
+    // (#1905). The eye that replaced it clears the seam, the trace and the
+    // lamp as they stand, and leaves the ember 4.3 dE from the Directorate's
+    // accent and the biolight 9.1 from Hadron's. Pinned, so the two tokens
+    // land here and take the floor with them.
     assert.deepEqual(PALETTES.tritanopia.worldLight, PALETTES.standard.worldLight);
     const under = nearestHeld(PALETTES.tritanopia, PALETTES.tritanopia.worldLight, 'tritanopia')
       .filter(({ d }) => d < WORLD_FLOOR)
       .map(({ family }) => family);
-    assert.deepEqual(under, ['vent', 'flora', 'ore', 'civic']);
+    assert.deepEqual(under, ['vent', 'flora']);
   });
 
   for (const name of ['deuteranopia', 'protanopia', 'tritanopia'] as const) {
@@ -735,14 +859,20 @@ describe('reliefTextureGain', () => {
  * and faction floors, measured for the eye each palette is for. The
  * Consortium's grey misses three, and the doc keeps it and records them,
  * because every grey that clears them is too close to read as another colour.
- * Those three are pinned here exactly, so a fourth miss fails rather than
- * hiding among them.
+ * Tritanopia's accents miss four more: they were chosen against an eye with
+ * no red-green axis (#1905), and the doc records them until they move
+ * (#1914). All seven are pinned here exactly, so an eighth miss fails rather
+ * than hiding among them.
  */
 describe('the console accent', () => {
   const RECORDED_MISSES = [
     'deuteranopia Bathyarch vs friendly',
     'deuteranopia Bathyarch vs chrome glassStroke',
     'protanopia Bathyarch vs friendly',
+    'tritanopia Pelagia vs friendly',
+    'tritanopia Pelagia vs the Directorate accent',
+    'tritanopia Directorate vs nodule',
+    'tritanopia Hadron vs sigLow',
   ];
 
   it('clears the inks it sits beside, the other navies and the glass, bar the recorded misses', () => {
@@ -771,10 +901,11 @@ describe('the console accent', () => {
         for (const key of ['accent', 'glassStroke', 'textDim'] as const) {
           if (deltaE(ink, p.ui[key], kind) < 15) misses.push(`${who} vs chrome ${key}`);
         }
-        for (const peer of FACTIONS) {
-          if (peer === faction) continue;
-          const d = deltaE(ink, p.faction[peer].consoleAccent, kind);
-          assert.ok(d >= 30, `${who} sits ${d.toFixed(1)} dE from ${FACTION_NAME[peer]}`);
+        // Each pair of navies once, named from the earlier of the two.
+        for (const peer of FACTIONS.slice(FACTIONS.indexOf(faction) + 1)) {
+          if (deltaE(ink, p.faction[peer].consoleAccent, kind) < 30) {
+            misses.push(`${who} vs the ${FACTION_NAME[peer]} accent`);
+          }
         }
         // Against the fill the console's plates draw, not the doc's
         // abyss-panel: the rule and the marks are drawn on glass.

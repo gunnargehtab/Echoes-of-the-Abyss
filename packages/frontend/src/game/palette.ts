@@ -108,11 +108,12 @@ export interface Palette {
    * (`jelly-lantern`, docs/style-neon-noir.md "World light", in development
    * with #1837): its bell, its seats and the beads of its strands
    * (jellyLight.ts). A palette's own, as a navy's inks are, because one pink
-   * cannot stand clear of every navy for every eye: to a tritanope the
-   * standard palette's orchid is the Directorate's glow. Each stands 25 dE or
-   * more from every navy's inks, every contact tier, the chrome's two neons
-   * and the reserved `neon-violet`, as the eye its palette serves sees them
-   * (palette.test.ts).
+   * cannot stand clear of every ink for every eye: to a deuteranope the first
+   * cut's was a Tier 2 contact. The floor is 25 dE from every navy's inks,
+   * every contact tier, the chrome's two neons and the reserved
+   * `neon-violet`, as the eye its palette serves sees them. Three palettes
+   * hold it, and tritanopia's violet stands under it at four inks
+   * (palette.test.ts, #1913).
    */
   lantern: number;
   /**
@@ -123,7 +124,8 @@ export interface Palette {
    * every navy's primary, accent and glow, every contact tier, the chrome's
    * two neons and `neon-violet`, to the eye its palette serves, and keeps its
    * standard luminance, so every level a family is drawn at is every
-   * palette's (palette.test.ts). Tritanopia's wait on #1905.
+   * palette's (palette.test.ts). Tritanopia's are the standard five still,
+   * its ember and its biolight under the floor (#1854).
    */
   worldLight: Record<WorldLightFamily, number>;
   ui: UiInk;
@@ -450,7 +452,7 @@ const TRITANOPIA: Palette = {
   },
   fauna: 0x7a7a88,
   lantern: 0x8026d9,
-  // The standard five, held to no floor yet: #1905.
+  // The standard five still, the ember and the biolight under the floor: #1854.
   worldLight: STANDARD_WORLD_LIGHT,
   ui: {
     ...CHROME,
