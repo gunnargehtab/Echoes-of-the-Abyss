@@ -623,6 +623,7 @@ export const items = {
   1812: 'Parts of a ship’s hull that are mirrored copies drawing nearly black in the game view',
   1820: 'The saved pictures of the richer water look being taken before the ships’ new navy surface, so they no longer matched the game',
   1828: 'The start-up check passing even when the game would run on an older 3D engine than the one it asks for',
+  1880: 'A label that marks visual-look work so the automatic loop leaves it for the owner',
   1829: 'A flat black shape filling the top left of the screen at the close camera beside a Corvette, on the richer water look',
   1832: 'On the richer graphics setting, a glass roof over your own ship staying clear of the water that covers everything else',
   1816: 'On the richer graphics setting, the dark discs under marks showing over shallow water that the standard look keeps clear',
@@ -630,6 +631,8 @@ export const items = {
   1842: 'On the richer graphics setting, the searchlights still waiting on a measured frame time and a look at a beam falling on rock',
   1849: 'On the richer graphics setting, the blades of fins and flanks still waiting on the owner to accept how they look',
   1840: 'A ship at rest no longer swinging round to face a nudge when another ship sails past it',
+  1893: 'The contact log’s rows spilling out of their panel when the interface is scaled to 200%',
+  1895: 'The interface mock-up pictures still showing the contact log’s old tier column',
   1777: 'The opening view of the open-water patch showing no sea life large enough to see',
   1600: 'Whether picking and ordering should make any interface sound',
   1601: 'How big the game’s sound files may be, and how they load',
@@ -648,6 +651,9 @@ export const items = {
   1870: 'The manta’s last two checks: a speed run on a real graphics card, and whether its pale belly reads as the target’s mid tone',
   1876: 'A deep fish’s far glowing spot no longer shining through its body when seen side-on',
   1856: 'A dark school of fish passing in front of the vent’s glow, seen as silhouettes',
+  1888: 'A rock’s shadow in a searchlight beam having a jagged, toothed edge instead of a soft line',
+  1889: 'The searchlight shadow frames still to be judged on a real graphics card, and the lights not yet built',
+  1882: 'A field of Tetherjelly being easier to pick out on the chart from far away',
   1574: 'The game online, played by people who did not build it, and its first tagged version',
 };
 

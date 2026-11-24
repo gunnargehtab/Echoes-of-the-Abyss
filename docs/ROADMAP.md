@@ -906,6 +906,8 @@ and no row below is open.
 | A flat black shape at the Corvette's near-port camera | [#1829](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1829) |
 | A glass roof at High skipping the water the rest of the scene gets | [#1832](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1832) |
 | A hull nudged by separation turning to face the nudge | [#1840](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1840) |
+| Contact log rows overflowing their panel at 200% UI scale | [#1893](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1893) |
+| HUD mockups still printing the contact log’s old tier column | [#1895](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1895) |
 
 **How the project runs**
 
@@ -920,12 +922,16 @@ and no row below is open.
 | Confirming the five-round cap exception for the free-water slice | [#1756](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1756) |
 | Re-syncing the vendored three.js skills to the r187 client | [#1804](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1804) |
 | Preflight passing a dependency that resolves outside its range | [#1828](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1828) |
+| A look-work label routing look issues away from the Routine | [#1880](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1880) |
 
 **Look work at High**
 
 | Work | Issue |
 | --- | --- |
 | A dark school staged in front of the vent’s glow | [#1856](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1856) |
+| A rock’s shadow in a searchlight having a toothed edge | [#1888](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1888) |
+| The cast-edge frames taken on the named graphics card | [#1889](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1889) |
+| A Tetherjelly field’s rim raised so its footprint reads | [#1882](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1882) |
 
 **Store art**
 
