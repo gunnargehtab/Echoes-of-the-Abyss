@@ -632,10 +632,11 @@ describe('the ground both missions stand on — §11, drawn in shapes (#1148)', 
     Array.from({ length: n + 1 }, (_, i) => [ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n]);
 
   it('stands every authored point of both missions on the §11 ground it stood on', () => {
-    // 32 of Tend's own, 47 of Convocation's, and the spawn, its Foundry and the
-    // three garden nodes under each.
+    // 33 of Tend's own, the Gardens' marker among them (#1886), 47 of
+    // Convocation's, and the spawn, its Foundry and the three garden nodes
+    // under each.
     const counts = MISSIONS_ON_MARR.map((mission) => authored(mission).places.length);
-    assert.deepEqual(counts, [37, 52], 'an authored point appeared or dropped out');
+    assert.deepEqual(counts, [38, 52], 'an authored point appeared or dropped out');
     for (const mission of MISSIONS_ON_MARR) {
       for (const place of authored(mission).places) {
         assert.deepEqual(

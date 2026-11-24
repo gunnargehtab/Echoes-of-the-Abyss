@@ -891,7 +891,8 @@ export interface MissionObjective {
   revealAtTick?: number;
   markerId?: string;
   /**
-   * The place on the way to `markerId` — `ObjectiveView.viaMarkerId`. Shipped
+   * The row's second place: on the way to `markerId`, or its other half —
+   * `ObjectiveView.viaMarkerId`. Shipped
    * under the same rule as `markerId`: only once this objective is revealed.
    */
   viaMarkerId?: string;

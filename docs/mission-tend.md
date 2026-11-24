@@ -409,9 +409,13 @@ the metre, and the lane's foot is outside every cluster's reach.
 resolved by mission id and nothing else ([maps.md](maps.md)).
 
 **Named on the chart** (#1617). *The Holdfast*, *The West Lane* and *Teel's landing* are printed
-with their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The
-last two lines are a request and a complaint rather than a place, so their names are the places they
-are about: the lane the jellies sit off, and the landing that is short.
+with their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The last
+two lines are a request and a complaint rather than a place, so their names are the places they are
+about: the lane the jellies sit off, and the landing that is short. *The Gardens* is printed with a
+375 m ring centred on the mid rows' node at 1125, 625, the widest circle inside the Gardens' 750 m
+depth, so every point of the ring is a place a share load runs. The share's row names it as the
+place on its way to the Holdfast, so the chart shows where to load as well as where to deliver
+(#1886).
 
 ---
 
@@ -489,7 +493,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `share` | Hold each Harvester in the gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast. |
+| `share` | Hold each Harvester in the Gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast. |
 | `jellies` | Hold Watch One, a Light Scout, on the West Lane for 90 s to move the jellies, loudly, at SIG 45. |
 | `gift` | Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing. |
 | `stillness` | From T+06:00 to the end, keep every Harvester at SIG 20 or less. |

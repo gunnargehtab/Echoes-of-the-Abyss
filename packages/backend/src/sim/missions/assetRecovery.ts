@@ -165,6 +165,19 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       y: 250,
       radiusM: 500,
     },
+    // Where a barge loads, as the place on each lift's way to the Rail Head
+    // (§11, #1886). The widest circle inside `face-cut`, the strip a cut runs
+    // in, so a hull anywhere on the ring is a hull whose cut runs: a ring that
+    // spilt past the strip would draw water where a barge waits for nothing.
+    // Not named Face Six, which is the map's name and the whole fall's.
+    {
+      id: 'working-edge',
+      label: "The Working Edge. The fall's working edge, where a cut runs.",
+      name: 'The Working Edge',
+      x: 2000,
+      y: 2375,
+      radiusM: 125,
+    },
   ],
 
   parties: [
@@ -299,9 +312,10 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       id: 'asset-114',
       text: 'Recover Asset 9-06-114. Log exceptions.',
       gloss:
-        'Hold your Harvesters on the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head.',
+        'Hold your Harvesters on the Working Edge of the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
+      viaMarkerId: 'working-edge',
       // A count ladder over the two machinery barges, the Sorrowgate tender
       // arrangement: either may be the first one home, and the court reads
       // counts rather than identities. Terminal, because §8's table is read
@@ -313,9 +327,10 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       id: 'asset-181',
       text: 'Recover Asset 9-06-181. The frame held; bring it home in the condition it earned.',
       gloss:
-        'Load a second Harvester at the face the same way; two loaded Harvesters at the Rail Head meet this row.',
+        'Load a second Harvester on the Working Edge the same way; two loaded Harvesters at the Rail Head meet this row.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
+      viaMarkerId: 'working-edge',
       terminal: true,
       predicate: { kind: 'extract', role: 'tender', region: 'railhead', count: 2, loaded: true },
     },
@@ -323,9 +338,10 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       id: 'asset-200',
       text: 'The chamber transmits. Treat the interval as schedule.',
       gloss:
-        'The chamber rides on one of your three Harvesters, so load all three at the face and bring every one to the Rail Head.',
+        'The chamber rides on one of your three Harvesters, so load all three on the Working Edge and bring every one to the Rail Head.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
+      viaMarkerId: 'working-edge',
       terminal: true,
       // The keystone: unmet, the Board reads "The number stays" whatever else
       // came home (§8) — the registry keeps the number, and the count is Lost.

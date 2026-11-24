@@ -379,7 +379,12 @@ owns its own water and its own Drift.
 balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
 **Named on the chart** (#1617). *The Rail Head* is printed with its marker's ring while a row that
-names it is open ([ui-ux.md](ui-ux.md) §10.5).
+names it is open ([ui-ux.md](ui-ux.md) §10.5). *The Working Edge* is printed with a 125 m ring
+centred at 2000, 2375, the widest circle inside the 500 × 250 m strip on Face Six's north edge
+where a barge holds while its cut runs, so every point of the ring is a place a cut runs. It takes
+its own name because Face Six is the map's and the whole fall's. Each lift's row names it as the
+place on its way to the Rail Head, so the chart shows where to load as well as where to deliver
+(#1886).
 
 ---
 
@@ -450,9 +455,9 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `asset-114` | Hold your Harvesters on the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head. |
-| `asset-181` | Load a second Harvester at the face the same way; two loaded Harvesters at the Rail Head meet this row. |
-| `asset-200` | The chamber rides on one of your three Harvesters, so load all three at the face and bring every one to the Rail Head. |
+| `asset-114` | Hold your Harvesters on the Working Edge of the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head. |
+| `asset-181` | Load a second Harvester on the Working Edge the same way; two loaded Harvesters at the Rail Head meet this row. |
+| `asset-200` | The chamber rides on one of your three Harvesters, so load all three on the Working Edge and bring every one to the Rail Head. |
 | `column` | Bring your Cruiser and both Corvettes to the Rail Head before the mission closes at T+18:00. |
 
 ---

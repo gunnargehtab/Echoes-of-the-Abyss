@@ -51,6 +51,7 @@ import {
   type MissionVoice,
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import { shapeContains } from '../src/sim/terrain.ts';
 import {
   CADRE_CALLSIGNS,
   MISSIONS,
@@ -58,6 +59,7 @@ import {
   callsignOf,
 } from '../src/sim/missions/index.ts';
 import { LEDGER_EXPOSURE } from '../src/sim/missions/exposure.ts';
+import { ATTENDING_TRENCH_AWAKENING } from '../src/sim/missions/trenchAwakening.ts';
 import { Match } from '../src/sim/match.ts';
 import { dueConditionalBeats } from '../src/sim/missions/conditional.ts';
 import { accrueSounding, soundingHolds } from '../src/sim/missions/sounding.ts';
@@ -981,6 +983,94 @@ describe('the objectives', () => {
           `${mission.id}: marker "${marker.id}" is authored and no objective names it, ` +
             `so it would never reach the client`
         );
+      }
+    }
+  });
+
+  it('rings every place a lift sends a hull to load (#1886)', () => {
+    // docs/ui-ux.md §10.5: a gloss names the place by its marker's name, and a
+    // place with no marker is one the chart never shows. Asset Recovery's face
+    // and Tend's gardens were each glossed as "load there" with nothing on the
+    // screen there, so a newcomer had a distance to read and no ring to steer
+    // at. The rule, over every lift: its region's centre lies inside the ring
+    // of a marker some objective names. A lift whose carrier is seated inside
+    // its region already is exempt, because nobody is sent anywhere: Deep
+    // Furrow's seed and Second Chord's cache rig on the first pass.
+    let ringed = 0;
+    for (const mission of MISSIONS) {
+      const named = new Set(
+        mission.objectives.flatMap((objective) => [objective.markerId, objective.viaMarkerId])
+      );
+      const seated = mission.parties
+        .filter((party) => party.slot === mission.playerSlot)
+        .flatMap((party) => party.units);
+      for (const lift of mission.lifts ?? []) {
+        const region = mission.regions.find((candidate) => candidate.id === lift.region)!;
+        const inside = (x: number, y: number) =>
+          x >= region.x &&
+          x <= region.x + region.widthM &&
+          y >= region.y &&
+          y <= region.y + region.heightM;
+        const carrier = seated.find((unit) => unit.tag === lift.tag);
+        if (carrier !== undefined && inside(carrier.x, carrier.y)) continue;
+        const cx = region.x + region.widthM / 2;
+        const cy = region.y + region.heightM / 2;
+        const ring = mission.markers.find(
+          (marker) =>
+            named.has(marker.id) && Math.hypot(marker.x - cx, marker.y - cy) <= marker.radiusM
+        );
+        assert.ok(
+          ring !== undefined,
+          `${mission.id}: lift "${lift.id}" loads in "${lift.region}", which no named marker rings`
+        );
+        ringed++;
+      }
+    }
+    assert.ok(ringed >= 10, `only ${ringed} lifts were checked, so the walk is broken`);
+  });
+
+  it('stands each ring #1886 added wholly on the ground it names', () => {
+    // A ring is the place the gloss names, so every point of it is that
+    // place: a lift's ring lies inside the rectangle a cut runs in (runtime.ts
+    // loads a carrier only there), and a wall's ring inside the overhang §11
+    // paints under that name. Sampled round the rim, which is where a ring
+    // that spills would draw water a hull waits on for nothing.
+    const RIM = Array.from({ length: 72 }, (_, i) => (i * Math.PI) / 36);
+    const onRim = (marker: { x: number; y: number; radiusM: number }) =>
+      RIM.map((a): [number, number] => [
+        marker.x + marker.radiusM * Math.cos(a),
+        marker.y + marker.radiusM * Math.sin(a),
+      ]);
+    const markerOf = (missionId: string, markerId: string) =>
+      MISSIONS.find((mission) => mission.id === missionId)!.markers.find(
+        (marker) => marker.id === markerId
+      )!;
+    // The lifts' places, against the mission region each lift loads in.
+    for (const [missionId, markerId, regionId] of [
+      ['ledger-asset-recovery', 'working-edge', 'face-cut'],
+      ['seeding-tend', 'gardens', 'gardens'],
+    ] as const) {
+      const mission = MISSIONS.find((candidate) => candidate.id === missionId)!;
+      const region = mission.regions.find((candidate) => candidate.id === regionId)!;
+      for (const [x, y] of onRim(markerOf(missionId, markerId))) {
+        const inside =
+          x >= region.x - 1e-6 &&
+          x <= region.x + region.widthM + 1e-6 &&
+          y >= region.y - 1e-6 &&
+          y <= region.y + region.heightM + 1e-6;
+        assert.ok(inside, `${missionId}: ${markerId}'s ring leaves ${regionId} at ${x}, ${y}`);
+      }
+    }
+    // The walls, against the map's own painted polygons, found by the name
+    // the marker prints: placed from the ground, never from a Hollow (§8).
+    const band = ATTENDING_TRENCH_AWAKENING.objectives.find((o) => o.id === 'the-band')!;
+    const map = missionMapById(ATTENDING_TRENCH_AWAKENING.mapId)!;
+    for (const markerId of [band.markerId!, band.viaMarkerId!]) {
+      const marker = markerOf(ATTENDING_TRENCH_AWAKENING.id, markerId);
+      const wall = map.regions.find((region) => region.note?.startsWith(`${marker.name} — `));
+      assert.ok(wall !== undefined, `no region of ${map.id} is named ${marker.name}`);
+      for (const [x, y] of [[marker.x, marker.y], ...onRim(marker)] as [number, number][]) {
+        assert.ok(shapeContains(wall, x, y), `${markerId}'s ring leaves its wall at ${x}, ${y}`);
       }
     }
   });
