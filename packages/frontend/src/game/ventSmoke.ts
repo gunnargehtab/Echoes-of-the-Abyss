@@ -48,7 +48,7 @@ import {
 } from 'three';
 import { HIGH_GRAPHICS } from '@echoes/shared';
 import { LIT_IRRADIANCE_GLSL } from './litGround.ts';
-import { VENT_EMBER } from './palette.ts';
+import { WORLD_LIGHT } from './palette.ts';
 import { SEARCHLIGHT_GLSL, SEARCHLIGHT_UNIFORMS } from './searchlights.ts';
 import type { PlumeSite } from './ventPlume.ts';
 
@@ -57,11 +57,6 @@ const SPEC = HIGH_GRAPHICS.VENT;
 const glsl = (value: number): string => {
   const text = value.toFixed(6);
   return text.includes('.') ? text : `${text}.0`;
-};
-
-const radiance = (hex: number, level: number): string => {
-  const c = new Color(hex).multiplyScalar(level);
-  return `vec3( ${glsl(c.r)}, ${glsl(c.g)}, ${glsl(c.b)} )`;
 };
 
 /**
@@ -90,6 +85,10 @@ export function patchVentSmoke(shader: { vertexShader: string; fragmentShader: s
         'attribute vec4 aSmoke;',
         'attribute float aSmokeVeil;',
         'uniform float uSmokeTime;',
+        // The vent's own light at the mouth: its family's token in the active
+        // palette, at `GLOW`. A uniform, so a palette changed mid-match
+        // recolours the column without a new program.
+        'uniform vec3 uSmokeEmber;',
         'varying vec3 vSmokeLight;',
         'float smokeT;',
         'float smokeRise;',
@@ -124,7 +123,7 @@ export function patchVentSmoke(shader: { vertexShader: string; fragmentShader: s
         // glow, as a face that looks half up takes it; and each own beam
         // that crosses the puff's centre, less what stands in its way.
         `float smokeOver = smokeRise / ${glsl(SPEC.GLOW_REACH_M)};`,
-        `vec3 smokeLit = ${radiance(VENT_EMBER, SPEC.GLOW)} / ( 1.0 + smokeOver * smokeOver );`,
+        'vec3 smokeLit = uSmokeEmber / ( 1.0 + smokeOver * smokeOver );',
         'smokeLit += echoesLitIrradiance( vec3( 0.0, 0.5, 0.0 ), smokeAt.y );',
         'for ( int i = 0; i < ECHOES_SEARCHLIGHTS; i ++ ) {',
         '  if ( i >= uSearchCount ) break;',
@@ -160,7 +159,10 @@ const TMP_SHADE = new Color();
 export class VentSmoke {
   readonly points: Points;
   private readonly material: PointsMaterial;
-  private readonly uniforms = { uSmokeTime: { value: 0 } };
+  private readonly uniforms = {
+    uSmokeTime: { value: 0 },
+    uSmokeEmber: { value: new Color() },
+  };
   private sites: readonly PlumeSite[] = [];
   private reducedMotion = false;
 
@@ -259,9 +261,14 @@ export class VentSmoke {
     veils.needsUpdate = true;
   }
 
-  /** Per frame: the clock, smooth, or held under reduced motion. One uniform write. */
+  /**
+   * Per frame: the clock, smooth, or held under reduced motion, and the
+   * vent's light in the active palette's `vent-ember`, read live as a mark's
+   * ink is. Two uniform writes.
+   */
   tick(nowMs: number): void {
     this.uniforms.uSmokeTime.value = this.reducedMotion ? SMOKE_HOLD_S : nowMs / 1000;
+    this.uniforms.uSmokeEmber.value.setHex(WORLD_LIGHT.vent).multiplyScalar(SPEC.GLOW);
   }
 
   setReducedMotion(reduced: boolean): void {
@@ -271,6 +278,11 @@ export class VentSmoke {
   /** Columns standing, for the probe and the tests. */
   get plumes(): number {
     return this.sites.length;
+  }
+
+  /** The vent's light at the mouth as last written, linear RGB, for the tests. */
+  get emberLight(): Color {
+    return this.uniforms.uSmokeEmber.value;
   }
 
   /** The shader's clock as last written, for the tests. */

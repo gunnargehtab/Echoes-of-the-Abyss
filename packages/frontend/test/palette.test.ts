@@ -34,9 +34,11 @@ import {
   scaleRgb,
   TIER_STYLE,
   UI,
+  WORLD_LIGHT,
   sigColor,
   type Palette,
   type PaletteName,
+  type WorldLightFamily,
 } from '../src/game/palette.ts';
 import {
   BIOME_RELIEF,
@@ -232,6 +234,7 @@ describe('the palette tables', () => {
         ['crystal', p.resource[ResourceKind.ResonanceCrystal]],
         ['fauna', p.fauna],
         ['lantern', p.lantern],
+        ...Object.entries(p.worldLight).map(([k, v]): [string, number] => [`worldLight.${k}`, v]),
         ...Object.entries(p.ui).map(([k, v]): [string, number] => [`ui.${k}`, v]),
       ];
       for (const [what, ink] of inks) {
@@ -332,6 +335,103 @@ describe('what each palette is for', () => {
     const directorate = PALETTES.tritanopia.faction[Faction.Directorate];
     assert.ok(deltaE(0xcc7ad4, directorate.glow, 'tritanopia') < 5);
     assert.ok(deltaE(PALETTES.standard.lantern, directorate.glow, 'tritanopia') < LANTERN_FLOOR);
+  });
+
+  // docs/style-neon-noir.md, "Rule 5 in the colour-vision palettes" (#1854):
+  // the five world-light families are a palette's own too. To the eye its
+  // palette serves, a family's token is no navy's primary, accent or glow,
+  // no contact tier, neither of the chrome's neons and not the reserved
+  // violet, by the floor fauna keeps from a navy. The console accents are the
+  // console's and are left out, with the inks the lantern's floor leaves out.
+  const WORLD_FLOOR = 15;
+  const FAMILIES: readonly WorldLightFamily[] = ['vent', 'flora', 'crystal', 'ore', 'civic'];
+  /** The inks a world light is held from: what is drawn in the world, and the neons. */
+  const worldDrawn = (p: Palette): Array<[string, number]> => [
+    ...FACTIONS.flatMap((f): Array<[string, number]> => [
+      [`${FACTION_NAME[f]} primary`, p.faction[f].primary],
+      [`${FACTION_NAME[f]} accent`, p.faction[f].accent],
+      [`${FACTION_NAME[f]} glow`, p.faction[f].glow],
+    ]),
+    ...TIERS.map((t): [string, number] => [`tier ${t}`, p.tier[t].color]),
+    ['neon magenta', p.ui.glassStroke],
+    ['neon cyan', p.ui.accent],
+    ['neon violet', NEON_VIOLET],
+  ];
+  /** Each family's nearest held ink in `p`, as `kind` sees `tokens`. */
+  const nearestHeld = (p: Palette, tokens: Record<WorldLightFamily, number>, kind: Deficiency) =>
+    FAMILIES.map((family) => {
+      const [what, d] = worldDrawn(p)
+        .map(([label, ink]): [string, number] => [label, deltaE(tokens[family], ink, kind)])
+        .sort((a, b) => a[1] - b[1])[0]!;
+      return { family, what, d };
+    });
+
+  // Tritanopia's five wait on #1905, below.
+  for (const name of ['standard', 'deuteranopia', 'protanopia'] as const) {
+    const kind = FOR[name];
+    it(`${name}: no world light is a navy's, a contact's or a neon's under ${kind}`, () => {
+      const p = PALETTES[name];
+      for (const { family, what, d } of nearestHeld(p, p.worldLight, kind)) {
+        assert.ok(
+          d >= WORLD_FLOOR,
+          `${name}: ${family} is ${d.toFixed(1)} dE from ${what} under ${kind}, needs ${WORLD_FLOOR}`
+        );
+      }
+    });
+  }
+
+  it('the standard families would be a navy’s to a red-green eye', () => {
+    // Why the families move: the measurement that refused one token for
+    // every eye. Four of the five fall under the floor in each palette, and
+    // the lamp alone clears both.
+    const standard = PALETTES.standard.worldLight;
+    for (const name of ['deuteranopia', 'protanopia'] as const) {
+      const under = nearestHeld(PALETTES[name], standard, name)
+        .filter(({ d }) => d < WORLD_FLOOR)
+        .map(({ family }) => family);
+      assert.deepEqual(
+        under,
+        name === 'deuteranopia' ? ['vent', 'flora', 'ore'] : ['vent', 'flora', 'crystal', 'ore']
+      );
+    }
+    // The worst of them: a kelp tip in Bathyarch's cladding grey.
+    const bathyarch = PALETTES.protanopia.faction[Faction.Bathyarch];
+    assert.ok(deltaE(standard.flora, bathyarch.accent, 'protanopia') < 5);
+    // One table serves both eyes, as one SIG ramp does, and the lamp did not move.
+    assert.deepEqual(PALETTES.deuteranopia.worldLight, PALETTES.protanopia.worldLight);
+    assert.equal(PALETTES.deuteranopia.worldLight.civic, standard.civic);
+  });
+
+  it('moves a family’s hue and never its luminance, so its levels are every palette’s', () => {
+    // Rule 2's order, the exports' strengths and High's powers are written
+    // against the standard tokens' luminance. A palette that lifted a token
+    // would be re-pricing them; the doc holds each within 1.5%.
+    const y = (hex: number) =>
+      0.2126 * srgbToLinear(((hex >> 16) & 0xff) / 255) +
+      0.7152 * srgbToLinear(((hex >> 8) & 0xff) / 255) +
+      0.0722 * srgbToLinear((hex & 0xff) / 255);
+    for (const name of PALETTE_NAMES) {
+      for (const family of FAMILIES) {
+        const ratio =
+          y(PALETTES[name].worldLight[family]) / y(PALETTES.standard.worldLight[family]);
+        assert.ok(
+          Math.abs(ratio - 1) <= 0.015,
+          `${name}: ${family} draws at ${ratio.toFixed(3)} of its standard luminance`
+        );
+      }
+    }
+  });
+
+  it('tritanopia’s families wait on the projection: the standard five, held to no floor (#1905)', () => {
+    // This file's tritanopia projection has no red-green axis (#1905), and
+    // tokens chosen against it would move twice. By it four of the five sit
+    // under the floor; a second model clears two of those four. Pinned, so
+    // the projection's replacement lands here and takes the decision with it.
+    assert.deepEqual(PALETTES.tritanopia.worldLight, PALETTES.standard.worldLight);
+    const under = nearestHeld(PALETTES.tritanopia, PALETTES.tritanopia.worldLight, 'tritanopia')
+      .filter(({ d }) => d < WORLD_FLOOR)
+      .map(({ family }) => family);
+    assert.deepEqual(under, ['vent', 'flora', 'ore', 'civic']);
   });
 
   for (const name of ['deuteranopia', 'protanopia', 'tritanopia'] as const) {
@@ -459,9 +559,13 @@ describe('the active palette', () => {
       assert.equal(sigColor(90), PALETTES.tritanopia.ui.sigHigh);
       assert.equal(sigColor(10), PALETTES.tritanopia.ui.sigLow);
       assert.equal(JELLY_LANTERN, PALETTES.tritanopia.lantern);
+      setActivePalette('protanopia');
+      assert.equal(WORLD_LIGHT, PALETTES.protanopia.worldLight);
+      assert.notEqual(WORLD_LIGHT.vent, PALETTES.standard.worldLight.vent);
     } finally {
       setActivePalette('standard');
     }
+    assert.equal(WORLD_LIGHT, PALETTES.standard.worldLight);
     assert.equal(JELLY_LANTERN, PALETTES.standard.lantern);
     assert.equal(UI.sigMid, PALETTES.standard.ui.sigMid);
     assert.equal(sigColor(90), PALETTES.standard.ui.sigHigh);

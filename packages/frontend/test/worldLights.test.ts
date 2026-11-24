@@ -9,7 +9,7 @@ import { describe, it } from 'node:test';
 import { Color, DataUtils } from 'three';
 import { Biome, HIGH_GRAPHICS } from '@echoes/shared';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
-import { CIVIC_LAMP, VENT_EMBER, WORLD_LIGHT } from '../src/game/palette.ts';
+import { PALETTES, setActivePalette, WORLD_LIGHT } from '../src/game/palette.ts';
 import {
   lightWindow,
   POOL_PX_PER_CELL,
@@ -24,10 +24,8 @@ import {
 const flat = () => -100;
 
 describe('the world’s own lights at High (#1801)', () => {
-  it('wears each family’s own token, the two the Low cloud draws among them', () => {
+  it('wears each family’s own token: the table’s five in the standard palette', () => {
     // style-neon-noir.md "World light": the five tokens, one a family.
-    assert.equal(WORLD_LIGHT.vent, VENT_EMBER);
-    assert.equal(WORLD_LIGHT.civic, CIVIC_LAMP);
     assert.deepEqual(WORLD_LIGHT, {
       vent: 0xe06a2b,
       flora: 0x2e8c74,
@@ -35,6 +33,37 @@ describe('the world’s own lights at High (#1801)', () => {
       ore: 0x7a5634,
       civic: 0xb8875a,
     });
+  });
+
+  it('stands its lights in the active palette’s tokens, at the same power (#1854)', () => {
+    // style-neon-noir.md "Rule 5 in the colour-vision palettes": what pools
+    // on the ground and scatters in the water is the palette's own token.
+    const sites: WorldLightSite[] = [
+      { family: 'vent', xM: 100, yM: 100 },
+      { family: 'flora', xM: 900, yM: 100 },
+      { family: 'crystal', xM: 100, yM: 900 },
+      { family: 'ore', xM: 900, yM: 900 },
+    ];
+    const standard = worldLightsOf(sites, flat);
+    try {
+      setActivePalette('deuteranopia');
+      const worn = worldLightsOf(sites, flat);
+      assert.equal(worn.length, standard.length);
+      for (const light of worn) {
+        const spec = HIGH_GRAPHICS.WORLD_LIGHT[light.family];
+        const token = new Color(PALETTES.deuteranopia.worldLight[light.family]);
+        assert.ok(Math.abs(light.r - token.r * spec.POWER) < 1e-9, `${light.family} red`);
+        assert.ok(Math.abs(light.b - token.b * spec.POWER) < 1e-9, `${light.family} blue`);
+        const before = standard.find((other) => other.family === light.family)!;
+        assert.notDeepEqual([light.r, light.g, light.b], [before.r, before.g, before.b]);
+        // Only the hue: the palette's token keeps its luminance, so the light's does.
+        const y = (l: { r: number; g: number; b: number }) =>
+          0.2126 * l.r + 0.7152 * l.g + 0.0722 * l.b;
+        assert.ok(Math.abs(y(light) / y(before) - 1) < 0.02, `${light.family} luminance`);
+      }
+    } finally {
+      setActivePalette('standard');
+    }
   });
 
   it('stands one light a site, its family’s height over the ground, in its token', () => {

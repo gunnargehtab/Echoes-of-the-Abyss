@@ -157,21 +157,29 @@ export interface LandmarkUniforms {
 }
 
 export function landmarkUniforms(poolColor: readonly [number, number, number]): LandmarkUniforms {
-  return {
+  const uniforms: LandmarkUniforms = {
     uLampLevel: { value: new Float32Array(LAMP_COUNT).fill(1) },
     uPool: { value: new Float32Array(LAMP_COUNT * 4) },
     uPoolCount: { value: 0 },
-    uPoolColor: {
-      value: Float32Array.from([
-        poolColor[0] * POOL_LEVEL,
-        poolColor[1] * POOL_LEVEL,
-        poolColor[2] * POOL_LEVEL,
-      ]),
-    },
+    uPoolColor: { value: new Float32Array(3) },
     uHangTime: { value: 0 },
     uFallT: { value: 1 },
     uBounce: { value: bounceIrradiance(BOUNCE_GAIN) },
   };
+  setPoolColor(uniforms, poolColor);
+  return uniforms;
+}
+
+/** The hue the stone takes under a lamp, linear RGB, laid at `POOL_LEVEL`. */
+export function setPoolColor(
+  uniforms: LandmarkUniforms,
+  poolColor: readonly [number, number, number]
+): void {
+  uniforms.uPoolColor.value.set([
+    poolColor[0] * POOL_LEVEL,
+    poolColor[1] * POOL_LEVEL,
+    poolColor[2] * POOL_LEVEL,
+  ]);
 }
 
 type Shader = { uniforms: Record<string, unknown>; vertexShader: string; fragmentShader: string };

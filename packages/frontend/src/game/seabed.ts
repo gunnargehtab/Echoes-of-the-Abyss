@@ -802,7 +802,7 @@ export function emberFlicker(index: number, bucket: number, phase: number): numb
 }
 
 /** TUNABLE. The ember's colour gain over its flicker: an ember at the top of
- * its breath draws `VENT_EMBER` at this level, and every other world light is
+ * its breath draws `vent-ember` at this level, and every other world light is
  * priced against it (docs/style-neon-noir.md "World light", rule 2). */
 export const EMBER_GAIN = 0.55;
 

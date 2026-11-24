@@ -20,7 +20,7 @@ import { readsDisplayVeil, VEIL_SHADE_ATTRIBUTE } from '../src/game/veilShading.
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mapProps, propSpec, type PropPlacement } from '../src/game/environment.ts';
 import { buildTemplate } from '../src/game/environmentModels.ts';
-import { VENT_EMBER } from '../src/game/palette.ts';
+import { PALETTES, setActivePalette, WORLD_LIGHT } from '../src/game/palette.ts';
 import {
   VENT_PLUME_LEVEL,
   VENT_PLUME_PUFFS,
@@ -111,10 +111,43 @@ describe('the column', () => {
     const plume = new VentPlume();
     plume.build([site(0, 0)]);
     const color = plume.points.geometry.getAttribute('color') as BufferAttribute;
-    const ember = new Color(VENT_EMBER);
+    const ember = new Color(WORLD_LIGHT.vent);
     assert.ok(VENT_PLUME_LEVEL < 0.55, 'dimmer than the ember at its peak');
     assert.ok(Math.abs(color.getX(0) / color.getZ(0) - ember.r / ember.b) < 1e-5, 'ember hue');
     assert.ok(Math.abs(color.getX(0) - ember.r * VENT_PLUME_LEVEL) < 1e-6);
+  });
+
+  it('follows the palette: a standing column takes the new ember on its next tick (#1854)', () => {
+    // style-neon-noir.md "Rule 5 in the colour-vision palettes": the ember is
+    // a palette's own, and a palette changes mid-match.
+    const plume = new VentPlume();
+    plume.build([site(0, 0), site(40, 40)]);
+    const read = () => {
+      const color = plume.points.geometry.getAttribute('color') as BufferAttribute;
+      return [
+        color.getX(color.count - 1),
+        color.getY(color.count - 1),
+        color.getZ(color.count - 1),
+      ];
+    };
+    const near = (got: number[], token: number) => {
+      const want = new Color(token).multiplyScalar(VENT_PLUME_LEVEL);
+      return got.every((c, i) => Math.abs(c - want.toArray()[i]!) < 1e-6);
+    };
+    try {
+      assert.ok(near(read(), PALETTES.standard.worldLight.vent));
+      setActivePalette('deuteranopia');
+      assert.ok(near(read(), PALETTES.standard.worldLight.vent), 'nothing moves before a tick');
+      plume.tick(0);
+      assert.ok(near(read(), PALETTES.deuteranopia.worldLight.vent), 'every puff, the last too');
+      // And a column built under the palette starts in it.
+      plume.build([site(80, 80)]);
+      assert.ok(near(read(), PALETTES.deuteranopia.worldLight.vent));
+    } finally {
+      setActivePalette('standard');
+    }
+    plume.tick(0);
+    assert.ok(near(read(), PALETTES.standard.worldLight.vent));
   });
 
   it('goes as cold as its ground under the veil, in display terms (#1536)', () => {

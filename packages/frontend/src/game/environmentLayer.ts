@@ -47,7 +47,12 @@ import {
   type LandmarkStand,
   type PropPlacement,
 } from './environment.ts';
-import { envTemplate, type EnvTemplate, type SwayUniforms } from './environmentModels.ts';
+import {
+  envTemplate,
+  wearWorldLight,
+  type EnvTemplate,
+  type SwayUniforms,
+} from './environmentModels.ts';
 import {
   decorationMatrix,
   decorationPose,
@@ -61,6 +66,7 @@ import {
   lampCentres,
   landmarkTemplate,
   siftSites,
+  wearCivicLamp,
   type LandmarkStateTemplate,
   type LandmarkTemplate,
 } from './landmarkModels.ts';
@@ -83,7 +89,13 @@ import { setDistanceGradeOn } from './distanceGrade.ts';
 import { VentPlume, plumeSites, type PlumeSite } from './ventPlume.ts';
 import { LIFE_GLOW_KIND, LifeGlow } from './lifeGlow.ts';
 import { jellyWaveGain, tintJellyMembrane, writeJellyLights } from './jellyLight.ts';
-import { JELLY_LANTERN } from './palette.ts';
+import {
+  ACTIVE_PALETTE,
+  JELLY_LANTERN,
+  WORLD_LIGHT,
+  type PaletteName,
+  type WorldLightFamily,
+} from './palette.ts';
 import { VentSmoke } from './ventSmoke.ts';
 import { FieldHaze, hazeSites } from './fieldHaze.ts';
 
@@ -262,6 +274,18 @@ export class EnvironmentLayer {
   /** The collapse's clock, milliseconds on the bucket, while the debris falls; null at rest. */
   private fallStartedMs: number | null = null;
   private falling = false;
+  /**
+   * What stands in this build wearing a licensed world light: each prop
+   * template with its family, and each landmark with its lamps
+   * (docs/style-neon-noir.md "Rule 5 in the colour-vision palettes"). A
+   * family's token is the active palette's, laid as each stands and again by
+   * `tick` on the frame the palette changes, since the files hold the
+   * standard palette's.
+   */
+  private licensed: { family: WorldLightFamily; template: EnvTemplate }[] = [];
+  private lamplit: LandmarkTemplate[] = [];
+  /** The palette those were last laid in. */
+  private wornPalette: PaletteName = ACTIVE_PALETTE.name;
   /** Sway handles of the templates standing in this build, ticked per frame. */
   private swaying: SwayUniforms[] = [];
   private reducedMotion = false;
@@ -433,6 +457,7 @@ export class EnvironmentLayer {
         this.look
       );
       if (template === null) continue;
+      this.license(spec.worldLight, template);
 
       const sinkM = this.seatStones ? (spec.buryFraction ?? 0) * template.heightM : 0;
       for (const part of template.parts) {
@@ -534,6 +559,7 @@ export class EnvironmentLayer {
           (spec.glint === 'lantern' ? 'lantern' : spec.wing === true ? 'wing' : true)
       );
       if (template === null) continue;
+      this.license(spec.worldLight, template);
       let batch = this.fixtureBatches.get(slug);
       // A batch is as long as its list was when it was made, and draws the
       // template it was made from: another quality's is another batch.
@@ -764,6 +790,8 @@ export class EnvironmentLayer {
   ): LandmarkTemplate | null {
     const template = landmarkTemplate(stand.spec, onReady, this.look, still);
     if (template === null) return null;
+    wearCivicLamp(template, WORLD_LIGHT.civic);
+    if (!this.lamplit.includes(template)) this.lamplit.push(template);
     const state = template.states[stand.state];
     const { landmark } = stand;
     TMP_POS.set(landmark.anchorXM, depthToWorldY(landmark.originFloorM), landmark.anchorYM);
@@ -822,6 +850,7 @@ export class EnvironmentLayer {
    */
   tick(nowMs: number, waterReachM?: number, matchMs = 0): void {
     this.matchMs = matchMs;
+    if (this.wornPalette !== ACTIVE_PALETTE.name) this.wearWorldLight();
     if (this.look === 'free-water') this.tickFixture();
     this.plume.tick(nowMs, waterReachM);
     this.smoke.tick(nowMs);
@@ -830,6 +859,28 @@ export class EnvironmentLayer {
     if (this.swaying.length === 0) return;
     const time = this.reducedMotion ? SWAY_HOLD_S : nowMs / 1000;
     for (const sway of this.swaying) sway.uSwayTime.value = time;
+  }
+
+  /**
+   * A prop template standing with a licensed family wears the active
+   * palette's token from here on; a prop with none carries no emissive.
+   */
+  private license(family: WorldLightFamily | 'none', template: EnvTemplate): void {
+    if (family === 'none') return;
+    wearWorldLight(template.parts, WORLD_LIGHT[family]);
+    // The crater's fixture stands again without clearing: once a template.
+    if (!this.licensed.some((worn) => worn.template === template)) {
+      this.licensed.push({ family, template });
+    }
+  }
+
+  /** Lay the active palette's world light on everything standing that wears one. */
+  private wearWorldLight(): void {
+    this.wornPalette = ACTIVE_PALETTE.name;
+    for (const { family, template } of this.licensed) {
+      wearWorldLight(template.parts, WORLD_LIGHT[family]);
+    }
+    for (const template of this.lamplit) wearCivicLamp(template, WORLD_LIGHT.civic);
   }
 
   /**
@@ -1111,6 +1162,8 @@ export class EnvironmentLayer {
     this.lit = [];
     this.litStands = [];
     this.landmarkParts = [];
+    this.licensed = [];
+    this.lamplit = [];
     this.props = 0;
     this.propTris = 0;
     this.landmarksStanding = 0;
