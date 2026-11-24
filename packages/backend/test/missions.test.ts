@@ -301,7 +301,7 @@ describe('the parties a mission seats', () => {
     }
   });
 
-  it('names a Knight hull by its cadre, once, and every hull of a party apart', () => {
+  it('names a hull by its cadre, once, and every hull of a party apart', () => {
     // One table for a cadre's name (`CADRE_CALLSIGNS`), so the First reads the
     // same in all five missions that seat her: a cadre'd hull authors no name
     // of its own, and every cadre id has an entry. Two hulls of one party under

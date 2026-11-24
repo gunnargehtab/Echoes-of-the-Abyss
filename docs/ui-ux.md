@@ -614,10 +614,11 @@ first: `THE FIRST · CORVETTE`, `TENDER THREE · HARVESTER`. Without the name, a
 With several selected, the card names the first and counts the rest, as it does for a class:
 `THE FIRST · CORVETTE +2`.
 
-Two sources name a hull, and nothing else does. **A Knight hull is always named by its
-cadre**, from one table for every mission that seats it
-([mission-nineteen.md](mission-nineteen.md) §8 names the six), so the First reads *The First*
-in each of them, whether or not a gloss there needs the name. **Any other hull is named only
+Two sources name a hull, and nothing else does. **A hull that carries a cadre is always
+named by it**: the six [mission-nineteen.md](mission-nineteen.md) §8 names, from one table for
+every mission that seats them, so the First reads *The First* in each of them, whether or not
+a gloss there needs the name. An Order hull with no cadre, such as Aptitude's Voice, has no
+name from this source. **Any other hull is named only
 where its mission's literal authors a name**, and its document says so in §3. A mission
 authors one when a gloss must point at one hull among several of its class, and then names
 the class's others too, so no hull of the set reads as the odd one out: Tend names its three

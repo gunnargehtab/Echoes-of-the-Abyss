@@ -61,7 +61,7 @@ describe('the card names a mission hull — docs/ui-ux.md §9', () => {
     assert.equal(nameAt(own, carrier.x, carrier.y), 'Tender Three');
   });
 
-  it('names a Knight hull by its cadre, so the First reads The First', () => {
+  it('names a hull by its cadre, so the First reads The First', () => {
     const own = firstSnapshot(missionMatch(CHORD_RIM_DEPOSITS), CHORD_RIM_DEPOSITS.playerSlot);
     const player = CHORD_RIM_DEPOSITS.parties.find(
       (p) => p.slot === CHORD_RIM_DEPOSITS.playerSlot
