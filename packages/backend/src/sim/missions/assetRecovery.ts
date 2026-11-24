@@ -165,6 +165,18 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       y: 250,
       radiusM: 500,
     },
+    // Where a barge loads, as the place on each lift's way to the Rail Head
+    // (§11, #1886). Centred on `face-cut`, the half of the face a cut runs in,
+    // and as wide as it: a gloss that says "hold on Face Six" points at a ring
+    // the player can see rather than at a distance from somewhere else.
+    {
+      id: 'face-six',
+      label: 'Face Six. The face is closed.',
+      name: 'Face Six',
+      x: 2000,
+      y: 2375,
+      radiusM: 250,
+    },
   ],
 
   parties: [
@@ -299,9 +311,10 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       id: 'asset-114',
       text: 'Recover Asset 9-06-114. Log exceptions.',
       gloss:
-        'Hold your Harvesters on the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head.',
+        'Hold your Harvesters on Face Six, the collapsed face 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
+      viaMarkerId: 'face-six',
       // A count ladder over the two machinery barges, the Sorrowgate tender
       // arrangement: either may be the first one home, and the court reads
       // counts rather than identities. Terminal, because §8's table is read
@@ -313,9 +326,10 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       id: 'asset-181',
       text: 'Recover Asset 9-06-181. The frame held; bring it home in the condition it earned.',
       gloss:
-        'Load a second Harvester at the face the same way; two loaded Harvesters at the Rail Head meet this row.',
+        'Load a second Harvester at Face Six the same way; two loaded Harvesters at the Rail Head meet this row.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
+      viaMarkerId: 'face-six',
       terminal: true,
       predicate: { kind: 'extract', role: 'tender', region: 'railhead', count: 2, loaded: true },
     },
@@ -323,9 +337,10 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       id: 'asset-200',
       text: 'The chamber transmits. Treat the interval as schedule.',
       gloss:
-        'The chamber rides on one of your three Harvesters, so load all three at the face and bring every one to the Rail Head.',
+        'The chamber rides on one of your three Harvesters, so load all three at Face Six and bring every one to the Rail Head.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
+      viaMarkerId: 'face-six',
       terminal: true,
       // The keystone: unmet, the Board reads "The number stays" whatever else
       // came home (§8) — the registry keeps the number, and the count is Lost.

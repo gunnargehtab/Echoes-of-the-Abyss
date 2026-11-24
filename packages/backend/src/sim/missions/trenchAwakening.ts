@@ -278,13 +278,36 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
   escortRadiusM: 0,
 
   /**
-   * §13 — empty, and empty on purpose. No predicate here addresses a rectangle:
-   * nothing on this map is a place the row is sent to, so the mission authors
-   * no region and no marker. The map paints all eight of §11's; none of them is
-   * a rule.
+   * §13 — empty, and empty on purpose. No predicate here addresses a
+   * rectangle, so the mission authors no region. The map paints all eight of
+   * §11's; none of them is a rule.
    */
   regions: [],
-  markers: [],
+  /**
+   * §8 — the two walls `the-band` is hunted on (#1886). Not regions: nothing
+   * counts a hull inside them. Places the chart names, so the gloss's "West
+   * Overhang" is on the screen and not only in the shift's lines. Each ring
+   * takes in its wall's three Hollows (§5) and draws none of them: an authored
+   * place, never an entity.
+   */
+  markers: [
+    {
+      id: 'west-overhang',
+      label: "The West Overhang. Hollow country, and half the band's income.",
+      name: 'The West Overhang',
+      x: 625,
+      y: 2000,
+      radiusM: 600,
+    },
+    {
+      id: 'east-overhang',
+      label: 'The East Overhang. The other half, four kilometres from the first.',
+      name: 'The East Overhang',
+      x: 4375,
+      y: 2000,
+      radiusM: 600,
+    },
+  ],
 
   parties: [
     {
@@ -397,8 +420,12 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
       id: 'the-band',
       text: 'The band is two hundred and sixty. It is rendered from what the trench brings, and this tide the trench is sounded.',
       gloss:
-        'Bank 260 Biomass by hunting: the animals on the walls hold about 210, and what comes up the trench after T+10:00 holds the rest.',
+        'Bank 260 Biomass by hunting: the animals on the West Overhang and East Overhang hold about 210, and what comes up the trench after T+10:00 holds the rest.',
       initial: ObjectiveStatus.Pending,
+      // The nearer wall, and the one the shift's line names; the other is the
+      // row's second place (§8, docs/ui-ux.md §10.5).
+      markerId: 'west-overhang',
+      viaMarkerId: 'east-overhang',
       terminal: true,
       // §8 — Biomass banked, read off the player's own economy record, and a
       // floor that latches: `deliver` is not standing, so the first pass the

@@ -1702,11 +1702,13 @@ export interface ObjectiveView {
   /** The marker this objective sends you to, if any. */
   markerId?: string;
   /**
-   * A second marker this objective names as the place on its way —
-   * Sorrowgate's service lock, on the road to the Concourse (#1594). The chart
-   * draws it beside `markerId`'s while the row is open, and focusing the row
-   * still goes to `markerId`: the destination is where the camera belongs, and
-   * the way is something to see on the chart on the way there.
+   * A second marker this objective names: the place on its way — Sorrowgate's
+   * service lock, on the road to the Concourse (#1594), or the face a lift
+   * loads at — or the other of two places the row sends the player to, as
+   * Trench Awakening's east wall is (#1886). The chart draws it beside
+   * `markerId`'s while the row is open, and focusing the row still goes to
+   * `markerId`: one place is where the camera belongs, and the other is
+   * something to see on the chart from there.
    */
   viaMarkerId?: string;
 }

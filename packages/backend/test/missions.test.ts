@@ -58,6 +58,7 @@ import {
   callsignOf,
 } from '../src/sim/missions/index.ts';
 import { LEDGER_EXPOSURE } from '../src/sim/missions/exposure.ts';
+import { ATTENDING_TRENCH_AWAKENING } from '../src/sim/missions/trenchAwakening.ts';
 import { Match } from '../src/sim/match.ts';
 import { dueConditionalBeats } from '../src/sim/missions/conditional.ts';
 import { accrueSounding, soundingHolds } from '../src/sim/missions/sounding.ts';
@@ -982,6 +983,74 @@ describe('the objectives', () => {
             `so it would never reach the client`
         );
       }
+    }
+  });
+
+  it('rings every place a lift sends a hull to load (#1886)', () => {
+    // docs/ui-ux.md §10.5: a gloss names the place by its marker's name, and a
+    // place with no marker is one the chart never shows. Asset Recovery's face
+    // and Tend's gardens were each glossed as "load there" with nothing on the
+    // screen there, so a newcomer had a distance to read and no ring to steer
+    // at. The rule, over every lift: its region's centre lies inside the ring
+    // of a marker some objective names. A lift whose carrier is seated inside
+    // its region already is exempt, because nobody is sent anywhere: Deep
+    // Furrow's seed and Second Chord's cache rig on the first pass.
+    let ringed = 0;
+    for (const mission of MISSIONS) {
+      const named = new Set(
+        mission.objectives.flatMap((objective) => [objective.markerId, objective.viaMarkerId])
+      );
+      const seated = mission.parties
+        .filter((party) => party.slot === mission.playerSlot)
+        .flatMap((party) => party.units);
+      for (const lift of mission.lifts ?? []) {
+        const region = mission.regions.find((candidate) => candidate.id === lift.region)!;
+        const inside = (x: number, y: number) =>
+          x >= region.x &&
+          x <= region.x + region.widthM &&
+          y >= region.y &&
+          y <= region.y + region.heightM;
+        const carrier = seated.find((unit) => unit.tag === lift.tag);
+        if (carrier !== undefined && inside(carrier.x, carrier.y)) continue;
+        const cx = region.x + region.widthM / 2;
+        const cy = region.y + region.heightM / 2;
+        const ring = mission.markers.find(
+          (marker) =>
+            named.has(marker.id) && Math.hypot(marker.x - cx, marker.y - cy) <= marker.radiusM
+        );
+        assert.ok(
+          ring !== undefined,
+          `${mission.id}: lift "${lift.id}" loads in "${lift.region}", which no named marker rings`
+        );
+        ringed++;
+      }
+    }
+    assert.ok(ringed >= 10, `only ${ringed} lifts were checked, so the walk is broken`);
+  });
+
+  it('rings the walls Trench Awakening hunts on, every Hollow inside one (#1886)', () => {
+    // docs/mission-trench-awakening.md §8: the band is hunted on two walls, so
+    // the row names both. Each ring takes in its wall's three Hollows, read off
+    // the creature beats that place them rather than retyped here.
+    const mission = MISSIONS.find((candidate) => candidate === ATTENDING_TRENCH_AWAKENING)!;
+    const band = mission.objectives.find((objective) => objective.id === 'the-band')!;
+    assert.equal(band.markerId, 'west-overhang');
+    assert.equal(band.viaMarkerId, 'east-overhang');
+    const rings = mission.markers.filter((marker) =>
+      [band.markerId, band.viaMarkerId].includes(marker.id)
+    );
+    assert.equal(rings.length, 2);
+    const hollows = mission.beats.flatMap((beat) =>
+      beat.kind === 'creature' && beat.tag.startsWith('hollow-') && beat.spawnAt !== undefined
+        ? [beat.spawnAt]
+        : []
+    );
+    assert.equal(hollows.length, 6, 'the six Hollows of §5');
+    for (const ring of rings) {
+      const held = hollows.filter(
+        (hollow) => Math.hypot(hollow.x - ring.x, hollow.y - ring.y) <= ring.radiusM
+      );
+      assert.equal(held.length, 3, `${ring.id} holds ${held.length} of its wall's three Hollows`);
     }
   });
 

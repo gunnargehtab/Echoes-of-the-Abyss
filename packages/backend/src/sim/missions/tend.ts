@@ -295,6 +295,18 @@ export const SEEDING_TEND: MissionDefinition = {
       y: 2000,
       radiusM: 350,
     },
+    // Where the share is loaded, as the place on its way home (§11, #1886).
+    // On the mid rows' node, and wide enough to take in the north and east
+    // rows' too: the ring is the three nodes a tender tends, not the whole
+    // rectangle of farm rows round them.
+    {
+      id: 'gardens',
+      label: 'The Gardens. The bloom nodes and the farm rows.',
+      name: 'The Gardens',
+      x: 1125,
+      y: 625,
+      radiusM: 500,
+    },
   ],
 
   parties: [
@@ -428,9 +440,10 @@ export const SEEDING_TEND: MissionDefinition = {
       id: 'share',
       text: 'The share wants bringing in. We think three loads is a tide.',
       gloss:
-        'Hold each Harvester in the gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast.',
+        'Hold each Harvester in the Gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast.',
       initial: ObjectiveStatus.Pending,
       markerId: 'holdfast',
+      viaMarkerId: 'gardens',
       terminal: true,
       predicate: { kind: 'extract', role: 'tender', region: 'holdfast', count: 3, loaded: true },
     },
