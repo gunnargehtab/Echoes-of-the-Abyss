@@ -296,7 +296,7 @@ describe('what each palette is for', () => {
   }
 
   // docs/style-neon-noir.md, "Life's own light at High": a drifting jelly's
-  // lantern is world light, and the one world light a palette owns, because
+  // lantern is world light, and the first world light a palette owned, because
   // one pink cannot stand clear of every navy for every eye (#1837). To the
   // eye its palette serves it is no navy's ink, no contact tier, neither of
   // the chrome's neons and not the violet the doc reserves for the
@@ -382,8 +382,8 @@ describe('what each palette is for', () => {
 
   it('the standard families would be a navy’s to a red-green eye', () => {
     // Why the families move: the measurement that refused one token for
-    // every eye. Four of the five fall under the floor in each palette, and
-    // the lamp alone clears both.
+    // every eye. Three of the five fall under the floor under deuteranopia
+    // and four under protanopia, and the lamp alone clears both by a margin.
     const standard = PALETTES.standard.worldLight;
     for (const name of ['deuteranopia', 'protanopia'] as const) {
       const under = nearestHeld(PALETTES[name], standard, name)

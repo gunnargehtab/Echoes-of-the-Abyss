@@ -528,9 +528,11 @@ export let JELLY_LANTERN: number = STANDARD.lantern;
  * (`Palette.worldLight`): what an ember, a lamp, a chimney's steam and a
  * prop's licensed emissive are drawn in at both graphics qualities, and what
  * pools on the ground and scatters in the water at High (worldLights.ts).
- * Read at draw time like every ink here, never copied into a constant: the
- * view lays it again when the palette changes (PerspectiveView.ts
- * `wearWorldLight`).
+ * Read at draw time like every ink here, never copied into a constant. What
+ * holds a token between frames is laid again when the palette changes: a
+ * prop's emissive and the arch's lamps by the layer (environmentLayer.ts
+ * `wearWorldLight`), High's pools and volumes by the view (PerspectiveView.ts
+ * `standWorldLights`).
  */
 export let WORLD_LIGHT: Record<WorldLightFamily, number> = STANDARD.worldLight;
 

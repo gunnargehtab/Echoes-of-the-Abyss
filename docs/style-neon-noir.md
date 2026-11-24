@@ -678,8 +678,9 @@ bloom over the free-water crater's bowl, which is the same jelly 120 times
 jelly as a lantern of pink-violet light, and its brightest pixels are `#BFA6E2`, at a hue
 of 265 degrees: the hue of Hadron's glow, `#C9A6FF`, within a degree. A world light takes
 no agent's token (rule 5), and violet is reserved, so that hue does not transfer, as the
-target's cyan ring did not. It is the one world light a palette owns, as a navy's inks
-are:
+target's cyan ring did not. It was the first world light a palette owned, as a navy's
+inks are, and four of the families followed it
+([Rule 5 in the colour-vision palettes](#rule-5-in-the-colour-vision-palettes)):
 
 | Palette | `jelly-lantern` | Nearest of a navy's inks, a contact tier, a chrome neon or `neon-violet`, to the eye it serves |
 | --- | --- | --- |
@@ -833,7 +834,9 @@ bowl among them (#1859).
 
 Rule 5 binds in every palette, and a floor says what it asks. To the eye its palette
 serves, a family's token stands **15 dE or more** from every navy's primary, accent and
-glow, every contact tier, the chrome's two neons and `neon-violet`. The owner set it on
+glow, every contact tier, the chrome's two neons and `neon-violet`. The standard palette
+and the red-green pair hold it today; tritanopia's five do not yet, and wait, as this
+section ends by saying. The owner set it on
 24 November 2026 ([#1854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1854)).
 It is the floor the fauna colour keeps from a navy, and the standard palette clears it as
 it stands: its tightest is `flora-biolight`, 16.6 dE from Pelagia's primary. The lantern's
@@ -857,8 +860,12 @@ to the standard token that keeps its luminance and its family's hue and stands 1
 clear for both eyes, by the test's simulation and by a second one (Machado, Oliveira and
 Fernandes 2009), which agree within 2 dE on these. The ember goes from orange to a dusty
 terracotta, the biolight from teal to a leaf green, the seam a shade bluer and the trace
-a shade redder. `civic-lamp` clears as it stands and does not move. The nearest held ink
-to each, to the eye its palette serves:
+a shade redder. `civic-lamp` clears as it stands and does not move. The four are SPEC by that
+rule and not by a frame: rule 5 is a gate, the floor is its measure, and the owner took
+them as a correction to it on 24 November 2026, at both graphics qualities. No target
+frame was named for them. Whether each still reads as its family is the owner's glance,
+at the frames in [screenshots/issue-1854](screenshots/issue-1854/README.md). The nearest
+held ink to each, to the eye its palette serves:
 
 | Token | Deuteranopia | Protanopia |
 | --- | --- | --- |
@@ -869,7 +876,7 @@ to each, to the eye its palette serves:
 | `civic-lamp` `#B8875A` | The Directorate's accent, 22.4 dE | Bathyarch's accent, 21.9 dE |
 
 **Luminance does not move.** Every token keeps its standard luminance within 1.5%, so each
-level in this section is every palette's: the exports' 0.18 and 0.11, the ember's gain
+level in this section is every palette's: the exports' 0.18, 0.14 and 0.11, the ember's gain
 against the lamp's, High's powers, and rule 2's order with them. Only the hue moves. A
 prop's file keeps the standard token, which is what intake checks, and the client lays
 the palette's over it as it draws.

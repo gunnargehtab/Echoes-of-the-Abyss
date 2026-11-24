@@ -4151,6 +4151,7 @@ export class PerspectiveView {
     });
     installDisplayVeil(emberMaterial);
     this.embers = new Points(emberGeometry, emberMaterial);
+    this.embers.name = 'vent_embers';
     this.embers.renderOrder = 1;
     this.scene.add(this.embers);
     this.emberBucket = -1;
@@ -6203,8 +6204,9 @@ export class PerspectiveView {
         this.emberBucket = bucket;
         const colors = this.embers.geometry.getAttribute('color') as BufferAttribute;
         // The active palette's tokens, read on the bucket as a mark's ink is
-        // read on its draw (palette.ts): an ember follows a palette changed
-        // mid-match within one step of its own flicker.
+        // read on its draw (palette.ts): this cloud follows a palette changed
+        // mid-match within one step of its own flicker. A cloud an earlier
+        // dressing left in the scene does not (#1906).
         const ember = EMBER_COLOR.setHex(WORLD_LIGHT.vent);
         LAMP_COLOR.setHex(WORLD_LIGHT.civic);
         const eye = this.camera.position;
