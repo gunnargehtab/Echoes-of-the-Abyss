@@ -609,16 +609,20 @@ quietly changed meaning, with nothing to press and notice.
 ### The card names a mission's hull
 
 The selection card's first line is the hull's class, and in a mission it is the hull's name
-first: `THE FIRST · CORVETTE`, `TENDER THREE · HARVESTER`. A mission names a hull when a row
-counts that one hull, or a load rides it, and the party holds others of its class. Without
-the name, a gloss that says *keep the First afloat* points at nothing when four Corvettes all
-read `CORVETTE` (#1886). With several selected, the card names the first and counts the
-rest, as it does for a class: `THE FIRST · CORVETTE +2`.
+first: `THE FIRST · CORVETTE`, `TENDER THREE · HARVESTER`. Without the name, a gloss that says
+*keep the First afloat* points at nothing when four Corvettes all read `CORVETTE` (#1886).
+With several selected, the card names the first and counts the rest, as it does for a class:
+`THE FIRST · CORVETTE +2`.
 
-A Knight hull's name is its cadre's, one table for every mission that seats it
+Two sources name a hull, and nothing else does. **A Knight hull is always named by its
+cadre**, from one table for every mission that seats it
 ([mission-nineteen.md](mission-nineteen.md) §8 names the six), so the First reads *The First*
-in each of them. Any other hull's name is authored on its mission's literal, and its document
-says so in §3: Tend's *Tender Three* carries the gift. Only the player's own hulls are named.
+in each of them, whether or not a gloss there needs the name. **Any other hull is named only
+where its mission's literal authors a name**, and its document says so in §3. A mission
+authors one when a gloss must point at one hull among several of its class, and then names
+the class's others too, so no hull of the set reads as the odd one out: Tend names its three
+tenders and both watch scouts because the gift rides one and the jellies another. A hull with
+neither reads its class alone. Only the player's own hulls are named.
 The name rides the own-force list beside the class and the hull's health, so nothing on the
 wire tells a player which of another party's hulls is which.
 

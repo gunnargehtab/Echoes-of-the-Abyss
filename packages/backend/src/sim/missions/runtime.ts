@@ -850,10 +850,6 @@ export class MissionRuntime {
   }
 
   /**
-   * The current view, without draining it — for a client that has just
-   * (re)joined and missed every edge so far.
-   */
-  /**
    * The name each of the player's living hulls goes by, by entity id — the
    * snapshot's `OwnUnit.callsign`. Empty for a mission that names none.
    *
@@ -869,6 +865,10 @@ export class MissionRuntime {
     return this.callsignIds;
   }
 
+  /**
+   * The current view, without draining it — for a client that has just
+   * (re)joined and missed every edge so far.
+   */
   get currentView(): MissionView | null {
     return this.latest;
   }
