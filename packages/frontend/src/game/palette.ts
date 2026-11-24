@@ -113,7 +113,7 @@ export interface Palette {
    * every contact tier, the chrome's two neons and the reserved
    * `neon-violet`, as the eye its palette serves sees them. Three palettes
    * hold it, and tritanopia's violet stands under it at four inks
-   * (palette.test.ts, #1905).
+   * (palette.test.ts, #1913).
    */
   lantern: number;
   /**

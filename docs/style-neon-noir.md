@@ -359,8 +359,9 @@ chosen against a tritanopia projection that had no red-green axis, the one axis 
 keeps ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By the projection that replaced it, the Commune's `#A0ECE8`
 stands 13.6 ΔE from the friendly teal and 27.3 from the Directorate's accent, the
 Directorate's `#E8CCFC` 5.1 from nodules, and the Knights' `#04749C` 17.1 from `SIG low`.
-The row keeps the three until they are chosen again for this eye, and the test pins each
-miss.
+The row keeps the three until they are chosen again for this eye
+([#1914](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1914)), and the test pins
+each miss.
 
 **The tritanopia Directorate is violet, and that is the one exception to its table.**
 Tritanopia makes red the warning family — `SIG mid`, `SIG high`, threat and the track — so
@@ -515,7 +516,8 @@ This table and the reasons under it were drawn against a projection of this eye
 that had no red-green axis ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By
 the one that replaced it every pair below still clears its floor but one:
 nodules stand 37.8 ΔE from Resonance Crystal, under their 40. The pair keeps
-its inks until the table is read again for this eye, and
+its inks until the table is read again for this eye
+([#1914](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1914)), and
 `packages/frontend/test/palette.test.ts` pins the miss.
 
 | Role | Standard | Tritanopia |
@@ -725,7 +727,9 @@ by which the first cut stood 1.7 dE from the Directorate's glow. By the projecti
 replaced it the first cut stands 19.5 dE from Bathyarch's accent, its nearest, and
 `#8026D9` stands under the floor at four inks: 15.4 dE from Bathyarch's accent and
 console accent, 15.6 from `neon-violet` and 20.4 from a Tier 1 contact. It keeps the
-token until one is chosen for this eye, and the test pins the four.
+token until one is chosen for this eye
+([#1913](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1913)), and the test pins
+the four.
 
 The floor leaves out the resource inks, the SIG band, the fauna colour and the other
 world lights, because no pink or violet clears all of those at once in a colour-vision

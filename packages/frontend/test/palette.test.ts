@@ -379,7 +379,8 @@ describe('what each palette is for', () => {
   // Tritanopia's tables were drawn against an eye with no red-green axis
   // (#1905). The eye that replaced it finds the ore's bone white 37.8 dE from
   // the crystal's blue, under their 40. Pinned exactly, as the console
-  // accent's misses are, so that a second miss fails and a new ink lands here.
+  // accent's misses are, so that a second miss fails and a new ink lands
+  // here (#1914).
   const PAIR_MISSES: Partial<Record<PaletteName, string[]>> = { tritanopia: ['nodule/crystal'] };
   for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
@@ -408,7 +409,7 @@ describe('what each palette is for', () => {
   // The tritanopia lantern does not hold it. Its violet was chosen against the
   // eye #1905 replaced, and to the one here it stands under the floor at four
   // inks, 15.4 dE from Bathyarch's cladding at the nearest. Pinned exactly
-  // until a token is chosen for this eye.
+  // until a token is chosen for this eye (#1913).
   const LANTERN_FLOOR = 25;
   const LANTERN_MISSES: Partial<Record<PaletteName, string[]>> = {
     tritanopia: ['Bathyarch accent', 'Bathyarch console accent', 'tier 1', 'neon violet'],
@@ -858,9 +859,9 @@ describe('reliefTextureGain', () => {
  * Consortium's grey misses three, and the doc keeps it and records them,
  * because every grey that clears them is too close to read as another colour.
  * Tritanopia's accents miss four more: they were chosen against an eye with
- * no red-green axis (#1905), and the doc records them until they move. All
- * seven are pinned here exactly, so an eighth miss fails rather than hiding
- * among them.
+ * no red-green axis (#1905), and the doc records them until they move
+ * (#1914). All seven are pinned here exactly, so an eighth miss fails rather
+ * than hiding among them.
  */
 describe('the console accent', () => {
   const RECORDED_MISSES = [
