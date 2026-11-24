@@ -188,7 +188,7 @@ jobs:
       # The same two gates over the prose this repository wrote under .claude/,
       # which was outside every glob above until #748 and had already drifted.
       # A script rather than two more shell steps, because it also decides which
-      # files are in scope: the eleven vendored skills are upstream copies and
+      # files are in scope: the vendored skills are upstream copies and
       # stay out, and a skill in neither list fails rather than being skipped.
       - name: Lint and link-check .claude/
         run: npm run docs:claude
