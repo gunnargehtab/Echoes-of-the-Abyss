@@ -551,7 +551,10 @@ are in the vertex shader, so a frame writes two uniforms a plume and no buffer; 
 shade rewrites its own attribute when it moves (#1536). That is one draw call for every
 chimney on the session's map, plus one for each drawn detail region that stands a
 chimney, as each region's props cost their own draws. The probe reports the session's
-columns as `ventPlumes` and the detail regions' as `detailVentPlumes`.
+columns as `ventPlumes` and the detail regions' as `detailVentPlumes`. At High the
+session's chimneys breathe lit smoke in that draw's place (`ventSmoke.ts`, #1837, and
+every map since #1853): one `Points` of the world pass, thirty puffs a chimney, written
+once per terrain rebuild, one uniform a frame. The probe counts either as `ventPlumes`.
 
 A hit on a live enemy track (`trackHit.ts`, #1517) is drawn on the chart, not in the
 conn view, into the `Graphics` the contact already owns: no display object of its own, at

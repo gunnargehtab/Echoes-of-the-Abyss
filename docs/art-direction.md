@@ -218,8 +218,8 @@ Built so far:
   and the ground does not. The grade puts a little weight into the darks and a little
   chroma back.
 - **The props** draw in the world pass under the shared rig. Their additive clouds, the
-  steam, the haze and the sift, stay in the tactical pass. The free-water crater's vent
-  stand is the one exception, in development ([The vents at work](#the-vents-at-work)).
+  haze and the sift, stay in the tactical pass. A chimney's steam does not: at High it is
+  lit smoke in the world pass, in development ([The vents at work](#the-vents-at-work)).
 - **A navy's cladding wears a surface**
   ([#1811](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1811)), the
   Commune's four materials first. Below.
@@ -232,6 +232,9 @@ Built so far:
   ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)). In
   development and not accepted. Below.
 - **The crater stands one vent stand, and its chimneys breathe lit smoke** (#1837). In
+  development and not accepted. Below.
+- **Every map's chimneys breathe that smoke**
+  ([#1853](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1853)). In
   development and not accepted. Below.
 - **A river of 120 lanterns drifts far out over the crater's bowl**
   ([#1859](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1859)). In
@@ -1190,13 +1193,15 @@ until a frame of it is accepted. This is the step's second instalment. The owner
 of 20 November 2026 put an authored vent stand on the crater's rim. Three more calls were
 taken in the open with the first frames, and wait on the owner: what a chimney breathes
 at High, which chimneys breathe it, and where the crater's stand is. The second was
-overturned by the round's critic, as written under it.*
+overturned by the round's critic, and the owner then took it on a frame of a vent field
+([#1853](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1853);
+[issue-1853](screenshots/issue-1853/README.md)), as written under it.*
 
 A chimney breathes steam as world light: puffs in the vent's own colour on the canvas,
 stepped on the 5 Hz grid ([style-neon-noir.md](style-neon-noir.md) "World light"). At
 High the world round it is lit, and a column of steam the colour of a lamp stands in it
-as a second light beside the vent's own. Over the crater's stand this step draws a
-chimney's breath another way.
+as a second light beside the vent's own. At High this step draws a chimney's breath
+another way.
 
 - **A chimney's breath is matter, and shows by the light on it.** Three readings were
   written. **The steam as Low draws it** keeps the canvas pass untouched, and leaves a
@@ -1221,12 +1226,19 @@ chimney's breath another way.
 - **It answers nothing** (limit 4). A column stands where the map stands a chimney, and
   a puff's line, phase and bearing are a hash of that placement. The acoustic veil drains
   it as it drains the steam.
-- **The crater's stand alone breathes it.** Two readings were written. **Every chimney
-  the map stands** was taken first, and the round's critic overturned it: it changes
-  every Thermal Vein at High, no frame shows one, and look work starts from a frame. **The
-  crater's stand alone** is taken: at High the stand's two chimneys breathe lit smoke, and
-  every other map's chimneys keep Low's steam on the canvas at both qualities. One plume a
-  stack, never both. The other reading is #1853, which starts from a frame of a vent field.
+- **Every chimney a map stands breathes it.** Two readings were written. **Every
+  chimney** was taken first, and #1837's critic overturned it: it changes every Thermal
+  Vein at High, no frame showed one, and look work starts from a frame. **The crater's
+  stand alone** stood in its place until a vent field had a frame. The owner took **every
+  chimney** in session on 24 November 2026, on a software rasteriser's frames of the
+  Ventfront Divide's middle vent field, the steam beside the smoke at four cameras, and
+  named the target frame and its camera
+  ([issue-1853](screenshots/issue-1853/README.md)). That names the target and is not the
+  look's acceptance. Kept for good, the crater's stand alone would leave two readings of a
+  vent at High. So at High every chimney breathes lit smoke and at Low every chimney
+  breathes the steam: one plume a stack, never both. The column's numbers are the
+  crater's, unmoved. Over a field no hull listens to, a column reads faint: the acoustic
+  veil drains it, as it drains the steam.
 - **The crater's stand is between two hulls.** The fixture stands two chimneys and three
   basalt boulders ([free-water-slice.md](free-water-slice.md) §5, "High's own vents").
   Both chimneys lie in one 80 m cell of the `vent` family's lattice, so the stand is one
@@ -2543,9 +2555,8 @@ Three further layers of the same texture-not-information rule:
   leave the 5 Hz grid the steam below steps on
   ([Two layers, two laws](#two-layers-two-laws)). Each vent chimney breathes steam in the ember's hue (#1514): soft
   puffs leave its mouth, climb straight up and thin out, each puff dimmer than an ember at its peak.
-  The climb steps on the same 5 Hz grid, and reduced motion holds each column still. Over
-  the free-water crater's vent stand, at High alone, the column is lit smoke instead
-  ([The vents at work](#the-vents-at-work)).
+  The climb steps on the same 5 Hz grid, and reduced motion holds each column still. At
+  High the column is lit smoke instead ([The vents at work](#the-vents-at-work)).
 
 #### Silt detail and seated stones — SPEC
 
