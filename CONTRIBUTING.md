@@ -165,9 +165,10 @@ cost is real and worth naming: #540 carries the label across what is left of it 
 script — so none of it is the loop's to take.
 
 **`look-work`** is the other, added on 22 November 2026 (#1880). It marks look work: a
-change accepted on how a frame reads, against a frame the owner named, which a Fable
-session authors (`.claude/skills/dev-loop/SKILL.md`, "Look work"). The Routine skips it
-for `shape-work`'s reason. Until then the only hold on a look issue was the owner as its
+change accepted on how a frame reads, against a frame the owner named. Since 25 November
+2026 (#1946) it runs on the model the look needs: Fable where the look is invented, Opus
+where its cause or rule is set (`.claude/skills/dev-loop/SKILL.md`, "Look work"). The
+Routine skips it because that model is a person's call per issue. Until then the only hold on a look issue was the owner as its
 assignee, which also means "taken", says nothing about why and is lost to an unassign;
 eight look issues were filed without even that. Whoever files a look issue applies the
 label, a firing that finds look work without it applies it and stands down, and only a
