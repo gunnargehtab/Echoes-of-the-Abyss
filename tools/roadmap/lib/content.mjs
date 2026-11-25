@@ -325,6 +325,7 @@ export const groups = {
   'What the chart survey found': 'A cleaner chart',
   Audio: 'Sound',
   'Store art': 'Art for the store page',
+  'Skills for the agent loop': 'Guidance for the automatic loop',
 };
 
 export const items = {
@@ -660,6 +661,19 @@ export const items = {
   1888: 'A rock’s shadow in a searchlight beam having a jagged, toothed edge instead of a soft line',
   1889: 'The searchlight shadow frames still to be judged on a real graphics card, and the lights not yet built',
   1882: 'A field of Tetherjelly being easier to pick out on the chart from far away',
+  1913: 'The lantern jelly’s colour being too close to other colours for players with blue-yellow colour blindness',
+  1914: 'Several console and ore colours being too close together for players with blue-yellow colour blindness',
+  1916: 'Borrowed guidance on finding bugs, writing instructions and interviewing the owner, added to the project',
+  1919: 'A test of whether the borrowed bug-finding guidance changes how a fix gets made',
+  1920: 'A security review of the game server before the public playtest is switched on',
+  1921: 'Marking the project’s guidance that only a person starts, so it stops loading in every session',
+  1922: 'Mission objectives that point at a place on the chart without saying its name',
+  1923: 'Four chart rings marking where a ship is loaded that extend past the area where loading works',
+  1925: 'Whether the Spinner, the Lure and the Submersible should show the same blade look as the Corvette',
+  1926: 'A ship’s searchlight lighting kelp and vent stacks it shines on',
+  1927: 'Kelp and vent stacks casting a shadow in a searchlight beam',
+  1928: 'A ship in another ship’s searchlight casting a shadow on the ship behind it',
+  1929: 'Your own bases throwing work lights and floodlights',
   1574: 'The game online, played by people who did not build it, and its first tagged version',
 };
 
