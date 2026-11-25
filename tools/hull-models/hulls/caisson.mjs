@@ -13,8 +13,9 @@
  * the shoulders aft to the step at two thirds of the length, then a step in
  * to the bare drive hull and a square stern with two prop tunnels. The drive
  * hull is bare of plate, not of drive: its ring frames stand unclad at the
- * pitch the caisson is bolted to, and a banded drive casing lies along its
- * back from the shoulder to each tunnel. The caisson is the
+ * pitch the caisson is bolted to, and the drive lies along its back in the
+ * open, a banded pressure drum a side from the shoulder aft to a drive leg
+ * down into its prop tunnel. The caisson is the
  * step: a box of heavier plate bolted over the forward two thirds, riveted,
  * patchworked older-under-newer, its after edge standing proud of the drive
  * hull as a shoulder — the third more plate, visible in the plan. On its
@@ -63,29 +64,47 @@
  * chamfer to the bow face takes 5.5 m of it; the block's fraction is the
  * step's station. The box stands 3.5 m of half-beam proud of the drive hull
  * on each side, and that is the step. The file's beam is 26.5 m, 0.294 of
- * its length, set alike by the flange, the flank's bolt heads and the
- * strake's rivets at z ±13.25; abaft the flange nothing reaches past the
- * strake at ±10.0, so the generated outline steps 3.25 m a side.
+ * its length, set by the flange at z ±13.25; the flank's bolt heads and the
+ * strake's rivets reach ±13.2. Abaft the flange nothing reaches past the
+ * drive hull's strake at ±10.0, so the generated outline steps 3.25 m a
+ * side.
  *
  * WHAT MAKES IT ONE HULL. Four things cross the step or repeat either side
  * of it, and each is a part of the machine rather than a tie drawn on:
  *
- * - **The drive.** A drive casing a side lies half sunk in the drive hull's
- *   deck over its tunnel, z ±5.2: a six-plate drum of 2.3 m radius from the
- *   flange at x −15 to −37 and a dished head on to −39.2, 1.3 m short of
- *   the notch the shroud lies in. It comes out of the shoulder through a
- *   flange in the older plate and carries three grey bands, the plant
- *   cylinder's own vocabulary at a lesser radius. Its crown is at y 6.89 and
- *   its bands at 7.07, between the caisson's crown at 6.5 and its plant
- *   deck at 7.4, so from the beam the hull's back runs level from the bow
- *   to the heads and the step is a step in the plan, as the block has it.
- *   Plant, casings, tunnels: each stage meets the next.
+ * - **The drive.** The drive is on the drive hull and in the open: a
+ *   pressure drum a side over its tunnel, z ±5.2, the drive's own vessel as
+ *   the cylinder on the caisson's back is the plant's. Nothing covers it
+ *   and it covers nothing, which is the block's "no baffle, no acoustic
+ *   shroud, no cowl on anything" kept. A six-plate drum of 2.3 m radius,
+ *   its axis at y 4.3, 0.6 m under the deck plate's top, from the flange at
+ *   x −15 to −37 and a dished head on to −39.2; out of the shoulder through
+ *   a flange in the older plate, with three grey bands, the plant
+ *   cylinder's vocabulary at a lesser radius. The head runs 0.3 m into a
+ *   drive leg, a box 2.6 m across in the older plate from x −38.9 to −41.7,
+ *   which stands 0.9 m over the deck at the notch's forward wall and goes
+ *   down the notch to y −2.3, 0.3 m under the hub; the hub, on the shaft
+ *   line at y −1.2, runs from the stern at −45 forward through its shroud
+ *   to −41.5, 0.2 m into the leg. Flange, drum, head, leg, hub, shroud:
+ *   `contacts.mjs --near 0` lists each pair, so each stage meets the next
+ *   and the block's "from the shoulder aft to a drive leg down into its
+ *   prop tunnel" is the file. What joins the drums to the plant is under
+ *   the caisson's plate and is not drawn.
+ * - **The shoulder still stands proud, from the beam as from above.** The
+ *   drum's crown is at y 6.29, its bands at 6.47 and its flange ring at
+ *   6.55; the caisson's crown is at 6.5 and the shoulder flange's at 6.75.
+ *   So the drive's back runs 0.2 to 0.5 m under the flange's edge all the
+ *   way aft: near enough level that the hull has one back, and under the
+ *   flange, so the step is a step in elevation too. The second cut's drums
+ *   stood to 6.89, over the caisson's crown, and closed it (#1956 review).
  * - **The frames.** Eight ring frames stand bare on the drive hull at x −18
  *   to −39, a 3 m pitch, 0.4 m proud of the flank and 0.3 of the deck
- *   plate. The caisson's seventeen bolt heads a side run x −12 to 36 at the
- *   same pitch, so the rank that is bolts forward is frames aft, one
- *   station each side of the flange. The casings' bands sit on the frames
- *   at −21, −27 and −33.
+ *   plate, in the older plate — unclad, and never replated. The caisson's
+ *   seventeen bolt heads a side run x −12 to 36 at the same pitch, so the
+ *   rank that is bolts forward is frames aft, one station each side of the
+ *   flange. The drums' bands sit on the frames at −21, −27 and −33. They
+ *   were grey for a round and read as a rank of white posts from the stern
+ *   quarter, the loudest thing abaft the step (#1956 review).
  * - **The stays.** Four raking stays, at z ±1.7 and ±8.65, run from y 6.3
  *   in the flange down to y 5.0 in the first frame, whose top is at 5.2.
  * - **The lit edge.** The flood strips run the caisson's two flanks and a
@@ -99,7 +118,8 @@
  *   shoulder"; `caissonBox` (`factions/bathyarch.mjs`) is the box, and its
  *   after face is a flange 1.2 m thick in the older plate, 0.25 m proud of
  *   the box all round, with eight bolt heads on each wing and the two drive
- *   flanges through it. The first cut's shoulder was one plate 26 m by 9.
+ *   drums' own flange rings against its after face. The first cut's shoulder
+ *   was one plate 26 m by 9.
  * - **The skirt is at y −1, and the blisters hang under it.** "Ballast
  *   blisters low on the hull" gives no run. The first cut's box came down
  *   to −2.5 with the blisters inside its overhang. This one stops 3 m above
@@ -125,7 +145,13 @@
  *   abreast of it, and a rank of exhaust louvres down each side", and no
  *   stations. A side: a plenum of hull black 20 m by 5.7, standing 1.6 m
  *   off the plant deck abreast of the cylinder from x 6 to 26; two ducts
- *   into it from the cylinder's flank at x 12 and 20; the louvre rank on
+ *   into it from under the cylinder at x 12 and 20, each a trunk 1.3 m
+ *   tall on the plant deck from z 1.0 to 5.2 — its top at y 8.7 is 0.65 m
+ *   through the drum's keel plate at 8.05, inside the drum from z 1.0 to
+ *   1.68, and its outboard end 0.3 m inside the plenum's wall
+ *   (`contacts.mjs --near 0` lists duct and cylinder, duct and plenum; the
+ *   second cut's trunks stopped at z 2.0, where the drum's flank is at
+ *   y 9.26, and met nothing but the plenum, #1956 review); the louvre rank on
  *   its roof, 13 m of blade hung between two cheeks from x 6 to 20; and the
  *   stack on its fore end at x 23, z ±7.75, abreast of the cylinder's
  *   forward band.
@@ -138,14 +164,23 @@
  *   half a metre of plenum showing between them. 104.0 m² of the hull's
  *   202.3, so "the brightest thing on the hull" is true by area as well as
  *   by material.
- * - **Lamps are sized to the raster, and the beam makes the raster
+ * - **Lamps are sized to the raster, and the flange makes the raster
  *   symmetric.** The maps bake at 4 px/m from the file's own bounds. The
  *   first cut's beam was 26.4 m, 105.6 cells, so a mirrored pair was not
  *   sampled alike and its slats had to be placed to the cell. This beam is
- *   26.5 m, 106 cells, with cell edges on every quarter metre either side
- *   of the keel: a lamp whose edges are on quarter metres reads the same to
- *   port and to starboard, and every pair in the audit below does. The
- *   slats, the three strips and the housings are all cut that way.
+ *   26.5 m to the bit — set by the flange alone, one box about the keel,
+ *   with the bolt heads and the strake's rivets 5 cm inside it at ±13.2 —
+ *   under a root scale of exactly 1, which the foot of this script holds.
+ *   So the bake is 360 by 106 px with cell edges on every quarter metre
+ *   either side of the keel, and a lamp whose edges are on quarter metres
+ *   reads the same to port and to starboard: the slats, the three strips
+ *   and the housings are cut that way, and every mirrored pair in the
+ *   audit below reads the same area. In the shipped emissive map the two
+ *   halves sum to the same figure and 40 px differ from their mirror, all
+ *   on the sloped edges of the two six-plate stack throats, where the
+ *   bake's multisampling is not mirror-symmetric. The second cut claimed
+ *   106 cells and baked 107: its hubs ended at a station a float rounds,
+ *   the root took a scale of 1 + 5e-10, and 614 px differed (#1956 review).
  * - **The floods are three strips and eight housings.** The Bulwark's
  *   `floodStrips` at this hull's scale: a 44.5 m strip a side on the older
  *   course inboard of the rim, four housings a side outboard of it standing
@@ -154,7 +189,7 @@
  *   the Broadside's door idiom turned through ninety degrees: a socket sunk
  *   1.2 m behind the face, a flange on the face, the door shut on it, and
  *   the knuckle standing up the door's outboard edge. Built loaded (§3.5);
- *   nothing points outboard and no casing shows on a flank.
+ *   nothing points outboard and no tube shows on a flank.
  * - **The plough plate is the stem, through both hulls.** A wedge plate
  *   4.6 m across its root and 2.6 at its tip, standing 1.5 m proud of the
  *   face on the centreline from y −4 to 6.5 — the drive hull's keel to the
@@ -165,7 +200,8 @@
  *   it the full length under the caisson, where nothing reads it.
  * - **No stern vents and no stacks aft.** The block names the plant's
  *   louvres and the two stacks and nothing else that exhausts, and puts "no
- *   cowl on anything". The drive casings are closed drums.
+ *   cowl on anything". The drive drums are pressure vessels and vent
+ *   nothing.
  * - **The bridge ports are the citadel's ports.** Three a flank and four
  *   across the bridge face, all boxes proud of their faces in `amber_lamp`,
  *   as the Broadside and the Furnace count them; the bridge ports 1.4 m
@@ -174,43 +210,45 @@
  *   table's floor row licenses at every band, on the centreline forward of
  *   the plant; the asset number to starboard of it; a dogged hatch to port,
  *   because the block gives no way into the hull, and a second on the drive
- *   hull's deck between the casings. Both are `deckHatches`, which lays the
+ *   hull's deck between the drums. Both are `deckHatches`, which lays the
  *   wheel on the coaming; the first cut's stood 13 mm over it.
  * - **The tunnels are notched into the stern, and hold their shrouds.** The
  *   Tender's idiom as the Broadside carries it: 3.3 m notches at z ±5.2
  *   with a ring lying in each and the hub standing to −45, so the transom
- *   keeps its square corners. The notches are 5.1 m wide and the six-plate
- *   shroud 5.2 across its vertices, so the ring bears on both walls; the
- *   first cut's notch was 5.6 and its ring met nothing but its own hub.
+ *   keeps its square corners, and the drive leg in the forward 1.2 m of
+ *   each, 0.7 m clear of the ring. The notches are 5.1 m wide and the
+ *   six-plate shroud 5.2 across its vertices, so the ring bears on both
+ *   walls; the first cut's notch was 5.6 and its ring met nothing but its
+ *   own hub.
  *   `propTunnel` names that ring `prop_shroud_s/p` on every hull in this
  *   navy, and the block's "no baffle, no shroud, no cowl" is the acoustic
  *   kind — the block names the two prop tunnels itself.
  * - **The plant cylinder is hull black, not plate grey**, and so are the
- *   drive casings: black drum, grey bands, oxide heads and flanges, on a
- *   grey deck that could not otherwise tell a grey drum from itself.
+ *   drive drums: black drum, grey bands, oxide heads, flanges and legs, on
+ *   a grey deck that could not otherwise tell a grey drum from itself.
  *
  * The resting light, as the audit counts it from above — and it is the only
  * light, because this hull has one band: the eight louvre blades at 13.0 m²
  * each, the two flank strips at 22.25 m² and the after strip at 11.25, the
  * two stack throats at 7.75, the eight flood housings at 1.88, the six
  * citadel ports at 1.0, the four bridge ports at 0.75 and the bow lamp at
- * 3.0 — thirty-two lit parts, 202.3 m² facing up on a 2,094 m² plan, no part
- * hidden, none floating, and every pair equal to the cell. That is 9.7 % of
- * the plan, where §3.2 says the Caisson, at E(64) = 43.51, is the one hull
- * in Phase 4 whose lit upward area has to be large. The bake at 90 m and
- * 4 px/m reads raw E 93.65 and dims by ×0.465 — inside the ×1/64 .. ×64
+ * 3.0 — thirty-two lit parts, 202.3 m² facing up on a 2,085 m² plan, no part
+ * hidden, none floating, and each pair the same area. That is 9.7 % of the
+ * plan, where §3.2 says the Caisson, at E(64) = 43.51, is the one hull in
+ * Phase 4 whose lit upward area has to be large. The bake at 90 m and
+ * 4 px/m reads raw E 92.66 and dims by ×0.469 — inside the ×1/64 .. ×64
  * window with thirty-fold headroom to its floor, under the first cut's
  * ×0.581 because the blades and the third strip added 42 m². The conn
  * view's lamps take the model's own intensity and never the bake's gain
- * (rosterModels.ts), so they rest 2.15 times over what the chart shows,
+ * (rosterModels.ts), so they rest 2.13 times over what the chart shows,
  * where the first cut's rested 1.72 times over. There is no second band to scale to: 64 idle and 64 cruise is
  * one state, so `applyLiveGlow` leaves these lamps where they are at rest
  * and under way alike. The +25 of a launch still scales them.
  *
- * 255 parts, 4,636 triangles, seven materials, where the first cut carried
+ * 257 parts, 4,660 triangles, seven materials, where the first cut carried
  * 158, 2,832 and the same seven; the file spans x −45 .. 45 and z −13.25 ..
- * 13.25, so the bake neither rescales nor rotates, and meta.json carries no
- * warnings.
+ * 13.25 exactly, so the bake neither rescales nor rotates, and meta.json
+ * carries no warnings.
  *
  * Where the block, the plan bullet and the visual law disagreed. The block
  * said "the bare drive hull" and named nothing on it, and the first cut
@@ -218,18 +256,22 @@
  * rivets a side and one patch. The art direction's silhouette rule wants a hull that reads
  * at a glance, and a third of this one read as a raft. So the block gained a
  * sentence, quoted above: bare is bare of *plate*, the frames the caisson is
- * bolted to stand unclad, and the drive is on the drive hull. Nothing else
- * in it moved. Two of its phrases are still read rather than taken at the
+ * bolted to stand unclad, and the drive is on the drive hull, in the open.
+ * That sentence was reworded once in review: it first called the drums
+ * "casings", and a casing is an enclosure over machinery — the thing the
+ * block's next lines forbid on this hull. They are the drive's pressure
+ * vessels, and one word names them here, in the block and in the file:
+ * drum. Nothing else in the block moved. Two of its phrases are still read rather than taken at the
  * word: "two thirds" is the caisson and not its parallel run, and "no
  * shroud" is the acoustic kind.
  *
  * Every part comes from `factions/bathyarch.mjs`. `caissonBox`, `bowTubes`,
  * `plantCylinder` and `exhaustLouvres` were written for this hull there in
- * #787; #1956 added `plantDucts`, `ringFrames`, `driveCasings` and
+ * #787; #1956 added `plantDucts`, `ringFrames`, `driveDrums` and
  * `shoulderStays`, a chamfer and shoulder bolts to `caissonBox`, a plenum's
- * `well.x` and `cheeks` to `exhaustLouvres`, `straps` to `ballastBlisters`
- * and `after` to `floodStrips` — each an option another hull's call leaves
- * unset, so no other file moved. Coordinate tables below are laid out as
+ * `well.x` and `cheeks` to `exhaustLouvres`, `straps` to `ballastBlisters`,
+ * `after` to `floodStrips` and `hub.x` to `propTunnel` — each an option
+ * another hull's call leaves unset, so no other file moved. Coordinate tables below are laid out as
  * tables on purpose; `tools/**\/*.mjs` is outside the repo's Prettier scope
  * (package.json) precisely so they can be.
  *
@@ -237,11 +279,11 @@
  * (docs/asset-prompts-3d.md Block 2c; bathyarch.mjs `cut`), and every round
  * part here asks it: the bow tubes, their flanges and doors, the plant
  * cylinder and its heads, the stacks, the blisters, their caps and straps,
- * the drive casings, their flanges, bands and heads, the shrouds, hubs,
+ * the drive drums, their flanges, bands and heads, the shrouds, hubs,
  * bolts and hatches six plates, the plant's 2.8 m bands eight. The blisters
- * and the casings are laid with a plate on the crown, so a blister's crown
+ * and the drums are laid with a plate on the crown, so a blister's crown
  * is an apothem, 1.73 m, over its axis and its axis is 1.7 m under the
- * skirt. The median unlit part reads 1.56 m on a side from above, inside
+ * skirt. The median unlit part reads 1.50 m on a side from above, inside
  * the hull band of 0.75–2 m; the first cut read 0.94.
  */
 import { THREE, bothSides, exportGlb, metreTrue } from '../kit.mjs';
@@ -340,21 +382,23 @@ bathyarch.caissonBox(root, { black, grey, rust, amber }, {
   },
   plough: { outline: [[BOW, 1.3], [42.8, 2.3], [42.8, -2.3], [BOW, -1.3]], depth: CROWN + 4, y: (CROWN - 4) / 2 },
   band: { at: [42.2, CROWN + 0.25, 0], size: [1.4, 0.5, 12.6] },
-  bolts: { from: -13.5, to: 37.5, count: 17, r: 0.35, h: 0.6, y: 5.45, z: 12.95 },
+  bolts: { from: -13.5, to: 37.5, count: 17, r: 0.35, h: 0.6, y: 5.45, z: 12.9 },
 });
 
 // The belt: the caisson's flank in plate, older under newer. Two newer grey
 // plates forward and an older one in oxide abaft them riding higher, a
 // metre of the box showing between each, over a strake of older plate the
 // length of the flank; sixteen rivets a side along the strake. The plates
-// stand 0.15 m proud of the box and the rivets and the bolt heads to 13.25,
-// which is the file's beam.
+// stand 0.1 m proud of the box and the rivets and the bolt heads to 13.2,
+// 5 cm inside the flange, which alone sets the file's beam: the flange is
+// one box about the keel, 13.25 to the bit, where a head at 12.9 + 0.3 is
+// 13.2 and a float's rounding over (the header's raster bullet).
 bathyarch.flankPlates(root, { grey, rust }, {
-  z: 12.75, plateT: 0.8,
+  z: 12.7, plateT: 0.8,
   plates: [[30, 13, 4, 3, false], [14.5, 16, 3.4, 2.7, false], [-4, 19, 3, 3.5, true]],
-  seamLength: 50.4, seam: { x: 11.5, y: 0.1, h: 1.0, t: 0.8, z: 12.75 },
+  seamLength: 50.4, seam: { x: 11.5, y: 0.1, h: 1.0, t: 0.8, z: 12.7 },
 });
-bathyarch.rivetRows(root, grey, { from: -13.5, to: 36.5, count: 16, y: 0.1, z: 13.15, size: [0.5, 0.5, 0.2] });
+bathyarch.rivetRows(root, grey, { from: -13.5, to: 36.5, count: 16, y: 0.1, z: 13.1, size: [0.5, 0.5, 0.2] });
 bathyarch.rivetRows(root, grey, { from: -12, to: 36, count: 16, y: CROWN + 0.15, z: 12, size: [0.6, 0.3, 0.6] });
 
 // The Corvette's two tubes let into the bow face either side of the plough,
@@ -381,12 +425,13 @@ bathyarch.plantCylinder(root, { black, grey, rust }, {
 
 // What the plant exhausts through, a side: a plenum 20 m long standing
 // 1.6 m off the plant deck abreast of the cylinder, two ducts into it from
-// the cylinder's flank, the louvre rank on its roof over the after 13 m —
+// under the cylinder — each carried in to z 1, where its top is 0.65 m
+// through the drum's keel plate — the louvre rank on its roof over 13 m —
 // four blades a metre across at a 1.25 m pitch, hung between two cheeks, no
 // shutters — and the stack standing on its fore end.
 const PLENUM = PLANT + 1.6;
 const BANK = 7.75;
-bathyarch.plantDucts(root, rust, { x: [12, 20], y: PLANT + 0.65, z: 3.6, size: [2.2, 1.3, 3.2] });
+bathyarch.plantDucts(root, rust, { x: [12, 20], y: PLANT + 0.65, z: 3.1, size: [2.2, 1.3, 4.2] });
 bathyarch.exhaustLouvres(root, { black, flood, rust }, {
   x: 13, y: PLENUM + 0.36, z: BANK, length: 13,
   well: { x: 16, y: PLANT + 0.8, size: [20, 1.6, 5.7] },
@@ -435,28 +480,36 @@ bathyarch.ballastBlisters(root, { grey, rust }, {
   straps: { x: [-9, -3, 3, 9, 15, 21, 27, 33], r: 2.15, width: 0.6 },
 });
 
-// The bare drive hull: eight ring frames at the bolts' pitch from x −18 to
-// −39, standing 0.4 m proud of the flank and 0.3 of the deck plate; four
-// stays raking from the flange down to the first frame; and the drive — a
-// casing a side over each tunnel, half sunk in the deck, from its flange on
-// the shoulder to its head over the notch, banded where a frame crosses it.
+// The bare drive hull: eight ring frames in the older plate at the bolts'
+// pitch from x −18 to −39, standing 0.4 m proud of the flank and 0.3 of the
+// deck plate; four stays raking from the flange down to the first frame;
+// and the drive — a pressure drum a side over each tunnel, its axis 0.6 m
+// under the deck plate's top, from its flange on the shoulder to its head,
+// banded where a frame crosses it, and the head into a drive leg that
+// stands through the deck at the notch's forward wall and goes down the
+// notch to the shaft line.
 const FRAMES = Array.from({ length: 8 }, (_, i) => -18 - i * PITCH);
-bathyarch.ringFrames(root, grey, { x: FRAMES, y: 0.5, size: [0.5, 9.4, 19.8] });
+const SHAFT = -1.2;
+bathyarch.ringFrames(root, rust, { x: FRAMES, y: 0.5, size: [0.5, 9.4, 19.8] });
 bathyarch.shoulderStays(root, rust, {
   z: [8.65, 1.7, -1.7, -8.65], head: { x: SHOULDER + 0.2, y: 6.3 }, foot: { x: -18.1, y: 5.0 }, t: 0.8,
 });
-bathyarch.driveCasings(root, { black, grey, rust }, {
-  x: -26, y: DECK, z: 5.2, r: 2.3, length: 22,
+bathyarch.driveDrums(root, { black, grey, rust }, {
+  x: -26, y: DECK - 0.6, z: 5.2, r: 2.3, length: 22,
   flange: { x: SHOULDER - 0.3, r: 2.6, width: 0.6 },
   bands: { x: [-21, -27, -33], r: 2.5, width: 0.7 },
   head: { length: 2.2, tipR: 1.2 },
+  leg: { x: [-41.7, -38.9], y: [SHAFT - 1.1, DECK + 0.9], w: 2.6 },
 });
 
 // The two prop tunnels, one lying in each stern notch: the shroud's after
-// face a metre proud of the transom and the hub standing to −45.
+// face a metre proud of the transom, and the hub through it from the stern
+// at −45 forward to x −41.5, 0.2 m into the drive leg. The hub is 3.5 m
+// about −43.25, numbers a float holds exactly, so the stern is −45 to the
+// bit and `metreTrue` below returns exactly 1.
 bothSides((side, sgn) =>
   bathyarch.propTunnel(root, { grey, black }, {
-    name: side, at: [-43.6, -1.2, sgn * 5.2], r: 2.6, length: 2.4, hub: { r: 0.9, length: 2.8 },
+    name: side, at: [-43.6, SHAFT, sgn * 5.2], r: 2.6, length: 2.4, hub: { r: 0.9, length: 3.5, x: -43.25 },
   })
 );
 
@@ -474,7 +527,7 @@ bathyarch.repairPatches(root, bathyarch.inFrame, { rust, grey }, {
 
 // The stencil to starboard on the foredeck, the hatch to port of the bow
 // lamp, the lamp itself on the centreline where nothing can occlude it,
-// and a second hatch on the drive hull's deck between the casings.
+// and a second hatch on the drive hull's deck between the drums.
 bathyarch.bowStencil(root, amber, { at: [35, OLDER + 0.15, 5], size: [6, 0.3, 1.3] });
 bathyarch.bowLamp(root, lampM, { at: [39.5, OLDER + 0.15, 0], size: [1.2, 0.8, 3] });
 const HATCH = { r: 1.3, h: 0.5, wheel: { R: 0.55, t: 0.1 } };
@@ -482,8 +535,12 @@ bathyarch.deckHatches(root, { hatch: rust, wheel: grey }, { on: 'caisson_course_
 bathyarch.deckHatches(root, { hatch: rust, wheel: grey }, { on: 'deck', ...HATCH, hatches: [['drive_hatch', [-28.5, 0]]] });
 
 // Metre-true as drawn: 90 from the prop hubs to the plough plate's face, so
-// the scale this returns is 1 and the root carries nothing.
+// the scale this returns is 1 and the root carries nothing. Exactly 1, and
+// held to it: the first two cuts' hubs ended at a station a float rounds
+// (−43.6 − 1.4), the root took a scale of 1 + 5e-10 to make up the length,
+// and that carried the beam 7 nm a side past 26.5 m — one more row in the
+// bake than the header counts, 107 for 106 (#1956 review).
 const k = metreTrue(root, L, { drawn: L });
-if (Math.abs(k - 1) > 1e-6) throw new Error(`consortium_caisson: root scale ${k}, expected 1`);
+if (k !== 1) throw new Error(`consortium_caisson: root scale ${k}, expected exactly 1`);
 
 await exportGlb(root, 'caisson-bathyarch.glb', { trim: bathyarch.TRIM });

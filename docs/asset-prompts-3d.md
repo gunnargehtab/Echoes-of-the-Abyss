@@ -1463,8 +1463,9 @@ no longer tapering — a blunt plough bow, a flat plate face with chamfered
 corners, flanks parallel from the shoulders aft to the step at two thirds
 of the length, then a step in to the bare drive hull and a square stern
 with two prop tunnels. The drive hull is bare of plate, not of drive: its
-ring frames stand unclad at the pitch the caisson is bolted to, and a
-banded drive casing lies along its back from the shoulder to each tunnel.
+ring frames stand unclad at the pitch the caisson is bolted to, and the
+drive lies along its back in the open, a banded pressure drum a side from
+the shoulder aft to a drive leg down into its prop tunnel.
 The caisson is the step: a box of heavier plate bolted over the
 forward two thirds, riveted, patchworked older-under-newer, its after edge
 standing proud of the drive hull as a shoulder — the third more plate,

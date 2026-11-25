@@ -1069,7 +1069,14 @@ export function propTunnel(root, { grey, black, vent }, opts) {
   const { name, at, r, length, hub, blades, vent: ev, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
   add(root, `prop_shroud_${name}`, cyl(r, r, length, rule.round(r)), grey, at, onX);
-  add(root, `prop_hub_${name}`, cyl(hub.r, hub.r, hub.length, rule.round(hub.r)), black, at, onX);
+  // `hub.x` sets the hub at a station of its own along the keel, for a
+  // shaft that runs on forward of its ring to what turns it: the Caisson's,
+  // into the drive leg in the notch (#1956). A station and not an offset,
+  // so a script can make the hub's after end a number a float holds
+  // exactly. Unset, the hub is centred in the shroud as every other
+  // hull's is.
+  const hubAt = hub.x === undefined ? at : [hub.x, at[1], at[2]];
+  add(root, `prop_hub_${name}`, cyl(hub.r, hub.r, hub.length, rule.round(hub.r)), black, hubAt, onX);
   if (blades)
     for (let i = 0; i < blades.count; i++)
       add(
@@ -1962,9 +1969,9 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
  * first cut read as a flat raft bolted to a box, and added what ties the
  * two: the caisson's chamfered rim and the bolted flange it ends in, the
  * stays off that flange (`shoulderStays`), the drive hull's bare frames at
- * the caisson's bolt pitch (`ringFrames`), a drive casing over each tunnel
- * (`driveCasings`), and the ducts that make the plant one machine
- * (`plantDucts`).
+ * the caisson's bolt pitch (`ringFrames`), the drive itself, a pressure drum
+ * a side geared down into its tunnel (`driveDrums`), and the ducts that make
+ * the plant one machine (`plantDucts`).
  * ------------------------------------------------------------------------ */
 
 /**
@@ -1989,8 +1996,8 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
  *
  * The step is the whole point and `outlines.mjs` has to keep it: the box is
  * the widest thing on the hull at every station it covers, and nothing on
- * the drive hull behind it — frame, strake, casing — reaches past the
- * drive hull's own flank by more than a frame's depth. A tier that stood
+ * the drive hull behind it — frame, strake, drum — reaches past the
+ * drive hull's own flank by more than a strake's depth. A tier that stood
  * proud of the box would read as one hull with a bulge rather than a hull
  * in a jacket of plate, which is the Furnace's seam-on-the-flank fault
  * (#786 review) in the other direction.
@@ -2171,9 +2178,13 @@ export function exhaustLouvres(root, { black, flood, rust }, opts) {
  * The ducts that make the plant one machine: a box trunk a station from the
  * pressure cylinder's flank out to the louvre plenum abreast of it, the
  * starboard rank then the port (`plant_duct_s0..n · plant_duct_p0..n`).
- * `size` is `[along the keel, tall, across]` and `z` the trunk's centre, so
- * its inboard end is inside the drum and its outboard end inside the
- * plenum's wall. Without them the cylinder, the louvres and the stacks are
+ * `size` is `[along the keel, tall, across]` and `z` the trunk's centre.
+ * The script sets both so the trunk meets both ends: a six-plate drum on
+ * saddles has its flank a long way over a deck trunk — the Caisson's is at
+ * y 9.26 where a trunk 1.3 m tall first reaches it — so the trunk is
+ * carried in under the drum to where its top is through the keel plate,
+ * and out into the plenum's wall. A trunk that stops at the drum's beam
+ * touches nothing (#1956 review). Without them the cylinder, the louvres and the stacks are
  * three fixtures on a deck; with them the block's sentence is a process —
  * the plant, and what it exhausts through (#1956).
  */
@@ -2200,32 +2211,44 @@ export function ringFrames(root, mat, { x: stations, y, size }) {
 }
 
 /**
- * The drive: a casing over each prop tunnel, a pressure drum lying
- * fore-and-aft and half sunk in the drive hull's deck, from the caisson's
- * shoulder aft to the tunnel it turns — the plant cylinder's own
- * vocabulary at a lesser radius, since it is the same plant's other end.
- * A side at a time, starboard first: the drum; the flange where it comes
- * out of the shoulder, in the older plate; the bands round it, flat and
- * grey as the plant's are; and the dished head over the tunnel, a frustum
- * drawn in to `head.tipR` with its small end aft (`drive_casing_s ·
- * drive_flange_s · drive_band_s0..n · drive_head_s · drive_casing_p …`).
+ * The drive, which on this navy's line hull is on the hull and not in it: a
+ * pressure drum a side lying fore-and-aft in the drive hull's deck, the
+ * drive's own vessel as the plant cylinder is the plant's — not a cover over
+ * anything, and nothing covers it — geared down at its after end into the
+ * tunnel it turns. A side at a time, starboard first: the drum; the flange
+ * where it comes out of the caisson's shoulder, in the older plate; the
+ * bands round it, flat and grey as the plant's are; the dished head, a
+ * frustum drawn in to `head.tipR` with its small end aft; and the drive
+ * leg, a box the head runs into, standing through the deck at the tunnel
+ * notch's forward wall and down the notch to the shaft line, where the
+ * prop hub runs into it from astern (`drive_drum_s · drive_flange_s ·
+ * drive_band_s0..n · drive_head_s · drive_leg_s · drive_drum_p …`).
  *
  * `x` is the drum's centre and `length` its run; the head stands on its
- * after end and the flange at `flange.x`. A cylinder laid on X by a quarter
- * turn about Z carries its `rTop` onto −X, so the after head is
- * `cyl(tipR, r)` — `plantCylinder`'s rule.
+ * after end and the flange at `flange.x`. The leg is `leg.x` `[aft, fore]`
+ * and `leg.y` `[foot, top]`, `leg.w` across, on the drum's own beam line;
+ * the script sets its foot under the hub and its after face where the hub
+ * (`propTunnel` `hub.x`) reaches it, so drum, head, leg, hub and shroud
+ * each meet the next. A cylinder laid on X by a quarter turn about Z
+ * carries its `rTop` onto −X, so the after head is `cyl(tipR, r)` —
+ * `plantCylinder`'s rule.
  */
-export function driveCasings(root, { black, grey, rust }, opts) {
-  const { x, y, z, r, length, flange, bands, head, cut: rule = METRE } = opts;
+export function driveDrums(root, { black, grey, rust }, opts) {
+  const { x, y, z, r, length, flange, bands, head, leg, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
   const facets = rule.round(r);
   bothSides((side, sgn) => {
-    add(root, `drive_casing_${side}`, cyl(r, r, length, facets), black, [x, y, sgn * z], onX);
+    add(root, `drive_drum_${side}`, cyl(r, r, length, facets), black, [x, y, sgn * z], onX);
     add(root, `drive_flange_${side}`, cyl(flange.r, flange.r, flange.width, rule.round(flange.r)), rust, [flange.x, y, sgn * z], onX);
     bands.x.forEach((bx, i) =>
       add(root, `drive_band_${side}${i}`, cyl(bands.r, bands.r, bands.width, rule.round(bands.r)), grey, [bx, y, sgn * z], onX)
     );
     add(root, `drive_head_${side}`, cyl(head.tipR, r, head.length, facets), rust, [x - length / 2 - head.length / 2, y, sgn * z], onX);
+    add(root, `drive_leg_${side}`, box(leg.x[1] - leg.x[0], leg.y[1] - leg.y[0], leg.w), rust, [
+      (leg.x[0] + leg.x[1]) / 2,
+      (leg.y[0] + leg.y[1]) / 2,
+      sgn * z,
+    ]);
   });
 }
 
