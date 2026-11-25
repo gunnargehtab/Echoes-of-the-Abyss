@@ -3459,13 +3459,20 @@ export class PerspectiveView {
       this.detailTexture = null;
       this.detailUniforms = null;
     }
-    if (this.embers !== null) {
-      this.scene.remove(this.embers);
-      this.embers.geometry.dispose();
-      (this.embers.material as PointsMaterial).dispose();
-      this.embers = null;
-    }
+    this.disposeEmbers();
     this.terrainDressing.clear();
+  }
+
+  /** Take the ember cloud out of the scene. Every dressing rebuild stands a
+   * new one, and the fields and the map each rebuild after the ground in
+   * every match: a cloud left in the scene adds on top of the live one,
+   * frozen at its last bucket, in the palette it was last written in (#1906). */
+  private disposeEmbers(): void {
+    if (this.embers === null) return;
+    this.scene.remove(this.embers);
+    this.embers.geometry.dispose();
+    (this.embers.material as PointsMaterial).dispose();
+    this.embers = null;
   }
 
   private rebuildTerrain(): void {
@@ -4107,15 +4114,13 @@ export class PerspectiveView {
    * is a few more points, not another draw call, and it takes the veil and
    * the swim the same way. */
   private buildEmbers(terrain: TerrainPayload): void {
+    this.disposeEmbers();
     const embers = ventEmbers(terrain, this.groundSeed);
     const lamps = civicLamps(terrain, this.groundSeed);
     this.emberPhases = embers.map((e) => e.phase);
     this.emberPositions = [...embers, ...lamps].map((e) => ({ xM: e.xM, yM: e.yM }));
     const count = this.emberPositions.length;
-    if (count === 0) {
-      this.embers = null;
-      return;
-    }
+    if (count === 0) return;
     const emberPositions = new Float32Array(count * 3);
     const emberColors = new Float32Array(count * 3);
     this.emberPositions.forEach((at, i) => {
