@@ -19,8 +19,9 @@ own text. The balance freeze binds here too: a balance issue goes under Later's
 
 ## 1. Take stock
 
-GitHub access is `work-issue` §0's: the `mcp__github__*` tools when present,
-else the REST API with `GITHUB_TOKEN`, and a refused write is a stop.
+GitHub access is `work-issue` §0's: the GitHub MCP tools when present under
+either prefix it names, else the REST API with `GITHUB_TOKEN`, and a refused
+write is a stop.
 
 First look for an open pull request from a `claude/roadmap-sync` branch. **One
 exists:** check it out, merge `origin/main` in (`steward` §3, never rebase),
