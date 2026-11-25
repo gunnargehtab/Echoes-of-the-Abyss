@@ -112,7 +112,7 @@ finished; an increment merges on software frames, and one that adds shading cost
 a timing run. No gate enforces any of it: a look is judged by looking. What keeps a look
 issue from the Routine is the `look-work` label (#1880), as `shape-work` keeps shape work.
 Since 25 November 2026 (#1946) a look runs on the model it needs, Fable or Opus, and that
-is a person's call per issue. Its critic is a fresh `opus` either way.
+is a person's call per issue. Its critic is a fresh `opus` at `xhigh` either way.
 
 ### These files are gated too, and a number in them carries its source
 

@@ -103,12 +103,16 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
   same way. A firing that finds its issue is look work without the label applies it,
   stops and releases it, so the next firing does not take it again. Nothing removes the
   label but a person.
-- **The critic is a fresh `opus`, whoever authored.** #540's rule is fresh context and
-  no edits, and it holds for a look as for any change. On a Fable round the critic is
-  also a second model. On an Opus round it is the same model, as on every change the
-  Routine makes, and the owner's acceptance is what grades the look. The owner turned
-  down a Fable critic for Opus rounds on 25 November 2026: Fable's tokens go to the
-  looks it authors.
+- **The critic is a fresh `opus` at `xhigh`, whoever authored.** #540's rule is fresh
+  context and no edits, and it holds for a look as for any change. On a Fable round the
+  critic is also a second model. On an Opus round it is the same model, as on every
+  change the Routine makes, and the owner's acceptance is what grades the look. The
+  owner turned down a Fable critic for Opus rounds on 25 November 2026: Fable's tokens go
+  to the looks it authors. Spawn a look round's critic with `effort: xhigh`. On 25
+  November eight critics, four at each level, replayed the last rounds of #1892 and
+  #1907 (#1946). On #1892 both at `xhigh` refused on a blocking finding, and each found
+  one no `high` critic did; one at `high` passed it. On #1907's one-line gate the levels
+  matched. `xhigh` took 1.55 times the tokens and 1.7 times the time, about 11 minutes.
 
 The round, the critic, the cap and "Three things the loop must never do" are unchanged.
 What changes is what a round is graded against.
