@@ -113,8 +113,9 @@ export interface Palette {
    * every contact tier, the chrome's two neons and the reserved
    * `neon-violet`, as the eye its palette serves sees them. All four hold it
    * (palette.test.ts). The red-green pair's are saturated violets; a
-   * tritanope sees those as greys beside a Tier 1 contact, so tritanopia's is
-   * the standard orchid moved to its floor (#1913).
+   * tritanope sees those as a grey or a dull blue, on Bathyarch's cladding or
+   * a Tier 1 contact, so tritanopia's is the standard orchid moved to its
+   * floor (#1913).
    */
   lantern: number;
   /**

@@ -57,7 +57,7 @@ rasteriser drew these too, and the owner's glance at them is still owed.
 
 ![High: the ember, the biolight and the lantern in tritanopia, before and after](software/high-tritanopia.png)
 
-- **The ember goes from orange to an amber.** At High its light fills the cell; at Low it
+- **The ember goes from orange to a yellower orange.** At High its light fills the cell; at Low it
   is the steam over the chimney's mouth and the two points at its lip.
 - **The lantern goes from a violet to the standard orchid, a shade pinker.** The crater's
   two rows are High's alone: Low draws no lantern. The second row holds two lanterns
@@ -65,9 +65,9 @@ rasteriser drew these too, and the owner's glance at them is still owed.
 - **The biolight barely moves, and that is the finding.** Its token moves 5.7 dE to a
   normal eye and 3.0 to a tritanope: no green stands further from that palette's inks
   ([style-neon-noir.md](../../style-neon-noir.md#rule-5-in-the-colour-vision-palettes)).
-  The Ventfront Divide's row is a coral growth 806 m from the base. The nearest kelp bed,
-  309 m out, drew one contact's mark in one run and four in the next, so it is no
-  control. The Abyssal Rift's biolight stands under a hull of the own base, as above.
+  The Ventfront Divide's row is a coral growth 806 m from the base. Over the nearest kelp
+  bed, 309 m out, the HUD heard one contact in one run and four in the next, and a ring
+  crossed the frame, so it is no control. The Abyssal Rift's biolight stands under a hull of the own base, as above.
 - **The standard palette does not move.**
   [control-tritanopia.json](software/control-tritanopia.json) compares the standard
   column before and after. Over the families the most pixels that differ by more than 8

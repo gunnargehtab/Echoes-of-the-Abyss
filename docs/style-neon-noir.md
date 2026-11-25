@@ -734,9 +734,9 @@ from Bathyarch's accent and console accent and 27.4 from the Directorate's accen
 degrees, 3.5 dE from the standard token to a normal eye. A second model of this eye
 (Machado, Oliveira and Fernandes 2009) puts its nearest ink at 36.0 dE. Its margin is
 1 dE where a family's is 3, because no pink or violet at that luminance stands more than
-26.8 dE clear; one 28 dE clear is a quarter brighter. It is the one lantern of the three
-that is no saturated violet: to a tritanope a saturated violet is a grey, and the
-red-green pair's `#7F00FF` would stand 8.1 dE from a Tier 1 contact. A software
+26.8 dE clear; one 28 dE clear is a quarter brighter. It is the one colour-vision
+lantern that is no saturated violet: to a tritanope a saturated violet is a grey or a
+dull blue, and deuteranopia's `#7F00FF` would stand 8.1 dE from a Tier 1 contact. A software
 rasteriser's frames of it are in [screenshots/issue-1854](screenshots/issue-1854/README.md),
 and the owner's glance at them is still owed.
 
@@ -957,14 +957,15 @@ its family's hue, by both models.
 | `vent-ember` `#CA782D` | The Directorate's accent, 18.0 dE | The Directorate's accent, 22.7 dE |
 | `flora-biolight` `#3D8C6B` | Pelagia's primary and Hadron's accent, 11.0 dE | Hadron's accent, 11.1 dE |
 
-The ember goes from orange to an amber, 18 dE clear as the red-green pair's four are.
+The ember goes from orange to a yellower orange, 18 dE clear as the red-green pair's
+four are.
 
 `flora-biolight` cannot reach the floor for this eye. A tritanope has one axis of hue,
 warm to cool, and at the biolight's luminance the cool side holds Pelagia's primary,
 Hadron's accent, a Tier 1 contact and `neon-violet` already: no green at that luminance
-stands more than 11.0 dE from all four. Two colours would hold 15, and neither is this
-family's: a pale sage at 1.8 times the luminance, which would re-price every level below,
-and a clay tan at the same luminance, 7.9 dE from the lamp. The owner took the nearest
+stands more than 11.0 dE from all four. The colours that would hold 15 leave the family:
+a pale sage at 1.8 times the luminance, for one, which would re-price every level that
+"Luminance does not move" names, or a clay tan at the same luminance, 7.9 dE from the lamp. The owner took the nearest
 green at that reach, in session on 25 November 2026, as #1913 said to record a lantern
 that could not reach its own. `#3D8C6B` stands 11.0 dE from Pelagia's primary and Hadron's
 accent, 11.1 from `neon-violet` and 11.3 from a Tier 1 contact, where the standard token

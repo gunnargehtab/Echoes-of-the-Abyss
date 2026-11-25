@@ -437,8 +437,8 @@ describe('what each palette is for', () => {
 
   it('tritanopia’s lantern is the orchid and no violet: its first violet, and the red-green pair’s, fall under the floor (#1913)', () => {
     // The violet this palette first wore was chosen against the eye #1905
-    // replaced. To the one here it and the red-green pair's violets are greys:
-    // Bathyarch's cladding, or a Tier 1 contact.
+    // replaced. To the one here it and protanopia's violet are greys, on
+    // Bathyarch's cladding, and deuteranopia's a dull blue on a Tier 1 contact.
     const p = PALETTES.tritanopia;
     const bathyarch = p.faction[Faction.Bathyarch].accent;
     const tier1 = p.tier[ResolutionTier.Contact].color;
@@ -569,7 +569,7 @@ describe('what each palette is for', () => {
     // The biolight cannot. A tritanope's cool side at this luminance holds
     // Pelagia's primary, Hadron's accent, a Tier 1 contact and the reserved
     // violet, and the token stands as far from all four as a green can: 11.0
-    // dE, within a tenth of each, where the standard teal stood 9.1.
+    // to 11.3 dE from each, where the standard teal stood 9.1 from the nearest.
     const cool: Array<[string, number]> = [
       ['Pelagia primary', p.faction[Faction.Pelagia].primary],
       ['Hadron accent', p.faction[Faction.Hadron].accent],
