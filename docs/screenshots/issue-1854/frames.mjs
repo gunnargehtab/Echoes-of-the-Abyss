@@ -77,8 +77,8 @@ export default async ({ page, shot }) => {
   assert.ok(own, 'the own force has a centre');
   // Clear of the base's own structures, and still the nearest: a kelp tip
   // behind a foundry is no frame of a kelp tip.
-  // CLEAR_M=800 stands a site clear of the base's traffic too: a loud hull's
-  // beam crossing a kelp bed is a different frame each run (#1836).
+  // CLEAR_M=800 stands a site clear of what is heard round the base too: one
+  // run drew four contacts' marks over the nearest kelp bed and the next one.
   const CLEAR_M = Number(process.env.CLEAR_M ?? 300);
   const from = (at) => Math.hypot(at[0] - own.x, at[1] - own.z);
   const given = process.env.POSES_FROM

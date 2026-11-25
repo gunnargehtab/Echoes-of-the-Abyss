@@ -65,9 +65,9 @@ rasteriser drew these too, and the owner's glance at them is still owed.
 - **The biolight barely moves, and that is the finding.** Its token moves 5.7 dE to a
   normal eye and 3.0 to a tritanope: no green stands further from that palette's inks
   ([style-neon-noir.md](../../style-neon-noir.md#rule-5-in-the-colour-vision-palettes)).
-  The Ventfront Divide's row is a coral growth 806 m from the base, where no hull's beam
-  crosses the frame; the Abyssal Rift's biolight stands under a hull of the own base, as
-  above.
+  The Ventfront Divide's row is a coral growth 806 m from the base. The nearest kelp bed,
+  309 m out, drew one contact's mark in one run and four in the next, so it is no
+  control. The Abyssal Rift's biolight stands under a hull of the own base, as above.
 - **The standard palette does not move.**
   [control-tritanopia.json](software/control-tritanopia.json) compares the standard
   column before and after. Over the families the most pixels that differ by more than 8
