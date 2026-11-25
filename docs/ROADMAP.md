@@ -913,6 +913,8 @@ and no row below is open.
 | The contact log printing a range without its thousands comma | [#1903](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1903) |
 | A palette test's tritanopia projection with no red-green axis | [#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905) |
 | A dressing rebuild leaving the old ember cloud in the scene | [#1906](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1906) |
+| Tritanopia’s lantern ink standing under its colour-distance floor at four inks | [#1913](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1913) |
+| Tritanopia’s console accents and ore ink missing five colour-distance floors | [#1914](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1914) |
 
 **How the project runs**
 
@@ -928,6 +930,7 @@ and no row below is open.
 | Re-syncing the vendored three.js skills to the r187 client | [#1804](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1804) |
 | Preflight passing a dependency that resolves outside its range | [#1828](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1828) |
 | A look-work label routing look issues away from the Routine | [#1880](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1880) |
+| Vendoring the diagnosing-bugs, writing-for-agents and grilling skills | [#1916](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1916) |
 
 **Look work at High**
 
@@ -971,6 +974,9 @@ is tagged from a green `main`.
 | Conclave Chord’s orders panel hiding its last rows | [#1621](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1621) |
 | Sorrowgate’s orders panel outgrowing the room at large UI scales | [#1634](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1634) |
 | The orders panel covering the depth ribbon's band labels | [#1650](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1650) |
+| Objective rows pointing at a marker their gloss never names | [#1922](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1922) |
+| Loading-place rings spilling past the region a load runs in | [#1923](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1923) |
+| Threat-modelling the game server before the playtest deploy | [#1920](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1920) |
 
 ---
 
@@ -1044,8 +1050,20 @@ A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shi
 | The manta’s findings left open at merge: a timing run and a mid-tone belly | [#1870](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1870) |
 | A deep fish’s far aft light showing through its body from abeam | [#1876](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1876) |
 | A vent field's own light filling a low camera's frame | [#1908](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1908) |
+| Blade rays read on the Spinner, the Lure and the Submersible | [#1925](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1925) |
+| A searchlight on a standing prop | [#1926](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1926) |
+| A standing prop's shadow in a searchlight | [#1927](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1927) |
+| A hull's shadow on another hull | [#1928](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1928) |
+| Work lights and floodlights on the player's own structures | [#1929](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1929) |
 
 Look work under [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) at High. Most wait on a target frame or an owner call.
+
+**Skills for the agent loop**
+
+| Work | Issue |
+| --- | --- |
+| Probing whether the vendored diagnosing-bugs skill changes a fix | [#1919](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1919) |
+| Marking skills only a person or a Routine starts as user-invoked | [#1921](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1921) |
 
 **Built when a branch wants it**
 
