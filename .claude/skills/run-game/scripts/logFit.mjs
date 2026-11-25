@@ -38,15 +38,15 @@ const SCALES = [0.75, 1, 1.25, 1.5, 2];
  */
 const PROBES = [
   ['tier-1', 'T+04:12', 'HEARD', 'contact', ['bearing unknown']],
-  ['tier-2', 'T+03:58', 'BEARING', 'contact', ['bearing 245°', '~1400 m']],
+  ['tier-2', 'T+03:58', 'BEARING', 'contact', ['bearing 245°', '~1,400 m']],
   [
     'tier-3',
     'T+04:09',
     'CLASSIFIED',
     'Directorate Abyssal Submersible',
-    ['bearing 118°', '~2100 m'],
+    ['bearing 118°', '~2,100 m'],
   ],
-  ['tier-4', 'T+12:40', 'TRACKED', 'Consortium Corvette', ['bearing 359°', '~11800 m']],
+  ['tier-4', 'T+12:40', 'TRACKED', 'Consortium Corvette', ['bearing 359°', '~11,800 m']],
   ['tier-1 mark', 'T+03:51', 'MARK', 'industrial hum', ['bearing 310°', 'decaying']],
 ];
 

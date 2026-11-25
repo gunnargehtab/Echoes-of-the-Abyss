@@ -545,12 +545,13 @@
    The label above it is what wraps first. When the detail is pushed to a line
    of its own the auto margin keeps it flush right, in the column it holds on
    every other row, and on a line still too narrow for all of it, it breaks
-   between its tokens and nowhere else: `bearing 359°` over `~11800 m`.
+   between its tokens and nowhere else: `bearing 359°` over `~11,800 m`.
 
    That second break is for the band just above the 900 px media query at
    200%: the panel is 144 px wide there, a 15 px scrollbar and the row's 16 px
-   of padding leave 113, and the widest detail is 133 px (#1893). So the detail may shrink, but no
-   further than its automatic minimum, which is its widest token. */
+   of padding leave 113, and the widest detail was 133 px (#1893), a comma wider
+   since #1903. So the detail may shrink, but no further than its automatic
+   minimum, which is its widest token. */
 .contact-log-detail {
   flex: 0 1 auto;
   margin-left: auto;
