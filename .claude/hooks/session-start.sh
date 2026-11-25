@@ -25,18 +25,29 @@ cd "${CLAUDE_PROJECT_DIR:-$(dirname "$0")/../..}"
 # the container image is cached after this hook completes, and `ci` deletes
 # node_modules on every run, which throws that cache away each session. The
 # lockfile is still respected for anything already satisfied.
+#
+# Note first whether the lockfile is already modified. SessionStart fires on
+# resume and after compaction too, mid-task, so a modified lockfile here can be a
+# session's own uncommitted dependency change, and the restore below would
+# discard it (#1953).
+lock_was_clean=false
+if git -C "$PWD" diff --quiet -- package-lock.json 2>/dev/null; then
+  lock_was_clean=true
+fi
+
 npm install --no-audit --no-fund
 
-# ...and then put the lockfile back. package-lock.json was authored by npm 11+,
-# which records a `libc` field per optional platform dependency; the npm 10 in
-# this image does not know that field and silently drops all 42 of them on any
-# write. Left alone, every unattended session would begin with a dirty tree and
-# could commit that churn into a PR that has nothing to do with dependencies.
-#
-# Safe to do unconditionally here: the hook runs before the session has done any
-# work, so there is never a deliberate lockfile change to clobber. A session that
-# genuinely adds a dependency edits it afterwards, and that edit survives.
-git -C "$PWD" checkout -- package-lock.json 2>/dev/null || true
+# ...and then put the lockfile back, if it was clean. package-lock.json was
+# authored by npm 11+, which records a `libc` field per optional platform
+# dependency; the npm 10 in this image does not know that field and silently
+# drops all 42 of them on any write. Left alone, every unattended session would
+# begin with a dirty tree and could commit that churn into a PR that has nothing
+# to do with dependencies. A lockfile that was already modified is left as npm
+# wrote it: the churn is then on top of a deliberate change, which steward §3
+# says how to untangle.
+if [ "$lock_was_clean" = true ]; then
+  git -C "$PWD" checkout -- package-lock.json 2>/dev/null || true
+fi
 
 # Both later gates depend on this, so pay for it once here rather than
 # discovering it mid-task.

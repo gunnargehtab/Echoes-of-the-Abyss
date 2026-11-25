@@ -1,5 +1,14 @@
-import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import {
+  appendFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -43,6 +52,68 @@ test('the configured read hook allows images and text but refuses GLBs', () => {
 test('the configured session-start hook is a no-op locally', () => {
   const result = runHook(startCommand);
   assert.equal(result.status, 0, result.stderr);
+});
+
+// The remote half of the session-start hook, against a scratch repository. `npm`
+// is stubbed to append to the lockfile on install, standing in for the image's
+// npm 10 dropping the `libc` fields, and `python3` so the Pillow step never
+// reaches pip. Bash only: the hook runs in Linux containers, never on Windows.
+function runRemoteStart(lockEdit) {
+  const dir = mkdtempSync(join(tmpdir(), 'session-start-'));
+  const bin = join(dir, 'bin');
+  const repo = join(dir, 'repo');
+  mkdirSync(bin);
+  mkdirSync(repo);
+  const stub = (name, body) =>
+    writeFileSync(join(bin, name), `#!/bin/sh\n${body}\nexit 0\n`, { mode: 0o755 });
+  stub('npm', '[ "$1" = install ] && echo churn >> package-lock.json');
+  stub('python3', '');
+  const git = (...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' });
+  git('init', '-q');
+  writeFileSync(join(repo, 'package-lock.json'), '{}\n');
+  git('add', 'package-lock.json');
+  git(
+    '-c',
+    'user.name=t',
+    '-c',
+    'user.email=t@t',
+    '-c',
+    'commit.gpgsign=false',
+    'commit',
+    '-qm',
+    'lock'
+  );
+  if (lockEdit) appendFileSync(join(repo, 'package-lock.json'), lockEdit);
+  try {
+    const result = spawnSync('bash', [join(root, '.claude', 'hooks', 'session-start.sh')], {
+      env: {
+        ...process.env,
+        CLAUDE_CODE_REMOTE: 'true',
+        CLAUDE_PROJECT_DIR: repo,
+        PATH: `${bin}:${process.env.PATH}`,
+      },
+      input: JSON.stringify({ source: 'compact' }),
+      encoding: 'utf8',
+    });
+    return { result, lock: readFileSync(join(repo, 'package-lock.json'), 'utf8') };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+const notOnWindows = { skip: process.platform === 'win32' && 'the hook is bash' };
+
+test('the session-start hook puts back a clean lockfile npm churned', notOnWindows, () => {
+  const { result, lock } = runRemoteStart('');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(lock, '{}\n');
+});
+
+// SessionStart also fires on resume and after compaction, mid-task (#1953).
+test('the session-start hook keeps a lockfile edit already in the tree', notOnWindows, () => {
+  const { result, lock } = runRemoteStart('"a dependency"\n');
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(lock, /"a dependency"/);
 });
 
 test('hooks resolve the project from a nested working directory', () => {
