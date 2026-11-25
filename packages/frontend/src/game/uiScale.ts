@@ -20,11 +20,13 @@ import { UI_SCALE_MIN } from '../settings/store.ts';
  * screen it had about 182 panel units of room for 444 units of rows, which is
  * not a layout to be tuned but arithmetic, and §2 does not let it scroll.
  *
- * So above 100% the type inside a panel grows by the square root of the scale
- * rather than by the scale. At 200% the reader still gets type about 1.4x the
- * size it was — magnification that is worth asking for — while the panel holds
- * roughly twice the rows it otherwise would. Below 100% it is 1: shrinking the
- * HUD is a request for more room and the panels already give it.
+ * So above 100% the type inside the orders panel grows by the square root of
+ * the scale rather than by the scale. At 200% the reader still gets type about
+ * 1.4x the size it was — magnification that is worth asking for — while the
+ * panel holds roughly twice the rows it otherwise would. Below 100% it is 1:
+ * shrinking the HUD is a request for more room and the panels already give it.
+ * The two logs magnify whole instead: their rows need not all be on screen at
+ * once, and §11 says why they keep their share of the width (#1898).
  */
 export const panelType = (uiScale: number) => (uiScale <= 1 ? 1 : Math.sqrt(uiScale) / uiScale);
 

@@ -1388,7 +1388,7 @@ Audio carries primary information, so accessibility here is a correctness requir
 - **Tier encoding is never hue-alone.** Tiers differ in size, alpha, edge hardness and shape before they differ in colour, so the whole scale survives any colour vision deficiency. Three additional palettes ship regardless: deuteranopia, protanopia, tritanopia.
 - **Faction colour is never the only identifier.** Tier-3+ contacts carry a faction glyph as well as a colour.
 - **UI scale** 75%–200%, independent of world zoom, with the SIG meter and ping preview scaling first.
-  Above 100% a floating panel's own type grows by the **square root** of the scale rather than
+  Above 100% the orders panel's own type grows by the **square root** of the scale rather than
   by the scale, and the panel keeps its width in panel units instead of narrowing. The reason is
   §2: the strip and the console scale too, so at 200% the room between them halves while a panel
   that magnified everything needed four times the area — the orders panel wanted 444 units of rows
@@ -1405,6 +1405,15 @@ Audio carries primary information, so accessibility here is a correctness requir
   refused, because 1280 × 720 overflows by 40 px at 100% itself, where no scale can be held.
   A panel is never allowed past the console to buy the difference; the console is not the
   water, but it is not spare room either.
+  **The contact log and the mission log do not take the square root.** Each magnifies whole,
+  type and box, and keeps its share of the screen's width rather than its width in panel units:
+  at 200% on a 1,440 × 1,200 window a log is 461 px wide, where the orders panel's rule would
+  make it 652 px and run the contact log into the orders panel across the top of the water. The
+  rule was written for rows that must all be on screen at once (§10.5). The logs' rows need not
+  be: each log is a text box that scrolls and folds (§2), and a contact row that cannot share
+  one line gives its detail a second line rather than printing over it (#1893). So a log holds
+  fewer, larger rows at 200%, which is the magnification a player asked for, and the orders
+  panel keeps its room (#1898).
   **And the scale the HUD draws at is held to what the window can carry.** The strip above
   the water and the console, hint line and breath below it take 292 units of height, and at
   200% on a 1366 × 768 screen they left 92 for the water, where no legible type fits the
