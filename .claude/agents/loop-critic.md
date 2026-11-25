@@ -64,7 +64,10 @@ between them first, under TARGET, in plain words a person looking at both would 
 is a finding only when it contradicts what the round claimed to change, and then it is
 blocking: no frame matches its target, and the distance left is the owner's to judge. A
 round with no target frame, or frames you cannot open, is `evidence-missing`. Check Low's
-frame is unchanged. You never accept a look: **pass** says the round did what it claimed.
+frame is unchanged. Where the evidence measures a claim with a script — Low's pixel
+difference from `main`, a timing, a profile across an edge — re-run it, and read the
+number before the picture. A claim of one of those three kinds that came with only a
+frame is a finding. You never accept a look: **pass** says the round did what it claimed.
 
 **3. What did it fail to do?** The clause with no code, the second call site, a
 `CLIENT_MSG` entry with no `CLIENT_SHAPE`, a constant moved without its doc, a

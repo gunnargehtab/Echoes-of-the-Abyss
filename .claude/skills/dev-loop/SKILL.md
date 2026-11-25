@@ -74,6 +74,11 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
   pull request. That run is a reading, not acceptance. Placement alone needs none.
 - **Low does not move.** Each increment shows the Low quality's frame unchanged at the
   same cameras, as its non-target control.
+- **A claim a script can measure carries the script.** Low's frame unchanged is a pixel
+  difference from `main` at the same camera, beside two takes of `main` for the noise. A
+  cost is gate 6's reading, and an edge is a profile across it. The evidence names the
+  command and its output, and the critic re-runs it rather than judging by eye. A claim
+  only an eye can make stays a frame for the owner.
 - **A refusal names one cause.** When the owner refuses a frame, write the one cause that
   produces their remarks before filing anything. On #1694 the first refusal became one
   issue per remark (#1749 to #1753), each closed, and the frame was refused again two
@@ -83,14 +88,31 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
   #1637 after its one GPU run, while that is open, and on the issue otherwise. A merge
   is not acceptance. Unattended, a session may build a look increment; it never accepts
   or promotes one.
-- **A Fable session does it.** The owner set this routing on 11 November 2026. Look work,
-  like shape work, is authored under Fable, and the Routine is pinned to another model.
-  A look issue carries the **`look-work`** label, which the Routine skips as it skips
-  `shape-work` (#1880), and stays assigned to the owner until a Fable session takes it.
-  Whoever files the next look step labels and assigns it the same way. A firing that
-  finds its issue is look work without the label applies it, stops and releases it, so
-  the next firing does not take it again. Nothing removes the label but a person. The
-  critic stays `opus`: a model other than the author's grades the frames.
+- **A look runs on the model it needs.** The owner set this in session on 25 November
+  2026 (#1946), in place of routing every look to Fable on 11 November. Fable takes a look
+  that has to be invented: a new rule in `docs/art-direction.md`, or a frame the owner
+  has refused. Opus takes one whose cause or rule is already set: a shadow's edge, a pass
+  inside gate 6's 8 ms, a placement by a written rule. A change to a hull's shape is
+  `shape-work`, under the design model of record. Whoever files a look issue names its
+  model in the body. When it names none, the session that takes it says which and why
+  in the pull request.
+- **The Routine does not take it.** A look issue carries the **`look-work`** label,
+  which the Routine skips as it skips `shape-work` (#1880): the model is a person's call
+  per issue, and the Routine is pinned to one. The issue stays assigned to the owner
+  until a session takes it. Whoever files the next look step labels and assigns it the
+  same way. A firing that finds its issue is look work without the label applies it,
+  stops and releases it, so the next firing does not take it again. Nothing removes the
+  label but a person.
+- **The critic is a fresh `opus` at `xhigh`, whoever authored.** #540's rule is fresh
+  context and no edits, and it holds for a look as for any change. On a Fable round the
+  critic is also a second model. On an Opus round it is the same model, as on every
+  change the Routine makes, and the owner's acceptance is what grades the look. The
+  owner turned down a Fable critic for Opus rounds on 25 November 2026: Fable's tokens go
+  to the looks it authors. Spawn a look round's critic with `effort: xhigh`. On 25
+  November eight critics, four at each level, replayed the last rounds of #1892 and
+  #1907 (#1946). On #1892 both at `xhigh` refused on a blocking finding, and each found
+  one no `high` critic did; one at `high` passed it. On #1907's one-line gate the levels
+  matched. `xhigh` took 1.55 times the tokens and 1.7 times the time, about 11 minutes.
 
 The round, the critic, the cap and "Three things the loop must never do" are unchanged.
 What changes is what a round is graded against.
