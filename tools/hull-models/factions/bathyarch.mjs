@@ -967,7 +967,7 @@ export function floodDecks(root, flood, { patches }) {
  * deck and a rank of lamp housings outboard of it, the starboard strip and
  * its lamps before port's (`flood_strip_s · flood_lamp_s0..7 · …`).
  */
-export function floodStrips(root, { flood, lampM }, { strip, lamps }) {
+export function floodStrips(root, { flood, lampM }, { strip, lamps, after }) {
   // `lamps.on` names, by index, a housing dropped onto the part named at
   // its station rather than laid at the rank's height (kit.mjs `seat`):
   // the Bulwark's last housing a side stands past its strip's end, 0.23 m
@@ -983,6 +983,11 @@ export function floodStrips(root, { flood, lampM }, { strip, lamps }) {
       add(root, `flood_lamp_${side}${i}`, box(...lamps.size), lampM, rest ? rest.at : at, rest ? rest.rot : [0, 0, 0]);
     }
   });
+  // `after` closes the two rows across the deck's after edge
+  // (`flood_strip_a`), written last: the Caisson's, whose caisson ends in a
+  // shoulder two thirds of the way aft, so its edge has three sides and the
+  // third is the one the step is read by (#1956).
+  if (after) add(root, 'flood_strip_a', box(...after.size), flood, after.at);
 }
 
 /**
@@ -997,7 +1002,7 @@ export function floodStrips(root, { flood, lampM }, { strip, lamps }) {
  * that keel.
  */
 export function ballastBlisters(root, { grey, rust }, opts) {
-  const { x, y, z, r, length, caps, skid, pipe, cut: rule = METRE } = opts;
+  const { x, y, z, r, length, caps, skid, pipe, straps, cut: rule = METRE } = opts;
   const onX = [0, 0, Math.PI / 2];
   // The drum's count, and its caps' with it: a cap is a frustum of the
   // drum's radius at its wide end, so the rule reads both at `r`.
@@ -1024,6 +1029,15 @@ export function ballastBlisters(root, { grey, rust }, opts) {
           onX
         );
     }
+    // Straps: a flat hoop round the blister at each of `straps.x`, in the
+    // older plate, cut at the drum's own count so its plates lie on the
+    // drum's (`ballast_strap_<side>0..n`). The Caisson's, whose blisters
+    // hang flush under a belt and are read from the beam, where a 47 m drum
+    // with nothing round it is one grey bar (#1956).
+    if (straps)
+      straps.x.forEach((sx, i) =>
+        add(root, `ballast_strap_${side}${i}`, cyl(straps.r, straps.r, straps.width, sides), rust, [sx, y, sgn * z], onX)
+      );
     if (skid) add(root, `keel_skid_${side}`, box(...skid.size), rust, [skid.x, skid.y, sgn * skid.z]);
     if (pipe)
       add(
@@ -1943,6 +1957,14 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
  * these are let into the bow face; and the kit's `louvres` draws one bank
  * where a hull wants the pair. Built, not ported: every number is the hull
  * script's.
+ *
+ * #1956 rebuilt the hull to the same block, because on a lit table the
+ * first cut read as a flat raft bolted to a box, and added what ties the
+ * two: the caisson's chamfered rim and the bolted flange it ends in, the
+ * stays off that flange (`shoulderStays`), the drive hull's bare frames at
+ * the caisson's bolt pitch (`ringFrames`), a drive casing over each tunnel
+ * (`driveCasings`), and the ducts that make the plant one machine
+ * (`plantDucts`).
  * ------------------------------------------------------------------------ */
 
 /**
@@ -1950,31 +1972,44 @@ export function gasRacks(root, { grey, rust, amber, lampM }, opts) {
  * riveted, patchworked older-under-newer, its after edge standing proud of
  * the drive hull as a shoulder" (docs/asset-prompts-3d.md, UNIT — Caisson).
  *
- * In the file's order: the box itself — a square-edged plan, blunt at the
- * bow with a chamfer to each corner — then the plate courses laid on its
- * back, older first and the newer over it so the older shows round its
- * edges; the shoulder plate across its after face; the plough plate
- * standing proud of the bow face on the centreline with the hazard band
- * across the crown behind it; and a row of bolt heads down each flank,
- * starboard then port, which is what "bolted over" looks like at arm's
- * length (`caisson · caisson_course_0..n · caisson_shoulder · plough_plate
- * · plough_band · caisson_bolt_s0..n · caisson_bolt_p0..n`).
+ * In the file's order: the box itself — a plan blunt at the bow with a
+ * chamfer to each corner, its rim chamfered by `slab.bevel` so the outline
+ * given is the top face and the flank stands a bevel proud of it (kit.mjs
+ * `plan`) — then the plate courses laid on its back, older first and the
+ * newer over it so the older shows round its edges; the shoulder across
+ * its after face, a flange a hand proud of the box all round, and the bolt
+ * heads on that flange's after face, a starboard wing then a port one,
+ * each `[y, z]` of `shoulder.bolts.at`; the plough plate standing proud of
+ * the bow face on the centreline with the hazard band across the crown
+ * behind it; and a row of bolt heads down each flank, starboard then port,
+ * which is what "bolted over" looks like at arm's length (`caisson ·
+ * caisson_course_0..n · caisson_shoulder · shoulder_bolt_s0..n ·
+ * shoulder_bolt_p0..n · plough_plate · plough_band · caisson_bolt_s0..n ·
+ * caisson_bolt_p0..n`).
  *
  * The step is the whole point and `outlines.mjs` has to keep it: the box is
- * the widest thing on the hull at every station it covers, the drive hull
- * behind it is bare, and nothing on a flank — blister, strake — reaches
- * past the box's own half-beam but the bolt heads, which stand 0.2 m proud
- * of it and set the file's beam. A tier that stood proud of it
- * would read as one hull with a bulge rather than two boxes, which is the
- * Furnace's seam-on-the-flank fault (#786 review) in the other direction.
+ * the widest thing on the hull at every station it covers, and nothing on
+ * the drive hull behind it — frame, strake, casing — reaches past the
+ * drive hull's own flank by more than a frame's depth. A tier that stood
+ * proud of the box would read as one hull with a bulge rather than a hull
+ * in a jacket of plate, which is the Furnace's seam-on-the-flank fault
+ * (#786 review) in the other direction.
  */
 export function caissonBox(root, mats, opts) {
   const { slab, courses = [], shoulder, plough, band, bolts, cut: rule = METRE } = opts;
-  add(root, 'caisson', plan(slab.outline, slab.depth), mats[slab.mat ?? 'black'], [0, slab.y, 0]);
+  const onX = [0, 0, Math.PI / 2];
+  add(root, 'caisson', plan(slab.outline, slab.depth, slab.bevel ?? 0), mats[slab.mat ?? 'black'], [0, slab.y, 0]);
   courses.forEach((c, i) =>
     add(root, `caisson_course_${i}`, plan(c.outline, c.depth), mats[c.mat ?? 'grey'], [0, c.y, 0])
   );
   add(root, 'caisson_shoulder', box(...shoulder.size), mats.rust, shoulder.at);
+  if (shoulder.bolts) {
+    const { r, h, x, at } = shoulder.bolts;
+    const head = cyl(r, r, h, rule.round(r));
+    bothSides((side, sgn) =>
+      at.forEach(([y, z], i) => add(root, `shoulder_bolt_${side}${i}`, head, mats.grey, [x, y, sgn * z], onX))
+    );
+  }
   add(root, 'plough_plate', plan(plough.outline, plough.depth, plough.bevel ?? 0), mats.grey, [
     0,
     plough.y,
@@ -2095,11 +2130,22 @@ export function plantCylinder(root, { black, grey, rust }, opts) {
  * (kit.mjs `louvres`). `machineryHouse` above is the same form stood
  * against a wall: the Derrick's well is raked from the deck up to the
  * house side and its blades step down the rake (#893).
+ *
+ * The well is a box and may be a tall one: the Caisson's is a plenum
+ * standing a metre and a half off the plant deck with the slats on its
+ * roof, because slats 0.15 m thick over a well flush with the deck read as
+ * paint on it from every camera but the chart's (#1956). `well.x` sets the
+ * box off the slats' own station where the plenum runs on past them — the
+ * Caisson's carries its stack on the fore end — and `cheeks` stands an end
+ * plate across each end of the rank, after then fore
+ * (`louvre_cheek_<side>a · louvre_cheek_<side>f`), which is what the blades
+ * are hung between. Neither is asked for by the Gantry, whose well and
+ * slats are as they were.
  */
-export function exhaustLouvres(root, { black, flood }, opts) {
-  const { x, y, z, length, well, slats } = opts;
+export function exhaustLouvres(root, { black, flood, rust }, opts) {
+  const { x, y, z, length, well, slats, cheeks } = opts;
   bothSides((side, sgn) => {
-    add(root, `louvre_well_${side}`, box(...well.size), black, [x, well.y, sgn * z]);
+    add(root, `louvre_well_${side}`, box(...well.size), black, [well.x ?? x, well.y, sgn * z]);
     louvres(root, `louvre_${side}`, flood, {
       ...slats,
       x,
@@ -2108,7 +2154,93 @@ export function exhaustLouvres(root, { black, flood }, opts) {
       length,
       tilt: sgn * (slats.tilt ?? 0.5),
     });
+    if (cheeks)
+      for (const [end, dir] of [
+        ['a', -1],
+        ['f', 1],
+      ])
+        add(root, `louvre_cheek_${side}${end}`, box(...cheeks.size), rust, [
+          x + dir * (length / 2 + cheeks.size[0] / 2),
+          cheeks.y,
+          sgn * z,
+        ]);
   });
+}
+
+/**
+ * The ducts that make the plant one machine: a box trunk a station from the
+ * pressure cylinder's flank out to the louvre plenum abreast of it, the
+ * starboard rank then the port (`plant_duct_s0..n · plant_duct_p0..n`).
+ * `size` is `[along the keel, tall, across]` and `z` the trunk's centre, so
+ * its inboard end is inside the drum and its outboard end inside the
+ * plenum's wall. Without them the cylinder, the louvres and the stacks are
+ * three fixtures on a deck; with them the block's sentence is a process —
+ * the plant, and what it exhausts through (#1956).
+ */
+export function plantDucts(root, mat, { x: stations, y, z, size }) {
+  const trunk = box(...size);
+  bothSides((side, sgn) =>
+    stations.forEach((x, i) => add(root, `plant_duct_${side}${i}`, trunk, mat, [x, y, sgn * z]))
+  );
+}
+
+/**
+ * A bare hull's frames: at each station a ring frame standing proud of the
+ * flank and the deck — one box through the hull, `size` `[along the keel,
+ * tall, across]` centred on `y`, so what shows is its rim (`frame_0..n`,
+ * bow first). The Caisson's drive hull carries them at the pitch its
+ * caisson's bolt heads are set at, because those bolts are into these
+ * frames: forward the plate is bolted over them, and abaft the shoulder
+ * there is no plate and they stand bare. That is the block's "bare drive
+ * hull" drawn rather than left empty (#1956).
+ */
+export function ringFrames(root, mat, { x: stations, y, size }) {
+  const frame = box(...size);
+  stations.forEach((x, i) => add(root, `frame_${i}`, frame, mat, [x, y, 0]));
+}
+
+/**
+ * The drive: a casing over each prop tunnel, a pressure drum lying
+ * fore-and-aft and half sunk in the drive hull's deck, from the caisson's
+ * shoulder aft to the tunnel it turns — the plant cylinder's own
+ * vocabulary at a lesser radius, since it is the same plant's other end.
+ * A side at a time, starboard first: the drum; the flange where it comes
+ * out of the shoulder, in the older plate; the bands round it, flat and
+ * grey as the plant's are; and the dished head over the tunnel, a frustum
+ * drawn in to `head.tipR` with its small end aft (`drive_casing_s ·
+ * drive_flange_s · drive_band_s0..n · drive_head_s · drive_casing_p …`).
+ *
+ * `x` is the drum's centre and `length` its run; the head stands on its
+ * after end and the flange at `flange.x`. A cylinder laid on X by a quarter
+ * turn about Z carries its `rTop` onto −X, so the after head is
+ * `cyl(tipR, r)` — `plantCylinder`'s rule.
+ */
+export function driveCasings(root, { black, grey, rust }, opts) {
+  const { x, y, z, r, length, flange, bands, head, cut: rule = METRE } = opts;
+  const onX = [0, 0, Math.PI / 2];
+  const facets = rule.round(r);
+  bothSides((side, sgn) => {
+    add(root, `drive_casing_${side}`, cyl(r, r, length, facets), black, [x, y, sgn * z], onX);
+    add(root, `drive_flange_${side}`, cyl(flange.r, flange.r, flange.width, rule.round(flange.r)), rust, [flange.x, y, sgn * z], onX);
+    bands.x.forEach((bx, i) =>
+      add(root, `drive_band_${side}${i}`, cyl(bands.r, bands.r, bands.width, rule.round(bands.r)), grey, [bx, y, sgn * z], onX)
+    );
+    add(root, `drive_head_${side}`, cyl(head.tipR, r, head.length, facets), rust, [x - length / 2 - head.length / 2, y, sgn * z], onX);
+  });
+}
+
+/**
+ * The stays off a shoulder: a raking strut at each of `z`, from `head` on
+ * the shoulder's after face down and aft to `foot` on the deck behind it,
+ * starboard-most first (`shoulder_stay_0..n`). `deckKnees` above is the
+ * same member in the other plane, under a deck wider than its hull; this
+ * one is what carries a box bolted over a hull onto the hull abaft it, and
+ * is the first thing the eye follows across the Caisson's step (#1956).
+ */
+export function shoulderStays(root, mat, { z: stations, head, foot, t }) {
+  stations.forEach((z, i) =>
+    strut(root, `shoulder_stay_${i}`, [head.x, head.y, z], [foot.x, foot.y, z], mat, t)
+  );
 }
 
 /* --------------------------------------------------------------------------

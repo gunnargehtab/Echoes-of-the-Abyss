@@ -1462,7 +1462,10 @@ nodules). A pressure box: the skirmisher's wedge made in riveted plate and
 no longer tapering — a blunt plough bow, a flat plate face with chamfered
 corners, flanks parallel from the shoulders aft to the step at two thirds
 of the length, then a step in to the bare drive hull and a square stern
-with two prop tunnels. The caisson is the step: a box of heavier plate bolted over the
+with two prop tunnels. The drive hull is bare of plate, not of drive: its
+ring frames stand unclad at the pitch the caisson is bolted to, and a
+banded drive casing lies along its back from the shoulder to each tunnel.
+The caisson is the step: a box of heavier plate bolted over the
 forward two thirds, riveted, patchworked older-under-newer, its after edge
 standing proud of the drive hull as a shoulder — the third more plate,
 visible in the plan. On its back the plant: a riveted pressure cylinder
