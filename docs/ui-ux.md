@@ -2067,25 +2067,27 @@ The briefing says what the mission asks, in plain words, before the player commi
 Until #1886 it showed only prose, so a stranger could read a whole briefing and descend
 without being told one thing to do.
 
-**At the top of the briefing, under the heading *Orders*, sits the gloss of every objective
-row the mission opens with**: the rows the orders panel (§10.5) shows at T+00:00, in the same
+**At the top of the briefing, under the heading *Orders*, sits the gloss of every objective row
+the mission opens with**: the rows the orders panel (§10.5) shows at T+00:00, in the same
 order, each in the same sentence that row carries there. Beside each gloss stand the panel's
-own words for whether the row decides the result, *critical* or *optional*, and, for a row
-that is no order at all, *budget* or *record*; a gloss alone cannot tell a must-not-fail row
-from flavour, which is §10.5's finding. The reader's name and the prose follow, unchanged.
-The list scrolls with the reading inside the briefing's text box, and the orders panel
-restates every row at T+00:00, so a list longer than the box loses nothing a player needs. A row revealed later in the mission is absent, as it is from the panel
-until its time: listing it would put the mission's later beats on a screen read before the
-drop, which is the leak a revealed row exists to prevent. A withheld briefing withholds its
-orders too, because a mission's asks can leak what its prose would. A gloss listed here is
-read off its row, so it may not lean on the panel around it: it names the orders panel by
-name rather than as *this panel*, says what meets it rather than *this row*, and a budget states its limit, since no counter
-stands beside it here.
+own words for whether the row decides the result, *critical* or *optional*, and, for a row that
+is no order at all, *budget* or *record*; a gloss alone cannot tell a must-not-fail row from
+flavour, which is §10.5's finding. The reader's name and the prose follow, unchanged. The list
+scrolls with the reading inside the briefing's text box, and the orders panel restates every
+row at T+00:00, so a list longer than the box loses nothing a player needs. A row revealed
+later in the mission is absent, as it is from the panel until its time: listing it would put
+the mission's later beats on a screen read before the drop, which is the leak a revealed row
+exists to prevent. A withheld briefing withholds its orders too, because a mission's asks can
+leak what its prose would. A gloss listed here is read off its row, so it may not lean on the
+panel around it: it names the orders panel by name rather than as *this panel*, says what meets
+it rather than *this row*, and a budget states its limit, since no counter stands beside it
+here.
 
 The orders are a copy on the public header, `MissionHeader.orders`, because the briefing is
 read before a room exists and the mission's literal is never sent. A copy drifts, so the
-backend's mission suite holds every header's list to its literal's opening glosses. A
-briefing variant changes the prose and never the orders ([campaign.md](campaign.md) §1).
+backend's mission suite holds every header's list to its literal's opening rows: each gloss and
+its two codes. A briefing variant changes the prose and never the orders
+([campaign.md](campaign.md) §1).
 
 ### The record
 
