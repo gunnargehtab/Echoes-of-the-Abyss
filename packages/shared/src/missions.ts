@@ -291,6 +291,64 @@ export const FOURTH_CLOSURE_PICKET = 'fourth-closure-picket';
  */
 export const MARR_PLATEAU_FILED = 'marr-plateau-filed';
 
+/**
+ * What kind of sentence a row is, so the panel can word its status truthfully
+ * (docs/ui-ux.md §10.5, #1883).
+ *
+ * `Met` means three different things across the catalogue, and the panel used
+ * to say *met* for all three. A **task** is met once and stays met. A **rule**
+ * — a silence order, a muster, a column that must be home at the close — is
+ * met *now* and can stop being met, so *met* beside it read as *done* from the
+ * first second of Sorrowgate. A **budget** — the seconds of classification a
+ * mission tolerates — is met when it is *spent*, which is the outcome the
+ * player was trying to avoid, and *met* in success teal said the opposite.
+ *
+ * A code and not a word, `MovementHoldReason`'s arrangement: the shell says it
+ * in its own voice, and no free text a runtime could compose reaches the wire.
+ * Absent is a task. Two more arrived with the first review of #1883: a **record**
+ * is a tolerance its document reads as a fact rather than a budget (Item Nine's
+ * choice, the counts on the rim that fill by design), so it is counted and
+ * graded by nothing; and a row **read at the close** — an authored `standing`
+ * extract whose hulls may start in the region — is open until the close says
+ * otherwise, because *kept* at 00:00 claimed something the player had not done.
+ */
+export enum ObjectiveForm {
+  Task = 0,
+  Rule = 1,
+  Budget = 2,
+  Record = 3,
+  Close = 4,
+}
+
+/**
+ * Whether a row decides the result — docs/ui-ux.md §10.5, #1883. A terminal row
+ * is required for a complete result, a keystone loses the mission when it is
+ * missed whatever else came home, and every other row is read at the close but
+ * counted by nothing. Nothing on the panel said which was which. Absent is
+ * required.
+ */
+export enum ObjectiveWeight {
+  Required = 0,
+  Critical = 1,
+  Optional = 2,
+}
+
+/**
+ * One order on the briefing — docs/ui-ux.md §14, "The orders": a row the
+ * mission opens with, as the orders panel words it at T+00:00.
+ *
+ * The gloss, and the same two codes the row carries on the wire, because the
+ * gloss alone does not say whether a row decides the result: a cold read of
+ * ten missions could not tell a must-not-fail row from flavour (§10.5), and
+ * the panel's answer was these codes. The shell words them from
+ * `objectiveWords.ts` here as it does there. Absent is a task, and required.
+ */
+export interface BriefingOrder {
+  gloss: string;
+  form?: ObjectiveForm;
+  weight?: ObjectiveWeight;
+}
+
 export interface MissionHeader {
   /**
    * Namespaced by campaign. Two missions in the campaign are both called
@@ -331,9 +389,9 @@ export interface MissionHeader {
   /** docs/campaign.md §10 — 12–25 minutes, in seconds. */
   lengthBandS: readonly [number, number];
   /**
-   * The orders the briefing lists — docs/ui-ux.md §14, "The orders": the plain
-   * gloss of every objective row the mission opens with, in the literal's
-   * order, each the sentence that row carries in the panel at T+00:00.
+   * The orders the briefing lists — docs/ui-ux.md §14, "The orders": every
+   * objective row the mission opens with, in the literal's order, each the
+   * sentence and the two codes that row carries in the panel at T+00:00.
    *
    * A copy, and on the header rather than derived because the briefing is read
    * before a room exists and the literal is never sent. The backend's mission
@@ -346,7 +404,7 @@ export interface MissionHeader {
    * because the prose would leak withholds its asks for the same reason.
    * A briefing variant never changes this list (docs/campaign.md §1).
    */
-  orders: readonly string[] | null;
+  orders: readonly BriefingOrder[] | null;
   /**
    * The briefing, in paragraphs, read before the socket opens.
    *
@@ -386,8 +444,16 @@ export const PROLOGUE_SORROWGATE_HEADER: MissionHeader = {
   spokenBy: 'Read into the record by Arbiter Mosk Halloran, 214 PC',
   lengthBandS: [1080, 1260],
   orders: [
-    'Hold under the arch until it falls, then go to the two Harvester hulls: the tenders.',
-    'Keep every escort under SIG 20 — the reading in the orders panel’s header. Diving goes over.',
+    {
+      gloss: 'Hold under the arch until it falls, then go to the two Harvester hulls: the tenders.',
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss:
+        'Keep every escort under SIG 20 — the reading in the orders panel’s header. Diving goes over.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   briefing: [
     'Four hulls have been admitted. Their hardpoints were struck in this chamber in front of all four parties and the tools are on the table where they were struck. Nobody has to take anybody’s word for anything today. That is the whole of what this court is.',
@@ -412,9 +478,19 @@ export const LEDGER_ASSET_RECOVERY_HEADER: MissionHeader = {
   // campaign.md §10's 12-25.
   lengthBandS: [1020, 1140],
   orders: [
-    'Hold your Harvesters on the Working Edge of the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head.',
-    'Load a second Harvester on the Working Edge the same way; it is met when two loaded Harvesters reach the Rail Head.',
-    'The chamber rides on one of your three Harvesters, so load all three on the Working Edge and bring every one to the Rail Head.',
+    {
+      gloss:
+        'Hold your Harvesters on the Working Edge of the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head.',
+    },
+    {
+      gloss:
+        'Load a second Harvester on the Working Edge the same way; it is met when two loaded Harvesters reach the Rail Head.',
+    },
+    {
+      gloss:
+        'The chamber rides on one of your three Harvesters, so load all three on the Working Edge and bring every one to the Rail Head.',
+      weight: ObjectiveWeight.Critical,
+    },
   ],
   /**
    * The recovery writ, read to the column at 00:00 — docs/mission-asset-recovery.md
@@ -445,8 +521,11 @@ export const LEDGER_SHIFT_CHANGE_HEADER: MissionHeader = {
   // The whistle at 16:00 (docs/mission-shift-change.md §9), inside §10's 12-25.
   lengthBandS: [900, 1020],
   orders: [
-    'Bank 3,600 nodules: keep your four working Harvesters harvesting all shift.',
-    'Move each of the three barge Harvesters to the rail transfer once it is released, at T+03:00, T+08:00 and T+11:00.',
+    { gloss: 'Bank 3,600 nodules: keep your four working Harvesters harvesting all shift.' },
+    {
+      gloss:
+        'Move each of the three barge Harvesters to the rail transfer once it is released, at T+03:00, T+08:00 and T+11:00.',
+    },
   ],
   /**
    * Osk, to the shift command, at muster — docs/mission-shift-change.md §12,
@@ -476,8 +555,15 @@ export const LEDGER_BAFFLE_HEADER: MissionHeader = {
   // The yard's plant fails at 20:00 (docs/mission-baffle.md §9), inside §10's 12-25.
   lengthBandS: [1140, 1260],
   orders: [
-    'Order the plant Harvester and an escort within 450 m to the Deep Yard together, before the plant fails at T+20:00.',
-    'Bring your Cruiser and both Corvettes to the Deep Yard as well.',
+    {
+      gloss:
+        'Order the plant Harvester and an escort within 450 m to the Deep Yard together, before the plant fails at T+20:00.',
+      weight: ObjectiveWeight.Critical,
+    },
+    {
+      gloss: 'Bring your Cruiser and both Corvettes to the Deep Yard as well.',
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * The relief writ, read to the convoy at muster — docs/mission-baffle.md
@@ -521,9 +607,22 @@ export const LEDGER_EXPOSURE_HEADER: MissionHeader = {
   // The watch change at 18:00 (docs/mission-exposure.md §9), inside §10's 12-25.
   lengthBandS: [1020, 1140],
   orders: [
-    'Take your Corvettes near the worked ground until 4 of its 6 sounds show in your contact log with a bearing.',
-    'After the readings, bring at least 2 Corvettes back to the shelf lane, above the layer.',
-    'How long your Corvettes have been classified; keep it under 30 s by staying quiet and further off.',
+    {
+      gloss:
+        'Take your Corvettes near the worked ground until 4 of its 6 sounds show in your contact log with a bearing.',
+    },
+    {
+      gloss:
+        'After the readings, bring at least 2 Corvettes back to the shelf lane, above the layer.',
+      form: ObjectiveForm.Close,
+      weight: ObjectiveWeight.Critical,
+    },
+    {
+      gloss:
+        'How long your Corvettes have been classified; keep it under 30 s by staying quiet and further off.',
+      form: ObjectiveForm.Budget,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * The survey charter, read at muster — docs/mission-exposure.md §12,
@@ -555,9 +654,18 @@ export const LEDGER_TOLERANCE_HEADER: MissionHeader = {
   // The water stops at 17:00 (docs/mission-tolerance.md §9), inside §10's 12-25.
   lengthBandS: [960, 1080],
   orders: [
-    'Hold the casting Harvester in the casting yard for 90 s to pour the casting.',
-    'Carry the casting to the root aperture; below 1,800 m it costs the Harvester 4 hull a second, and it seals only one aperture.',
-    "Or carry it to Sector Vayle's frame instead: there is one casting, so only one of the two can be sealed.",
+    {
+      gloss: 'Hold the casting Harvester in the casting yard for 90 s to pour the casting.',
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss:
+        'Carry the casting to the root aperture; below 1,800 m it costs the Harvester 4 hull a second, and it seals only one aperture.',
+    },
+    {
+      gloss:
+        "Or carry it to Sector Vayle's frame instead: there is one casting, so only one of the two can be sealed.",
+    },
   ],
   /**
    * The breach writ, read to the column at the yard — docs/mission-tolerance.md
@@ -587,9 +695,21 @@ export const LEDGER_PROSPECT_HEADER: MissionHeader = {
   // The writ turns north at 22:00 (docs/mission-prospect.md §9), inside §10's 12-25.
   lengthBandS: [1260, 1380],
   orders: [
-    'Each Corvette reads the faces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field.',
-    'Have 3 of your 4 hulls back in the staging, at the north edge, when the mission closes at T+22:00.',
-    'How long your column has been classified; keep it under 60 s.',
+    {
+      gloss:
+        'Each Corvette reads the faces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field.',
+    },
+    {
+      gloss:
+        'Have 3 of your 4 hulls back in the staging, at the north edge, when the mission closes at T+22:00.',
+      form: ObjectiveForm.Close,
+      weight: ObjectiveWeight.Critical,
+    },
+    {
+      gloss: 'How long your column has been classified; keep it under 60 s.',
+      form: ObjectiveForm.Budget,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * The survey writ, read at the staging — docs/mission-prospect.md §12,
@@ -619,9 +739,18 @@ export const LEDGER_ITEM_NINE_HEADER: MissionHeader = {
   // The chamber empties at 12:30 (docs/mission-item-nine.md §9), just over §10's floor.
   lengthBandS: [720, 840],
   orders: [
-    'Keep the flight at the rail of the chamber until the session closes at T+12:30.',
-    'The 9 items sound one after another; each counts once your contact log shows it with a bearing.',
-    'Your choice: if your hulls are classified for 2 s in all, by pinging or by moving loudly, Item Nine is read into the open record.',
+    { gloss: 'Keep the flight at the rail of the chamber until the session closes at T+12:30.' },
+    {
+      gloss:
+        'The 9 items sound one after another; each counts once your contact log shows it with a bearing.',
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss:
+        'Your choice: if your hulls are classified for 2 s in all, by pinging or by moving loudly, Item Nine is read into the open record.',
+      form: ObjectiveForm.Record,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * The session notice, as the registry circulates it — docs/mission-item-nine.md
@@ -651,9 +780,18 @@ export const SEEDING_TEND_HEADER: MissionHeader = {
   // The tide ends at 16:00 (docs/mission-tend.md §9), inside §10's 12-25.
   lengthBandS: [900, 1020],
   orders: [
-    'Hold each Harvester in the Gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast.',
-    'Hold Watch One, a Light Scout, on the West Lane for 90 s to move the jellies, loudly, at SIG 45.',
-    'Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing.',
+    {
+      gloss:
+        'Hold each Harvester in the Gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast.',
+    },
+    {
+      gloss:
+        'Hold Watch One, a Light Scout, on the West Lane for 90 s to move the jellies, loudly, at SIG 45.',
+    },
+    {
+      gloss:
+        'Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing.',
+    },
   ],
   /**
    * Spoken by Tidespeaker Ysolde Marr at dawn tide — docs/mission-tend.md §12,
@@ -687,10 +825,17 @@ export const SEEDING_THIN_WATER_HEADER: MissionHeader = {
   // four more times.
   lengthBandS: [780, 900],
   orders: [
-    'Bring at least 6 of your 10 Harvesters to the Holdfast Gate; each moves only with a Corvette within 450 m.',
-    'Get at least 1 Harvester across the closed line to the Holdfast Gate.',
-    'All 10 Harvesters at the Holdfast Gate.',
-    'Keep both Corvettes afloat.',
+    {
+      gloss:
+        'Bring at least 6 of your 10 Harvesters to the Holdfast Gate; each moves only with a Corvette within 450 m.',
+    },
+    { gloss: 'Get at least 1 Harvester across the closed line to the Holdfast Gate.' },
+    { gloss: 'All 10 Harvesters at the Holdfast Gate.', weight: ObjectiveWeight.Optional },
+    {
+      gloss: 'Keep both Corvettes afloat.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Spoken by Tidespeaker Ysolde Marr at the load-out, from Marr, on the
@@ -752,9 +897,16 @@ export const SEEDING_CONVOCATION_HEADER: MissionHeader = {
   // most consequential scoping decision and is deliberate.
   lengthBandS: [1080, 1200],
   orders: [
-    'Keep a hull on the marked row for 60 s with every hull there at SIG 26 or less; then the walk moves to the next row.',
-    'Take a Light Scout into the edge marker on the bare slope.',
-    "If another party's hulls stand on the Holdfast for 60 s before T+18:45, the mission ends lost.",
+    {
+      gloss:
+        'Keep a hull on the marked row for 60 s with every hull there at SIG 26 or less; then the walk moves to the next row.',
+    },
+    { gloss: 'Take a Light Scout into the edge marker on the bare slope.' },
+    {
+      gloss:
+        "If another party's hulls stand on the Holdfast for 60 s before T+18:45, the mission ends lost.",
+      weight: ObjectiveWeight.Critical,
+    },
   ],
   /**
    * Spoken by Tidespeaker Ysolde Marr, off-tide, after the bell —
@@ -811,8 +963,15 @@ export const SEEDING_DEEP_FURROW_HEADER: MissionHeader = {
   // layer, and the second to resolve to `anholt-furrow` when mission 5 lands.
   lengthBandS: [1020, 1140],
   orders: [
-    'Hold the sower Harvester within 250 m of the second furrow, facing it, out of Silent Running, for 60 s; bare rock costs it 4 hull a second, 75 s in all.',
-    'Keep all 3 Harvesters afloat.',
+    {
+      gloss:
+        'Hold the sower Harvester within 250 m of the second furrow, facing it, out of Silent Running, for 60 s; bare rock costs it 4 hull a second, 75 s in all.',
+    },
+    {
+      gloss: 'Keep all 3 Harvesters afloat.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Spoken by Tidespeaker Ysolde Marr on the lane at the cleft's mouth, at
@@ -850,10 +1009,19 @@ export const SEEDING_IN_WRITING_HEADER: MissionHeader = {
   // docs/mission-deep-furrow.md — §11's reuse, region for region.
   lengthBandS: [900, 1020],
   orders: [
-    'Bring all 3 Harvesters, which carry the 16, to the Foot, above the layer.',
-    'Get at least 1 Harvester to the Foot.',
-    'How long your hulls have been classified; a hull under a bed cannot be heard.',
-    'Keep all 3 Corvettes afloat; their weapons are locked.',
+    { gloss: 'Bring all 3 Harvesters, which carry the 16, to the Foot, above the layer.' },
+    { gloss: 'Get at least 1 Harvester to the Foot.' },
+    {
+      gloss:
+        'How long your hulls have been classified; keep it under 30 s, and a hull under a bed cannot be heard.',
+      form: ObjectiveForm.Budget,
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss: 'Keep all 3 Corvettes afloat; their weapons are locked.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Spoken by Tidespeaker Ysolde Marr on the lane at the cleft's mouth, at
@@ -893,10 +1061,21 @@ export const SEEDING_RADICALS_HEADER: MissionHeader = {
   // 12-25 — and the band is the document's own 840-960 s.
   lengthBandS: [840, 960],
   orders: [
-    'Get the barge Cruiser and all 3 Harvesters into the far water; they follow their own route, and an order of yours holds them for 30 s.',
-    'At least 2 of those 4 hulls in the far water.',
-    'Keep all 3 Corvettes afloat; they may fire and be loud.',
-    'Keep all 4 column hulls afloat.',
+    {
+      gloss:
+        'Get the barge Cruiser and all 3 Harvesters into the far water; they follow their own route, and an order of yours holds them for 30 s.',
+    },
+    { gloss: 'At least 2 of those 4 hulls in the far water.' },
+    {
+      gloss: 'Keep all 3 Corvettes afloat; they may fire and be loud.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss: 'Keep all 4 column hulls afloat.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Spoken by Tidespeaker Ysolde Marr from home, on the plateau channel, to the
@@ -936,10 +1115,25 @@ export const SEEDING_SECOND_SEEDING_HEADER: MissionHeader = {
   // (campaign.md §8).
   lengthBandS: [1320, 1440],
   orders: [
-    'Hold the sower Harvester within 250 m of the lip, facing it, out of Silent Running, for 60 s.',
-    'How long your hulls have been tracked exactly; keep it under 60 s.',
-    'Get near enough that a sound on the lip shows in your contact log with a bearing.',
-    "Bring the 3 Corvettes from the staging into the lip's furrow once they are released at T+20:30.",
+    {
+      gloss:
+        'Hold the sower Harvester within 250 m of the lip, facing it, out of Silent Running, for 60 s.',
+      weight: ObjectiveWeight.Critical,
+    },
+    {
+      gloss: 'How long your hulls have been tracked exactly; keep it under 60 s.',
+      form: ObjectiveForm.Budget,
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss: 'Get near enough that a sound on the lip shows in your contact log with a bearing.',
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss:
+        "Bring the 3 Corvettes from the staging into the lip's furrow once they are released at T+20:30.",
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Spoken by Bloomwright Sefa Anholt, aboard the barge, under the bed on the
@@ -977,8 +1171,14 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   // The watch ends at 18:00 (docs/mission-attendance.md §9), inside §10's 12-25.
   lengthBandS: [1020, 1140],
   orders: [
-    'Hear at least 5 of the 9 arrivals: each sounds for 20 s along the axis and counts once your contact log shows it with a bearing.',
-    'Hear all 9 for a complete result; the log calls each arrival about 60 s before it sounds.',
+    {
+      gloss:
+        'Hear at least 5 of the 9 arrivals: each sounds for 20 s along the axis and counts once your contact log shows it with a bearing.',
+    },
+    {
+      gloss:
+        'Hear all 9 for a complete result; the log calls each arrival about 60 s before it sounds.',
+    },
   ],
   /**
    * Undermarshal Korrin's assignment, after the First Cantor's formula —
@@ -1012,9 +1212,17 @@ export const ATTENDING_THE_DOME_HEADER: MissionHeader = {
   // same tide from the counting side.
   lengthBandS: [1140, 1260],
   orders: [
-    'Keep at least 3 of your 4 Submersibles afloat.',
-    'Hear both sounds below the mouth; each counts once your contact log shows it with a bearing.',
-    'How long a Submersible has been tracked exactly; a ping or a volley fills it fast.',
+    { gloss: 'Keep at least 3 of your 4 Submersibles afloat.', form: ObjectiveForm.Rule },
+    {
+      gloss:
+        'Hear both sounds below the mouth; each counts once your contact log shows it with a bearing.',
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss: 'How long a Submersible has been tracked exactly; a ping or a volley fills it fast.',
+      form: ObjectiveForm.Record,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Two voices at the opening, in the order the rite fixes — the First
@@ -1067,8 +1275,10 @@ export const ATTENDING_INTAKE_HEADER: MissionHeader = {
   // The shift ends at 20:00 (docs/mission-intake.md \u00a79), inside \u00a710's 12\u201325.
   lengthBandS: [1140, 1260],
   orders: [
-    'Bank 245 Biomass by hunting the animals on the walls; Biomass is paid on each kill.',
-    'Keep at least 9 of your 12 Submersibles afloat.',
+    {
+      gloss: 'Bank 245 Biomass by hunting the animals on the walls; Biomass is paid on each kill.',
+    },
+    { gloss: 'Keep at least 9 of your 12 Submersibles afloat.', form: ObjectiveForm.Rule },
   ],
   /**
    * Undermarshal Korrin, assigning the band at the muster \u2014
@@ -1101,9 +1311,16 @@ export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
   // minutes in the middle of it.
   lengthBandS: [1080, 1200],
   orders: [
-    'Hear 5 of the 10 plateau sounds; each counts once your contact log shows it with a bearing.',
-    'How long your hulls have been classified; keep it under 60 s.',
-    "Hear 8 of the 10, the Holdfast's among them.",
+    {
+      gloss:
+        'Hear 5 of the 10 plateau sounds; each counts once your contact log shows it with a bearing.',
+    },
+    {
+      gloss: 'How long your hulls have been classified; keep it under 60 s.',
+      form: ObjectiveForm.Budget,
+      weight: ObjectiveWeight.Optional,
+    },
+    { gloss: "Hear 8 of the 10, the Holdfast's among them.", weight: ObjectiveWeight.Optional },
   ],
   /**
    * Undermarshal Setha Korrin, assigning from Sufficiency to a column she
@@ -1144,9 +1361,12 @@ export const ATTENDING_TRENCH_AWAKENING_HEADER: MissionHeader = {
   // Not a conclusion: the tide does not end here (§8).
   lengthBandS: [1140, 1260],
   orders: [
-    'Bank 260 Biomass by hunting: the animals on the West Overhang and East Overhang hold about 210, and what comes up the trench after T+10:00 holds the rest.',
-    'Keep at least 6 of your 8 hulls afloat.',
-    'Bank 400 Biomass in all.',
+    {
+      gloss:
+        'Bank 260 Biomass by hunting: the animals on the West Overhang and East Overhang hold about 210, and what comes up the trench after T+10:00 holds the rest.',
+    },
+    { gloss: 'Keep at least 6 of your 8 hulls afloat.', form: ObjectiveForm.Rule },
+    { gloss: 'Bank 400 Biomass in all.', weight: ObjectiveWeight.Optional },
   ],
   /**
    * Undermarshal Setha Korrin, assigning the band at the band —
@@ -1184,9 +1404,17 @@ export const ATTENDING_CONCLAVE_HEADER: MissionHeader = {
   // campaign.md §10's 12–25 — and the band is the document's own 19:00–21:00.
   lengthBandS: [1140, 1260],
   orders: [
-    'Keep at least 12 of your 16 hulls afloat.',
-    'Hear 3 of the cells across the trench; each counts once your contact log shows it with a bearing.',
-    'Keep every hull at SIG 25 or less, all mission long.',
+    { gloss: 'Keep at least 12 of your 16 hulls afloat.', form: ObjectiveForm.Rule },
+    {
+      gloss:
+        'Hear 3 of the cells across the trench; each counts once your contact log shows it with a bearing.',
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss: 'Keep every hull at SIG 25 or less, all mission long.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Two voices at the opening, in the order the rite fixes — the First
@@ -1226,10 +1454,22 @@ export const CHORD_APTITUDE_HEADER: MissionHeader = {
   // The tuning closes at 16:00 (docs/mission-aptitude.md \u00a79), inside \u00a710's 12-25.
   lengthBandS: [900, 1020],
   orders: [
-    'Each of your 6 hulls sounds its own formation: within 400 m, facing it, out of Silent Running, for 20 s.',
-    'Met once any 4 of the 6 formations are sounded.',
-    'Keep all 6 hulls afloat until the close.',
-    'How long the survey has classified you; keep it under 30 s by turning your flank to it.',
+    {
+      gloss:
+        'Each of your 6 hulls sounds its own formation: within 400 m, facing it, out of Silent Running, for 20 s.',
+    },
+    { gloss: 'Sound at least 4 of the 6 formations.' },
+    {
+      gloss: 'Keep all 6 hulls afloat until the close.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Critical,
+    },
+    {
+      gloss:
+        'How long the survey has classified you; keep it under 30 s by turning your flank to it.',
+      form: ObjectiveForm.Budget,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Chapter-Master Vrey, setting the exercise \u2014 docs/mission-aptitude.md
@@ -1264,10 +1504,23 @@ export const CHORD_STANDING_WAVE_HEADER: MissionHeader = {
   // the clock to matter.
   lengthBandS: [1020, 1140],
   orders: [
-    'Raise 2 Sounding Spires, one on each wall of the Fifth, so they pair into a line.',
-    'Once the line is up, have all 6 hulls in the North Gallery at the close.',
-    "Keep all 6 hulls afloat; the line harms your hulls as much as anyone's.",
-    'A 3rd Sounding Spire, 900 m further south, costs about 12.5 minutes of income.',
+    {
+      gloss: 'Raise 2 Sounding Spires, one on each wall of the Fifth, so they pair into a line.',
+      weight: ObjectiveWeight.Critical,
+    },
+    {
+      gloss: 'Once the line is up, have all 6 hulls in the North Gallery at the close.',
+      form: ObjectiveForm.Close,
+    },
+    {
+      gloss: "Keep all 6 hulls afloat; the line harms your hulls as much as anyone's.",
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss: 'A 3rd Sounding Spire, 900 m further south, costs about 12.5 minutes of income.',
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Choirmaster Ivane Sull, setting the works — docs/mission-standing-wave.md
@@ -1303,9 +1556,17 @@ export const ATTENDING_FIRST_ARRIVAL_HEADER: MissionHeader = {
   // column has stood on for eighteen.
   lengthBandS: [1200, 1320],
   orders: [
-    'Keep at least 4 of your 6 Submersibles afloat.',
-    'Hear both sounds on the lip; each counts once your contact log shows it with a bearing.',
-    'How long your column has been classified; keep it under 60 s.',
+    { gloss: 'Keep at least 4 of your 6 Submersibles afloat.', form: ObjectiveForm.Rule },
+    {
+      gloss:
+        'Hear both sounds on the lip; each counts once your contact log shows it with a bearing.',
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss: 'How long your column has been classified; keep it under 60 s.',
+      form: ObjectiveForm.Budget,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Undermarshal Setha Korrin, assigning the rim from Sufficiency —
@@ -1352,14 +1613,44 @@ export const CHORD_NINETEEN_HEADER: MissionHeader = {
   // paid for.
   lengthBandS: [1020, 1140],
   orders: [
-    "At 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.",
-    'Keep your Cruiser afloat; a hull lost here is lost for the rest of the campaign.',
-    'Keep the First, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
-    'Keep the Second, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
-    'Keep the Third, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
-    'Keep the Fourth, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
-    'Keep the Fifth, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
-    'How long your party has been classified; keep it under 60 s.',
+    {
+      gloss:
+        "At 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.",
+    },
+    {
+      gloss: 'Keep your Cruiser afloat; a hull lost here is lost for the rest of the campaign.',
+      form: ObjectiveForm.Rule,
+    },
+    {
+      gloss:
+        'Keep the First, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+      form: ObjectiveForm.Rule,
+    },
+    {
+      gloss:
+        'Keep the Second, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+      form: ObjectiveForm.Rule,
+    },
+    {
+      gloss:
+        'Keep the Third, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+      form: ObjectiveForm.Rule,
+    },
+    {
+      gloss:
+        'Keep the Fourth, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+      form: ObjectiveForm.Rule,
+    },
+    {
+      gloss:
+        'Keep the Fifth, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+      form: ObjectiveForm.Rule,
+    },
+    {
+      gloss: 'How long your party has been classified; keep it under 60 s.',
+      form: ObjectiveForm.Budget,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Choirmaster Ivane Sull, the committal order — docs/mission-nineteen.md §12,
@@ -1400,8 +1691,16 @@ export const CHORD_CONCLAVE_HEADER: MissionHeader = {
   // campaign.md §10's 12–25, and the document's own advertised 840–900 s.
   lengthBandS: [840, 900],
   orders: [
-    'Until T+14:30, never hold your Cruiser within 400 m of one of the six markers, facing it, out of Silent Running: that plays the tone.',
-    'How long your party has been classified; at 30 s the survey files a contact.',
+    {
+      gloss:
+        'Until T+14:30, never hold your Cruiser within 400 m of one of the six markers, facing it, out of Silent Running: that plays the tone.',
+      weight: ObjectiveWeight.Critical,
+    },
+    {
+      gloss: 'How long your party has been classified; at 30 s the survey files a contact.',
+      form: ObjectiveForm.Record,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Chapter-Master Halden Vrey, setting the interval —
@@ -1443,9 +1742,20 @@ export const CHORD_THE_THREE_HEADER: MissionHeader = {
   // boundary (`closesAtS >= low`). The document advertises [720, 780].
   lengthBandS: [720, 780],
   orders: [
-    'Keep an escort within 600 m of your tender so it can reach the sealed room at 2,900 m.',
-    'Keep the three escort hulls in Silent Running at SIG 8 or less; the 12:00 count excludes the tender.',
-    'Hear both sounds in the house; each counts once your contact log shows it with a bearing.',
+    {
+      gloss:
+        'Keep an escort within 600 m of your tender so it can reach the sealed room at 2,900 m.',
+    },
+    {
+      gloss:
+        'Keep the three escort hulls in Silent Running at SIG 8 or less; the 12:00 count excludes the tender.',
+      form: ObjectiveForm.Rule,
+    },
+    {
+      gloss:
+        'Hear both sounds in the house; each counts once your contact log shows it with a bearing.',
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Choirmaster Ivane Sull, aboard her own hull at the foot of the Fields —
@@ -1492,15 +1802,33 @@ export const CHORD_RIM_DEPOSITS_HEADER: MissionHeader = {
   // 14:30, and a longer one would only add water for the nodes to sing over.
   lengthBandS: [900, 1020],
   orders: [
-    'Bring at least 2 of your 3 cutter Corvettes, the First, Second and Third, back loaded above the Staging line; each cuts its own face, 240 s a load.',
-    "The First's first load from the western face, above the Staging line.",
-    "The First's second load from the western face, above the Staging line.",
-    "The Second's first load from the middle face, above the Staging line.",
-    "The Second's second load from the middle face, above the Staging line.",
-    "The Third's one load from the eastern face, above the Staging line.",
-    'Keep all 3 cutter Corvettes, the First, Second and Third, afloat.',
-    'Keep the Voice, your Cruiser, and the Fourth and Fifth, your escort Corvettes, afloat.',
-    'How long your hulls have been classified; the raised nodes give you away, so it fills early.',
+    {
+      gloss:
+        'Bring at least 2 of your 3 cutter Corvettes, the First, Second and Third, back loaded above the Staging line; each cuts its own face, 240 s a load.',
+      weight: ObjectiveWeight.Critical,
+    },
+    { gloss: "The First's first load from the western face, above the Staging line." },
+    { gloss: "The First's second load from the western face, above the Staging line." },
+    { gloss: "The Second's first load from the middle face, above the Staging line." },
+    { gloss: "The Second's second load from the middle face, above the Staging line." },
+    { gloss: "The Third's one load from the eastern face, above the Staging line." },
+    {
+      gloss: 'Keep all 3 cutter Corvettes, the First, Second and Third, afloat.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss:
+        'Keep the Voice, your Cruiser, and the Fourth and Fifth, your escort Corvettes, afloat.',
+      form: ObjectiveForm.Rule,
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss:
+        'How long your hulls have been classified; the raised nodes give you away, so it fills early.',
+      form: ObjectiveForm.Record,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Choirmaster Ivane Sull, the authorisation — docs/mission-rim-deposits.md
@@ -1545,12 +1873,29 @@ export const CHORD_SECOND_CHORD_HEADER: MissionHeader = {
   // window, and the band is drawn tight around it.
   lengthBandS: [1020, 1140],
   orders: [
-    'Bring both loaded carrier Corvettes into the Chord on the lip.',
-    'Keep the Cruiser your escort guards afloat; it is released at T+15:30.',
-    'Keep your other Cruiser and both escort Corvettes afloat.',
-    'Keep both carrier Corvettes afloat.',
-    'Hear 3 sounds on the lip; each counts once your contact log shows it with a bearing.',
-    'How long your hulls have been classified; the nodes give you away, so it fills early.',
+    {
+      gloss: 'Bring both loaded carrier Corvettes into the Chord on the lip.',
+      weight: ObjectiveWeight.Critical,
+    },
+    {
+      gloss: 'Keep the Cruiser your escort guards afloat; it is released at T+15:30.',
+      form: ObjectiveForm.Rule,
+    },
+    {
+      gloss: 'Keep your other Cruiser and both escort Corvettes afloat.',
+      form: ObjectiveForm.Rule,
+    },
+    { gloss: 'Keep both carrier Corvettes afloat.', form: ObjectiveForm.Rule },
+    {
+      gloss: 'Hear 3 sounds on the lip; each counts once your contact log shows it with a bearing.',
+      weight: ObjectiveWeight.Optional,
+    },
+    {
+      gloss:
+        'How long your hulls have been classified; the nodes give you away, so it fills early.',
+      form: ObjectiveForm.Record,
+      weight: ObjectiveWeight.Optional,
+    },
   ],
   /**
    * Choirmaster Ivane Sull, the Order's last works order —
@@ -1647,48 +1992,6 @@ export enum ObjectiveStatus {
   Pending = 0,
   Met = 1,
   Failed = 2,
-}
-
-/**
- * What kind of sentence a row is, so the panel can word its status truthfully
- * (docs/ui-ux.md §10.5, #1883).
- *
- * `Met` means three different things across the catalogue, and the panel used
- * to say *met* for all three. A **task** is met once and stays met. A **rule**
- * — a silence order, a muster, a column that must be home at the close — is
- * met *now* and can stop being met, so *met* beside it read as *done* from the
- * first second of Sorrowgate. A **budget** — the seconds of classification a
- * mission tolerates — is met when it is *spent*, which is the outcome the
- * player was trying to avoid, and *met* in success teal said the opposite.
- *
- * A code and not a word, `MovementHoldReason`'s arrangement: the shell says it
- * in its own voice, and no free text a runtime could compose reaches the wire.
- * Absent is a task. Two more arrived with the first review of #1883: a **record**
- * is a tolerance its document reads as a fact rather than a budget (Item Nine's
- * choice, the counts on the rim that fill by design), so it is counted and
- * graded by nothing; and a row **read at the close** — an authored `standing`
- * extract whose hulls may start in the region — is open until the close says
- * otherwise, because *kept* at 00:00 claimed something the player had not done.
- */
-export enum ObjectiveForm {
-  Task = 0,
-  Rule = 1,
-  Budget = 2,
-  Record = 3,
-  Close = 4,
-}
-
-/**
- * Whether a row decides the result — docs/ui-ux.md §10.5, #1883. A terminal row
- * is required for a complete result, a keystone loses the mission when it is
- * missed whatever else came home, and every other row is read at the close but
- * counted by nothing. Nothing on the panel said which was which. Absent is
- * required.
- */
-export enum ObjectiveWeight {
-  Required = 0,
-  Critical = 1,
-  Optional = 2,
 }
 
 export enum MissionOutcome {

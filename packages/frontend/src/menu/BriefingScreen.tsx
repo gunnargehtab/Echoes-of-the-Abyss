@@ -8,11 +8,11 @@
  * still reading. The shell mounts one screen at a time, so this one has to be
  * finished with before the next one exists.
  *
- * Every word on it is authored. The premise, the orders and the paragraphs
- * come from the mission header in `@echoes/shared` — the same compiled-in
- * public catalogue the setup screen reads its maps from — and this component
- * adds no prose of its own to the court's register: its only words are the
- * heading over the orders and its two buttons.
+ * Every word of the mission's is authored. The premise, the orders and the
+ * paragraphs come from the mission header in `@echoes/shared` — the same
+ * compiled-in public catalogue the setup screen reads its maps from — and this
+ * component adds no prose of its own to the court's register. Its own words
+ * are shell labels, never the register's.
  */
 
 import type { CSSProperties } from 'react';
@@ -26,6 +26,7 @@ import {
 } from '@echoes/shared';
 import { FACTION_PALETTE } from '../game/palette.ts';
 import { FactionGlyph } from './FactionGlyph.tsx';
+import { orderWords } from '../game/objectiveWords.ts';
 
 export interface BriefingScreenProps {
   missionId: string;
@@ -130,13 +131,25 @@ export function BriefingScreen({ missionId, seenScenes, onDescend, onBack }: Bri
             <section className="briefing-orders" aria-label="Orders">
               <h3 className="briefing-title">Orders</h3>
               <ol className="briefing-order-list">
-                {mission.orders.map((order, index) => (
-                  // Authored order, and two rows may share a sentence in
-                  // principle, so the index is the key.
-                  <li className="briefing-order" key={index}>
-                    {order}
-                  </li>
-                ))}
+                {mission.orders.map((order, index) => {
+                  // The row's weight, and its form where it is no order at
+                  // all, in the panel's own words: a gloss alone cannot say
+                  // whether a row decides the result (§10.5).
+                  const words = orderWords(order);
+                  return (
+                    // Authored order, and two rows may share a sentence in
+                    // principle, so the index is the key.
+                    <li className="briefing-order" key={index}>
+                      <span className="briefing-order-gloss">{order.gloss}</span>
+                      {words.map((word) => (
+                        <span key={word} className={`objectives-weight ${word}`}>
+                          {' '}
+                          {word}
+                        </span>
+                      ))}
+                    </li>
+                  );
+                })}
               </ol>
             </section>
           )}

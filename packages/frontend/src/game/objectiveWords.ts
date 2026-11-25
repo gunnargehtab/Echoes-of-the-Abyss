@@ -15,6 +15,7 @@
 
 import {
   ObjectiveForm,
+  type BriefingOrder,
   ObjectiveStatus,
   ObjectiveWeight,
   type ObjectiveView,
@@ -100,7 +101,7 @@ export function statusClass(objective: ObjectiveView, closed = false): StatusCla
  * carry no word; a critical row loses the mission when it is missed, and an
  * optional one is read at the close and counted by nothing.
  */
-export function weightWord(objective: ObjectiveView): string | undefined {
+export function weightWord(objective: Pick<ObjectiveView, 'weight'>): string | undefined {
   switch (objective.weight) {
     case ObjectiveWeight.Critical:
       return 'critical';
@@ -109,6 +110,23 @@ export function weightWord(objective: ObjectiveView): string | undefined {
     default:
       return undefined;
   }
+}
+
+/**
+ * The words beside an order on the briefing (docs/ui-ux.md §14, "The orders"):
+ * the row's weight, and its form where the form is not an order at all — a
+ * budget is something not to spend, and a record is counted and graded by
+ * nothing. A task, a rule and a row read at the close are orders as written,
+ * and their status words (`statusWord`) describe a running match, which the
+ * briefing is not.
+ */
+export function orderWords(order: BriefingOrder): string[] {
+  const words: string[] = [];
+  const weight = weightWord(order);
+  if (weight !== undefined) words.push(weight);
+  if (order.form === ObjectiveForm.Budget) words.push('budget');
+  if (order.form === ObjectiveForm.Record) words.push('record');
+  return words;
 }
 
 /** `3 of 4`, or `12 of 30 s` on a budget, which the server counts in seconds. */

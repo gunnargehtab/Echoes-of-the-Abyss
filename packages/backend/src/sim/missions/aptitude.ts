@@ -490,7 +490,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       id: 'the-lattice',
       text: 'A chord certifies against four voices and its Drone. Below that there are measurements and nothing to measure them from.',
-      gloss: 'Met once any 4 of the 6 formations are sounded.',
+      gloss: 'Sound at least 4 of the 6 formations.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
       predicate: { kind: 'sound', count: 4 },

@@ -622,7 +622,7 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
     {
       id: 'the-letter',
       text: "What they hear of us they'll enter, and this time they came to enter it in person.",
-      gloss: 'How long your hulls have been classified; a hull under a bed cannot be heard.',
+      gloss: 'How long your hulls have been classified; keep it under 30 s, and a hull under a bed cannot be heard.',
       initial: ObjectiveStatus.Pending,
       // Non-terminal, and the one row in this union where meeting a predicate
       // is not good news: thirty seconds cumulative of the force at

@@ -36,6 +36,7 @@ import {
 import './support/headless.ts';
 import { click, render, type Rendered } from './support/screen.ts';
 import { BriefingScreen } from '../src/menu/BriefingScreen.tsx';
+import { orderWords } from '../src/game/objectiveWords.ts';
 import { RecordScreen } from '../src/menu/RecordScreen.tsx';
 import type { WitnessedConclusion } from '../src/progression/store.ts';
 import { ADMISSION_LINE, RECORD_PAGES, countLine, readRecord } from '../src/menu/record.ts';
@@ -162,7 +163,7 @@ describe('the briefing: the reading a player has earned', () => {
 
 describe('the briefing: the orders it gives (docs/ui-ux.md §14, "The orders")', () => {
   const orders = (view: Rendered) =>
-    view.allByClass('briefing-order').map((li) => String(li.props.children));
+    view.allByClass('briefing-order-gloss').map((span) => String(span.props.children));
 
   it('lists every mission’s opening orders verbatim, in the authored order', async () => {
     // The backend suite holds each header's list to its literal; this holds
@@ -170,11 +171,42 @@ describe('the briefing: the orders it gives (docs/ui-ux.md §14, "The orders")',
     for (const header of MISSION_HEADERS) {
       const { view } = await briefing(header.id);
       try {
-        assert.deepEqual(orders(view), header.orders ?? [], `${header.id}: orders on screen`);
+        assert.deepEqual(
+          orders(view),
+          (header.orders ?? []).map((order) => order.gloss),
+          `${header.id}: orders on screen`
+        );
       } finally {
         await view.unmount();
       }
     }
+  });
+
+  it('says which orders decide the result, in the panel’s own words', async () => {
+    // docs/ui-ux.md §10.5: a gloss alone cannot tell a must-not-fail row from
+    // flavour. Thin Water asks for 6 of 10 Harvesters and lists all 10 beside
+    // it, which reads as a contradiction unless the second says it is optional.
+    const words = (view: Rendered) =>
+      view
+        .allByClass('briefing-order')
+        .map((li) =>
+          li
+            .findAll((node) => String(node.props?.className ?? '').startsWith('objectives-weight'))
+            .map((span) => (span.props.children as unknown[]).join('').trim())
+        );
+    for (const header of MISSION_HEADERS) {
+      const { view } = await briefing(header.id);
+      try {
+        assert.deepEqual(words(view), (header.orders ?? []).map(orderWords), header.id);
+      } finally {
+        await view.unmount();
+      }
+    }
+    const thin = missionHeaderById('seeding-thin-water')!.orders!;
+    const all = thin.find((order) => order.gloss.startsWith('All 10 Harvesters'))!;
+    assert.deepEqual(orderWords(all), ['optional']);
+    const choice = missionHeaderById('ledger-item-nine')!.orders!.at(-1)!;
+    assert.deepEqual(orderWords(choice), ['optional', 'record']);
   });
 
   it('gives the orders before the reader and the reading', async () => {
@@ -184,7 +216,7 @@ describe('the briefing: the orders it gives (docs/ui-ux.md §14, "The orders")',
     try {
       const lines = view.text();
       const at = (needle: string) => lines.findIndex((line) => line.includes(needle));
-      const firstOrder = at(PROLOGUE_SORROWGATE_HEADER.orders![0]!);
+      const firstOrder = at(PROLOGUE_SORROWGATE_HEADER.orders![0]!.gloss);
       assert.ok(firstOrder >= 0, 'the first order is on screen');
       assert.ok(firstOrder < at(PROLOGUE_SORROWGATE_HEADER.spokenBy), 'before the reader');
       assert.ok(firstOrder < at(PROLOGUE_SORROWGATE_HEADER.briefing![0]!), 'before the reading');
