@@ -33,11 +33,20 @@ graphics quality alone stands), environment geometry that is no animal of the ro
 2. **One Claude Design conversation per roster run.** Session context reinforces
    consistency; tell it "same series, same materials and lighting as the previous model"
    on every follow-up.
-3. **One model for the whole run, and for this series it is Fable 5.1.** That holds
+3. **One model for the whole run, and for this series it is Fable 5.2.** That holds
    whichever door a model comes through, and there are two. Every GLB approved in
-   `docs/concept-art/models/` to date was authored under Opus 5; anything authored under
-   Fable 5.1 is a new series, and the break is *deliberate* rather than an exception to
-   the rule.
+   `docs/concept-art/models/` before the scout wave was authored under Opus 5; anything
+   authored under Fable 5.1 is a new series, and the break is *deliberate* rather than an
+   exception to the rule.
+
+   **Fable 5.2 since 12 November 2026.** Fable 5.1 authored the series up to
+   `env-rim-ray` (#1777) on 6 November. From 12 November shape work ran on Fable 5.2,
+   because `hull-designer` named the `fable` alias, which follows the newest Fable. Its new
+   models are `env-drift-jelly` (#1837) and `env-rim-manta` (#1867), the manta accepted
+   by the owner on 24 November. The owner kept the switch on 25 November 2026 (#1951)
+   rather than make a second one back, and `hull-designer` now pins `claude-fable-5-2`,
+   so a release cannot move the series unseen. A later Fable is a decision written here
+   first.
 
    **Generated** — a prompt in the Claude Design picker, which is how the roster to date
    was made; in roster terms the move to Fable 5.1 lands from the scout wave on. Do not

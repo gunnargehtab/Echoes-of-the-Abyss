@@ -2,7 +2,7 @@
 name: hull-designer
 description: Design a hull's look and author its shape — the STYLE+FACTION+UNIT block in docs/asset-prompts-3d.md, the plan outline, and the hull, structure or prop script under tools/hull-models/ that builds the GLB. Use this for any issue labelled shape-work (#540 — porting a modelled hull or prop to a script, or authoring an unmodelled one). It does not write stat blocks, sim mechanisms, doctrine or tests, and it does not review its own bake — hull-reviewer is the gate.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: fable
+model: claude-fable-5-2
 ---
 
 # Hull designer
