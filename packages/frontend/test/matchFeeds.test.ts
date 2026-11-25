@@ -143,8 +143,8 @@ describe('the contact log: a row claims exactly what was sent', () => {
   it('rounds a range to the nearest hundred metres, groups its thousands and tildes it', async () => {
     // Range is blurred at Tier 2 by design and exact at 3+. The tilde is on
     // both because a player should not have to remember which they are reading.
-    // §10's sample rows group thousands, `~2,100 m`, as every metres readout
-    // on the screen does (#1903); a range under a kilometre has no comma.
+    // §10's sample rows group thousands, `~2,100 m`, as the depth readout
+    // does (#1903); a range under a kilometre has no comma.
     const { view } = await contactLog([
       entry({ id: 'a', tier: ResolutionTier.Bearing, bearingDeg: 245, rangeM: 1437 }),
       entry({ id: 'b', tier: ResolutionTier.Classification, bearingDeg: 118, rangeM: 2149 }),
