@@ -11,6 +11,7 @@
     ],
     "deny": [
       "mcp__github__enable_pr_auto_merge",
+      "mcp__claude_ai_github__enable_pr_auto_merge",
       "mcp__plugin_github_github__enable_pr_auto_merge"
     ]
   },

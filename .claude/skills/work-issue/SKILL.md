@@ -21,11 +21,12 @@ The history behind each rule is in the run log (#580, then its successors) and i
 
 ## 0. Check GitHub access first
 
-- **GitHub MCP tools present:** use them; the rest of this file assumes them. Cloud
-  sessions name them `mcp__github__*`. The owner's GitHub plugin names them
-  `mcp__plugin_github_github__*`, so a check for the first prefix alone reads a
-  local session as absent.
-- **Absent under both prefixes:** use the REST API with `GITHUB_TOKEN` or `GH_TOKEN`:
+- **GitHub MCP tools present:** use them; the rest of this file assumes them. They
+  come under one of three prefixes: `mcp__github__*` in a cloud session,
+  `mcp__claude_ai_github__*` from the owner's claude.ai `github` connector, and
+  `mcp__plugin_github_github__*` from the GitHub plugin. A check for one prefix
+  alone reads a session that has another as absent.
+- **Absent under all three:** use the REST API with `GITHUB_TOKEN` or `GH_TOKEN`:
 
   ```bash
   curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" \

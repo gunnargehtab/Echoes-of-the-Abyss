@@ -227,9 +227,10 @@ section replaces the generic check-in cadence:
 The owner chose this on 21 October (#1483). Green pull requests from the loop sat
 for hours waiting on a manual merge, and one session merged 27 in a row by hand.
 The repository has no branch protection, so GitHub's own auto-merge would merge at
-once; `.claude/settings.json` denies `enable_pr_auto_merge` under both GitHub tool
-prefixes for that reason (#1941). The steward is the gate. Merge only when every condition below holds, and
-check them all again just before merging:
+once; `.claude/settings.json` denies `enable_pr_auto_merge` under every GitHub tool
+prefix `work-issue` §0 names, for that reason (#1941). The steward is the gate.
+Merge only when every condition below holds, and check them all again just before
+merging:
 
 - The pull request carries both `routine` and `automerge`.
 - Every check on the head commit passed, and it is mergeable: not a draft, no
