@@ -2,7 +2,8 @@
 
 Frames for [style-neon-noir.md](../../style-neon-noir.md#rule-5-in-the-colour-vision-palettes):
 each world-light family a skirmish map stands, close, in the standard, deuteranopia and
-protanopia palettes, before the change and after it.
+protanopia palettes, before the change and after it. Tritanopia's two tokens and its lantern
+follow, in a section of their own.
 
 **A software rasteriser drew every frame here**: SwiftShader, in headless Chromium, in the
 cloud container that built the change. They guide a round and are not offered for
@@ -44,6 +45,53 @@ to a leaf green, and the seam a shade bluer.
   pools and its smoke follow whole. A palette chosen before the match is right everywhere.
 - **No frame shows ore or a lamp.** `ore-trace` moves by 8.7 dE to a normal eye and stands
   on fields the room places; `civic-lamp` does not move in any palette.
+
+## Tritanopia: the ember, the biolight and the lantern
+
+Tritanopia's `vent-ember`, `flora-biolight` and `jelly-lantern` moved on 25 November 2026
+(#1854, #1913). A row is a family on a map, or a drifting jelly in the free-water crater;
+the columns are the standard palette, then tritanopia before and after. A software
+rasteriser drew these too, and the owner's glance at them is still owed.
+
+![Low: the ember and the biolight in tritanopia, before and after](software/low-tritanopia.png)
+
+![High: the ember, the biolight and the lantern in tritanopia, before and after](software/high-tritanopia.png)
+
+- **The ember goes from orange to an amber.** At High its light fills the cell; at Low it
+  is the steam over the chimney's mouth and the two points at its lip.
+- **The lantern goes from a violet to the standard orchid, a shade pinker.** The crater's
+  two rows are High's alone: Low draws no lantern. The second row holds two lanterns
+  beside a staged hull and its ring.
+- **The biolight barely moves, and that is the finding.** Its token moves 5.7 dE to a
+  normal eye and 3.0 to a tritanope: no green stands further from that palette's inks
+  ([style-neon-noir.md](../../style-neon-noir.md#rule-5-in-the-colour-vision-palettes)).
+  The Ventfront Divide's row is a coral growth 806 m from the base, where no hull's beam
+  crosses the frame; the Abyssal Rift's biolight stands under a hull of the own base, as
+  above.
+- **The standard palette does not move.**
+  [control-tritanopia.json](software/control-tritanopia.json) compares the standard
+  column before and after. Over the families the most pixels that differ by more than 8
+  in a channel is 14 of 196,000. Over the crater it is 208, in the snow that drifts
+  between two sessions.
+
+The before set is the same module against servers with `palette.ts` at the base commit,
+513ee456. Each set is three runs:
+
+```bash
+export SETTINGS_JSON='{"reducedMotion":true,"reducedMotionChosen":true}'
+PALETTES=standard,tritanopia node .claude/skills/run-game/scripts/drive.mjs \
+  --url 'http://localhost:5173/?study=free-water' \
+  --out /tmp/issue-1854/before/free-water --steps docs/screenshots/issue-1854/frames.mjs
+CLEAR_M=800 PALETTES=standard,tritanopia FAMILIES=vent,flora \
+  node .claude/skills/run-game/scripts/drive.mjs \
+  --url 'http://localhost:5173/?map=ventfront-divide' \
+  --out /tmp/issue-1854/before/ventfront-divide --steps docs/screenshots/issue-1854/frames.mjs
+```
+
+The third is the second against `?map=abyssal-rift-corridor`, with no `CLEAR_M`. The after
+set's Ventfront Divide run takes `POSES_FROM=/tmp/issue-1854/before/ventfront-divide/readings.json`
+in place of `CLEAR_M` and `FAMILIES`, so both sets frame one site. Then `sheet.py <before>
+<after> docs/screenshots/issue-1854/software tritanopia` lays the two sheets.
 
 ## Reproduce
 

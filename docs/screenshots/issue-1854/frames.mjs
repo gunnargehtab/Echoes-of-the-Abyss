@@ -16,7 +16,9 @@
 // PALETTES and FAMILIES narrow the run: tritanopia's two tokens (#1854) were
 // taken with PALETTES=standard,tritanopia FAMILIES=vent,flora. Against
 // `?study=free-water` the module frames a drifting jelly instead, at High
-// alone, which is where a lantern is drawn (#1913).
+// alone, which is where a lantern is drawn (#1913). POSES_FROM names another
+// run's readings.json and frames the sites it framed: the own force's centre
+// moves with its harvester, and the nearest clear site can move with it.
 //
 // `sites.json` is every licensed prop the default placement stands on those
 // two maps, by family (environment.ts `placeAll`, which is a pure function of
@@ -75,11 +77,17 @@ export default async ({ page, shot }) => {
   assert.ok(own, 'the own force has a centre');
   // Clear of the base's own structures, and still the nearest: a kelp tip
   // behind a foundry is no frame of a kelp tip.
-  const CLEAR_M = 300;
+  // CLEAR_M=800 stands a site clear of the base's traffic too: a loud hull's
+  // beam crossing a kelp bed is a different frame each run (#1836).
+  const CLEAR_M = Number(process.env.CLEAR_M ?? 300);
   const from = (at) => Math.hypot(at[0] - own.x, at[1] - own.z);
+  const given = process.env.POSES_FROM
+    ? JSON.parse(readFileSync(process.env.POSES_FROM, 'utf8')).poses
+    : null;
   const poses = crater
     ? LANTERN_POSES
-    : Object.entries(families)
+    : (given ??
+      Object.entries(families)
         .filter(([family]) => !FAMILIES || FAMILIES.includes(family))
         .map(([family, list]) => {
           const clear = list.filter((at) => from(at) >= CLEAR_M);
@@ -87,7 +95,7 @@ export default async ({ page, shot }) => {
             from(at) < from(best) ? at : best
           );
           return { family, x, z, fromBaseM: Math.round(from([x, z])) };
-        });
+        }));
 
   // The store the shell subscribes to: the same module instance the page
   // loaded, so this is the settings screen's own write. A save lays every
