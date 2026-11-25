@@ -1,6 +1,6 @@
 """Lay frames.mjs's before and after sets beside each other, one sheet a quality.
 
-    python3 docs/screenshots/issue-1854/sheet.py <before-dir> <after-dir> <out-dir>
+    python3 docs/screenshots/issue-1854/sheet.py <before-dir> <after-dir> <out-dir> [palettes]
 
 Each of <before-dir> and <after-dir> holds one folder a map, as frames.mjs
 wrote it. A row is a family on a map; the columns are the standard palette,
@@ -8,6 +8,12 @@ then deuteranopia before and after, then protanopia before and after. Each
 cell is the middle of its frame, where frames.mjs aims the family, so the
 light itself is large enough to judge. The standard column is the after
 set's; `control` below says how far it stands from the before set's.
+
+[palettes] names other palettes for the before and after columns, comma
+separated, and the files then carry them: `tritanopia` writes
+`low-tritanopia.png`, `high-tritanopia.png` and `control-tritanopia.json`.
+A quality a map was not framed at, as Low in the free-water crater, has no
+row for it.
 """
 
 import json
@@ -17,13 +23,15 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw
 
 CROP = (560, 350)
-COLUMNS = [
-    ("standard", "after", "standard"),
-    ("deuteranopia", "before", "deuteranopia, before"),
-    ("deuteranopia", "after", "deuteranopia, after"),
-    ("protanopia", "before", "protanopia, before"),
-    ("protanopia", "after", "protanopia, after"),
-]
+DEFAULT_PALETTES = ("deuteranopia", "protanopia")
+
+
+def columns(palettes):
+    out = [("standard", "after", "standard")]
+    for palette in palettes:
+        out.append((palette, "before", f"{palette}, before"))
+        out.append((palette, "after", f"{palette}, after"))
+    return out
 
 
 def frame(root: Path, name: str) -> Image.Image:
@@ -36,6 +44,9 @@ def frame(root: Path, name: str) -> Image.Image:
 
 def main() -> None:
     before, after, out = (Path(arg) for arg in sys.argv[1:4])
+    palettes = tuple(sys.argv[4].split(",")) if len(sys.argv) > 4 else DEFAULT_PALETTES
+    suffix = "beside" if palettes == DEFAULT_PALETTES else "-".join(palettes)
+    COLUMNS = columns(palettes)
     out.mkdir(parents=True, exist_ok=True)
     sets = {"before": before, "after": after}
     control = {}
@@ -44,7 +55,10 @@ def main() -> None:
         for map_dir in sorted(p for p in after.iterdir() if p.is_dir()):
             readings = json.loads((map_dir / "readings.json").read_text())
             for pose in readings["poses"]:
-                rows.append((map_dir.name, pose["family"]))
+                if any(f["quality"] == quality for f in readings["frames"]):
+                    rows.append((map_dir.name, pose["family"]))
+        if not rows:
+            continue
         label_h = 22
         sheet = Image.new(
             "RGB",
@@ -68,8 +82,9 @@ def main() -> None:
                 "pixelsOver8": changed,
                 "pixels": CROP[0] * CROP[1],
             }
-        sheet.save(out / f"{quality}-beside.png", optimize=True)
-    (out / "control.json").write_text(json.dumps(control, indent=2) + "\n")
+        sheet.save(out / f"{quality}-{suffix}.png", optimize=True)
+    name = "control.json" if suffix == "beside" else f"control-{suffix}.json"
+    (out / name).write_text(json.dumps(control, indent=2) + "\n")
     print(json.dumps(control, indent=2))
 
 

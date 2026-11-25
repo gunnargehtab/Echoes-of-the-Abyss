@@ -1,0 +1,52 @@
+{
+  "low-abyssal-rift-corridor-vent": {
+    "maxChannelDifference": 8,
+    "pixelsOver8": 0,
+    "pixels": 196000
+  },
+  "low-abyssal-rift-corridor-flora": {
+    "maxChannelDifference": 25,
+    "pixelsOver8": 13,
+    "pixels": 196000
+  },
+  "low-ventfront-divide-flora": {
+    "maxChannelDifference": 24,
+    "pixelsOver8": 14,
+    "pixels": 196000
+  },
+  "low-ventfront-divide-vent": {
+    "maxChannelDifference": 6,
+    "pixelsOver8": 0,
+    "pixels": 196000
+  },
+  "high-abyssal-rift-corridor-vent": {
+    "maxChannelDifference": 8,
+    "pixelsOver8": 0,
+    "pixels": 196000
+  },
+  "high-abyssal-rift-corridor-flora": {
+    "maxChannelDifference": 20,
+    "pixelsOver8": 12,
+    "pixels": 196000
+  },
+  "high-free-water-lantern": {
+    "maxChannelDifference": 81,
+    "pixelsOver8": 208,
+    "pixels": 196000
+  },
+  "high-free-water-lanterns": {
+    "maxChannelDifference": 85,
+    "pixelsOver8": 74,
+    "pixels": 196000
+  },
+  "high-ventfront-divide-flora": {
+    "maxChannelDifference": 24,
+    "pixelsOver8": 14,
+    "pixels": 196000
+  },
+  "high-ventfront-divide-vent": {
+    "maxChannelDifference": 6,
+    "pixelsOver8": 0,
+    "pixels": 196000
+  }
+}

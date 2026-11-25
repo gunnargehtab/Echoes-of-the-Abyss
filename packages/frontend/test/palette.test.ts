@@ -406,20 +406,12 @@ describe('what each palette is for', () => {
   // eye its palette serves it is no navy's ink, no contact tier, neither of
   // the chrome's neons and not the violet the doc reserves for the
   // unresolved, by the floor an information ink keeps.
-  //
-  // The tritanopia lantern does not hold it. Its violet was chosen against the
-  // eye #1905 replaced, and to the one here it stands under the floor at four
-  // inks, 15.4 dE from Bathyarch's cladding at the nearest. Pinned exactly
-  // until a token is chosen for this eye (#1913).
   const LANTERN_FLOOR = 25;
-  const LANTERN_MISSES: Partial<Record<PaletteName, string[]>> = {
-    tritanopia: ['Bathyarch accent', 'Bathyarch console accent', 'tier 1', 'neon violet'],
-  };
   /** `neon-violet`, docs/style-neon-noir.md: the Mouth's, drawn by the menu's CSS token. */
   const NEON_VIOLET = 0x8b5cf6;
   for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
-    it(`${name}: a jelly's lantern is no navy's, no contact's and no neon under ${kind}, bar the recorded misses`, () => {
+    it(`${name}: a jelly's lantern is no navy's, no contact's and no neon under ${kind}`, () => {
       const p = PALETTES[name];
       const agents: Array<[string, number]> = [
         ...FACTIONS.flatMap((f): Array<[string, number]> => [
@@ -433,26 +425,35 @@ describe('what each palette is for', () => {
         ['neon cyan', p.ui.accent],
         ['neon violet', NEON_VIOLET],
       ];
-      const under: string[] = [];
-      const measured: string[] = [];
       for (const [what, ink] of agents) {
         const d = deltaE(p.lantern, ink, kind);
-        if (d >= LANTERN_FLOOR) continue;
-        under.push(what);
-        measured.push(`${d.toFixed(1)} dE from ${what}`);
+        assert.ok(
+          d >= LANTERN_FLOOR,
+          `${name}: the lantern is ${d.toFixed(1)} dE from ${what} under ${kind}, needs ${LANTERN_FLOOR}`
+        );
       }
-      assert.deepEqual(
-        under,
-        LANTERN_MISSES[name] ?? [],
-        `${name}: the lantern is ${measured.join(', ')} under ${kind}, needs ${LANTERN_FLOOR}`
-      );
     });
   }
+
+  it('tritanopia’s lantern is the orchid and no violet: its first violet, and the red-green pair’s, fall under the floor (#1913)', () => {
+    // The violet this palette first wore was chosen against the eye #1905
+    // replaced. To the one here it and protanopia's violet are greys, on
+    // Bathyarch's cladding, and deuteranopia's a dull blue on a Tier 1 contact.
+    const p = PALETTES.tritanopia;
+    const bathyarch = p.faction[Faction.Bathyarch].accent;
+    const tier1 = p.tier[ResolutionTier.Contact].color;
+    assert.ok(deltaE(0x8026d9, bathyarch, 'tritanopia') < 16);
+    assert.ok(deltaE(PALETTES.deuteranopia.lantern, tier1, 'tritanopia') < 10);
+    assert.ok(deltaE(PALETTES.protanopia.lantern, bathyarch, 'tritanopia') < 10);
+    // The token is the standard orchid moved to the floor, and no further.
+    assert.ok(deltaE(PALETTES.standard.lantern, bathyarch, 'tritanopia') < LANTERN_FLOOR);
+    assert.ok(deltaE(p.lantern, PALETTES.standard.lantern, 'none') < 5);
+  });
 
   it('the first cut’s one pink would be a contact or a navy to a red-green eye', () => {
     // Why the lantern is a palette's own: the measurements that refused one
     // token. To a tritanope that pink is no ink's, and stands 19.5 dE from
-    // Bathyarch's cladding at the nearest: under the floor, by less.
+    // Bathyarch's cladding at the nearest: under the floor, by 5.5.
     const FIRST_CUT = 0xcc7ad4;
     const bearing = PALETTES.deuteranopia.tier[ResolutionTier.Bearing].color;
     assert.ok(deltaE(FIRST_CUT, bearing, 'deuteranopia') < 5);
@@ -489,17 +490,19 @@ describe('what each palette is for', () => {
       return { family, what, d };
     });
 
-  // Tritanopia's five are the standard palette's still, below (#1854).
-  for (const name of ['standard', 'deuteranopia', 'protanopia'] as const) {
+  // One family cannot hold it: no green at the biolight's luminance stands
+  // 15 dE clear for a tritanope, below. Pinned exactly, so a second miss fails.
+  const WORLD_MISSES: Partial<Record<PaletteName, WorldLightFamily[]>> = { tritanopia: ['flora'] };
+  for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
-    it(`${name}: no world light is a navy's, a contact's or a neon's under ${kind}`, () => {
+    it(`${name}: no world light is a navy's, a contact's or a neon's under ${kind}, bar the recorded miss`, () => {
       const p = PALETTES[name];
-      for (const { family, what, d } of nearestHeld(p, p.worldLight, kind)) {
-        assert.ok(
-          d >= WORLD_FLOOR,
-          `${name}: ${family} is ${d.toFixed(1)} dE from ${what} under ${kind}, needs ${WORLD_FLOOR}`
-        );
-      }
+      const under = nearestHeld(p, p.worldLight, kind).filter(({ d }) => d < WORLD_FLOOR);
+      assert.deepEqual(
+        under.map(({ family }) => family),
+        WORLD_MISSES[name] ?? [],
+        `${name}: ${under.map(({ family, what, d }) => `${family} is ${d.toFixed(1)} dE from ${what}`).join('; ')} under ${kind}, needs ${WORLD_FLOOR}`
+      );
     });
   }
 
@@ -545,17 +548,39 @@ describe('what each palette is for', () => {
     }
   });
 
-  it('tritanopia’s families are the standard five still, two of them under the floor (#1854)', () => {
-    // They waited on this file's tritanopia eye, which had no red-green axis
-    // (#1905). The eye that replaced it clears the seam, the trace and the
-    // lamp as they stand, and leaves the ember 4.3 dE from the Directorate's
-    // accent and the biolight 9.1 from Hadron's. Pinned, so the two tokens
-    // land here and take the floor with them.
-    assert.deepEqual(PALETTES.tritanopia.worldLight, PALETTES.standard.worldLight);
-    const under = nearestHeld(PALETTES.tritanopia, PALETTES.tritanopia.worldLight, 'tritanopia')
-      .filter(({ d }) => d < WORLD_FLOOR)
-      .map(({ family }) => family);
-    assert.deepEqual(under, ['vent', 'flora']);
+  it('tritanopia moves its ember and its biolight, and the biolight to its reach (#1854)', () => {
+    // The eye #1905 gave this file clears the standard seam, trace and lamp,
+    // and leaves the standard ember on the Directorate's accent and the
+    // standard biolight 9.1 dE from Hadron's.
+    const standard = PALETTES.standard.worldLight;
+    const p = PALETTES.tritanopia;
+    const held = (tokens: Record<WorldLightFamily, number>) =>
+      Object.fromEntries(
+        nearestHeld(p, tokens, 'tritanopia').map(({ family, d }) => [family, d])
+      ) as Record<WorldLightFamily, number>;
+    assert.deepEqual(
+      FAMILIES.filter((family) => held(standard)[family] < WORLD_FLOOR),
+      ['vent', 'flora']
+    );
+    for (const family of ['crystal', 'ore', 'civic'] as const)
+      assert.equal(p.worldLight[family], standard[family]);
+    // The ember holds the floor with the red-green pair's margin.
+    assert.ok(held(p.worldLight).vent >= 18);
+    // The biolight cannot. A tritanope's cool side at this luminance holds
+    // Pelagia's primary, Hadron's accent, a Tier 1 contact and the reserved
+    // violet, and the token stands as far from all four as a green can: 11.0
+    // to 11.3 dE from each, where the standard teal stood 9.1 from the nearest.
+    const cool: Array<[string, number]> = [
+      ['Pelagia primary', p.faction[Faction.Pelagia].primary],
+      ['Hadron accent', p.faction[Faction.Hadron].accent],
+      ['neon violet', NEON_VIOLET],
+      ['tier 1', p.tier[ResolutionTier.Contact].color],
+    ];
+    for (const [what, ink] of cool) {
+      const d = deltaE(p.worldLight.flora, ink, 'tritanopia');
+      assert.ok(d >= 10.9 && d < 11.5, `the biolight is ${d.toFixed(1)} dE from ${what}`);
+    }
+    assert.ok(held(p.worldLight).flora > held(standard).flora + 1.5);
   });
 
   for (const name of ['deuteranopia', 'protanopia', 'tritanopia'] as const) {
