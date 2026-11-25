@@ -362,6 +362,33 @@ Home's eye is 840 m and more from the hulls and Close's 350 to 530 m, and #1771'
 stand a kilometre off in the garden. High's slots follow Low's in the list and never
 stand among them, so Low's counts, order and frame do not move.
 
+**Life by depth band (#1858).** *The owner's calls of 24 and 25 November 2026 in #1858.
+The placements below keep it, and no frame of it is accepted.* At High each decorative
+body keeps its axis inside one of [systems-depth.md](systems-depth.md) §1's bands all lap
+long, its swing and station included, so what lives beside a hull says how deep it is,
+with no HUD. Water depth is public map data, so the rule tells nothing a match hides.
+
+| Water | Axis depth | What lives there at High |
+| --- | --- | --- |
+| The Lid | Above 150 m | Nothing: its glow is an empty roof over the lanterns |
+| Shelf | 150 to 400 m | The lanterns, in `jelly-lantern`; the fry; the backlit mill; the manta |
+| Mid-Water, over the rim | 400 to 600 m | The rim's outer fish; and a deep body in a second hue (#1860), not yet modelled |
+
+- **A body is measured by its axis**, as every swim depth here is (#1713). The manta's
+  axis keeps 157 to 173 m, so its accepted numbers stand, though a wingtip at its bank
+  reaches 131 m.
+- **No body crosses a line.** A school that swam across 400 m would blur what the line
+  tells, so the rim's outer fish swing 11 m about 430 m, where they swung 40.
+- **The deep body's line is 400 m, the Shelf's floor, not the thermocline.** The crater's
+  eyes stand at 233 m and higher, and under 1,200 m there is only the pocket, which they
+  see dark at High (#1857). The thermocline waits for a camera that sees under it (§9).
+- **Low is unchanged**, and High draws Low's list whole. So Low's two fry schools over the
+  clearing, 105 to 170 m, stand in the Lid at High too: the rule's one known exception,
+  2.1 km from the Close eye, where a 0.5 m fry draws under half a pixel.
+
+`packages/frontend/test/freeWaterDecoration.test.ts` holds every High body to its band
+and out of the Lid, and names the exception.
+
 A **stream** is schools sharing one loop, evenly round it, each fish keeping station on
 its school's own point as #1771's do. A camera held beside the loop then sees fish pass
 at any match time, where one school would pass once a lap.
@@ -369,7 +396,7 @@ at any match time, where one school would pass once a lap.
 | Stream | Loop centre, radius, period | Depth | Schools and fish | Station: along, across, depth |
 | --- | --- | --- | --- | --- |
 | Rim fry, `env-shoal-fry` | `(299, 2,098)`, 90 m, 380 s | 228 ± 6 m | 5 of 96 | 7 m, 1.6 m, 5 m |
-| Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 40 m | 4 of 12 | 14 m, 6 m, 14 m |
+| Rim outer fish, `env-outer-fish` | `(760, 2,050)`, 75 m, 300 s | 430 ± 11 m | 4 of 12 | 14 m, 6 m, 14 m |
 | Backlit outer fish, `env-outer-fish` | `(462, 2,069)`, 34 m, 150 s | 355 ± 25 m | 4 of 30 | 20 m, 3 m, 12 m |
 
 The **drifting bodies** are five `env-drift-jelly`, each alone on its own loop: a 14 m
@@ -379,14 +406,15 @@ goes, its bell leaning 12 degrees into the turn. Each hangs by its bell's mid-he
 
 | Jelly | Loop centre, map x / y | Depth | Start, degrees round its loop |
 | --- | --- | --- | --- |
-| 1 | 305 / 2,041 | 140 m | 0 |
-| 2 | 416 / 2,062 | 120 m | 70 |
-| 3 | 505 / 2,122 | 150 m | 140 |
-| 4 | 509 / 1,909 | 110 m | 210 |
-| 5 | 678 / 2,025 | 130 m | 280 |
+| 1 | 305 / 2,041 | 190 m | 0 |
+| 2 | 416 / 2,062 | 170 m | 70 |
+| 3 | 505 / 2,122 | 200 m | 140 |
+| 4 | 509 / 1,909 | 160 m | 210 |
+| 5 | 678 / 2,025 | 180 m | 280 |
 
-Over a lap they hang 166 to 534 m from the Close eye, 190 to 526 m at its start, and 73
-to 133 m over the eye's own depth, so they stand in the water above the hulls' rings, as
+Over a lap they hang 165 to 534 m from the Close eye, 190 to 526 m at its start, and 23
+to 83 m over the eye's own depth, 50 m deeper than #1837 hung them, out of the Lid (Life by
+depth band, above), so they stand in the water above the hulls' rings, as
 the target's do. A 6 m bell draws 17 to 56 px there, and 10 to 13 from Home's eye.
 
 The fry's loop passes 50 m in front of the Close eye, 233 m deep at `(178, 2,168)`, where
@@ -483,15 +511,15 @@ of High's list, so every slot before them keeps its index, and Low stands none.
 
 | River | Loop centre, radii east-west and north-south, period | Depth | Lanterns, and the share of the loop they fill | Station: across, depth |
 | --- | --- | --- | --- | --- |
-| The far bloom, `env-drift-jelly` | `(2,150, 1,930)`, 950 m and 330 m, 13,500 s | 160 m | 120 over 230 degrees of its phase | 60 m, 60 m |
+| The far bloom, `env-drift-jelly` | `(2,150, 1,930)`, 950 m and 330 m, 13,500 s | 190 m | 120 over 230 degrees of its phase | 60 m, 40 m |
 
 Its loop is an ellipse along the bowl's north half, the one loop of this fixture that is
 no circle, clockwise seen from above as every loop here is. The band the river sweeps in
 a lap lies over `x=1,120..3,177` and `y=1,545..2,364`: every cell under it is the bowl's
 or the pocket's, open to the Lid over a floor of 1,500 m or more, south of the garden's
 row and north of the southern wall. A lantern whose loop the ground under it shoals or
-roofs over keeps its slot and is not drawn, as any slot here. The river hangs 100 to
-220 m deep, a lantern's whole bell over the hulls' 300 m, and its band passes 500 m in
+roofs over keeps its slot and is not drawn, as any slot here. The river hangs 150 to
+230 m deep, a lantern's whole bell over the hulls' 300 m, and its band passes 500 m in
 plan from the Light Scout's start at its nearest.
 
 **The loop is an eddy on the stream's south flank** (the author's reading of the
@@ -502,7 +530,7 @@ stream runs over the garden, and the water over the bowl south of it is slower. 
 stream runs beside slower water the two shear, and the shear on the south flank of an
 eastward stream turns clockwise seen from above, fastest beside the stream. So the eddy
 turns as every loop here does, its north side running east with the stream and its
-south side coming back west, slower. Nothing walls it in: the lanterns hang 100 to 220 m
+south side coming back west, slower. Nothing walls it in: the lanterns hang 150 to 230 m
 deep, over the garden's 400 m floor and the bowl's alike, where the water is one open
 layer. That the loop closes is the author's choice for the frame, since a river that
 ran east with the stream and was gone would leave the bowl empty behind it or have to be
@@ -528,7 +556,7 @@ and its tail, 115 degrees of the lap's phase either way. Its middle starts at th
 west end, `(1,200, 1,930)`, the end nearer Home's eye, which is where reduced motion
 holds it and where a still frame finds it. The river is a procession: every lantern
 heads where the next second carries it, its strands trailing. Its station across the
-flow, up to 60 m at the loop's ends, its depth, up to 60 m off the river's 160 m, its
+flow, up to 60 m at the loop's ends, its depth, up to 40 m off the river's 190 m, its
 wander and its lean are each a draw of its own. A lantern of the river keeps its depth
 all lap, where one of the five rises and sinks 10 m, and leans up to 12 degrees either
 way, where the five lean into their turn. It hangs by its bell's mid-height, 2.76 m over
@@ -539,14 +567,14 @@ What each camera holds of it when the match starts
 
 | Camera | Lanterns in the frame, of 120 | How far off | A bell, 6 m across | What the water leaves of its light |
 | --- | --- | --- | --- | --- |
-| Home | 92 | 1,316 to 2,453 m | 3.6 to 6.8 px | 0.16 to 0.59 |
+| Home | 92 | 1,318 to 2,453 m | 3.6 to 6.8 px | 0.16 to 0.59 |
 | Close | 114 | 992 to 2,156 m | 4.1 to 9.0 px | 0.08 at most |
-| Low | 120 | 1,288 to 1,993 m | 4.5 to 6.9 px | 0.52 to 0.76 |
+| Low | 120 | 1,289 to 1,994 m | 4.5 to 6.9 px | 0.52 to 0.76 |
 | Survey | 120 | 10 km | 0.9 px | 0.91 |
 
 It drifts and Home's eye does not: after 10 minutes that eye holds 98 of them, after 30
 minutes 98, and after an hour 55, the river's middle by then far along the loop's north
-side and the lanterns that eye holds 1,922 m off at the median. It is decoration under
+side and the lanterns that eye holds 1,924 m off at the median. It is decoration under
 every rule of this section: no reaction, no collision, no tell, the same river for every
 client, held still under reduced motion. The numbers are TUNABLE in
 `FREE_WATER_HIGH_LIFE.BLOOM` until the owner accepts a frame.
@@ -591,7 +619,7 @@ grazer of the water and nothing of a hunter. The manta (#1867) is High's, at the
 | `env-outer-fish` | 4 m long | 16 / 600 | Open bowl, 700..1,000 m depth, and the garden clearing, 200..300 m; slow closed swimming paths |
 | `env-deep-fish` | 2 m long | 26 / 400 | Deep pocket, 1,900..2,100 m depth; sparse photophore points |
 | `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide, banked 30 degrees into its turn |
-| `env-drift-jelly` | 6 m across its bell | 5 / 700 | Over the outside rim by the start, 100..160 m depth, at the High graphics quality alone; each alone on one slow closed drift |
+| `env-drift-jelly` | 6 m across its bell | 5 / 700 | Over the outside rim by the start, 150..210 m depth, at the High graphics quality alone; each alone on one slow closed drift |
 | `env-rim-manta` | 18 m across | 1 / 4,000 | Over the outside rim before the Close eye, 150..180 m depth, at the High graphics quality alone; one slow closed glide, banked 40 degrees into its turn |
 
 All motion is deterministic from published placement, a fixed seed and shared match

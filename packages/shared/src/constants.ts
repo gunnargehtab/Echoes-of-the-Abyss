@@ -115,14 +115,16 @@ export const FREE_WATER_HIGH_LIFE = {
    * Outer fish among the hulls and through the water the Corvette's beam
    * crosses at rest, between its lamp at 300 m and its pool on the 600 m rim:
    * a 4 m body draws nine to twelve pixels from the Close eye and six from
-   * Home's.
+   * Home's. Its swing and its station together keep every fish under the
+   * Shelf's 400 m line all lap (docs/free-water-slice.md §5, "Life by depth
+   * band"; #1858): a stream that crossed the line would blur what the line tells.
    */
   OUTER_STREAM: {
     at: [760, 2050],
     startDeg: 90,
     SCHOOLS: 4,
     COUNT: 12,
-    MOTION: { radiusM: 75, periodS: 300, depthM: 430, depthSwingM: 40, axisM: 0.78 },
+    MOTION: { radiusM: 75, periodS: 300, depthM: 430, depthSwingM: 11, axisM: 0.78 },
     STATION: { alongM: 14, acrossM: 6, depthM: 14 },
   },
   /**
@@ -143,8 +145,10 @@ export const FREE_WATER_HIGH_LIFE = {
   },
   /**
    * The drifting bodies: `env-drift-jelly`, five of them hanging over the
-   * fleet's start, 110 to 150 m deep, where the Close camera has the water
-   * above the hulls' rings. A slot is a loop's centre in map metres, the
+   * fleet's start, 160 to 200 m deep, where the Close camera has the water
+   * above the hulls' rings. No loop centre is shallower than 160 m, so a 10 m
+   * swing never lifts a bell's axis into the Lid's top 150 m (§5, "Life by
+   * depth band"; #1858). A slot is a loop's centre in map metres, the
    * depth its bell hangs at and where it stands when the match starts, in
    * degrees round its loop. A jelly drifts: one lap of a loop 14 m in radius
    * in 280 s, about a fifth of a fry's pace, rising and sinking 10 m as it
@@ -154,11 +158,11 @@ export const FREE_WATER_HIGH_LIFE = {
    */
   JELLIES: {
     SLOTS: [
-      [305, 2041, 140, 0],
-      [416, 2062, 120, 70],
-      [505, 2122, 150, 140],
-      [509, 1909, 110, 210],
-      [678, 2025, 130, 280],
+      [305, 2041, 190, 0],
+      [416, 2062, 170, 70],
+      [505, 2122, 200, 140],
+      [509, 1909, 160, 210],
+      [678, 2025, 180, 280],
     ],
     MOTION: { radiusM: 14, periodS: 280, depthSwingM: 10, axisM: 2.76, bankDeg: 12 },
   },
@@ -212,8 +216,11 @@ export const FREE_WATER_HIGH_LIFE = {
     startDeg: 180,
     SPAN_DEG: 230,
     COUNT: 120,
-    depthM: 160,
-    STATION: { acrossM: 60, depthM: 60 },
+    // The river's top kept under the Lid's line and its floor about where it
+    // was, 230 m (§5, "Life by depth band"; #1858). Its old 60 m station moved
+    // whole drew 7 bells across the staged Corvette's ring from Home's eye.
+    depthM: 190,
+    STATION: { acrossM: 60, depthM: 40 },
     MOTION: { periodS: 13500, depthSwingM: 0, axisM: 2.76, bankDeg: 12 },
     EDDY: { SKEW: 0.3, SPREAD: 0.4, WANDER_M: [8, 20], WANDER_LAPS: [9, 22] },
   },
