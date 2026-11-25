@@ -2430,6 +2430,38 @@ describe('renderer smoke test: the conn view', () => {
     }
   });
 
+  it('keeps one ember cloud however often the dressing is rebuilt (#1906)', async () => {
+    // docs/style-neon-noir.md "World light": an ember draws `vent-ember` at
+    // 0.55 times its flicker. A cloud a rebuild leaves behind adds on top of
+    // the live one, frozen at its last bucket, so the scene holds one cloud,
+    // and the one it replaced is disposed.
+    const world = await boot();
+    const clouds = () => {
+      const found: Points[] = [];
+      world.gl.lastScene!.traverse((object) => {
+        if (object.name === 'vent_embers') found.push(object as Points);
+      });
+      return found;
+    };
+    try {
+      world.frame(2);
+      const [first] = clouds();
+      assert.ok(first, 'the canned ground stands vent embers');
+      let disposed = false;
+      first.geometry.addEventListener('dispose', () => (disposed = true));
+      // The fields and the map each re-dress the ground, as every match sends them.
+      world.conn.setNodes(cannedNodes());
+      world.conn.setMap('ventfront-divide');
+      world.conn.setNodes(cannedNodes());
+      world.frame(2);
+      assert.equal(clouds().length, 1, 'one ember cloud after three rebuilds');
+      assert.notEqual(clouds()[0], first, 'the cloud is the rebuild’s');
+      assert.ok(disposed, 'the replaced cloud’s geometry is disposed');
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('draws High as a lit world pass under the tactical pass Low draws, and Low as it always did (#1801)', async () => {
     // docs/art-direction.md, "Two layers, two laws": the world layer is lit
     // at High, and the tactical layer is "unchanged at both graphics

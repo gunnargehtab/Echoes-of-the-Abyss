@@ -3459,13 +3459,20 @@ export class PerspectiveView {
       this.detailTexture = null;
       this.detailUniforms = null;
     }
-    if (this.embers !== null) {
-      this.scene.remove(this.embers);
-      this.embers.geometry.dispose();
-      (this.embers.material as PointsMaterial).dispose();
-      this.embers = null;
-    }
+    this.disposeEmbers();
     this.terrainDressing.clear();
+  }
+
+  /** Take the ember cloud out of the scene. Every dressing rebuild stands a
+   * new one, and the fields and the map each rebuild after the ground in
+   * every match: a cloud left in the scene adds on top of the live one,
+   * frozen at its last bucket, in the palette it was last written in (#1906). */
+  private disposeEmbers(): void {
+    if (this.embers === null) return;
+    this.scene.remove(this.embers);
+    this.embers.geometry.dispose();
+    (this.embers.material as PointsMaterial).dispose();
+    this.embers = null;
   }
 
   private rebuildTerrain(): void {
@@ -4107,15 +4114,13 @@ export class PerspectiveView {
    * is a few more points, not another draw call, and it takes the veil and
    * the swim the same way. */
   private buildEmbers(terrain: TerrainPayload): void {
+    this.disposeEmbers();
     const embers = ventEmbers(terrain, this.groundSeed);
     const lamps = civicLamps(terrain, this.groundSeed);
     this.emberPhases = embers.map((e) => e.phase);
     this.emberPositions = [...embers, ...lamps].map((e) => ({ xM: e.xM, yM: e.yM }));
     const count = this.emberPositions.length;
-    if (count === 0) {
-      this.embers = null;
-      return;
-    }
+    if (count === 0) return;
     const emberPositions = new Float32Array(count * 3);
     const emberColors = new Float32Array(count * 3);
     this.emberPositions.forEach((at, i) => {
@@ -6205,8 +6210,8 @@ export class PerspectiveView {
         const colors = this.embers.geometry.getAttribute('color') as BufferAttribute;
         // The active palette's tokens, read on the bucket as a mark's ink is
         // read on its draw (palette.ts): this cloud follows a palette changed
-        // mid-match within one step of its own flicker. A cloud an earlier
-        // dressing left in the scene does not (#1906).
+        // mid-match within one step of its own flicker. There is one cloud:
+        // a rebuild disposes the last (`disposeEmbers`, #1906).
         const ember = EMBER_COLOR.setHex(WORLD_LIGHT.vent);
         LAMP_COLOR.setHex(WORLD_LIGHT.civic);
         const eye = this.camera.position;
