@@ -746,9 +746,9 @@ degrees, 3.5 dE from the standard token to a normal eye. A second model of this 
 1 dE where a family's is 3, because no pink or violet at that luminance stands more than
 26.8 dE clear; one 28 dE clear is a quarter brighter. It is the one colour-vision
 lantern that is no saturated violet: to a tritanope a saturated violet is a grey or a
-dull blue, and deuteranopia's `#7F00FF` would stand 8.1 dE from a Tier 1 contact. A software
-rasteriser's frames of it are in [screenshots/issue-1854](screenshots/issue-1854/README.md),
-and the owner's glance at them is still owed.
+dull blue, and deuteranopia's `#7F00FF` would stand 8.1 dE from a Tier 1 contact. The
+owner looked at a software rasteriser's frames of it on 25 November 2026, in
+[screenshots/issue-1854](screenshots/issue-1854/README.md), and found them fine (#1938).
 
 The floor leaves out the resource inks, the SIG band, the fauna colour and the other
 world lights, because no pink or violet clears all of those at once in a colour-vision
@@ -985,9 +985,9 @@ biolight tips kelp and living coral on the ground, and a navy's ink is on a hull
 What this palette's floor leaves out costs more than the red-green pair's does. The ember
 stands 17.4 dE from `SIG mid`, the seam 15.5 from the fauna colour, the biolight 12.6 from
 `SIG low` and 10.5 from Hadron's console accent. The ember and the lamp stand 15.7 dE
-apart, where the standard pair stood 30.1 to this eye. The owner has not read the two new
-tokens at a frame: a software rasteriser's are in
-[screenshots/issue-1854](screenshots/issue-1854/README.md), and that glance is still owed.
+apart, where the standard pair stood 30.1 to this eye. The owner looked at the two new
+tokens on 25 November 2026, at a software rasteriser's frames in
+[screenshots/issue-1854](screenshots/issue-1854/README.md), and found them fine (#1938).
 
 `WORLD_LIGHT` in `packages/frontend/src/game/palette.ts` is the active palette's five, and
 `packages/frontend/test/palette.test.ts` holds the floor and the luminance.
