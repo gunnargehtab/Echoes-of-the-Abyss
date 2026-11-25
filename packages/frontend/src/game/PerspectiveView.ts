@@ -6210,8 +6210,8 @@ export class PerspectiveView {
         const colors = this.embers.geometry.getAttribute('color') as BufferAttribute;
         // The active palette's tokens, read on the bucket as a mark's ink is
         // read on its draw (palette.ts): this cloud follows a palette changed
-        // mid-match within one step of its own flicker. A cloud an earlier
-        // dressing left in the scene does not (#1906).
+        // mid-match within one step of its own flicker. There is one cloud:
+        // a rebuild disposes the last (`disposeEmbers`, #1906).
         const ember = EMBER_COLOR.setHex(WORLD_LIGHT.vent);
         LAMP_COLOR.setHex(WORLD_LIGHT.civic);
         const eye = this.camera.position;

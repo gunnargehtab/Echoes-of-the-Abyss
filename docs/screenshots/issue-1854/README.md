@@ -39,10 +39,11 @@ to a leaf green, and the seam a shade bluer.
   and the quality through the settings store with no reload, and reads back what the view
   draws before each frame. So every deuteranopia and protanopia cell is a ground that
   stood in another palette a moment before.
-- **An ember only half follows at Low.** A dressing rebuild leaves the old ember cloud in
-  the scene ([#1906](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1906)), and
-  a stale cloud keeps the palette it was last written in. The steam, the props, High's
-  pools and its smoke follow whole. A palette chosen before the match is right everywhere.
+- **An ember only half follows at Low in these frames.** A dressing rebuild left the old
+  ember cloud in the scene, and a stale cloud kept the palette it was last written in. The
+  steam, the props, High's pools and its smoke follow whole. The fix came after these frames
+  ([#1906](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1906),
+  [its frames](../issue-1906/README.md)): one cloud, which follows a change whole.
 - **No frame shows ore or a lamp.** `ore-trace` moves by 8.7 dE to a normal eye and stands
   on fields the room places; `civic-lamp` does not move in any palette.
 
