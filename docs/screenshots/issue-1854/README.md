@@ -51,7 +51,8 @@ to a leaf green, and the seam a shade bluer.
 Tritanopia's `vent-ember`, `flora-biolight` and `jelly-lantern` moved on 25 November 2026
 (#1854, #1913). A row is a family on a map, or a drifting jelly in the free-water crater;
 the columns are the standard palette, then tritanopia before and after. A software
-rasteriser drew these too, and the owner's glance at them is still owed.
+rasteriser drew these too. The owner looked at them on 25 November 2026 and found them
+fine (#1938).
 
 ![Low: the ember and the biolight in tritanopia, before and after](software/low-tritanopia.png)
 
