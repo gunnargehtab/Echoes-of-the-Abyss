@@ -71,7 +71,9 @@ function detail(entry: ContactLogEntry): string[] {
   if (entry.rangeM === undefined) return [bearing];
   // Range is approximate at Tier 2 by design (15% blur) and exact at 3+; the
   // tilde is on both because a player should not have to remember which.
-  return [bearing, `~${Math.round(entry.rangeM / 100) * 100} m`];
+  // Thousands are grouped, `~2,100 m`, as §10's sample rows and the screen's
+  // other metres readouts print them (#1903).
+  return [bearing, `~${(Math.round(entry.rangeM / 100) * 100).toLocaleString('en-US')} m`];
 }
 
 /**

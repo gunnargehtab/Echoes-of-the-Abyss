@@ -140,16 +140,22 @@ describe('the contact log: a row claims exactly what was sent', () => {
     }
   });
 
-  it('rounds a range to the nearest hundred metres and tildes it at every tier', async () => {
+  it('rounds a range to the nearest hundred metres, groups its thousands and tildes it', async () => {
     // Range is blurred at Tier 2 by design and exact at 3+. The tilde is on
     // both because a player should not have to remember which they are reading.
+    // §10's sample rows group thousands, `~2,100 m`, as every metres readout
+    // on the screen does (#1903); a range under a kilometre has no comma.
     const { view } = await contactLog([
       entry({ id: 'a', tier: ResolutionTier.Bearing, bearingDeg: 245, rangeM: 1437 }),
       entry({ id: 'b', tier: ResolutionTier.Classification, bearingDeg: 118, rangeM: 2149 }),
+      entry({ id: 'c', tier: ResolutionTier.Bearing, bearingDeg: 9, rangeM: 640 }),
+      entry({ id: 'd', tier: ResolutionTier.Bearing, bearingDeg: 300, rangeM: 12_480 }),
     ]);
     try {
-      assert.equal(columns(view, 0)[3], 'bearing 245°   ~1400 m');
-      assert.equal(columns(view, 1)[3], 'bearing 118°   ~2100 m');
+      assert.equal(columns(view, 0)[3], 'bearing 245°   ~1,400 m');
+      assert.equal(columns(view, 1)[3], 'bearing 118°   ~2,100 m');
+      assert.equal(columns(view, 2)[3], 'bearing 009°   ~600 m');
+      assert.equal(columns(view, 3)[3], 'bearing 300°   ~12,500 m');
     } finally {
       await view.unmount();
     }
