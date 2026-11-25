@@ -387,7 +387,8 @@ with no HUD. Water depth is public map data, so the rule tells nothing a match h
   2.1 km from the Close eye, where a 0.5 m fry draws under half a pixel.
 
 `packages/frontend/test/freeWaterDecoration.test.ts` holds every High body to its band
-and out of the Lid, and names the exception.
+and out of the Lid, and names the exception. Software frames of the Close and Home
+cameras, before and after, are in [issue-1858](screenshots/issue-1858/README.md).
 
 A **stream** is schools sharing one loop, evenly round it, each fish keeping station on
 its school's own point as #1771's do. A camera held beside the loop then sees fish pass
