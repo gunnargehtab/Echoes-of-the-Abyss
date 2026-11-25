@@ -28,11 +28,15 @@ import { seabedSeed } from '../src/game/seabed.ts';
 import { CONN_FOV_DEG } from '../src/game/readability.ts';
 import {
   Biome,
+  DEPTH_BANDS,
+  DepthBand,
+  depthBandFor,
   Faction,
   FaunaSpecies,
   FREE_WATER_HIGH_LIFE,
   FREE_WATER_HIGH_VENTS,
   HIGH_GRAPHICS,
+  LID,
   ResolutionTier,
   UnitKind,
 } from '@echoes/shared';
@@ -1025,6 +1029,48 @@ describe('authored public decoration', () => {
     // A ribbon 40 m long: the four fill 160 m of the loop's 214 m.
     assert.equal(Math.round(2 * Math.PI * MOTION.radiusM), 214);
     assert.equal(BACKLIT_STREAM.SCHOOLS * 2 * STATION.alongM, 160);
+  });
+
+  it('keeps each of High’s bodies in one depth band, and none in the Lid (#1858)', () => {
+    // §5, "Life by depth band": a body's axis keeps to one of
+    // docs/systems-depth.md §1's bands all lap and never rises into the Lid's
+    // top 150 m, and a lantern stays on the Shelf, so its hue says the water
+    // by it is over 400 m. A body's `depthM` is its axis (#1713), and it
+    // swings `depthSwingM` either way of it.
+    const terrain = ground();
+    const low = freeWaterPlacements(terrain, true);
+    const high = freeWaterPlacements(terrain, true, true);
+    const span = (p: PropPlacement) => {
+      const m = p.motion!;
+      return [m.depthM! - m.depthSwingM, m.depthM! + m.depthSwingM] as const;
+    };
+    const shelf = DEPTH_BANDS[DepthBand.Shelf].max;
+    const own = high.slice(low.length).filter((p) => p.motion?.depthM != null);
+    assert.ok(own.length > 0);
+    for (const p of own) {
+      const [shallowest, deepest] = span(p);
+      const name = `${p.slug} of ${p.xM},${p.yM} at ${shallowest}..${deepest} m`;
+      assert.ok(shallowest >= LID.DEPTH_M, `${name} rises into the Lid`);
+      assert.equal(depthBandFor(shallowest), depthBandFor(deepest), `${name} crosses a band`);
+      if (p.slug === 'env-drift-jelly')
+        assert.ok(deepest < shelf, `${name}, a lantern off the Shelf`);
+    }
+    // The rim's outer fish are the one stream under the line, all of it.
+    const [x, y] = FREE_WATER_HIGH_LIFE.OUTER_STREAM.at;
+    const rim = own.filter((p) => p.slug === 'env-outer-fish' && p.xM === x && p.yM === y);
+    assert.equal(
+      rim.length,
+      FREE_WATER_HIGH_LIFE.OUTER_STREAM.SCHOOLS * FREE_WATER_HIGH_LIFE.OUTER_STREAM.COUNT
+    );
+    for (const p of rim) assert.ok(span(p)[0] >= shelf, `a rim fish at ${span(p)[0]} m`);
+    // Low is unchanged, and High draws Low's list whole, so Low's two fry
+    // schools over the clearing are the rule's one known exception, 2 km from
+    // the Close eye.
+    const inLid = low.filter((p) => p.motion?.depthM != null && span(p)[0] < LID.DEPTH_M);
+    assert.deepEqual(
+      [...new Set(inLid.map((p) => `${p.slug} ${p.xM},${p.yM}`))],
+      ['env-shoal-fry 2035,1120', 'env-shoal-fry 2010,1160']
+    );
   });
 
   it('stands High’s one vent stand on the outside rim, and none at Low (#1837)', () => {

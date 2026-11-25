@@ -995,7 +995,7 @@ over the fleet's start alone. A river of 120 lanterns now drifts far out over th
   turns clockwise seen from above, fastest beside the stream. That is how the
   procession already went and how every loop of the fixture turns, so the direction
   stands, and the south side running west is the eddy's far side coming back. Nothing
-  walls it in: at the lanterns' 100 to 220 m the garden's water and the bowl's are one
+  walls it in: at the lanterns' 150 to 230 m the garden's water and the bowl's are one
   open layer. That the loop closes is the author's choice for the frame. What changed
   is how it moves, in three things an eddy has and a ring turning does not:
   - **Its pace is uneven.** Beside the stream, at the loop's north point, a lantern
@@ -1019,7 +1019,7 @@ over the fleet's start alone. A river of 120 lanterns now drifts far out over th
   the owner on the second cut's frames. The five by the fleet rise and sink 10 m a lap
   and lean 12 degrees into their turn. On a loop 1.9 km long there is no turn to lean
   into and a lap is hours, so a lantern of the river hangs at the depth it was drawn,
-  100 to 220 m, and leans up to 12 degrees either way, each its own.
+  150 to 230 m, and leans up to 12 degrees either way, each its own.
 - **Its wave of light is a third of a lantern's by the fleet.** The owner's call. A
   lantern strokes its bell, sways its strands and takes a wave of light down its body
   once in 9 s. From Home's range the stroke and the sway are under a pixel, so the
@@ -1061,7 +1061,8 @@ over the fleet's start alone. A river of 120 lanterns now drifts far out over th
   under it is staged
   ([issue-1859](screenshots/issue-1859/README.md#gate-7-and-the-limits)): a mark is
   drawn over the world, so its ring's stroke reads at High what it reads at Low, with
-  22 bells inside the ring and 1 across its stroke. The owner looked at the second
+  22 bells inside the ring and 1 across its stroke on the second cut, and 23 and 2
+  since the river's top moved out of the Lid (#1858). The owner looked at the second
   cut's staged frame against gate 7's three questions: the ring is found straight away,
   its loudness arc reads as easily as with no lantern by it, and no lantern looks like
   a contact or a mark. That is a glance at a software frame; the named GPU's is still
