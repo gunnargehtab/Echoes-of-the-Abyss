@@ -764,7 +764,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | --- | --- |
 | `the-people` | Bring all 3 Harvesters, which carry the 16, to the Foot, above the layer. |
 | `the-crossing` | Get at least 1 Harvester to the Foot. |
-| `the-letter` | How long your hulls have been classified; a hull under a bed cannot be heard. |
+| `the-letter` | How long your hulls have been classified; keep it under 30 s, and a hull under a bed cannot be heard. |
 | `the-escorts` | Keep all 3 Corvettes afloat; their weapons are locked. |
 
 ---

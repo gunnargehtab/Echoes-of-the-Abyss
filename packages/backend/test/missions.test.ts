@@ -55,6 +55,7 @@ import { shapeContains } from '../src/sim/terrain.ts';
 import {
   CADRE_CALLSIGNS,
   MISSIONS,
+  objectiveCodes,
   PROLOGUE_SORROWGATE,
   callsignOf,
 } from '../src/sim/missions/index.ts';
@@ -154,6 +155,27 @@ describe('the mission catalogue', () => {
       assert.ok(missionHeaderById(mission.id) !== undefined, `${mission.id}: no public header`);
       assert.ok(mission.doc.length > 0, `${mission.id}: cites no document`);
       assert.ok(missionMapById(mission.mapId) !== undefined, `${mission.id}: map does not resolve`);
+    }
+  });
+
+  it('lists on the briefing the orders the panel opens with, and no later row', () => {
+    // docs/ui-ux.md §14, "The orders". The header's list is a copy the shell
+    // reads before a room exists, so it is held here to the literal it copies:
+    // every row shown at T+00:00 (`projectMissionView` withholds a row until
+    // its `revealAtTick`), its gloss verbatim and the weight and form codes the
+    // panel sends with it, in the literal's order. A later row in the list
+    // would be the mission's next beat read before the drop.
+    for (const mission of MISSIONS) {
+      const header = missionHeaderById(mission.id)!;
+      if (header.briefing === null) {
+        assert.equal(header.orders, null, `${mission.id}: a withheld briefing lists orders`);
+        continue;
+      }
+      const opening = mission.objectives
+        .filter((objective) => objective.revealAtTick === undefined || objective.revealAtTick <= 0)
+        .map((objective) => ({ gloss: objective.gloss, ...objectiveCodes(objective) }));
+      assert.ok(opening.length > 0, `${mission.id}: opens with no row to list`);
+      assert.deepEqual(header.orders, opening, `${mission.id}: the briefing's orders drifted`);
     }
   });
 

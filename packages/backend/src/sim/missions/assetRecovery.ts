@@ -327,7 +327,7 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       id: 'asset-181',
       text: 'Recover Asset 9-06-181. The frame held; bring it home in the condition it earned.',
       gloss:
-        'Load a second Harvester on the Working Edge the same way; two loaded Harvesters at the Rail Head meet this row.',
+        'Load a second Harvester on the Working Edge the same way; it is met when two loaded Harvesters reach the Rail Head.',
       initial: ObjectiveStatus.Pending,
       markerId: 'railhead',
       viaMarkerId: 'working-edge',

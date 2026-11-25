@@ -105,6 +105,14 @@ describe('the public mission catalogue', () => {
       // in the water.
       'speaker',
       'spokenBy',
+      // Added on purpose (#1886): the briefing's orders, the plain gloss of
+      // every row the mission opens with, and its weight and form codes
+      // (docs/ui-ux.md §14, "The orders"). The panel sends each of these at
+      // T+00:00 in any case, so listing them one screen earlier reveals no
+      // state; a row revealed later never
+      // appears, and the backend suite holds the list to exactly the opening
+      // rows, which is what keeps this field from becoming the objective list.
+      'orders',
     ]);
     for (const mission of MISSION_HEADERS) {
       for (const key of Object.keys(mission)) {

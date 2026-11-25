@@ -206,14 +206,7 @@ function objectiveView(
     }),
     status: state.statuses.get(objective.id) ?? objective.initial,
   };
-  // What kind of sentence the row is and whether it decides the result
-  // (docs/ui-ux.md §10.5, #1883). Codes, not words: the shell says them. Read
-  // off the literal's own shape, so a row cannot be told it is a rule while
-  // the runtime latches it as a task.
-  const form = formOf(objective);
-  if (form !== ObjectiveForm.Task) view.form = form;
-  if (objective.keystone === true) view.weight = ObjectiveWeight.Critical;
-  else if (objective.terminal !== true) view.weight = ObjectiveWeight.Optional;
+  Object.assign(view, objectiveCodes(objective));
   // The plain line beside the reading — docs/ui-ux.md §10.5, #720, #725.
   //
   // Chosen from the literal, never assembled: this is one of the mission's own
@@ -318,6 +311,28 @@ export function formOf(objective: MissionObjective): ObjectiveForm {
   if (isStanding(objective.predicate)) return ObjectiveForm.Rule;
   if (objective.standing === true) return ObjectiveForm.Close;
   return ObjectiveForm.Task;
+}
+
+/**
+ * What kind of sentence a row is and whether it decides the result
+ * (docs/ui-ux.md §10.5, #1883). Codes, not words: the shell says them. Read
+ * off the literal's own shape, so a row cannot be told it is a rule while the
+ * runtime latches it as a task. Absent is a task, and required.
+ *
+ * One function for the panel and for the briefing's copy of the opening rows
+ * (`MissionHeader.orders`), which `missions.test.ts` holds to this, so the two
+ * surfaces cannot word one row two ways.
+ */
+export function objectiveCodes(objective: MissionObjective): {
+  form?: ObjectiveForm;
+  weight?: ObjectiveWeight;
+} {
+  const codes: { form?: ObjectiveForm; weight?: ObjectiveWeight } = {};
+  const form = formOf(objective);
+  if (form !== ObjectiveForm.Task) codes.form = form;
+  if (objective.keystone === true) codes.weight = ObjectiveWeight.Critical;
+  else if (objective.terminal !== true) codes.weight = ObjectiveWeight.Optional;
+  return codes;
 }
 
 /**
