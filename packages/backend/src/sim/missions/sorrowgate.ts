@@ -580,7 +580,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       id: 'silence',
       text: 'The flight stays under twenty.',
       gloss:
-        'Keep every escort under SIG 20 — the reading in this panel’s header. Diving goes over.',
+        'Keep every escort under SIG 20 — the reading in the orders panel’s header. Diving goes over.',
       debtText: 'The flight owes the court a silence.',
       debtGloss: 'An escort dived — following the floor down is a dive. The debt pays itself off.',
       initial: ObjectiveStatus.Pending,

@@ -1788,6 +1788,36 @@
   color: var(--text-bright);
 }
 
+/*
+ * The orders, at the top of the briefing (docs/ui-ux.md §14, "The orders"):
+ * plain lines in the panel's own type, ruled off from the reading under them so
+ * the shell's words and the speaker's never run together.
+ */
+.briefing-orders {
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-dim) 40%, transparent);
+}
+
+.briefing-orders .briefing-title {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.briefing-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.briefing-order {
+  font-size: 0.7rem;
+  line-height: 1.55;
+  color: var(--text-bright);
+}
+
 .briefing-withheld {
   margin: 0;
   font-size: 0.7rem;

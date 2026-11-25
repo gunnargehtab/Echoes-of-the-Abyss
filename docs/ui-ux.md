@@ -1694,8 +1694,9 @@ title screen, and reads the briefing on the way in.
   the fastest way in — picking a map is picking a queue — but it is now one of three doors
   rather than the only one. Rooms that have started are absent rather than greyed out,
   because a started room is not a thing you can ask to join.
-- **Briefing** — a mission's own setup: its name, its premise, and the briefing text read
-  verbatim in the register of whoever is speaking it
+- **Briefing** — a mission's own setup: its name, its premise, its opening orders in plain
+  words (see "The orders" below), and the briefing text read verbatim in the register of
+  whoever is speaking it
   ([mission-sorrowgate.md](mission-sorrowgate.md) §12). It is a screen and not an overlay on
   the match, because the match opens a socket and a simulation and a briefing has no
   business holding either. The shell does hold an audio context of its own now (#194), but
@@ -2059,6 +2060,27 @@ nothing about the water.
 
 Review screenshots: `docs/screenshots/issue-410/` has the prologue's briefing in the court's
 register and *Tend*'s in the plateaus'.
+
+### The orders
+
+The briefing says what the mission asks, in plain words, before the player commits to it.
+Until #1886 it showed only prose, so a stranger could read a whole briefing and descend
+without being told one thing to do.
+
+**At the top of the briefing, under the heading *Orders*, sits the gloss of every objective
+row the mission opens with**: the rows the orders panel (§10.5) shows at T+00:00, in the same
+order, each in the same sentence that row carries there. The reader's name and the prose
+follow it, unchanged. A row revealed later in the mission is absent, as it is from the panel
+until its time: listing it would put the mission's later beats on a screen read before the
+drop, which is the leak a revealed row exists to prevent. A withheld briefing withholds its
+orders too, because a mission's asks can leak what its prose would. A gloss listed here is
+read off its row, so it may not lean on the panel around it: it names the orders panel by
+name rather than as *this panel*, and says what meets it rather than *this row*.
+
+The orders are a copy on the public header, `MissionHeader.orders`, because the briefing is
+read before a room exists and the mission's literal is never sent. A copy drifts, so the
+backend's mission suite holds every header's list to its literal's opening glosses. A
+briefing variant changes the prose and never the orders ([campaign.md](campaign.md) §1).
 
 ### The record
 

@@ -331,6 +331,23 @@ export interface MissionHeader {
   /** docs/campaign.md §10 — 12–25 minutes, in seconds. */
   lengthBandS: readonly [number, number];
   /**
+   * The orders the briefing lists — docs/ui-ux.md §14, "The orders": the plain
+   * gloss of every objective row the mission opens with, in the literal's
+   * order, each the sentence that row carries in the panel at T+00:00.
+   *
+   * A copy, and on the header rather than derived because the briefing is read
+   * before a room exists and the literal is never sent. The backend's mission
+   * suite holds each list to its literal's opening rows, so the copy cannot
+   * drift. A row revealed later is never here: it would put the mission's
+   * later beats on a screen read before the drop, which is the leak
+   * `revealAtTick` exists to prevent.
+   *
+   * `null` exactly when `briefing` is: a mission that withholds its prose
+   * because the prose would leak withholds its asks for the same reason.
+   * A briefing variant never changes this list (docs/campaign.md §1).
+   */
+  orders: readonly string[] | null;
+  /**
    * The briefing, in paragraphs, read before the socket opens.
    *
    * `null` means withheld — the room sends it on join instead. That is a
@@ -368,6 +385,10 @@ export const PROLOGUE_SORROWGATE_HEADER: MissionHeader = {
   speaker: 'halloran',
   spokenBy: 'Read into the record by Arbiter Mosk Halloran, 214 PC',
   lengthBandS: [1080, 1260],
+  orders: [
+    'Hold under the arch until it falls, then go to the two Harvester hulls: the tenders.',
+    'Keep every escort under SIG 20 — the reading in the orders panel’s header. Diving goes over.',
+  ],
   briefing: [
     'Four hulls have been admitted. Their hardpoints were struck in this chamber in front of all four parties and the tools are on the table where they were struck. Nobody has to take anybody’s word for anything today. That is the whole of what this court is.',
     'Fourteen people are in the record. Nine were taken off a face that two parties have called theirs. Five went into plateau water and did not come out of it. The count is closed. It was closed two tides ago and it does not reopen because somebody has since thought of a better argument.',
@@ -390,6 +411,11 @@ export const LEDGER_ASSET_RECOVERY_HEADER: MissionHeader = {
   // Closes at 18:00 exactly (docs/mission-asset-recovery.md §9), inside
   // campaign.md §10's 12-25.
   lengthBandS: [1020, 1140],
+  orders: [
+    'Hold your Harvesters on the Working Edge of the collapsed face, 2 km south of the Rail Head, for 120 s each to load, then bring them to the Rail Head.',
+    'Load a second Harvester on the Working Edge the same way; it is met when two loaded Harvesters reach the Rail Head.',
+    'The chamber rides on one of your three Harvesters, so load all three on the Working Edge and bring every one to the Rail Head.',
+  ],
   /**
    * The recovery writ, read to the column at 00:00 — docs/mission-asset-recovery.md
    * §12, verbatim. Public for Sorrowgate's reason: it names no hidden fact.
@@ -418,6 +444,10 @@ export const LEDGER_SHIFT_CHANGE_HEADER: MissionHeader = {
   spokenBy: 'Foreman Corwin Osk, to the shift command, at muster. Not read from anything',
   // The whistle at 16:00 (docs/mission-shift-change.md §9), inside §10's 12-25.
   lengthBandS: [900, 1020],
+  orders: [
+    'Bank 3,600 nodules: keep your four working Harvesters harvesting all shift.',
+    'Move each of the three barge Harvesters to the rail transfer once it is released, at T+03:00, T+08:00 and T+11:00.',
+  ],
   /**
    * Osk, to the shift command, at muster — docs/mission-shift-change.md §12,
    * verbatim. Public for Sorrowgate's reason: it names no hidden fact the
@@ -445,6 +475,10 @@ export const LEDGER_BAFFLE_HEADER: MissionHeader = {
   spokenBy: 'The relief writ, read to the convoy at muster. Signed for the Ninth Board',
   // The yard's plant fails at 20:00 (docs/mission-baffle.md §9), inside §10's 12-25.
   lengthBandS: [1140, 1260],
+  orders: [
+    'Order the plant Harvester and an escort within 450 m to the Deep Yard together, before the plant fails at T+20:00.',
+    'Bring your Cruiser and both Corvettes to the Deep Yard as well.',
+  ],
   /**
    * The relief writ, read to the convoy at muster — docs/mission-baffle.md
    * §12, verbatim. Public for Sorrowgate's reason: it names no hidden fact.
@@ -486,6 +520,11 @@ export const LEDGER_EXPOSURE_HEADER: MissionHeader = {
     'The survey charter, read at muster. Issued by the Risk & Actuarial Division over Underwriter Baen Tull’s signature',
   // The watch change at 18:00 (docs/mission-exposure.md §9), inside §10's 12-25.
   lengthBandS: [1020, 1140],
+  orders: [
+    'Take your Corvettes near the worked ground until 4 of its 6 sounds show in your contact log with a bearing.',
+    'After the readings, bring at least 2 Corvettes back to the shelf lane, above the layer.',
+    'How long your Corvettes have been classified; keep it under 30 s by staying quiet and further off.',
+  ],
   /**
    * The survey charter, read at muster — docs/mission-exposure.md §12,
    * verbatim. The first Ledger briefing not signed for the Board, and public
@@ -515,6 +554,11 @@ export const LEDGER_TOLERANCE_HEADER: MissionHeader = {
     'The breach writ, read to the column at the yard. Signed for the Ninth Board, with the Chair present',
   // The water stops at 17:00 (docs/mission-tolerance.md §9), inside §10's 12-25.
   lengthBandS: [960, 1080],
+  orders: [
+    'Hold the casting Harvester in the casting yard for 90 s to pour the casting.',
+    'Carry the casting to the root aperture; below 1,800 m it costs the Harvester 4 hull a second, and it seals only one aperture.',
+    "Or carry it to Sector Vayle's frame instead: there is one casting, so only one of the two can be sealed.",
+  ],
   /**
    * The breach writ, read to the column at the yard — docs/mission-tolerance.md
    * §12, verbatim. Public for Sorrowgate's reason and one more: the mission's
@@ -542,6 +586,11 @@ export const LEDGER_PROSPECT_HEADER: MissionHeader = {
   spokenBy: 'The survey writ, read at the staging. Signed for the Ninth Board',
   // The writ turns north at 22:00 (docs/mission-prospect.md §9), inside §10's 12-25.
   lengthBandS: [1260, 1380],
+  orders: [
+    'Each Corvette reads the faces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field.',
+    'Have 3 of your 4 hulls back in the staging, at the north edge, when the mission closes at T+22:00.',
+    'How long your column has been classified; keep it under 60 s.',
+  ],
   /**
    * The survey writ, read at the staging — docs/mission-prospect.md §12,
    * verbatim. Public for Sorrowgate's reason: the writ's whole posture is
@@ -569,6 +618,11 @@ export const LEDGER_ITEM_NINE_HEADER: MissionHeader = {
   spokenBy: 'The session notice, as the registry circulates it',
   // The chamber empties at 12:30 (docs/mission-item-nine.md §9), just over §10's floor.
   lengthBandS: [720, 840],
+  orders: [
+    'Keep the flight at the rail of the chamber until the session closes at T+12:30.',
+    'The 9 items sound one after another; each counts once your contact log shows it with a bearing.',
+    'Your choice: if your hulls are classified for 2 s in all, by pinging or by moving loudly, Item Nine is read into the open record.',
+  ],
   /**
    * The session notice, as the registry circulates it — docs/mission-item-nine.md
    * §12, verbatim: the shortest briefing in the campaign, because the campaign
@@ -596,6 +650,11 @@ export const SEEDING_TEND_HEADER: MissionHeader = {
   spokenBy: 'Tidespeaker Ysolde Marr, at dawn tide',
   // The tide ends at 16:00 (docs/mission-tend.md §9), inside §10's 12-25.
   lengthBandS: [900, 1020],
+  orders: [
+    'Hold each Harvester in the Gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast.',
+    'Hold Watch One, a Light Scout, on the West Lane for 90 s to move the jellies, loudly, at SIG 45.',
+    'Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing.',
+  ],
   /**
    * Spoken by Tidespeaker Ysolde Marr at dawn tide — docs/mission-tend.md §12,
    * verbatim. Public, and pointedly so: a briefing that orders nobody to do
@@ -627,6 +686,12 @@ export const SEEDING_THIN_WATER_HEADER: MissionHeader = {
   // continuous withdrawal, and a longer one would be the same decision taken
   // four more times.
   lengthBandS: [780, 900],
+  orders: [
+    'Bring at least 6 of your 10 Harvesters to the Holdfast Gate; each moves only with a Corvette within 450 m.',
+    'Get at least 1 Harvester across the closed line to the Holdfast Gate.',
+    'All 10 Harvesters at the Holdfast Gate.',
+    'Keep both Corvettes afloat.',
+  ],
   /**
    * Spoken by Tidespeaker Ysolde Marr at the load-out, from Marr, on the
    * plateau channel \u2014 docs/mission-thin-water.md \u00a712, verbatim.
@@ -686,6 +751,11 @@ export const SEEDING_CONVOCATION_HEADER: MissionHeader = {
   // 12–25. The second mission to resolve to `marr-plateau`, which is §11's
   // most consequential scoping decision and is deliberate.
   lengthBandS: [1080, 1200],
+  orders: [
+    'Keep a hull on the marked row for 60 s with every hull there at SIG 26 or less; then the walk moves to the next row.',
+    'Take a Light Scout into the edge marker on the bare slope.',
+    "If another party's hulls stand on the Holdfast for 60 s before T+18:45, the mission ends lost.",
+  ],
   /**
    * Spoken by Tidespeaker Ysolde Marr, off-tide, after the bell —
    * docs/mission-convocation.md §12, verbatim. Public for Tend's reason and
@@ -740,6 +810,10 @@ export const SEEDING_DEEP_FURROW_HEADER: MissionHeader = {
   // campaign.md §10's 12–25. The first Commune mission played under the
   // layer, and the second to resolve to `anholt-furrow` when mission 5 lands.
   lengthBandS: [1020, 1140],
+  orders: [
+    'Hold the sower Harvester within 250 m of the second furrow, facing it, out of Silent Running, for 60 s; bare rock costs it 4 hull a second, 75 s in all.',
+    'Keep all 3 Harvesters afloat.',
+  ],
   /**
    * Spoken by Tidespeaker Ysolde Marr on the lane at the cleft's mouth, at
    * 900 m — docs/mission-deep-furrow.md §12, verbatim. Public for Tend's
@@ -775,6 +849,12 @@ export const SEEDING_IN_WRITING_HEADER: MissionHeader = {
   // 12–25. The second mission to resolve to `anholt-furrow`, after
   // docs/mission-deep-furrow.md — §11's reuse, region for region.
   lengthBandS: [900, 1020],
+  orders: [
+    'Bring all 3 Harvesters, which carry the 16, to the Foot, above the layer.',
+    'Get at least 1 Harvester to the Foot.',
+    'How long your hulls have been classified; a hull under a bed cannot be heard.',
+    'Keep all 3 Corvettes afloat; their weapons are locked.',
+  ],
   /**
    * Spoken by Tidespeaker Ysolde Marr on the lane at the cleft's mouth, at
    * 900 m, to the watch going down to carry it — docs/mission-in-writing.md
@@ -812,6 +892,12 @@ export const SEEDING_RADICALS_HEADER: MissionHeader = {
   // The count is read at 15:00 (docs/mission-radicals.md §9), inside §10's
   // 12-25 — and the band is the document's own 840-960 s.
   lengthBandS: [840, 960],
+  orders: [
+    'Get the barge Cruiser and all 3 Harvesters into the far water; they follow their own route, and an order of yours holds them for 30 s.',
+    'At least 2 of those 4 hulls in the far water.',
+    'Keep all 3 Corvettes afloat; they may fire and be loud.',
+    'Keep all 4 column hulls afloat.',
+  ],
   /**
    * Spoken by Tidespeaker Ysolde Marr from home, on the plateau channel, to the
    * escort at the Upper Concourse — docs/mission-radicals.md §12, verbatim.
@@ -849,6 +935,12 @@ export const SEEDING_SECOND_SEEDING_HEADER: MissionHeader = {
   // `mouth-rim`, and the second of four once the rim week is built
   // (campaign.md §8).
   lengthBandS: [1320, 1440],
+  orders: [
+    'Hold the sower Harvester within 250 m of the lip, facing it, out of Silent Running, for 60 s.',
+    'How long your hulls have been tracked exactly; keep it under 60 s.',
+    'Get near enough that a sound on the lip shows in your contact log with a bearing.',
+    "Bring the 3 Corvettes from the staging into the lip's furrow once they are released at T+20:30.",
+  ],
   /**
    * Spoken by Bloomwright Sefa Anholt, aboard the barge, under the bed on the
    * western lip at 3,000 m — docs/mission-second-seeding.md §12, verbatim. The
@@ -884,6 +976,10 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
     'Undermarshal Setha Korrin, at the opening of the watch, after the First Cantor’s formula',
   // The watch ends at 18:00 (docs/mission-attendance.md §9), inside §10's 12-25.
   lengthBandS: [1020, 1140],
+  orders: [
+    'Hear at least 5 of the 9 arrivals: each sounds for 20 s along the axis and counts once your contact log shows it with a bearing.',
+    'Hear all 9 for a complete result; the log calls each arrival about 60 s before it sounds.',
+  ],
   /**
    * Undermarshal Korrin's assignment, after the First Cantor's formula —
    * docs/mission-attendance.md §12, verbatim. Public: it names the count, the
@@ -915,6 +1011,11 @@ export const ATTENDING_THE_DOME_HEADER: MissionHeader = {
   // §10's 12–25 — and Baffle's twenty minutes to the second, because it is the
   // same tide from the counting side.
   lengthBandS: [1140, 1260],
+  orders: [
+    'Keep at least 3 of your 4 Submersibles afloat.',
+    'Hear both sounds below the mouth; each counts once your contact log shows it with a bearing.',
+    'How long a Submersible has been tracked exactly; a ping or a volley fills it fast.',
+  ],
   /**
    * Two voices at the opening, in the order the rite fixes — the First
    * Cantor's formula, then the Undermarshal's assignment
@@ -965,6 +1066,10 @@ export const ATTENDING_INTAKE_HEADER: MissionHeader = {
   spokenBy: 'Undermarshal Setha Korrin, at the muster',
   // The shift ends at 20:00 (docs/mission-intake.md \u00a79), inside \u00a710's 12\u201325.
   lengthBandS: [1140, 1260],
+  orders: [
+    'Bank 245 Biomass by hunting the animals on the walls; Biomass is paid on each kill.',
+    'Keep at least 9 of your 12 Submersibles afloat.',
+  ],
   /**
    * Undermarshal Korrin, assigning the band at the muster \u2014
    * docs/mission-intake.md \u00a712, verbatim. Public for Attendance's reason: it
@@ -995,6 +1100,11 @@ export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
   // the strip is 2,302 m from the seat and the Holdfast's window is three
   // minutes in the middle of it.
   lengthBandS: [1080, 1200],
+  orders: [
+    'Hear 5 of the 10 plateau sounds; each counts once your contact log shows it with a bearing.',
+    'How long your hulls have been classified; keep it under 60 s.',
+    "Hear 8 of the 10, the Holdfast's among them.",
+  ],
   /**
    * Undermarshal Setha Korrin, assigning from Sufficiency to a column she
    * cannot join — docs/mission-shallow.md §12, verbatim. There is no formula
@@ -1033,6 +1143,11 @@ export const ATTENDING_TRENCH_AWAKENING_HEADER: MissionHeader = {
   // campaign.md §10's 12–25, and the document's own advertised 1,140–1,260 s.
   // Not a conclusion: the tide does not end here (§8).
   lengthBandS: [1140, 1260],
+  orders: [
+    'Bank 260 Biomass by hunting: the animals on the West Overhang and East Overhang hold about 210, and what comes up the trench after T+10:00 holds the rest.',
+    'Keep at least 6 of your 8 hulls afloat.',
+    'Bank 400 Biomass in all.',
+  ],
   /**
    * Undermarshal Setha Korrin, assigning the band at the band —
    * docs/mission-trench-awakening.md §12, verbatim. There is no Cantorate
@@ -1068,6 +1183,11 @@ export const ATTENDING_CONCLAVE_HEADER: MissionHeader = {
   // The cycle closes at 20:00 (docs/mission-conclave-attending.md §9), inside
   // campaign.md §10's 12–25 — and the band is the document's own 19:00–21:00.
   lengthBandS: [1140, 1260],
+  orders: [
+    'Keep at least 12 of your 16 hulls afloat.',
+    'Hear 3 of the cells across the trench; each counts once your contact log shows it with a bearing.',
+    'Keep every hull at SIG 25 or less, all mission long.',
+  ],
   /**
    * Two voices at the opening, in the order the rite fixes — the First
    * Cantor's formula, then the Undermarshal's calling
@@ -1105,6 +1225,12 @@ export const CHORD_APTITUDE_HEADER: MissionHeader = {
   spokenBy: 'Chapter-Master Halden Vrey, from the Third, at the top of the exercise',
   // The tuning closes at 16:00 (docs/mission-aptitude.md \u00a79), inside \u00a710's 12-25.
   lengthBandS: [900, 1020],
+  orders: [
+    'Each of your 6 hulls sounds its own formation: within 400 m, facing it, out of Silent Running, for 20 s.',
+    'Met once any 4 of the 6 formations are sounded.',
+    'Keep all 6 hulls afloat until the close.',
+    'How long the survey has classified you; keep it under 30 s by turning your flank to it.',
+  ],
   /**
    * Chapter-Master Vrey, setting the exercise \u2014 docs/mission-aptitude.md
    * \u00a712, verbatim. Public for Sorrowgate's reason: it names no hidden fact.
@@ -1137,6 +1263,12 @@ export const CHORD_STANDING_WAVE_HEADER: MissionHeader = {
   // fourteen, and a mission whose economy is a clock has to be long enough for
   // the clock to matter.
   lengthBandS: [1020, 1140],
+  orders: [
+    'Raise 2 Sounding Spires, one on each wall of the Fifth, so they pair into a line.',
+    'Once the line is up, have all 6 hulls in the North Gallery at the close.',
+    "Keep all 6 hulls afloat; the line harms your hulls as much as anyone's.",
+    'A 3rd Sounding Spire, 900 m further south, costs about 12.5 minutes of income.',
+  ],
   /**
    * Choirmaster Ivane Sull, setting the works — docs/mission-standing-wave.md
    * §12, verbatim. Public for Aptitude's reason: it names no hidden fact. It
@@ -1170,6 +1302,11 @@ export const ATTENDING_FIRST_ARRIVAL_HEADER: MissionHeader = {
   // walk west is four minutes of it and the count is taken on ground the
   // column has stood on for eighteen.
   lengthBandS: [1200, 1320],
+  orders: [
+    'Keep at least 4 of your 6 Submersibles afloat.',
+    'Hear both sounds on the lip; each counts once your contact log shows it with a bearing.',
+    'How long your column has been classified; keep it under 60 s.',
+  ],
   /**
    * Undermarshal Setha Korrin, assigning the rim from Sufficiency —
    * docs/mission-first-arrival.md §12, verbatim. There is no formula at the
@@ -1214,6 +1351,16 @@ export const CHORD_NINETEEN_HEADER: MissionHeader = {
   // hundred and eighty seconds of standing still before a metre of transit is
   // paid for.
   lengthBandS: [1020, 1140],
+  orders: [
+    "At 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.",
+    'Keep your Cruiser afloat; a hull lost here is lost for the rest of the campaign.',
+    'Keep the First, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+    'Keep the Second, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+    'Keep the Third, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+    'Keep the Fourth, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+    'Keep the Fifth, one of your Corvettes, afloat; a hull lost here is lost for the campaign.',
+    'How long your party has been classified; keep it under 60 s.',
+  ],
   /**
    * Choirmaster Ivane Sull, the committal order — docs/mission-nineteen.md §12,
    * verbatim. Public for Aptitude's reason: it names no hidden fact. It states
@@ -1252,6 +1399,10 @@ export const CHORD_CONCLAVE_HEADER: MissionHeader = {
   // seconds after it (docs/mission-conclave-chord.md §9) — 870 s, inside
   // campaign.md §10's 12–25, and the document's own advertised 840–900 s.
   lengthBandS: [840, 900],
+  orders: [
+    'Until T+14:30, never hold your Cruiser within 400 m of one of the six markers, facing it, out of Silent Running: that plays the tone.',
+    'How long your party has been classified; at 30 s the survey files a contact.',
+  ],
   /**
    * Chapter-Master Halden Vrey, setting the interval —
    * docs/mission-conclave-chord.md §12, verbatim.
@@ -1291,6 +1442,11 @@ export const CHORD_THE_THREE_HEADER: MissionHeader = {
   // shortest mission in the bible, deliberately, and the band test admits the
   // boundary (`closesAtS >= low`). The document advertises [720, 780].
   lengthBandS: [720, 780],
+  orders: [
+    'Keep an escort within 600 m of your tender so it can reach the sealed room at 2,900 m.',
+    'Keep the three escort hulls in Silent Running at SIG 8 or less; the 12:00 count excludes the tender.',
+    'Hear both sounds in the house; each counts once your contact log shows it with a bearing.',
+  ],
   /**
    * Choirmaster Ivane Sull, aboard her own hull at the foot of the Fields —
    * docs/mission-the-three.md §12, verbatim, and the first Knight briefing in
@@ -1335,6 +1491,17 @@ export const CHORD_RIM_DEPOSITS_HEADER: MissionHeader = {
   // laid over a correction that is walking from 03:00 and a basin that lifts at
   // 14:30, and a longer one would only add water for the nodes to sing over.
   lengthBandS: [900, 1020],
+  orders: [
+    'Bring at least 2 of your 3 cutter Corvettes, the First, Second and Third, back loaded above the Staging line; each cuts its own face, 240 s a load.',
+    "The First's first load from the western face, above the Staging line.",
+    "The First's second load from the western face, above the Staging line.",
+    "The Second's first load from the middle face, above the Staging line.",
+    "The Second's second load from the middle face, above the Staging line.",
+    "The Third's one load from the eastern face, above the Staging line.",
+    'Keep all 3 cutter Corvettes, the First, Second and Third, afloat.',
+    'Keep the Voice, your Cruiser, and the Fourth and Fifth, your escort Corvettes, afloat.',
+    'How long your hulls have been classified; the raised nodes give you away, so it fills early.',
+  ],
   /**
    * Choirmaster Ivane Sull, the authorisation — docs/mission-rim-deposits.md
    * §12, verbatim. Public for Aptitude's and Nineteen's reason: it names no
@@ -1377,6 +1544,14 @@ export const CHORD_SECOND_CHORD_HEADER: MissionHeader = {
   // the reply not being shown — so the close is a fixed point rather than a
   // window, and the band is drawn tight around it.
   lengthBandS: [1020, 1140],
+  orders: [
+    'Bring both loaded carrier Corvettes into the Chord on the lip.',
+    'Keep the Cruiser your escort guards afloat; it is released at T+15:30.',
+    'Keep your other Cruiser and both escort Corvettes afloat.',
+    'Keep both carrier Corvettes afloat.',
+    'Hear 3 sounds on the lip; each counts once your contact log shows it with a bearing.',
+    'How long your hulls have been classified; the nodes give you away, so it fills early.',
+  ],
   /**
    * Choirmaster Ivane Sull, the Order's last works order —
    * docs/mission-second-chord.md §12, verbatim, read at the Staging aboard her

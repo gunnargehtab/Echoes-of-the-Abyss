@@ -160,6 +160,54 @@ describe('the briefing: the reading a player has earned', () => {
   });
 });
 
+describe('the briefing: the orders it gives (docs/ui-ux.md §14, "The orders")', () => {
+  const orders = (view: Rendered) =>
+    view.allByClass('briefing-order').map((li) => String(li.props.children));
+
+  it('lists every mission’s opening orders verbatim, in the authored order', async () => {
+    // The backend suite holds each header's list to its literal; this holds
+    // the screen to the header, over every mission rather than one.
+    for (const header of MISSION_HEADERS) {
+      const { view } = await briefing(header.id);
+      try {
+        assert.deepEqual(orders(view), header.orders ?? [], `${header.id}: orders on screen`);
+      } finally {
+        await view.unmount();
+      }
+    }
+  });
+
+  it('gives the orders before the reader and the reading', async () => {
+    // A stranger is told what to do before the prose starts, so the list stands
+    // above the reader's name and the first paragraph rather than under them.
+    const { view } = await briefing(PROLOGUE_SORROWGATE_HEADER.id);
+    try {
+      const lines = view.text();
+      const at = (needle: string) => lines.findIndex((line) => line.includes(needle));
+      const firstOrder = at(PROLOGUE_SORROWGATE_HEADER.orders![0]!);
+      assert.ok(firstOrder >= 0, 'the first order is on screen');
+      assert.ok(firstOrder < at(PROLOGUE_SORROWGATE_HEADER.spokenBy), 'before the reader');
+      assert.ok(firstOrder < at(PROLOGUE_SORROWGATE_HEADER.briefing![0]!), 'before the reading');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('gives the same orders whichever reading the player has earned', async () => {
+    // docs/campaign.md §1: a witnessed scene changes briefing text and nothing
+    // else, so the variant moves the prose and never the asks.
+    const plain = await briefing(VARIANT_MISSION);
+    const filed = await briefing(VARIANT_MISSION, new Set([MARR_PLATEAU_FILED]));
+    try {
+      assert.ok(orders(plain.view).length > 0);
+      assert.deepEqual(orders(filed.view), orders(plain.view));
+    } finally {
+      await plain.view.unmount();
+      await filed.view.unmount();
+    }
+  });
+});
+
 describe('the briefing: what it commits to', () => {
   it('carries the mission’s own name, premise and length band', async () => {
     const header = missionHeaderById(VARIANT_MISSION)!;
