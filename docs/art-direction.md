@@ -827,10 +827,11 @@ over long strands of beads of light. At High `env-drift-jelly` is drawn as one.
   deuteranope's 4.2 dE from a Tier 2 contact refuses the one pink all the same.
   **A lantern each palette owns** is taken, as a navy's inks are: an orchid pink
   in the standard palette, 35 degrees pinker than Hadron's violet and 29 bluer than the
-  interface's magenta, and a saturated violet in each colour-vision palette. Its floor is
+  interface's magenta, a saturated violet in the red-green pair's and that orchid a shade
+  pinker in tritanopia's (#1913). Its floor is
   25 dE from every navy's inks, every contact tier, both chrome neons and
-  `neon-violet`, to the eye its palette serves. Tritanopia's violet stands under it, and
-  that and what the floor leaves out are in
+  `neon-violet`, to the eye its palette serves. All four hold it, and what the floor
+  leaves out is in
   [style-neon-noir.md](style-neon-noir.md#world-light--the-terrain-carve-outs). A lantern
   follows a palette changed mid-match.
 - **It moves, and for nothing** (limit 4). Three things run on the shared match time,

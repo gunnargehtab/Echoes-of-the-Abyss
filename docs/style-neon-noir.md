@@ -534,7 +534,7 @@ its inks until the table is read again for this eye
 | Nodules | `#F2B233` | `#F0E0C8` |
 | Resonance Crystal | `#B98CFF` | `#7FB8FF` |
 | Fauna | `#5FA88A` | `#7A7A88` |
-| Jelly lantern (world light, High) | `#C56BC7` | `#8026D9` |
+| Jelly lantern (world light, High) | `#C56BC7` | `#CB68C3` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F0E0C8` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#1FA67A` · `#8FE36B` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#A02030` · `#E0566B` |
@@ -708,36 +708,45 @@ inks are, and four of the families followed it
 | Standard | `#C56BC7` | Hadron's glow, 25.4 dE |
 | Deuteranopia | `#7F00FF` | `neon-violet`, 30.5 dE |
 | Protanopia | `#9900FF` | `neon-violet`, 34.3 dE |
-| Tritanopia | `#8026D9` | Bathyarch's accent, 15.4 dE, under the floor below |
+| Tritanopia | `#CB68C3` | Bathyarch's accent, 26.0 dE |
 
 The standard palette's is an orchid pink at 299 degrees, in the gap between the two hues
 that flank it: 35 degrees pinker than Hadron's violet, and 29 bluer than `neon-magenta`
 at under half its saturation. No one pink holds for every eye. The first cut's
 `#CC7AD4` stood 4.2 dE from a Tier 2 contact to a deuteranope and 8.2 from Pelagia's
 primary to a protanope. So the lantern
-moves with the palette, to a saturated violet in each colour-vision palette, and its
+moves with the palette, to a saturated violet in the red-green pair and to an orchid a
+shade pinker for a tritanope, and its
 floor is the one an information ink keeps: 25 dE from every navy's primary, accent, glow
 and console accent, every contact tier, the chrome's two neons and `neon-violet`, as the
-eye its palette serves sees them. `packages/frontend/test/palette.test.ts` holds it for
-the standard palette and the red-green pair.
+eye its palette serves sees them. `packages/frontend/test/palette.test.ts` holds it in
+all four palettes.
 
-**Tritanopia's lantern stands under it.** Its violet was chosen against a projection of
-that eye with no red-green axis ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)),
-by which the first cut stood 1.7 dE from the Directorate's glow. By the projection that
-replaced it the first cut stands 19.5 dE from Bathyarch's accent, its nearest, and
-`#8026D9` stands under the floor at four inks: 15.4 dE from Bathyarch's accent and
-console accent, 15.6 from `neon-violet` and 20.4 from a Tier 1 contact. It keeps the
-token until one is chosen for this eye
-([#1913](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1913)), and the test pins
-the four.
+**Tritanopia's lantern is the standard orchid, a shade pinker.** Its first token, the
+violet `#8026D9`, was chosen against a projection of that eye with no red-green axis
+([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By the
+projection that replaced it that violet stood under the floor at four inks, 15.4 dE from
+Bathyarch's accent at the nearest, and the first cut's pink stands 19.5 dE from it. The
+owner's call of 24 November 2026 was a token chosen to the floor, as the families' are
+([#1913](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1913)). `#CB68C3` is
+the nearest colour to the standard orchid, at its luminance, that stands 26 dE clear: 26.0
+from Bathyarch's accent and console accent and 27.4 from the Directorate's accent, at 305
+degrees, 3.5 dE from the standard token to a normal eye. A second model of this eye
+(Machado, Oliveira and Fernandes 2009) puts its nearest ink at 36.0 dE. Its margin is
+1 dE where a family's is 3, because no pink or violet at that luminance stands more than
+26.8 dE clear; one 28 dE clear is a quarter brighter. It is the one lantern of the three
+that is no saturated violet: to a tritanope a saturated violet is a grey, and the
+red-green pair's `#7F00FF` would stand 8.1 dE from a Tier 1 contact. A software
+rasteriser's frames of it are in [screenshots/issue-1854](screenshots/issue-1854/README.md),
+and the owner's glance at them is still owed.
 
 The floor leaves out the resource inks, the SIG band, the fauna colour and the other
 world lights, because no pink or violet clears all of those at once in a colour-vision
 palette. What that costs, each to the eye its palette serves: the tritanopia lantern
-stands 11.5 dE from that palette's fauna colour and 6.1 from `crystal-seam`, and the
-standard lantern 22.1 from the Resonance Crystal ink. Place and form hold those apart:
-a fauna mark is a figure in dots on the chart, and a crystal's seam and a field's ink
-lie on the ground, where no lantern hangs. The lantern carries no information: it moves
+stands 6.3 dE from `civic-lamp`, 9.4 from that palette's `vent-ember` and 21.0 from its
+`SIG mid`, and the standard lantern 22.1 from the Resonance Crystal ink. Place and form
+hold those apart: a lamp and an ember stand on the ground and a field's ink lies on it,
+and a lantern is a bell hanging in open water. The lantern carries no information: it moves
 so that it cannot be taken for an ink that does. It is not `neon-violet`, which is the menu's and
 never shares a frame with it, and it stands for nothing unresolved. Whether it reads
 apart from a lamp and from a panel's bevel in play is still the owner's glance. The five
@@ -867,8 +876,8 @@ bowl among them (#1859).
 Rule 5 binds in every palette, and a floor says what it asks. To the eye its palette
 serves, a family's token stands **15 dE or more** from every navy's primary, accent and
 glow, every contact tier, the chrome's two neons and `neon-violet`. The standard palette
-and the red-green pair hold it today; three of tritanopia's five do, and two wait, as this
-section ends by saying. The owner set it on
+and the red-green pair hold it; four of tritanopia's five do and its biolight cannot, as
+this section ends by saying. The owner set it on
 24 November 2026 ([#1854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1854)).
 It is the floor the fauna colour keeps from a navy, and the standard palette clears it as
 it stands: its tightest is `flora-biolight`, 16.6 dE from Pelagia's primary. The lantern's
@@ -881,8 +890,8 @@ glow under deuteranopia. So a family's token is a palette's own, as the lantern 
 
 | Token | Standard | Deuteranopia | Protanopia | Tritanopia |
 | --- | --- | --- | --- | --- |
-| `vent-ember` | `#E06A2B` | `#CC7656` | `#CC7656` | `#E06A2B` |
-| `flora-biolight` | `#2E8C74` | `#4E8B4C` | `#4E8B4C` | `#2E8C74` |
+| `vent-ember` | `#E06A2B` | `#CC7656` | `#CC7656` | `#CA782D` |
+| `flora-biolight` | `#2E8C74` | `#4E8B4C` | `#4E8B4C` | `#3D8C6B` |
 | `crystal-seam` | `#5B4A8C` | `#584996` | `#584996` | `#5B4A8C` |
 | `ore-trace` | `#7A5634` | `#7A5643` | `#7A5643` | `#7A5634` |
 | `civic-lamp` | `#B8875A` | `#B8875A` | `#B8875A` | `#B8875A` |
@@ -931,15 +940,43 @@ luminance, and that gap is 45 to 48 dE wide. Place and behaviour hold them apart
 flickers in the cracks of a Thermal Vein, a lamp stands steady on the Upper Concourse, and
 biolight tips kelp and living coral.
 
-**Tritanopia's ember and biolight wait.** Its five are the standard palette's still. They
-waited on the test's tritanopia projection, which had no red-green axis and has been
-replaced ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By the new one
+**Tritanopia moves two, and its biolight stands under the floor.** Its seam, trace and
+lamp are the standard palette's. By the test's projection of this eye, Brettel, Viénot and
+Mollon's ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)),
 `crystal-seam` stands 16.7 dE from a Tier 1 contact, and `ore-trace` 21.4 and `civic-lamp`
-20.1 from Bathyarch's accent, so the three hold the floor as they stand. `vent-ember`
-stands 4.3 dE from the Directorate's accent and `flora-biolight` 9.1 from Hadron's.
-Machado's model agrees on all five: it clears the same three and puts the ember 6.8 dE
-from that accent and the biolight 10.0 from Pelagia's primary. Those two tokens are still
-to be chosen ([#1854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1854)).
+20.1 from Bathyarch's accent, so the three hold the floor as they stand. The standard
+`vent-ember` stood 4.3 dE from the Directorate's accent and `flora-biolight` 9.1 from
+Hadron's, and Machado's model agreed: 6.8 from that accent and 10.0 from Pelagia's primary.
+The owner's call of 24 November 2026 was a token to the floor for each
+([#1854](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1854)), chosen by the
+red-green pair's rule: the nearest colour to the standard token, at its luminance and in
+its family's hue, by both models.
+
+| Token | Nearest held ink to a tritanope | By Machado's model |
+| --- | --- | --- |
+| `vent-ember` `#CA782D` | The Directorate's accent, 18.0 dE | The Directorate's accent, 22.7 dE |
+| `flora-biolight` `#3D8C6B` | Pelagia's primary and Hadron's accent, 11.0 dE | Hadron's accent, 11.1 dE |
+
+The ember goes from orange to an amber, 18 dE clear as the red-green pair's four are.
+
+`flora-biolight` cannot reach the floor for this eye. A tritanope has one axis of hue,
+warm to cool, and at the biolight's luminance the cool side holds Pelagia's primary,
+Hadron's accent, a Tier 1 contact and `neon-violet` already: no green at that luminance
+stands more than 11.0 dE from all four. Two colours would hold 15, and neither is this
+family's: a pale sage at 1.8 times the luminance, which would re-price every level below,
+and a clay tan at the same luminance, 7.9 dE from the lamp. The owner took the nearest
+green at that reach, in session on 25 November 2026, as #1913 said to record a lantern
+that could not reach its own. `#3D8C6B` stands 11.0 dE from Pelagia's primary and Hadron's
+accent, 11.1 from `neon-violet` and 11.3 from a Tier 1 contact, where the standard token
+stood 9.1, and the test pins the family as this palette's one miss. Place holds it apart:
+biolight tips kelp and living coral on the ground, and a navy's ink is on a hull or a mark.
+
+What this palette's floor leaves out costs more than the red-green pair's does. The ember
+stands 17.4 dE from `SIG mid`, the seam 15.5 from the fauna colour, the biolight 12.6 from
+`SIG low` and 10.5 from Hadron's console accent. The ember and the lamp stand 15.7 dE
+apart, where the standard pair stood 30.1 to this eye. The owner has not read the two new
+tokens at a frame: a software rasteriser's are in
+[screenshots/issue-1854](screenshots/issue-1854/README.md), and that glance is still owed.
 
 `WORLD_LIGHT` in `packages/frontend/src/game/palette.ts` is the active palette's five, and
 `packages/frontend/test/palette.test.ts` holds the floor and the luminance.

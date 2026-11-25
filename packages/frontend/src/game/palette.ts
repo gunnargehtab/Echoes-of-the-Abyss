@@ -111,9 +111,10 @@ export interface Palette {
    * cannot stand clear of every ink for every eye: to a deuteranope the first
    * cut's was a Tier 2 contact. The floor is 25 dE from every navy's inks,
    * every contact tier, the chrome's two neons and the reserved
-   * `neon-violet`, as the eye its palette serves sees them. Three palettes
-   * hold it, and tritanopia's violet stands under it at four inks
-   * (palette.test.ts, #1913).
+   * `neon-violet`, as the eye its palette serves sees them. All four hold it
+   * (palette.test.ts). The red-green pair's are saturated violets; a
+   * tritanope sees those as greys beside a Tier 1 contact, so tritanopia's is
+   * the standard orchid moved to its floor (#1913).
    */
   lantern: number;
   /**
@@ -124,8 +125,9 @@ export interface Palette {
    * every navy's primary, accent and glow, every contact tier, the chrome's
    * two neons and `neon-violet`, to the eye its palette serves, and keeps its
    * standard luminance, so every level a family is drawn at is every
-   * palette's (palette.test.ts). Tritanopia's are the standard five still,
-   * its ember and its biolight under the floor (#1854).
+   * palette's (palette.test.ts). One token cannot: no green at the biolight's
+   * luminance stands 15 dE clear for a tritanope, so tritanopia's stands at
+   * that eye's reach, 11.0 dE, and the test pins it (#1854).
    */
   worldLight: Record<WorldLightFamily, number>;
   ui: UiInk;
@@ -161,6 +163,24 @@ const RED_GREEN_WORLD_LIGHT: Record<WorldLightFamily, number> = {
   flora: 0x4e8b4c,
   crystal: 0x584996,
   ore: 0x7a5643,
+  civic: 0xb8875a,
+};
+
+/**
+ * Tritanopia's (SPEC, #1854): its seam, trace and lamp clear as they stand.
+ * The ember is the nearest colour to the standard token, at its luminance and
+ * in its hue, that stands 18 dE clear of the Directorate's accent, which the
+ * standard orange sat on. The biolight is the nearest green at the furthest a
+ * green reaches for this eye, 11.0 dE: Pelagia's primary, Hadron's accent and
+ * a Tier 1 contact hold the cool side of a tritanope's one hue axis already.
+ * The owner took it under the floor over a token that left the family's hue
+ * or its luminance.
+ */
+const TRITANOPIA_WORLD_LIGHT: Record<WorldLightFamily, number> = {
+  vent: 0xca782d,
+  flora: 0x3d8c6b,
+  crystal: 0x5b4a8c,
+  ore: 0x7a5634,
   civic: 0xb8875a,
 };
 
@@ -451,9 +471,8 @@ const TRITANOPIA: Palette = {
     [ResourceKind.ResonanceCrystal]: 0x7fb8ff,
   },
   fauna: 0x7a7a88,
-  lantern: 0x8026d9,
-  // The standard five still, the ember and the biolight under the floor: #1854.
-  worldLight: STANDARD_WORLD_LIGHT,
+  lantern: 0xcb68c3,
+  worldLight: TRITANOPIA_WORLD_LIGHT,
   ui: {
     ...CHROME,
     friendly: 0x5fd0c0,
