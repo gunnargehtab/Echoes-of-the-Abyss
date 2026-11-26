@@ -8,10 +8,16 @@
  *
  * Colyseus answers `/matchmake/` from a request listener it prepends ahead of
  * express, so an express middleware never sees these requests. The limit wraps
- * the server's listeners the way `guardOrigins` does, and reads the path the
- * way Colyseus's own router does (`router/node.mjs`): the same `URL` pathname
- * and the same pattern, so no spelling of the path reaches the matchmaker
- * without being counted.
+ * the server's listeners the way `guardOrigins` does.
+ *
+ * Which path it reads is the hard part (#1960's review). Colyseus binds its
+ * router in `bindRouterToTransport` (`router/index.mjs`): it *finds* the route
+ * on the raw `req.url`, then *dispatches* on `new Request(base + req.url)`,
+ * whose `base` is built from `X-Forwarded-Proto` and `Host`. A `Host` that
+ * carries a path rewrites the dispatched one, so a request whose raw path says
+ * `join` can be answered as a `create`. Both paths are read here, and the
+ * count is the default: only a request both of them name as a seat-only
+ * method passes uncounted.
  */
 
 import type { IncomingMessage, RequestListener, Server, ServerResponse } from 'node:http';
@@ -39,20 +45,58 @@ export function clientAddress(req: IncomingMessage): string {
 }
 
 /**
- * The matchmaker methods that can make a room. `join`, `joinById` and
- * `reconnect` only seat a player in a room that exists, and a reconnection in
- * particular must never be refused: it is a player getting back to their fleet.
+ * The matchmaker methods that only seat a player in a room that exists
+ * (`controller.exposedMethods`, less `create` and `joinOrCreate`). These pass
+ * uncounted: a reconnection in particular must never be refused, as it is a
+ * player getting back to their fleet. Anything else is counted, a method that
+ * would fail anyway included, so a spelling nobody foresaw costs a window
+ * rather than slipping past one.
  */
-const ROOM_MAKING = new Set(['create', 'joinOrCreate']);
+const SEAT_ONLY = new Set(['join', 'joinById', 'reconnect']);
 
-/** Whether Colyseus would answer this request by possibly making a room. */
-export function makesRoom(method: string | undefined, url: string | undefined): boolean {
-  if (method !== 'POST') return false;
-  const { pathname } = new URL(url || '/', 'http://localhost');
+/** The URL Colyseus dispatches a request on, built as `router/index.mjs` builds it. */
+export function routedUrl(req: IncomingMessage): string {
+  const encrypted = (req.socket as { encrypted?: boolean } | undefined)?.encrypted === true;
+  const protocol = req.headers['x-forwarded-proto'] || (encrypted ? 'https' : 'http');
+  const authority = req.headers[':authority'] || req.headers.host;
+  return `${String(protocol)}://${String(authority)}${req.url ?? ''}`;
+}
+
+/** The method a matchmaking pathname names, decoded; `null` off the route. */
+function namedMethod(pathname: string): string | null {
   const route = `/${matchMaker.controller.matchmakeRoute}/`;
-  if (!pathname.startsWith(route)) return false;
-  const named = pathname.slice(route.length).match(/^(\w+)\/(.+)/);
-  return named !== null && ROOM_MAKING.has(named[1]!);
+  if (!pathname.startsWith(route)) return null;
+  const segment = pathname.slice(route.length).split('/')[0] ?? '';
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
+/** One path, read as a seat-only call (`true`), another call, or off the route. */
+function seatOnly(url: string, base?: string): boolean | null {
+  let pathname: string;
+  try {
+    pathname = new URL(url, base).pathname;
+  } catch {
+    // A URL that does not parse cannot be shown harmless.
+    return false;
+  }
+  const method = namedMethod(pathname);
+  return method === null ? null : SEAT_ONLY.has(method);
+}
+
+/**
+ * Whether a request is counted against its address: a POST that either the
+ * raw path or the dispatched one reads as a matchmaking call other than a
+ * seat in an existing room.
+ */
+export function makesRoom(req: IncomingMessage): boolean {
+  if (req.method !== 'POST') return false;
+  const raw = seatOnly(req.url || '/', 'http://localhost');
+  const routed = seatOnly(routedUrl(req));
+  return raw === false || routed === false;
 }
 
 /** The matchmaking limit, at the bounds `MATCHMAKING` sets. */
@@ -79,7 +123,7 @@ export function guardMatchmaking(
   const listeners = server.listeners('request') as RequestListener[];
   server.removeAllListeners('request');
   server.on('request', (req: IncomingMessage, res: ServerResponse) => {
-    if (makesRoom(req.method, req.url) && !limiter.allow(clientAddress(req), now())) {
+    if (makesRoom(req) && !limiter.allow(clientAddress(req), now())) {
       res.writeHead(429, {
         ...corsHeadersFor(policy, req.headers.origin),
         'Content-Type': 'application/json',

@@ -8,33 +8,53 @@ import type { IncomingMessage } from 'node:http';
 import { describe, it } from 'node:test';
 import { clientAddress, makesRoom } from '../src/http/matchmaking.ts';
 
+/** A request as far as `makesRoom` reads one. */
+const call = (
+  method: string,
+  url: string,
+  headers: Record<string, string> = { host: 'play.example.com:3000' }
+): IncomingMessage => ({ method, url, headers, socket: {} }) as unknown as IncomingMessage;
+
 describe('the requests that can make a room', () => {
   it('counts a create and a joinOrCreate', () => {
-    assert.equal(makesRoom('POST', '/matchmake/create/match'), true);
-    assert.equal(makesRoom('POST', '/matchmake/joinOrCreate/match'), true);
+    assert.equal(makesRoom(call('POST', '/matchmake/create/match')), true);
+    assert.equal(makesRoom(call('POST', '/matchmake/joinOrCreate/match')), true);
   });
 
-  it('reads the path as Colyseus does, so no spelling slips past', () => {
-    // The same `URL` pathname Colyseus's router reads: a query, a dot segment
-    // and a full URL all reach the matchmaker, so all are counted.
-    assert.equal(makesRoom('POST', '/matchmake/create/match?mapId=x'), true);
-    assert.equal(makesRoom('POST', '/./matchmake/create/match'), true);
-    assert.equal(makesRoom('POST', 'http://evil.example/matchmake/create/match'), true);
+  it('counts the spellings a URL parser reads as the route', () => {
+    // A query, a dot segment, an absolute-form target and an escaped method.
+    // Not every one reaches the matchmaker, and counting one that does not
+    // costs nothing but a window.
+    assert.equal(makesRoom(call('POST', '/matchmake/create/match?mapId=x')), true);
+    assert.equal(makesRoom(call('POST', '/./matchmake/create/match')), true);
+    assert.equal(makesRoom(call('POST', 'http://evil.example/matchmake/create/match')), true);
+    assert.equal(makesRoom(call('POST', '/matchmake/%63reate/match')), true);
+  });
+
+  it('counts a seat whose Host rewrites the path Colyseus dispatches on', () => {
+    // Colyseus finds the route on the raw path and dispatches on
+    // `base + req.url`, so a path in `Host` makes this raw `join` a `create`.
+    const smuggled = { host: 'x/matchmake/create/match?' };
+    assert.equal(makesRoom(call('POST', '/matchmake/join/match', smuggled)), true);
+    const proto = {
+      host: 'play.example.com',
+      'x-forwarded-proto': 'http://x/matchmake/create/match?',
+    };
+    assert.equal(makesRoom(call('POST', '/matchmake/join/match', proto)), true);
   });
 
   it('leaves a seat in a room that exists alone', () => {
     // A reconnection is a player getting back to their fleet.
     for (const method of ['join', 'joinById', 'reconnect']) {
-      assert.equal(makesRoom('POST', `/matchmake/${method}/match`), false, method);
+      assert.equal(makesRoom(call('POST', `/matchmake/${method}/match`)), false, method);
     }
   });
 
   it('leaves reads, preflights and other routes alone', () => {
-    assert.equal(makesRoom('OPTIONS', '/matchmake/create/match'), false);
-    assert.equal(makesRoom('GET', '/matchmake/create/match'), false);
-    assert.equal(makesRoom('POST', '/rooms/match'), false);
-    assert.equal(makesRoom('POST', '/api/report'), false);
-    assert.equal(makesRoom('POST', undefined), false);
+    assert.equal(makesRoom(call('OPTIONS', '/matchmake/create/match')), false);
+    assert.equal(makesRoom(call('GET', '/matchmake/create/match')), false);
+    assert.equal(makesRoom(call('POST', '/rooms/match')), false);
+    assert.equal(makesRoom(call('POST', '/api/report')), false);
   });
 });
 

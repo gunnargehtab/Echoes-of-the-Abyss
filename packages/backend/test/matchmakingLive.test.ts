@@ -28,6 +28,36 @@ const post = (method: string, from: string, target = 'match') =>
     body: '{}',
   });
 
+/**
+ * A raw request, because `fetch` will not send a `Host` it did not derive.
+ * The `Host` names a path, which Colyseus prepends to the one it dispatches.
+ */
+const smuggle = async (from: string): Promise<number> => {
+  const { request } = await import('node:http');
+  const { port } = new URL(base);
+  return new Promise((resolve, reject) => {
+    const req = request(
+      {
+        host: '127.0.0.1',
+        port,
+        method: 'POST',
+        path: '/matchmake/join/match',
+        headers: {
+          Host: 'x/matchmake/create/match?',
+          'X-Forwarded-For': from,
+          'Content-Type': 'application/json',
+        },
+      },
+      (res) => {
+        res.resume();
+        resolve(res.statusCode ?? 0);
+      }
+    );
+    req.on('error', reject);
+    req.end('{}');
+  });
+};
+
 // Imported here, not at the top: Colyseus reads the seat timeout `before()`
 // sets when it loads, and a static import would load it first.
 const colyseus = () => import('@colyseus/core');
@@ -91,6 +121,17 @@ describe('the matchmaking limit, as a script meets it', () => {
       assert.equal(refused.headers.get('retry-after'), String(MATCHMAKING.WINDOW_MS / 1000));
       assert.deepEqual(await refused.json(), { error: 'too many matches made from this address' });
     }
+    assert.equal(await matchRooms(), rooms, 'a refused request made no room');
+  });
+
+  it('counts a join whose Host makes it a create', async () => {
+    // The review's bypass: forty of these made forty rooms, none counted.
+    const from = '203.0.113.9';
+    for (let i = 0; i < MATCHMAKING.MAX_CREATES_PER_WINDOW; i += 1) {
+      assert.equal(await smuggle(from), 200, `request ${i + 1} is inside the window`);
+    }
+    const rooms = await matchRooms();
+    assert.equal(await smuggle(from), 429);
     assert.equal(await matchRooms(), rooms, 'a refused request made no room');
   });
 
