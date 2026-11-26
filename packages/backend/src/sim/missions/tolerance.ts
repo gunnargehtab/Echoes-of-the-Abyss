@@ -88,13 +88,16 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
   ],
 
   markers: [
+    // The widest circle the yard's 500 m depth holds, on its centre (#1923):
+    // the pour runs only inside `the-yard`, so a 400 m ring drew water north
+    // and south of it where a held barge pours nothing.
     {
       id: 'yard',
       label: 'The casting yard. Tungsten pours for exactly one seal.',
       name: 'The casting yard',
       x: 2000,
       y: 1000,
-      radiusM: 400,
+      radiusM: 250,
     },
     {
       id: 'root',

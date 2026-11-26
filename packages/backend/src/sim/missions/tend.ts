@@ -279,13 +279,16 @@ export const SEEDING_TEND: MissionDefinition = {
       y: 375,
       radiusM: 400,
     },
+    // The widest circle the lane's 750 m depth holds, on its centre (#1923):
+    // the re-seat runs only inside the rectangle, so a 500 m ring drew water
+    // past both long sides where a held Watch One moves no jelly.
     {
       id: 'west-lane',
       label: 'The jellies would sit better off the lane.',
       name: 'The West Lane',
       x: 750,
       y: 1375,
-      radiusM: 500,
+      radiusM: 375,
     },
     {
       id: 'landing',
@@ -305,6 +308,18 @@ export const SEEDING_TEND: MissionDefinition = {
       x: 1125,
       y: 625,
       radiusM: 375,
+    },
+    // Where the gift is picked up, as the place on the gift's way to the
+    // landing (§11, #1923). The ovens are a 250 m square inside the Holdfast's
+    // ring, so that ring left 88% of its water a place no bread is waiting;
+    // this one is the square's own inscribed circle.
+    {
+      id: 'ovens',
+      label: 'The ovens. Bread that remembers being grain.',
+      name: 'The ovens',
+      x: 2375,
+      y: 375,
+      radiusM: 125,
     },
   ],
 
@@ -471,6 +486,7 @@ export const SEEDING_TEND: MissionDefinition = {
         'Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing.',
       initial: ObjectiveStatus.Pending,
       markerId: 'landing',
+      viaMarkerId: 'ovens',
       terminal: true,
       predicate: { kind: 'extract', role: 'tender', region: 'landing', count: 1, loaded: 'gift' },
     },
