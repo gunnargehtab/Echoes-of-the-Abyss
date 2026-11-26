@@ -36,6 +36,7 @@ import {
   startPlaying,
   until,
 } from './support/room.ts';
+import { handleKeyForSeed } from '../src/sim/handleKey.ts';
 
 /**
  * Run `body` and return what the hook logged.
@@ -499,6 +500,30 @@ describe('a resignation the client asks for (#1588)', () => {
       assert.equal(resigned, 0, 'a mission was resigned');
     } finally {
       await shutdown(room);
+    }
+  });
+});
+
+describe('the handle key a room plays under (#1959)', () => {
+  // A named seed derives its handle key (`handleKeyForSeed`), which is safe
+  // only because a room never names one. A room that did — for a rematch, a
+  // repro, a daily seed — would key its handles by 32 bits again
+  // (docs/threat-model.md TM-001) with every other test still green.
+  it('is drawn fresh in a skirmish room and a mission room, never from the seed', async () => {
+    const rooms = [
+      await bootRoom(),
+      await bootRoom(),
+      await bootRoom({ missionId: PROLOGUE_SORROWGATE_HEADER.id }),
+    ];
+    try {
+      const keys = rooms.map((room) => {
+        const { match } = internals(room);
+        assert.notEqual(match.handleKey, handleKeyForSeed(match.seed));
+        return match.handleKey;
+      });
+      assert.equal(new Set(keys).size, keys.length, 'every room its own key');
+    } finally {
+      for (const room of rooms) await shutdown(room);
     }
   });
 });

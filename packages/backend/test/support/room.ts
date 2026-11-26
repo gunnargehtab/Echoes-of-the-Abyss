@@ -76,7 +76,13 @@ export interface RoomInternals {
     events: Record<string, Array<(client: Client, payload: unknown) => void> | undefined>;
   };
   /** The room's own simulation. Private, and the only way to tear a step. */
-  match: { update: (deltaMs: number) => unknown; resign: (slot: number) => void; tick: number };
+  match: {
+    update: (deltaMs: number) => unknown;
+    resign: (slot: number) => void;
+    tick: number;
+    seed: number;
+    handleKey: string;
+  };
   /**
    * How Colyseus takes a client out of a room, drop or consented leave alike.
    * Reached directly because no socket exists here to close.
