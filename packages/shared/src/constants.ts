@@ -3828,3 +3828,28 @@ export const REPORTS = {
    */
   MAX_TRACKED_ADDRESSES: 10_000,
 } as const;
+
+/**
+ * How many rooms one address may ask the matchmaker to make (#1960).
+ *
+ * Bounds, like `REPORTS`: `POST /matchmake/create` needs no account, and every
+ * room it makes is work on the one thread that steps every match
+ * (`docs/threat-model.md`, TM-002). Only the two methods that can make a room
+ * are counted, `create` and `joinOrCreate`. A join or a reconnection seats a
+ * player in a room that already exists, and a flaky connection must never be
+ * refused its way back into its own match.
+ *
+ * None is a balance number, so none is inside `CLAUDE.md`'s freeze.
+ */
+export const MATCHMAKING = {
+  /**
+   * TUNABLE — room-making requests one address may send inside `WINDOW_MS`. A
+   * player makes one per lobby, mission or study they open, so this binds a
+   * script; it is generous because a household or an office shares one address.
+   */
+  MAX_CREATES_PER_WINDOW: 30,
+  /** TUNABLE — the window the count above is spent in. */
+  WINDOW_MS: 60_000,
+  /** TUNABLE — addresses the limiter remembers, for `REPORTS`' reason. */
+  MAX_TRACKED_ADDRESSES: 10_000,
+} as const;

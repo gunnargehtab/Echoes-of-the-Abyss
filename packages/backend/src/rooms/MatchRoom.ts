@@ -168,7 +168,31 @@ const outcomeOf = (
 export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMetadata }> {
   maxClients = 4;
 
-  private match!: Match;
+  /**
+   * The world, once something has needed it; `null` until then (#1960).
+   *
+   * Built on first use rather than in `onCreate`, because creating a room
+   * takes no account and no socket: a script that floods the matchmaker
+   * reserves seats nobody takes, and a world built for each of those would be
+   * tens of milliseconds apiece on the thread that steps every live match
+   * (`docs/threat-model.md`, TM-002). The first join sends the map, which
+   * reads the terrain, so a room is built when somebody arrives, and an
+   * unjoined room is disposed after its seat reservation with nothing built.
+   *
+   * Everything that only *reports* on the room — `seed`, `onDispose`, the
+   * exception hook — reads this field, never `match`: a log line or a report
+   * lookup must not be what builds a world.
+   */
+  private built: Match | null = null;
+
+  private get match(): Match {
+    this.built ??= this.newMatch();
+    return this.built;
+  }
+
+  private set match(match: Match) {
+    this.built = match;
+  }
   private map!: MapDefinition;
   /** The authored mission this room is running, or null for a skirmish. */
   private mission: MissionDefinition | null = null;
@@ -327,7 +351,6 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     // Validated before the world is built, and only for a mission: what
     // arrives here is a number the client chose.
     this.driftCarry = this.mission === null ? null : validDriftCarry(options?.driftCarry);
-    this.match = this.newMatch();
     // A map's spawn list is its player count — except a mission's, which has
     // one spawn and authors its other parties itself. A mission is not a lobby.
     this.maxClients = this.mission === null ? Math.min(this.maxClients, this.map.spawns.length) : 1;
@@ -1046,19 +1069,20 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
   }
 
   /**
-   * The match's seed, for a failure line (#1576); `null` before `onCreate`
-   * built a match. Server-side only: it reproduces the whole match, so no
+   * The match's seed, for a failure line (#1576); `null` before anybody's
+   * arrival built a match. Server-side only: it reproduces the whole match, so no
    * client is ever sent it.
    */
   get seed(): number | null {
-    return this.match === undefined ? null : this.match.seed;
+    return this.built === null ? null : this.built.seed;
   }
 
   override onDispose(): void {
-    // A room whose `onCreate` refused an unknown mission never built a match,
-    // and reading one here would throw a TypeError on top of the real error —
+    // A room nobody joined never built a match, and one whose `onCreate`
+    // refused an unknown mission could not: building one here would spend a
+    // world on a room that is going away, or throw on top of the real error —
     // burying the one line that says what the client actually asked for.
-    if (this.match === undefined) return;
+    if (this.built === null) return;
     console.log(
       `[MatchRoom ${this.roomId}] disposed at tick ${this.match.tick}; ` +
         `worst Echo pass ${this.match.worstEchoPassMs.toFixed(3)} ms ` +
@@ -1135,7 +1159,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     // Both reads are defensive for the same reason `onDispose` guards `match`:
     // a throw out of `onCreate` happens before either exists, and a log line
     // that threw would bury the one error anybody wanted to read.
-    const tick = this.match === undefined ? 'no match' : `tick ${this.match.tick}`;
+    const tick = this.built === null ? 'no match' : `tick ${this.built.tick}`;
     const phase =
       this.state === undefined ? 'no state' : (MatchPhase[this.state.phase] ?? 'unknown');
     const midMatch = this.state !== undefined && this.state.phase === MatchPhase.Playing;

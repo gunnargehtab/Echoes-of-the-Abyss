@@ -19,11 +19,13 @@
     "@colyseus/ws-transport": "^0.18.4",
     "@echoes/shared": "*",
     "bitecs": "^0.3.40",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "proxy-addr": "~2.0.7"
   },
   "devDependencies": {
     "@types/express": "^4.17.0",
     "@types/node": "^20.0.0",
+    "@types/proxy-addr": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "esbuild": "^0.28.1",

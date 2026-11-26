@@ -75,6 +75,8 @@ export interface RoomInternals {
   onMessageEvents: {
     events: Record<string, Array<(client: Client, payload: unknown) => void> | undefined>;
   };
+  /** The world once something has needed it, read without building it (#1960). */
+  built: unknown;
   /** The room's own simulation. Private, and the only way to tear a step. */
   match: { update: (deltaMs: number) => unknown; resign: (slot: number) => void; tick: number };
   /**

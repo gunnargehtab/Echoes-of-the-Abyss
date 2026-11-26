@@ -92,6 +92,9 @@ describe('the error-report route, as a hosted client meets it', () => {
     const { MatchRoom } = await import('../src/rooms/MatchRoom.ts');
     const room = matchMaker.getLocalRoomById(reservation.roomId);
     assert.ok(room instanceof MatchRoom);
+    // A client reports from a room it joined, and arriving is what builds a
+    // room's world (#1960). No socket here, so the world is asked for directly.
+    void (room as unknown as { match: unknown }).match;
 
     let status = 0;
     const lines = await capturingLines(async () => {
