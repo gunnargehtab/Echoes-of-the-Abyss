@@ -479,7 +479,14 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
     match.activeSonar(0, pinger);
     const result = match.echo.run(match.world, [0, 1]);
     const contacts = result.contactsBySlot.get(0) ?? [];
-    const phantoms = contacts.filter((c) => match.echo.entityForHandle(0, c.id) === undefined);
+    // Nearest first, never handle order: handle order is a keyed permutation
+    // that is meant to say nothing (#1959), so a test reading `phantoms[0]`
+    // has to name the same phantom under every key. The farthest can lie
+    // beyond what the Corvette survives the Cruiser's gun for (#1959).
+    const range = (c: Contact) => Math.hypot(c.x - 4000, c.y - 4000);
+    const phantoms = contacts
+      .filter((c) => match.echo.entityForHandle(0, c.id) === undefined)
+      .sort((a, b) => range(a) - range(b));
     const real = contacts.filter((c) => match.echo.entityForHandle(0, c.id) === enemy);
     return { match, pinger, enemy, contacts, phantoms, real };
   }
