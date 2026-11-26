@@ -1068,7 +1068,10 @@ The `you were pinged` row is implemented (#206, alongside the own-force rows it 
 shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position, and, on a tick that carries no bearing, one `bearing unknown` row — a fallback, since every tick that tells a side it was lit now carries its one bearing (#1290, #1300) — under the `---` tier the log
 reserves for events that are not detections. The log also carries the own-force rows §5
 licenses, in the same form: `Corvette under fire`, `Harvester idle — mined out`, each
-focusable because the hull is the player's own. Tier-3 rows currently name the hull and
+focusable because the hull is the player's own. For the same reason an own-force row prints its
+range exact, in whole metres and with no tilde (`1,050 m`), while a contact's range is rounded
+to 100 m and tilded (`~1,400 m`): the tilde marks a resolution, and the player's own hull was
+never resolved (#1937). Tier-3 rows currently name the hull and
 faction rather than estimating a count, because the Echo Layer does not model counts.
 
 **The rows that point the other way** — what the rest of the map holds on *you* — are

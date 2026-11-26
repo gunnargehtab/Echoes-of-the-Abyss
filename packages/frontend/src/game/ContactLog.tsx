@@ -52,7 +52,7 @@ function tierLabel(entry: ContactLogEntry): string {
  * `decaying` where the row has one. Each token is drawn whole, and the row may
  * break between them when the panel is too narrow for both on one line (#1893).
  */
-function detail(entry: ContactLogEntry): string[] {
+export function detail(entry: ContactLogEntry): string[] {
   if (entry.bearingDeg === undefined) {
     // Tier 1 carries the listener's own position, not the emitter's. There is
     // no bearing in the report, so the log says so rather than inventing one.
@@ -69,7 +69,11 @@ function detail(entry: ContactLogEntry): string[] {
   // §10): the server sent a direction and nothing else, and the log shows
   // exactly that much.
   if (entry.rangeM === undefined) return [bearing];
-  // Range is approximate at Tier 2 by design (15% blur) and exact at 3+; the
+  // An own-force row measures the player's own hull, which is fact rather than
+  // a resolution, so its range is exact: whole metres, no tilde, as §10's
+  // `Corvette went loud` row prints it (#1937).
+  if (entry.own === true) return [bearing, `${Math.round(entry.rangeM).toLocaleString('en-US')} m`];
+  // A contact's range is approximate at Tier 2 by design (15% blur) and exact at 3+; the
   // tilde is on both because a player should not have to remember which.
   // Thousands are grouped, `~2,100 m`, as §10's sample rows print them and the
   // depth readout (`verticalCommand.ts`) does (#1903).
