@@ -327,14 +327,14 @@ which falls on `neon-magenta` under protanopia (7.3).
 | Faction | Standard | Deuteranopia | Protanopia | Tritanopia |
 | --- | --- | --- | --- | --- |
 | Bathyarch Consortium | `#8C8378` | `#8C8378` | `#8C8378` | `#8C8378` |
-| Pelagia Commune | `#8FE36B` | `#247C98` | `#A0ACD0` | `#A0ECE8` |
+| Pelagia Commune | `#8FE36B` | `#247C98` | `#A0ACD0` | `#00FFFF` |
 | Abyssal Directorate | `#7A5A9E` | `#845C2C` | `#BCAC70` | `#E8CCFC` |
 | Hadron Knights | `#C9A6FF` | `#6454D8` | `#6660D8` | `#04749C` |
 
 Each row is measured the way `packages/frontend/test/palette.test.ts` measures the
 palettes: a dichromat simulation and CIE76 ΔE, for the eye the palette is for. The
 simulation is Viénot, Brettel and Mollon's (1999) for the red-green pair and Brettel,
-Viénot and Mollon's (1997) for tritanopia. Every accent but the Consortium's and three of
+Viénot and Mollon's (1997) for tritanopia. Every accent but the Consortium's and two of
 tritanopia's, all below, clears its palette's SIG bands, threat, Tier-4
 track, nodules and friendly ink by 25 ΔE (26 under the red-green pair), the SIG floor in
 that test; clears `neon-cyan`, `neon-magenta` and `text-dim` by 15; sits 30 from every
@@ -345,7 +345,7 @@ amber and neutral for the red-green pair; red, teal, blue and neutral for tritan
 Consortium keeps its iron grey in all four, as its cladding does.
 
 The margins are thin, and that is the finding: a dichromat's few hues are already spoken
-for by the console's information inks. Six of the twelve clear their tightest floor by
+for by the console's information inks. Seven of the twelve clear their tightest floor by
 under 2 ΔE.
 The Consortium's grey misses three: under deuteranopia it is 23.7 from the friendly teal
 and 14.7 from `neon-magenta`, and under protanopia 25.5 from the friendly teal. The nearest
@@ -354,26 +354,33 @@ too close to read as a different colour, so the row keeps the cladding grey and 
 the miss. On the deuteranopia console its rule barely differs from the magenta it
 replaces, and the glyph carries identity there, as it does everywhere (§11).
 
-**Tritanopia's accents miss four floors.** The three that are not the Consortium's were
+**Tritanopia's Directorate and Knights miss one floor each, for good.** Their accents were
 chosen against a tritanopia projection that had no red-green axis, the one axis that eye
-keeps ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By the projection that replaced it, the Commune's `#A0ECE8`
-stands 13.6 ΔE from the friendly teal and 27.3 from the Directorate's accent, the
-Directorate's `#E8CCFC` 5.1 from nodules, and the Knights' `#04749C` 17.1 from `SIG low`.
-The row keeps the three until they are chosen again for this eye
-([#1914](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1914)), and the test pins
-each miss.
+keeps ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By the
+projection that replaced it, the Directorate's `#E8CCFC` stands 5.1 ΔE from nodules and
+the Knights' `#04749C` 17.1 from `SIG low`. Neither can be chosen to clear every floor
+([#1914](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1914)). Of the
+2,097,152 inks on an even-valued sRGB grid, 129 clear every floor an accent keeps, the
+jelly lantern's among them. They are one cyan corner around `#00FFFF`, none of them more
+than 27.7 ΔE from another, so only one accent can hold the corner against the faction
+floor of 30. The Commune takes it, since its `#A0ECE8` stood 13.6 from the friendly teal
+and 27.3 from the Directorate's accent. It takes `#00FFFF`, the corner's widest margin,
+1.88 ΔE over the friendly teal. The other two rows keep their inks and record the misses, as the Consortium's grey does. The glyph carries identity there,
+as it does everywhere (§11), and the test pins each miss.
 
 **The tritanopia Directorate is violet, and that is the one exception to its table.**
 Tritanopia makes red the warning family — `SIG mid`, `SIG high`, threat and the track — so
-no red accent clears them. The table bars violet because, to this eye, violet drifts toward
-the Directorate. For the Directorate's own accent that drift is the point. Pale violet
-`#E8CCFC` stands 30.6 from the Consortium's grey. It was taken as clearing nodules by 25.8,
-by the projection since replaced; that argument is read again with the accent.
+no red accent clears them. The table bars violet because this eye sees a saturated violet
+as a dull blue-grey: the Knights' standard primary `#8B5CF6` stands 13.9 ΔE from the Consortium's
+grey and 15.0 from a Tier 1 contact. A pale violet reads as bone white instead, which is
+why `#E8CCFC` falls on nodules. It stands 30.6 from the Consortium's grey. No ink that clears
+its other floors clears nodules too: the furthest any reaches is 22.9 ΔE, a pale cyan
+beside the Commune's, and in the accent's own hue about 17.
 
 §12.5's "Doctrine marks" is the accent's argument in sound or depth: the accent marks
 where a navy's doctrine bends a sound or depth number. These rows are its inks.
 `palette.ts` transcribes them as `FactionInk.consoleAccent`, and `palette.test.ts` holds
-them to the floors above, the Consortium's three misses pinned by name.
+them to the floors above, the Consortium's three misses and tritanopia's two pinned by name.
 
 ### The Directorate's one area glow: a maw is not livery
 
@@ -513,12 +520,14 @@ both go, save one proposed violet: the Directorate's console accent, under
 "Console accent, per colour-vision palette" above.
 
 This table and the reasons under it were drawn against a projection of this eye
-that had no red-green axis ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)). By
-the one that replaced it every pair below still clears its floor but one:
-nodules stand 37.8 ΔE from Resonance Crystal, under their 40. The pair keeps
-its inks until the table is read again for this eye
-([#1914](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1914)), and
-`packages/frontend/test/palette.test.ts` pins the miss.
+that had no red-green axis ([#1905](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1905)),
+and were read again against the one that replaced it
+([#1914](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1914)). Every pair
+below clears its floor in `packages/frontend/test/palette.test.ts`. One ink moved to get
+there: Resonance Crystal's `#7FB8FF` stood 37.8 ΔE from nodules, under their 40, and
+`#70B4FC`, at 41.2, is the nearest blue on an even-valued grid that clears them by at least 1 ΔE,
+the margin the jelly lantern was given
+([#1913](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1913)).
 
 | Role | Standard | Tritanopia |
 | --- | --- | --- |
@@ -532,7 +541,7 @@ its inks until the table is read again for this eye
 | Threat | `#FF3B30` | `#FF3B30` |
 | Friendly | `#5FD0C0` | `#5FD0C0` |
 | Nodules | `#F2B233` | `#F0E0C8` |
-| Resonance Crystal | `#B98CFF` | `#7FB8FF` |
+| Resonance Crystal | `#B98CFF` | `#70B4FC` |
 | Fauna | `#5FA88A` | `#7A7A88` |
 | Jelly lantern (world light, High) | `#C56BC7` | `#CB68C3` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F0E0C8` · `#8C8378` |
@@ -541,12 +550,13 @@ its inks until the table is read again for this eye
 | Hadron primary · accent | `#8B5CF6` · `#C9A6FF` | `#0A3348` · `#1F6EA0` |
 
 Bathyarch's sodium lamps go pale rather than saturated — under tritanopia a
-saturated amber reads pink and would collide with both the Directorate's
-crimson and the threat red, so the Consortium becomes bone-white work-light and
-keeps its iron-grey cladding. Nodules follow it, as they follow Bathyarch's
+saturated amber reads pink, in the warning family's hue, and stands 17.8 ΔE from
+the jelly lantern's orchid, under the 25 the lantern keeps from every navy's ink, so the
+Consortium becomes
+bone-white work-light and keeps its iron-grey cladding. Nodules follow it, as they follow Bathyarch's
 amber in every other palette: ore is what the Consortium is *about*. Hadron's
-resonance violet becomes a deep instrument blue — violet loses its blue channel
-and drifts toward the Directorate — and the Knights' "razor-thin constant lines,
+resonance violet becomes a deep instrument blue — this eye sees the violet as a
+dull blue-grey, 13.9 ΔE from the Consortium's cladding — and the Knights' "razor-thin constant lines,
 mirror speculars" is the half of their identity that was never in the hue.
 Resonance Crystal follows Hadron into a cold blue, which is the same argument
 the standard palette makes with violet: the resource and the faction that is
