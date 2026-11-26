@@ -332,10 +332,11 @@ Grade such an arm on the other eleven gates.
 
 **Arm A ran as a subagent, not a session, so the graft shaped none of its context.** This
 session could not start a fresh one. A subagent takes its skill listing and `CLAUDE.md`
-from the parent's checkout, which was `main`. So arm A saw `diagnosing-bugs` listed
-because `main` has it, beside `grilling` and `writing-for-agents`, which the base lacks.
-It worked the base's files under `main`'s instructions. It got `PROMPT.md` verbatim behind
-three sentences naming its worktree.
+from the parent's checkout, this probe's branch, whose `CLAUDE.md` and skills match
+`main`'s. So arm A saw `diagnosing-bugs` listed because `main` has it, beside `grilling`
+and `writing-for-agents`, which the base lacks. It worked the base's files under `main`'s
+instructions. It got `PROMPT.md` verbatim behind five sentences that name its worktree,
+keep it there, and ask for a local commit and a report.
 
 ### Run of 2026-11-26
 
