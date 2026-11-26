@@ -14,8 +14,8 @@ match seed. A client can recover that seed offline from the handles it holds, in
 seconds on one core, and the seed is also the key of the lies the Echo Layer tells. The
 other two are about the host, which runs every room on one Node event loop. Every anonymous
 `POST` to `/matchmake/create/match` builds a full world on that loop, and a client that
-joins its own rooms holds a running simulation per socket, with no cap on either. Since
-#1960 a create is limited per address and builds no world until somebody joins. The
+joins its own rooms holds a running simulation per socket, with no cap on either. Since a
+fix in #1960, a create is limited per address and builds no world until somebody joins. The
 per-message wire bounds, the origin lock and the error-report route are sound for what
 they cover.
 
