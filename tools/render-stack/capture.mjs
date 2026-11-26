@@ -72,7 +72,8 @@ export default async ({ page, shot }) => {
   const queueable = await page.evaluate(() => typeof window.__perspectiveGpuQueue === 'function');
   if (asked === 'on' || asked === 'off') {
     const state = await page.evaluate((on) => window.__perspectiveHalo?.(on), asked === 'on');
-    if (asked === 'on') assert.ok(state === 'idle' || state === 'drawn', `the lamp halo is ${state}`);
+    if (asked === 'on')
+      assert.ok(state === 'idle' || state === 'drawn', `the lamp halo is ${state}`);
   }
   const halo = await page.evaluate(() => window.__perspectiveProbe().halo);
   if (!unpaced && !software) {
@@ -91,19 +92,28 @@ export default async ({ page, shot }) => {
     ['low', 3500, 12],
     ['survey', 18000, 88],
   ]) {
-    await page.evaluate(({ centre, distance, pitchDeg, name }) => {
-      window.__perspectiveCamera(centre.x, centre.z, distance, {
-        yawDeg: 0, pitchDeg, focusDepthM: null,
-      });
-      window.__perspectiveStation(name);
-    }, { centre, distance, pitchDeg, name });
+    await page.evaluate(
+      ({ centre, distance, pitchDeg, name }) => {
+        window.__perspectiveCamera(centre.x, centre.z, distance, {
+          yawDeg: 0,
+          pitchDeg,
+          focusDepthM: null,
+        });
+        window.__perspectiveStation(name);
+      },
+      { centre, distance, pitchDeg, name }
+    );
     // GPU results land a few frames late, so a timing probe waits for its own
     // windowful too.
-    await page.waitForFunction(() => {
-      const p = window.__perspectiveProbe();
-      const gpu = p.gpuTimer !== 'timing' || p.gpuFrames >= 240;
-      return p.stationFrames >= 240 && p.overlayFrames >= 240 && gpu;
-    }, null, { timeout: 120000 });
+    await page.waitForFunction(
+      () => {
+        const p = window.__perspectiveProbe();
+        const gpu = p.gpuTimer !== 'timing' || p.gpuFrames >= 240;
+        return p.stationFrames >= 240 && p.overlayFrames >= 240 && gpu;
+      },
+      null,
+      { timeout: 120000 }
+    );
     const probe = await page.evaluate(() => window.__perspectiveProbe());
     if (probe.gpuTimer !== undefined) {
       // A GPU capture that read no GPU time is no gate-6 before-and-after, and
@@ -120,7 +130,10 @@ export default async ({ page, shot }) => {
       if (typeof window.__perspectiveLamps !== 'function') return null;
       const seen = ({ screen }) =>
         screen !== null &&
-        screen.x1 > 0 && screen.x0 < innerWidth && screen.y1 > 0 && screen.y0 < innerHeight;
+        screen.x1 > 0 &&
+        screen.x0 < innerWidth &&
+        screen.y1 > 0 &&
+        screen.y0 < innerHeight;
       const { units, structures } = window.__perspectiveLamps();
       return { units: units.filter(seen).length, structures: structures.filter(seen).length };
     });

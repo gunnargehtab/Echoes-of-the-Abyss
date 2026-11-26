@@ -13,8 +13,10 @@
  * figure quoted since stays comparable: each pixel's largest channel
  * difference, out of 255; their mean over the area; the share that moved by
  * more than `--over`; and the box those pixels span. `--area=world`, the
- * default, is that README's world area: under the top strip and over the
- * console, rows 52 to 870 of a 1080-row frame, scaled to the frame's height —
+ * default, is the world area that README reads, cropped as
+ * docs/screenshots/issue-1801/low-control/diff.py crops it: under the top strip
+ * and over the console, rows 52 to 870 of a 1080-row frame, scaled to the
+ * frame's height —
  * the HUD's log and marks move between two takes of one build, and a reading
  * that counts them reads the match, not the change.
  *
@@ -24,8 +26,10 @@
  * pair under it. Before this script one round's floor quoted a take of `main`
  * that was never committed, and two critics could not reproduce it (#1892).
  *
- * `--box` reads a named box as well, clipped to the area; boxes and every
- * printed coordinate are frame pixels, x1 and y1 exclusive as a crop is.
+ * `--box` reads a named box as well, clipped to the area. A box, given or
+ * printed, is frame pixels with x1 and y1 exclusive as a crop is, so a box
+ * that moved can be pasted back as a `--box`; a profile's line runs from one
+ * pixel to another, both included.
  * `--out` writes the first frame's area dimmed to half, red where the pair
  * moved by more than `--over`, as diff.py drew it; with `--floor`, the floor's
  * map beside it as `<out>-floor.png`.
@@ -46,7 +50,7 @@ import { fileURLToPath } from 'node:url';
 
 import { decodeRgb, encodeRgb } from '../hull-models/png.mjs';
 
-/** The issue-1800 README's world area, as fractions of the frame's height. */
+/** diff.py's world area, as fractions of the frame's height. */
 const WORLD_TOP = 52 / 1080;
 const WORLD_BOTTOM = 870 / 1080;
 
@@ -96,8 +100,8 @@ export function largestDifference(a, b) {
 
 /**
  * A pair's reading over one box of its difference map: the mean, the share
- * that moved by more than `over`, and the inclusive box those pixels span, or
- * null when none did.
+ * that moved by more than `over`, and the box those pixels span, x1 and y1
+ * exclusive, or null when none did.
  */
 export function readBox(diff, width, [x0, y0, x1, y1], over) {
   let sum = 0;
@@ -119,6 +123,10 @@ export function readBox(diff, width, [x0, y0, x1, y1], over) {
       }
     }
   const n = (x1 - x0) * (y1 - y0);
+  if (span) {
+    span[2]++;
+    span[3]++;
+  }
   return { mean: sum / n, over: moved / n, moved, changed: span };
 }
 
@@ -279,7 +287,7 @@ function runPairs(opts, print) {
   };
   for (const [pair, name] of Object.entries(names)) if (maps[pair]) print(`${pair}: ${name}`);
   print(
-    `area: x ${area[0]} to ${area[2]}, y ${area[1]} to ${area[3]} (${opts.area}), x1 and y1 exclusive`
+    `area: x ${area[0]} to ${area[2]}, y ${area[1]} to ${area[3]} (${opts.area}); every box's x1 and y1 exclusive`
   );
   print('');
   print(`| Region | Pair | Mean of 255 | Moved over ${opts.over} | Box that moved |`);
@@ -320,8 +328,19 @@ function runProfile(opts, print) {
 /** The command line, with its output handed to `print`; throws on a bad call. */
 export function main(argv, print = console.log) {
   const opts = parseArgs(argv);
-  if (opts.profile) runProfile(opts, print);
-  else runPairs(opts, print);
+  if (opts.profile) {
+    // A pair's options mean nothing to a profile: refuse them rather than
+    // leave a critic waiting on an --out that was never written.
+    const pairOnly = [
+      opts.floor && '--floor',
+      opts.out && '--out',
+      opts.boxes.length && '--box',
+      opts.area !== 'world' && '--area',
+      opts.over !== 2 && '--over',
+    ].filter(Boolean);
+    if (pairOnly.length) throw new Error(`--profile takes no ${pairOnly.join(', ')}`);
+    runProfile(opts, print);
+  } else runPairs(opts, print);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

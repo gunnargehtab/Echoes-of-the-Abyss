@@ -29,7 +29,7 @@ const save = (name, f) => {
   return path;
 };
 
-test("the world area is the issue-1800 README's rows 52 to 870 of 1080", () => {
+test("the world area is diff.py's rows 52 to 870 of 1080", () => {
   assert.deepEqual(worldArea(1920, 1080), [0, 52, 1920, 870]);
   // diff.py's int() of the scaled rows, at a frame half the size.
   assert.deepEqual(worldArea(960, 540), [0, 26, 960, 435]);
@@ -52,7 +52,7 @@ test("a pixel's difference is its largest channel's, not their sum", () => {
   const [row] = readPairs({ a, b, area: [0, 0, 10, 10] }).rows;
   assert.equal(row.mean, 50 / 100);
   assert.equal(row.moved, 1);
-  assert.deepEqual(row.changed, [3, 4, 3, 4]);
+  assert.deepEqual(row.changed, [3, 4, 4, 5]);
 });
 
 test('the threshold counts pixels that moved by more than it, not by it', () => {
@@ -61,7 +61,7 @@ test('the threshold counts pixels that moved by more than it, not by it', () => 
   const [row] = readPairs({ a, b, area: [0, 0, 4, 1], over: 2 }).rows;
   assert.equal(row.moved, 2);
   assert.equal(row.over, 0.5);
-  assert.deepEqual(row.changed, [1, 0, 2, 0]);
+  assert.deepEqual(row.changed, [1, 0, 3, 1]);
   assert.equal(readPairs({ a, b, area: [0, 0, 4, 1], over: 3 }).rows[0].moved, 1);
 });
 
@@ -87,7 +87,7 @@ test('the floor row comes first, and each named box is read clipped to the area'
   );
   // The noisy pixel sits above the area, so the floor reads nothing inside it.
   assert.equal(rows[0].moved, 0);
-  assert.deepEqual(rows[1].changed, [30, 5, 34, 9]);
+  assert.deepEqual(rows[1].changed, [30, 5, 35, 10]);
   assert.deepEqual(rows[2].box, [28, 2, 40, 12]);
   assert.equal(rows[3].moved, 25);
   assert.equal(rows[3].mean, (25 * 190) / (12 * 10));
@@ -162,11 +162,11 @@ test('the command line prints the table and writes the diff and floor maps', () 
     (line) => lines.push(line)
   );
   const text = lines.join('\n');
-  assert.match(text, /area: x 0 to 1920, y 52 to 870 \(world\)/);
+  assert.match(text, /area: x 0 to 1920, y 52 to 870 \(world\); every box/);
   // The floor's noise sits in the top strip, outside the world area.
   assert.match(text, /\| area \| floor \| 0\.00 \| 0\.00% \| nothing moved \|/);
-  assert.match(text, /\| area \| pair \| 0\.01 \| 0\.01% \| x 500 to 519, y 400 to 409 \|/);
-  assert.match(text, /\| pool \| pair \| 16\.67 \| 16\.67% \| x 500 to 519, y 400 to 409 \|/);
+  assert.match(text, /\| area \| pair \| 0\.01 \| 0\.01% \| x 500 to 520, y 400 to 410 \|/);
+  assert.match(text, /\| pool \| pair \| 16\.67 \| 16\.67% \| x 500 to 520, y 400 to 410 \|/);
 
   const map = decodeRgb(readFileSync(out));
   assert.deepEqual([map.width, map.height], [1920, 818]);
@@ -187,7 +187,7 @@ test('--json carries the same rows, and --area=frame reads the whole frame', () 
   assert.equal(record.rows.length, 1);
   assert.deepEqual(record.rows[0].box, [0, 0, 100, 100]);
   assert.equal(record.rows[0].moved, 10);
-  assert.deepEqual(record.rows[0].changed, [0, 0, 9, 0]);
+  assert.deepEqual(record.rows[0].changed, [0, 0, 10, 1]);
 });
 
 test('the profile mode prints each frame’s edge and one row a step', () => {
@@ -205,4 +205,8 @@ test('a bad call names what is wrong', () => {
   assert.throws(() => main(['a.png', 'b.png', '--box=1,2,3,4']), /--box is <name>:x0,y0,x1,y1/);
   assert.throws(() => main(['a.png', 'b.png', '--over=2.5']), /--over is a whole number/);
   assert.throws(() => main(['a.png', 'b.png', '--frobnicate']), /unknown option --frobnicate/);
+  assert.throws(
+    () => main(['a.png', '--profile=0,0,4,0', '--out=x.png', '--box=v:0,0,1,1']),
+    /--profile takes no --out, --box/
+  );
 });
