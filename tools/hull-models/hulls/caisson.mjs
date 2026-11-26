@@ -404,7 +404,8 @@ bathyarch.caissonBox(root, { black, grey, rust, amber }, {
   bolts: { from: -13.5, to: 37.5, count: 17, r: 0.35, h: 0.6, y: 5.45, z: 12.9 },
 });
 
-// The belt: the caisson's flank in plate, older under newer. Two newer grey
+// The belt: the caisson's flank in plate, older beside newer and none laid
+// over another. Two newer grey
 // plates forward and an older one in oxide abaft them riding higher, a
 // metre of the box showing between each, over a strake of older plate
 // 50.4 m long; sixteen rivets a side along the strake. The plates

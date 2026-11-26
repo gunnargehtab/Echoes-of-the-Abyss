@@ -43,7 +43,8 @@ graphics quality alone stands), environment geometry that is no animal of the ro
    `env-rim-ray` (#1777) on 6 November. From 12 November shape work ran on Fable 5.2,
    because `hull-designer` named the `fable` alias, which follows the newest Fable. Its new
    models are `env-drift-jelly` (#1837) and `env-rim-manta` (#1867), the manta accepted
-   by the owner on 24 November. The owner kept the switch on 25 November 2026 (#1951)
+   by the owner on 24 November, and `caisson-bathyarch`, rebuilt to its block on
+   26 November (#1956). The owner kept the switch on 25 November 2026 (#1951)
    rather than make a second one back, and `hull-designer` now pins `claude-fable-5-2`,
    so a release cannot move the series unseen. A later Fable is a decision written here
    first.
