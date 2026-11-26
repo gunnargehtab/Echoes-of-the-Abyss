@@ -1617,7 +1617,7 @@ export const CHORD_NINETEEN_HEADER: MissionHeader = {
   orders: [
     {
       gloss:
-        "At 1,750 m over the Rest, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.",
+        "Over the Rest, at 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.",
     },
     {
       gloss: 'Keep your Cruiser afloat; a hull lost here is lost for the rest of the campaign.',
@@ -1809,7 +1809,7 @@ export const CHORD_RIM_DEPOSITS_HEADER: MissionHeader = {
         'Bring at least 2 of your 3 cutter Corvettes, the First, Second and Third, back loaded above the Staging line; each cuts its own face, 240 s a load.',
       weight: ObjectiveWeight.Critical,
     },
-    { gloss: "The First's first load from the western of the faces, above the Staging line." },
+    { gloss: "The First's first load from the western face of the faces, above the Staging line." },
     { gloss: "The First's second load from the western face, above the Staging line." },
     { gloss: "The Second's first load from the middle face, above the Staging line." },
     { gloss: "The Second's second load from the middle face, above the Staging line." },

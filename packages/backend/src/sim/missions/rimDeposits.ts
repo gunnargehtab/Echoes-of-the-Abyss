@@ -795,7 +795,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       'load-one-home',
       'load-one',
       'The first cut of the fourth face is above the line.',
-      "The First's first load from the western of the faces, above the Staging line.",
+      "The First's first load from the western face of the faces, above the Staging line.",
       'first',
       'fourth',
       'the-faces'

@@ -881,17 +881,20 @@ describe('the objectives', () => {
         }
       }
 
-      // A place the chart prints is no reveal, whoever it is named after.
+      // A place the row's own ring is printed with is no reveal, whoever it is
+      // named after: the chart shows that name while the row is open.
       // *Teel's landing* carries a speaker's name, and §10.5 has the gloss name
       // the place by its marker's name (#1922), so the sweep reads a gloss with
-      // the mission's own marker names cut out. The whole name only: `Teel`
-      // anywhere else in the gloss is still refused.
-      const places = mission.markers
-        .map((marker) => marker.name)
-        .filter((name): name is string => name !== undefined)
-        .map((name) => new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'));
+      // its own row's marker names cut out. The whole name only, and only the
+      // row's: `Teel` anywhere else is still refused, and a marker another row
+      // ships, or no row has revealed yet, excuses nothing here.
+      const names = new Map(mission.markers.map((marker) => [marker.id, marker.name]));
 
       for (const objective of mission.objectives) {
+        const places = [objective.markerId, objective.viaMarkerId]
+          .map((id) => (id === undefined ? undefined : names.get(id)))
+          .filter((name): name is string => name !== undefined)
+          .map((name) => new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'));
         const glosses = [
           objective.gloss,
           objective.debtGloss,
