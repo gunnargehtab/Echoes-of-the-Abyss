@@ -243,6 +243,12 @@ Measured on `main` at `6c70fa1e`, in this repository's container, with 4 cores.
 Each high-ranked abuse path is its own `finding` issue, and fixes land in their own pull
 requests: TM-001 in #1959, TM-002 in #1960 and TM-003 in #1961.
 
+TM-001's handle half is fixed. Contact and mark handles are keyed by a 128-bit secret
+drawn per match from `crypto.randomBytes`, held server-side, recorded in the replay, and
+never the seed (`packages/backend/src/sim/handleKey.ts`, #1959). The tables above still
+describe `6c70fa1e`. The seed still keys `scatterLie` and the phantom dice; whether
+another channel leaks it is not yet checked.
+
 ## Quality check
 
 - **Entry points:** every route `index.ts` mounts, the matchmaker, the 32 client messages,

@@ -149,6 +149,7 @@ import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
 import { grantRefit } from './systems/refit.ts';
 import { randomSeed, type Rng } from './rng.ts';
+import { handleKeyForSeed, randomHandleKey } from './handleKey.ts';
 import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
 import { hashWorld } from './stateHash.ts';
 import { accumulateWorst, newStepWork, resetStepWork, type StepWork } from './stepWork.ts';
@@ -244,6 +245,13 @@ export interface MatchOptions {
    * spent, which is every skirmish and every mission outside the Knights'.
    */
   spent?: ReadonlySet<string>;
+  /**
+   * The 128-bit secret contact and mark handles are keyed by, as 32 hex digits
+   * (#1959, `handleKey.ts`). Omitted means follow the seed when one was named
+   * and draw a fresh key when it was not, which is every live room. Named by a
+   * replay, so playback mints the handles its recorded orders name.
+   */
+  handleKey?: string;
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
@@ -316,7 +324,7 @@ function depthInMap(depthM: number): boolean {
 export class Match {
   readonly world: SimWorld;
   /** Public for bench/echo-pass.mjs, which times the pass in isolation. */
-  readonly echo = new EchoLayer();
+  readonly echo: EchoLayer;
   private readonly slots: number[] = [];
   /**
    * Slots the Echo pass resolves for beyond the seated commanders — a
@@ -479,6 +487,13 @@ export class Match {
   /** Non-null while this match is being recorded. */
   private readonly recorder: ReplayRecorder | null;
   readonly seed: number;
+  /**
+   * What this match's handles are keyed by, and deliberately not the seed: a
+   * 32-bit seed fit a known-plaintext search from a client's own handles
+   * (docs/threat-model.md TM-001). It never crosses the wire, and the replay
+   * records it beside the seed.
+   */
+  readonly handleKey: string;
 
   /**
    * The authored map this match is being played on.
@@ -493,6 +508,10 @@ export class Match {
   constructor(map: MapDefinition = VENTFRONT_DIVIDE, options: MatchOptions = {}) {
     this.map = map;
     this.seed = options.seed ?? randomSeed();
+    this.handleKey =
+      options.handleKey ??
+      (options.seed === undefined ? randomHandleKey() : handleKeyForSeed(options.seed));
+    this.echo = new EchoLayer(this.handleKey);
     this.world = createSimWorld(
       options.terrain ?? terrainFor(map),
       FIXED_DT,
@@ -507,6 +526,7 @@ export class Match {
       options.record === true
         ? new ReplayRecorder(
             this.seed,
+            this.handleKey,
             map.id,
             options.fauna !== false,
             options.mission?.id ?? null,

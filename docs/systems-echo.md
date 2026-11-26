@@ -234,7 +234,8 @@ false, is told as a bow is stored, single precision in the half turn either side
 precision and its range sort nothing (#1307). Every depth a contact reports, true or false, is
 told to the metre, floored, so its precision sorts nothing. The depth was once the pinger's own,
 which the pinger knows exactly, and that made every return at it a lie (#1294). The counter is not
-what goes on the wire: a handle is a per-match, per-observer permutation of it, and a slot's
+what goes on the wire: a handle is a per-observer permutation of it, keyed by a 128-bit secret the
+match draws for itself rather than by its seed (#1959), and a slot's
 contacts are listed in handle order, so neither a handle's value nor its place in the list says when it was
 issued. It must not, because the mint order is not arbitrary — a ping's phantoms are minted
 before the pass resolves its true returns, so a counter published raw sorted the lies to the

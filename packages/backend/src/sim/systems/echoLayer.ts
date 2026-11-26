@@ -37,8 +37,6 @@ import {
   directionalSectorFactor,
   maxAudibleRangeM,
   scatterContact,
-  contactHandle,
-  markHandle,
   stableUnit,
   tierFromRatio,
   unitAvailableTo,
@@ -69,6 +67,7 @@ import {
   Veterancy,
 } from '../components.ts';
 import { hasBow } from '../directional.ts';
+import { HandleCipher, randomHandleKey } from '../handleKey.ts';
 import { SpatialHash } from '../spatialHash.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
 import type { Terrain } from '../terrain.ts';
@@ -423,21 +422,18 @@ export class EchoLayer {
   private readonly byHandle = new Map<number, Map<number, number>>();
   /**
    * slot -> how many handles it has been issued. An *index*, not a handle:
-   * what goes on the wire is `contactHandle` of it, because a counter
+   * what goes on the wire is `HandleCipher.contact` of it, because a counter
    * published raw is a sort order, and a sort order separates the phantoms a
    * ping in scattered water returns from the true returns beside them
    * (docs/systems-echo.md §3). See `mintHandle`.
    */
   private readonly nextHandle = new Map<number, number>();
   /**
-   * This match's seed, hoisted at the top of every pass.
-   *
-   * Only the handle key reads it, and only from inside `run`. Held on the
-   * instance rather than threaded through `handleFor` and `conjurePhantoms`
-   * because both are already deep in the pass's call tree and the value is a
-   * property of the match, not of the call.
+   * What turns a slot's counter into the handles it is published under: a
+   * permutation keyed by the match's own 128-bit secret, never by its seed
+   * (#1959, `handleKey.ts`).
    */
-  private seed = 0;
+  private readonly handleCipher: HandleCipher;
   /** Handle order, which is the order a slot's contacts are published in. */
   private readonly byHandleAscending = (a: Contact, b: Contact): number => a.id - b.id;
   private readonly results = new Map<number, Contact[]>();
@@ -472,10 +468,10 @@ export class EchoLayer {
    * as it was: a slot that heard one new mark read off its id how many it had
    * never heard, which is the map-wide total contacts' handles exist to deny.
    * So a mark goes out under a handle minted from a per-slot count of the
-   * marks that slot has heard, through `markHandle`'s keyed permutation, and
-   * held for the mark's life, so a mark heard again keeps its handle. The key
-   * is the marks' own: under the contacts' key a slot's nth mark and nth
-   * contact shared a value, and its marks decoded its contacts' mint order,
+   * marks that slot has heard, through `HandleCipher.mark`'s permutation, and
+   * held for the mark's life, so a mark heard again keeps its handle. The
+   * space is the marks' own, tagged apart from the contacts': in one space a
+   * slot's nth mark and nth contact shared a value, and its marks decoded its contacts' mint order,
    * which is where §3's phantoms hide.
    */
   private readonly markHandles = new Map<number, Map<number, number>>();
@@ -614,7 +610,12 @@ export class EchoLayer {
   private scatterPass = false;
   private terrain: Terrain | undefined;
 
-  constructor() {
+  /**
+   * `handleKey` is the match's (`Match.handleKey`). A layer built bare, as a
+   * test of the pass alone builds one, draws a key of its own.
+   */
+  constructor(handleKey: string = randomHandleKey()) {
+    this.handleCipher = new HandleCipher(handleKey);
     for (let h = 0; h <= HYD_MAX; h++) {
       this.rangeScaleByHyd[h] = Math.pow(
         Math.max(h, 1) / PROPAGATION_MODEL.MAX_EXPECTED_HYD,
@@ -772,7 +773,7 @@ export class EchoLayer {
     if (handle === undefined) {
       const index = (this.nextMarkHandle.get(slot) ?? 0) + 1;
       this.nextMarkHandle.set(slot, index);
-      handle = markHandle(this.seed, slot, index);
+      handle = this.handleCipher.mark(slot, index);
       slotHandles.set(markId, handle);
     }
     return handle;
@@ -808,7 +809,7 @@ export class EchoLayer {
    * a statement of intent rather than of the code. Two things make it true:
    *
    * - **The counter is not the handle.** `nextHandle` is an index and
-   *   `contactHandle` publishes a keyed permutation of it, so the order
+   *   `HandleCipher.contact` publishes a keyed permutation of it, so the order
    *   handles were issued in does not survive onto the wire. It had to stop
    *   surviving because the mint order is not arbitrary: a ping conjures its
    *   phantoms in the active-sonar loop and the materialisation loop mints
@@ -839,7 +840,7 @@ export class EchoLayer {
   private mintHandle(slot: number): number {
     const index = (this.nextHandle.get(slot) ?? 0) + 1;
     this.nextHandle.set(slot, index);
-    return contactHandle(this.seed, slot, index);
+    return this.handleCipher.contact(slot, index);
   }
 
   /**
@@ -1354,9 +1355,6 @@ export class EchoLayer {
     const entities = acousticEntities(world);
     this.terrain = terrain;
     this.scatterPass = terrain.hasScatter;
-    // The handle key's one input, and the only thing `mintHandle` needs that
-    // is a property of the match rather than of the contact.
-    this.seed = world.rng.seed;
 
     for (const slot of observers) {
       this.best.get(slot)?.clear();
