@@ -1,7 +1,7 @@
 /**
- * The contact log's detail column prints each kind of row as docs/ui-ux.md
- * §10's sample block does — every kind, so a later edit to one cannot quietly
- * reshape another.
+ * The contact log's detail column prints the rows docs/ui-ux.md §10's sample
+ * block gives a bearing, a range or `decaying` as that block does, so a later
+ * edit to one cannot quietly reshape another.
  *
  * The one that broke (#1937): an own-force row's range is the player's own
  * hull measured from the scope anchor, so it is exact. It printed through the
