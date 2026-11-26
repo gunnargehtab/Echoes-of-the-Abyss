@@ -147,6 +147,28 @@ Why each one earns its context:
   session, and nothing in `work-issue` loads it. It costs 25 words a session;
   `grill-me` is its `/grill-me` entry point and costs none.
 
+### Why no repo-authored skill is user-invoked (#1921)
+
+The thirteen repo-authored descriptions cost 645 words a session. Eleven of them a
+session reaches on its own, sent by another skill, an agent or a `CLAUDE.md`: `dev-loop`
+by `work-issue` §5, `art-direction` by `dev-loop`, its five specialists by
+`art-direction`, `hull-intake` by `dev-loop` and `hull-designer`, `run-game` by
+`dev-loop` and `work-issue` §6, `balance-run` by the root `CLAUDE.md`. `steward` fires
+on a pull request's events. A flag would cut that reach. `work-issue` (60 words) stays
+too: `dev-loop` sends a session to its §7, and `steward` to its §4, §6 and §7. That
+leaves `roadmap-sync` (53), started by nothing but a person or its Routine, and it
+cannot take the flag yet.
+
+A session's Skill tool refuses a flagged skill, and its error forbids following the
+file "by other means" (probed with `grill-me` on 26 November 2026). The roadmap Routine's
+prompt asks the model to invoke the skill, and its fallback, reading the file, is the
+route the error forbids. A prompt that opens with `/roadmap-sync` might be expanded
+before the model sees it, but that is unverified: `create_session` refuses a prompt
+opening with `/`, and the probe Routine was not created. Whether Copilot CLI honours the
+flag was not checked either. Flag it once a fired Routine shows `/<name>` expanding, and
+rewrite the prompt to open with it in the same change. The flag also stops a plain-words
+request to update the roadmap from starting it: only a typed `/roadmap-sync` would.
+
 ### The BitmapText argument, measured
 
 This file used to say the HUD "does not yet use" `BitmapText`, which was true and
