@@ -102,6 +102,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | --- | --- |
 | **[tech-stack.md](tech-stack.md)** | Stack, rationale, Echo Layer performance budget |
 | **[webgpu-feasibility.md](webgpu-feasibility.md)** | What moving the conn view to WebGPU and TSL would touch: every shader patch and its TSL equivalent, read against three r169. A note, not a migration |
+| **[threat-model.md](threat-model.md)** | What a stranger can do to the public game server: trust boundaries, abuse paths ranked, and the findings filed from them |
 | **[invariants.md](invariants.md)** | What the simulation must hold over every input, where each rule comes from, and the test that holds it — `npm run check:invariants` fails if a row names a test that is gone |
 | **[ROADMAP.md](ROADMAP.md)** | Where the build stands against the bible, and what is planned next |
 
