@@ -166,7 +166,8 @@ route the error forbids. A prompt that opens with `/roadmap-sync` might be expan
 before the model sees it, but that is unverified: `create_session` refuses a prompt
 opening with `/`, and the probe Routine was not created. Whether Copilot CLI honours the
 flag was not checked either. Flag it once a fired Routine shows `/<name>` expanding, and
-rewrite the prompt to open with it in the same change.
+rewrite the prompt to open with it in the same change. The flag also stops a plain-words
+request to update the roadmap from starting it: only a typed `/roadmap-sync` would.
 
 ### The BitmapText argument, measured
 
