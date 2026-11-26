@@ -446,7 +446,7 @@ const TRITANOPIA: Palette = {
       primary: 0x1fa67a,
       accent: 0x8fe36b,
       glow: 0x8fe36b,
-      consoleAccent: 0xa0ece8,
+      consoleAccent: 0x00ffff,
     },
     [Faction.Directorate]: {
       primary: 0xa02030,
@@ -469,7 +469,7 @@ const TRITANOPIA: Palette = {
   }),
   resource: {
     [ResourceKind.Nodule]: 0xf0e0c8,
-    [ResourceKind.ResonanceCrystal]: 0x7fb8ff,
+    [ResourceKind.ResonanceCrystal]: 0x70b4fc,
   },
   fauna: 0x7a7a88,
   lantern: 0xcb68c3,
