@@ -297,7 +297,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
       id: 'the-field',
       text: 'Prove the field. Read the faces by hand; enough closes the survey.',
       gloss:
-        'Each Corvette reads the faces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field.',
+        'Each Corvette reads the faces of the terraces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field.',
       initial: ObjectiveStatus.Pending,
       markerId: 'terraces',
       terminal: true,

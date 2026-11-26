@@ -619,7 +619,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | Row | Gloss |
 | --- | --- |
 | `column` | Bring at least 6 of your 10 Harvesters to the Holdfast Gate; each moves only with a Corvette within 450 m. |
-| `crossing` | Get at least 1 Harvester across the closed line to the Holdfast Gate. |
+| `crossing` | Get at least 1 Harvester across the corridor, the closed line, to the Holdfast Gate. |
 | `all-ten` | All 10 Harvesters at the Holdfast Gate. |
 | `escorts` | Keep both Corvettes afloat. |
 

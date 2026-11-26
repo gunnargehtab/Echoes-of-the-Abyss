@@ -770,7 +770,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | Row | Gloss |
 | --- | --- |
 | `the-chord` | Bring at least 2 of your 3 cutter Corvettes, the First, Second and Third, back loaded above the Staging line; each cuts its own face, 240 s a load. |
-| `load-one-home` | The First's first load from the western face, above the Staging line. |
+| `load-one-home` | The First's first load from the western face of the faces, above the Staging line. |
 | `load-two-home` | The First's second load from the western face, above the Staging line. |
 | `load-three-home` | The Second's first load from the middle face, above the Staging line. |
 | `load-four-home` | The Second's second load from the middle face, above the Staging line. |

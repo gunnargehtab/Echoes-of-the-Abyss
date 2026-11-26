@@ -476,7 +476,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
       id: 'the-chord',
       text: 'The lattice stands at six voices. A tone you interrupt is a tone you have not played.',
       gloss:
-        'Each of your 6 hulls sounds its own formation: within 400 m, facing it, out of Silent Running, for 20 s.',
+        'Each of your 6 hulls sounds one of the outer formations, its own: within 400 m, facing it, out of Silent Running, for 20 s.',
       initial: ObjectiveStatus.Pending,
       markerId: 'formations',
       terminal: true,
@@ -503,7 +503,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       id: 'the-party',
       text: 'Six of you. Six voices. I would like both of those numbers to be the same at the end as they are now.',
-      gloss: 'Keep all 6 hulls afloat until the close.',
+      gloss: "Keep all 6 hulls afloat until the close; they set out from the Third's approach.",
       initial: ObjectiveStatus.Pending,
       markerId: 'approach',
       terminal: true,

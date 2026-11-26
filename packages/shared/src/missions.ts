@@ -697,7 +697,7 @@ export const LEDGER_PROSPECT_HEADER: MissionHeader = {
   orders: [
     {
       gloss:
-        'Each Corvette reads the faces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field.',
+        'Each Corvette reads the faces of the terraces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field.',
     },
     {
       gloss:
@@ -790,7 +790,7 @@ export const SEEDING_TEND_HEADER: MissionHeader = {
     },
     {
       gloss:
-        'Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing.',
+        "Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to Teel's landing.",
     },
   ],
   /**
@@ -829,7 +829,9 @@ export const SEEDING_THIN_WATER_HEADER: MissionHeader = {
       gloss:
         'Bring at least 6 of your 10 Harvesters to the Holdfast Gate; each moves only with a Corvette within 450 m.',
     },
-    { gloss: 'Get at least 1 Harvester across the closed line to the Holdfast Gate.' },
+    {
+      gloss: 'Get at least 1 Harvester across the corridor, the closed line, to the Holdfast Gate.',
+    },
     { gloss: 'All 10 Harvesters at the Holdfast Gate.', weight: ObjectiveWeight.Optional },
     {
       gloss: 'Keep both Corvettes afloat.',
@@ -901,7 +903,7 @@ export const SEEDING_CONVOCATION_HEADER: MissionHeader = {
       gloss:
         'Keep a hull on the marked row for 60 s with every hull there at SIG 26 or less; then the walk moves to the next row.',
     },
-    { gloss: 'Take a Light Scout into the edge marker on the bare slope.' },
+    { gloss: "Take a Light Scout into the watch's edge, on the bare slope." },
     {
       gloss:
         "If another party's hulls stand on the Holdfast for 60 s before T+18:45, the mission ends lost.",
@@ -1456,11 +1458,11 @@ export const CHORD_APTITUDE_HEADER: MissionHeader = {
   orders: [
     {
       gloss:
-        'Each of your 6 hulls sounds its own formation: within 400 m, facing it, out of Silent Running, for 20 s.',
+        'Each of your 6 hulls sounds one of the outer formations, its own: within 400 m, facing it, out of Silent Running, for 20 s.',
     },
     { gloss: 'Sound at least 4 of the 6 formations.' },
     {
-      gloss: 'Keep all 6 hulls afloat until the close.',
+      gloss: "Keep all 6 hulls afloat until the close; they set out from the Third's approach.",
       form: ObjectiveForm.Rule,
       weight: ObjectiveWeight.Critical,
     },
@@ -1615,7 +1617,7 @@ export const CHORD_NINETEEN_HEADER: MissionHeader = {
   orders: [
     {
       gloss:
-        "At 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.",
+        "Over the Rest, at 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.",
     },
     {
       gloss: 'Keep your Cruiser afloat; a hull lost here is lost for the rest of the campaign.',
@@ -1807,7 +1809,7 @@ export const CHORD_RIM_DEPOSITS_HEADER: MissionHeader = {
         'Bring at least 2 of your 3 cutter Corvettes, the First, Second and Third, back loaded above the Staging line; each cuts its own face, 240 s a load.',
       weight: ObjectiveWeight.Critical,
     },
-    { gloss: "The First's first load from the western face, above the Staging line." },
+    { gloss: "The First's first load from the western face of the faces, above the Staging line." },
     { gloss: "The First's second load from the western face, above the Staging line." },
     { gloss: "The Second's first load from the middle face, above the Staging line." },
     { gloss: "The Second's second load from the middle face, above the Staging line." },

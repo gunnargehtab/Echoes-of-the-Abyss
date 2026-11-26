@@ -495,7 +495,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | --- | --- |
 | `share` | Hold each Harvester in the Gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast. |
 | `jellies` | Hold Watch One, a Light Scout, on the West Lane for 90 s to move the jellies, loudly, at SIG 45. |
-| `gift` | Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing. |
+| `gift` | Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to Teel's landing. |
 | `stillness` | From T+06:00 to the end, keep every Harvester at SIG 20 or less. |
 | `turning` | Nothing more is asked; the tide ends when the countdown does. |
 

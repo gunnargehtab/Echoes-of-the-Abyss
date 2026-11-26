@@ -420,7 +420,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `the-field` | Each Corvette reads the faces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field. |
+| `the-field` | Each Corvette reads the faces of the terraces on its side: within 400 m, facing the face, 20 s out of Silent Running; any 4 faces prove the field. |
 | `the-ascent` | Have 3 of your 4 hulls back in the staging, at the north edge, when the mission closes at T+22:00. |
 | `the-ledger` | How long your column has been classified; keep it under 60 s. |
 

@@ -548,7 +548,7 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
     {
       id: 'count',
       text: 'The count goes to the edge, and the edge carries — everything on the drop is about to know what we sound like when we agree.',
-      gloss: 'Take a Light Scout into the edge marker on the bare slope.',
+      gloss: "Take a Light Scout into the watch's edge, on the bare slope.",
       initial: ObjectiveStatus.Pending,
       markerId: 'watch-edge',
       terminal: true,
