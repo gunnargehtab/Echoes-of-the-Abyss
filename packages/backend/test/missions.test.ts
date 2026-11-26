@@ -1068,7 +1068,7 @@ describe('the objectives', () => {
         (marker) => marker.id === markerId
       )!;
     // The lifts' places, against the mission region each lift loads in. Until
-    // #1923 the West Lane's and the yard's rings left 14% and 25% of their
+    // #1923 the West Lane's and the yard's rings left 14% and 26% of their
     // water outside the rectangle, and the ovens had only the Holdfast's ring,
     // 88% of it somewhere no bread waits.
     for (const [missionId, markerId, regionId] of [
