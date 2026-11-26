@@ -337,7 +337,7 @@ Grade such an arm on the other eleven gates.
 | Arm | Skill loaded | Traps | Gates | Red before the fix | Output tokens |
 | --- | --- | --- | --- | --- | --- |
 | landed #1830, no skill on disk | — | 0 of 6 tripped | CI green | yes, per its body | not comparable |
-| A, skill grafted | **no** | 0 of 6 tripped | GATES_A | **no** | 45,409 |
+| A, skill grafted | **no** | 0 of 6 tripped | 11 of 12, `docs:claude` from the graft | **no** | 45,409 |
 
 **The skill never fired.** Arm A made no `Skill` call and read no file under
 `.claude/skills/diagnosing-bugs`. A bug report stating a symptom and its steps is the
@@ -348,6 +348,8 @@ versions, and wrote the fix at its sixth tool call. It ran the issue's repro onc
 the fix, and its seven tests were never watched failing. Phase 1's red loop and Phase 5's
 test-before-fix are both absent. The landed arm had them, and it had no skill: it ran
 under `dev-loop`, which demands a fix's red run.
+
+Re-run here, arm A's gates pass bar that one, and the repro fails then passes on its tree.
 
 Both fixes read the resolved copy's version against the declared range, with a range
 reader of their own and no `semver` dependency. Arm A's reader is larger, taking `~`,
