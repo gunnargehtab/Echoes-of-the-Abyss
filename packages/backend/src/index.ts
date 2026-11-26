@@ -17,6 +17,7 @@ import {
   guardOrigins,
   resolveCorsPolicy,
 } from './http/cors.ts';
+import { guardMatchmaking } from './http/matchmaking.ts';
 import { mountReports } from './http/reports.ts';
 import { describeThrown, logFailure } from './log.ts';
 
@@ -132,6 +133,9 @@ await server.listen(PORT);
 const httpServer = server.transport.server;
 if (httpServer === undefined) throw new Error('The WebSocket transport has no HTTP server.');
 guardOrigins(httpServer, corsPolicy);
+// Wrapped after the origin lock, so it runs first: a room-making request is
+// counted against its address before anything else is asked of it (#1960).
+guardMatchmaking(httpServer, corsPolicy);
 console.log(`Echoes of the Abyss server listening on :${PORT}`);
 console.log(`  simulation ${SIM.TICK_HZ} Hz | Echo Layer ${SIM.ECHO_HZ} Hz`);
 console.log(`  origins: ${describeCorsPolicy(corsPolicy)}`);

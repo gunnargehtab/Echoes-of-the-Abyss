@@ -22,7 +22,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { ClientState, CloseCode, type Client } from '@colyseus/core';
-import { CLIENT_MSG, MatchPhase, PROLOGUE_SORROWGATE_HEADER, SIM } from '@echoes/shared';
+import {
+  CLIENT_MSG,
+  MatchPhase,
+  PROLOGUE_SORROWGATE_HEADER,
+  SERVER_MSG,
+  SIM,
+} from '@echoes/shared';
 
 // The boot and delivery harness, shared with `wireValidation.test.ts` since
 // #628 rather than written out twice — see the head of that file.
@@ -501,6 +507,44 @@ describe('a resignation the client asks for (#1588)', () => {
     } finally {
       await shutdown(room);
     }
+  });
+});
+
+describe('a room building its world (#1960)', () => {
+  // Creating a room takes no account and no socket, so a world built in
+  // `onCreate` was tens of milliseconds a script could spend per request on
+  // the thread that steps every match (docs/threat-model.md, TM-002).
+  it('builds nothing on create, and the world on the first arrival', async () => {
+    const room = await bootRoom();
+    try {
+      assert.equal(internals(room).built, null, 'onCreate built a world');
+      assert.equal(room.seed, null);
+      const client = fakeClient('first');
+      room.onJoin(client as unknown as Client);
+      assert.notEqual(internals(room).built, null, 'the first arrival built no world');
+      assert.equal(typeof room.seed, 'number');
+      // The positive control: the arrival still gets the ground it plays on.
+      const sent = client.sent.map(({ type }) => type);
+      assert.ok(sent.includes(SERVER_MSG.map) && sent.includes(SERVER_MSG.terrain));
+    } finally {
+      await shutdown(room);
+    }
+  });
+
+  it('builds nothing when a room nobody joined is disposed', async () => {
+    const room = await bootRoom();
+    const lines: string[] = [];
+    const log = console.log;
+    console.log = (...args: unknown[]): void => {
+      lines.push(args.map(String).join(' '));
+    };
+    try {
+      await room.disconnect();
+    } finally {
+      console.log = log;
+    }
+    assert.equal(internals(room).built, null, 'disposing built a world');
+    assert.deepEqual(lines, [], 'an unbuilt room has no budget line to print');
   });
 });
 

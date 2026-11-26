@@ -24,6 +24,8 @@ import {
   REPORTS,
 } from '@echoes/shared';
 import { logFailure } from '../log.ts';
+import { AddressLimiter } from './addressLimiter.ts';
+import { TRUSTED_PROXIES } from './matchmaking.ts';
 
 /**
  * A Colyseus room id: nanoid's alphabet, nine characters by default. Matched
@@ -60,39 +62,10 @@ export function parseClientReport(body: unknown): ClientReport | null {
   };
 }
 
-/** A fixed-window count per address. */
-export class ReportLimiter {
-  private readonly windows = new Map<string, { start: number; count: number }>();
-
-  constructor(
-    private readonly maxPerWindow: number = REPORTS.MAX_PER_WINDOW,
-    private readonly windowMs: number = REPORTS.WINDOW_MS
-  ) {}
-
-  /** Spend one report for `address` at `now`; false when its window is spent. */
-  allow(address: string, now: number): boolean {
-    const window = this.windows.get(address);
-    if (window === undefined || now - window.start >= this.windowMs) {
-      if (window === undefined && this.windows.size >= REPORTS.MAX_TRACKED_ADDRESSES)
-        this.prune(now);
-      this.windows.set(address, { start: now, count: 1 });
-      return true;
-    }
-    if (window.count >= this.maxPerWindow) return false;
-    window.count += 1;
-    return true;
-  }
-
-  /** How many addresses are remembered, for the bound's test. */
-  get tracked(): number {
-    return this.windows.size;
-  }
-
-  private prune(now: number): void {
-    for (const [address, window] of this.windows) {
-      if (now - window.start >= this.windowMs) this.windows.delete(address);
-    }
-    if (this.windows.size >= REPORTS.MAX_TRACKED_ADDRESSES) this.windows.clear();
+/** The report route's own limit; the mechanism is `AddressLimiter`'s. */
+export class ReportLimiter extends AddressLimiter {
+  constructor(maxPerWindow: number = REPORTS.MAX_PER_WINDOW, windowMs: number = REPORTS.WINDOW_MS) {
+    super(maxPerWindow, windowMs, REPORTS.MAX_TRACKED_ADDRESSES);
   }
 }
 
@@ -107,7 +80,7 @@ export type SeedLookup = (roomId: string) => number | null;
  * without this, every stranger shares one address and one window. A peer on a
  * private network is the proxy, whose `X-Forwarded-For` is believed; a peer on
  * the internet is the client, whose header is not, so it cannot buy itself a
- * fresh window by forging one.
+ * fresh window by forging one. Matchmaking's limit reads the same list.
  */
 export function mountReports(
   app: Application,
@@ -115,7 +88,7 @@ export function mountReports(
   limiter: ReportLimiter = new ReportLimiter(),
   now: () => number = Date.now
 ): void {
-  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+  app.set('trust proxy', TRUSTED_PROXIES);
   app.post(
     REPORT_PATH,
     // Before the body is read, so a refused address costs no parse.
