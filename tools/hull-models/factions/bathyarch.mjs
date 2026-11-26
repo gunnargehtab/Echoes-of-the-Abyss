@@ -983,7 +983,7 @@ export function floodStrips(root, { flood, lampM }, { strip, lamps, after }) {
       add(root, `flood_lamp_${side}${i}`, box(...lamps.size), lampM, rest ? rest.at : at, rest ? rest.rot : [0, 0, 0]);
     }
   });
-  // `after` closes the two rows across the deck's after edge
+  // `after` is a third strip, across the deck's after edge
   // (`flood_strip_a`), written last: the Caisson's, whose caisson ends in a
   // shoulder two thirds of the way aft, so its edge has three sides and the
   // third is the one the step is read by (#1956).
@@ -1032,7 +1032,7 @@ export function ballastBlisters(root, { grey, rust }, opts) {
     // Straps: a flat hoop round the blister at each of `straps.x`, in the
     // older plate, cut at the drum's own count so its plates lie on the
     // drum's (`ballast_strap_<side>0..n`). The Caisson's, whose blisters
-    // hang flush under a belt and are read from the beam, where a 47 m drum
+    // hang under its skirt and are read from the beam, where a 47 m drum
     // with nothing round it is one grey bar (#1956).
     if (straps)
       straps.x.forEach((sx, i) =>
@@ -2139,7 +2139,7 @@ export function plantCylinder(root, { black, grey, rust }, opts) {
  * house side and its blades step down the rake (#893).
  *
  * The well is a box and may be a tall one: the Caisson's is a plenum
- * standing a metre and a half off the plant deck with the slats on its
+ * standing 1.6 m off the plant deck with the slats on its
  * roof, because slats 0.15 m thick over a well flush with the deck read as
  * paint on it from every camera but the chart's (#1956). `well.x` sets the
  * box off the slats' own station where the plenum runs on past them — the

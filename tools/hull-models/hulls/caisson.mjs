@@ -196,8 +196,11 @@
  *   caisson's crown, 10.5 m — with the hazard band across the crown behind
  *   it. No teeth: the Bulwark rams and this hull does not.
  * - **The drive hull's deck plate is laid only where the hull is bare**,
- *   x −43.2 to −14.2 and ±9.1, notched over the tunnels. The first cut ran
- *   it the full length under the caisson, where nothing reads it.
+ *   x −43.2 to −14.2 and ±9.1, 0.9 m thick on the hull's top at y 4.0 and
+ *   notched to the hull's own notches. The first cut ran it the full length
+ *   under the caisson, where nothing reads it; the second and third laid
+ *   it 0.3 m clear of the hull, with notches narrower and shorter than the
+ *   hull's (#1956 review).
  * - **No stern vents and no stacks aft.** The block names the plant's
  *   louvres and the two stacks and nothing else that exhausts, and puts "no
  *   cowl on anything". The drive drums are pressure vessels and vent
@@ -232,11 +235,11 @@
  * each, the two flank strips at 22.25 m² and the after strip at 11.25, the
  * two stack throats at 7.75, the eight flood housings at 1.88, the six
  * citadel ports at 1.0, the four bridge ports at 0.75 and the bow lamp at
- * 3.0 — thirty-two lit parts, 202.3 m² facing up on a 2,085 m² plan, no part
+ * 3.0 — thirty-two lit parts, 202.3 m² facing up on a 2,083 m² plan, no part
  * hidden, none floating, and each pair the same area. That is 9.7 % of the
  * plan, where §3.2 says the Caisson, at E(64) = 43.51, is the one hull in
  * Phase 4 whose lit upward area has to be large. The bake at 90 m and
- * 4 px/m reads raw E 92.66 and dims by ×0.469 — inside the ×1/64 .. ×64
+ * 4 px/m reads raw E 92.78 and dims by ×0.469 — inside the ×1/64 .. ×64
  * window with thirty-fold headroom to its floor, under the first cut's
  * ×0.581 because the blades and the third strip added 42 m². The conn
  * view's lamps take the model's own intensity and never the bake's gain
@@ -307,7 +310,7 @@ const SHOULDER = -15;
 const RIM = 0.6;
 const SKIRT = -1;
 
-/** The decks: the drive hull's, the caisson's own top, the older course on it, and the plant deck on the newer. */
+/** The decks, each its top face: the drive hull's deck plate, the caisson's crown, the older course on it, and the plant deck on the newer. */
 const DECK = 4.9;
 const CROWN = 6.5;
 const OLDER = 7.0;
@@ -331,9 +334,11 @@ root.name = 'consortium_caisson';
 // side and back up the port, 8 m deep and centred on the waterline. Flanks
 // parallel at ±9.5 from x 40 to the transom, a short chamfer to a 15 m bow
 // face under the caisson, and the two tunnel notches cut 3.3 m into the
-// stern at z ±5.2 between the quarters and the centre block. Its deck plate
-// is laid only where the hull is bare, from the shoulder aft, a metre and a
-// half inside the rim and notched with it; so is the rubbing strake.
+// stern at z ±5.2, 5.1 m wide, between the quarters and the centre block.
+// Its deck plate is laid only where the hull is bare, x −14.2 to −43.2:
+// 0.9 m thick on the hull's top, y 4.0 to 4.9, 0.4 m inside each flank and
+// 0.6 inside the transom, its two notches the hull's own to the wall. The
+// rubbing strake runs the bare flank too, x −15 to the transom.
 bathyarch.boxHull(root, { black, grey, rust }, {
   hull: {
     outline: [
@@ -344,10 +349,13 @@ bathyarch.boxHull(root, { black, grey, rust }, {
   },
   deck: {
     outline: [
-      [-14.2, 9.1], [-43.2, 9.1], [-43.2, 7.4], [-40, 7.4], [-40, 3], [-43.2, 3],
-      [-43.2, -3], [-40, -3], [-40, -7.4], [-43.2, -7.4], [-43.2, -9.1], [-14.2, -9.1],
+      [-14.2, 9.1], [-43.2, 9.1], [-43.2, 7.75], [-40.5, 7.75], [-40.5, 2.65], [-43.2, 2.65],
+      [-43.2, -2.65], [-40.5, -2.65], [-40.5, -7.75], [-43.2, -7.75], [-43.2, -9.1], [-14.2, -9.1],
     ],
-    depth: 0.6, y: DECK - 0.3,
+    // On the hull's top and up to DECK: the second and third cuts laid a
+    // 0.6 m plate centred 0.3 m under DECK, which is 0.3 m of water between
+    // the plate and the hull the length of it (#1956 review).
+    depth: DECK - 4, y: (DECK + 4) / 2,
   },
   strakes: { x: -29.4, y: -3.4, z: HALF, size: [28.8, 0.6, 1.0] },
 });
@@ -387,8 +395,8 @@ bathyarch.caissonBox(root, { black, grey, rust, amber }, {
 
 // The belt: the caisson's flank in plate, older under newer. Two newer grey
 // plates forward and an older one in oxide abaft them riding higher, a
-// metre of the box showing between each, over a strake of older plate the
-// length of the flank; sixteen rivets a side along the strake. The plates
+// metre of the box showing between each, over a strake of older plate
+// 50.4 m long; sixteen rivets a side along the strake. The plates
 // stand 0.1 m proud of the box and the rivets and the bolt heads to 13.2,
 // 5 cm inside the flange, which alone sets the file's beam: the flange is
 // one box about the keel, 13.25 to the bit, where a head at 12.9 + 0.3 is
@@ -399,10 +407,13 @@ bathyarch.flankPlates(root, { grey, rust }, {
   seamLength: 50.4, seam: { x: 11.5, y: 0.1, h: 1.0, t: 0.8, z: 12.7 },
 });
 bathyarch.rivetRows(root, grey, { from: -13.5, to: 36.5, count: 16, y: 0.1, z: 13.1, size: [0.5, 0.5, 0.2] });
+// Sixteen more a side on the caisson's bare rim at z ±12, x −10.5 to 34.5
+// at the bolts' pitch and half a pitch off their stations, which is also
+// clear of the four flood housings.
 bathyarch.rivetRows(root, grey, { from: -12, to: 36, count: 16, y: CROWN + 0.15, z: 12, size: [0.6, 0.3, 0.6] });
 
 // The Corvette's two tubes let into the bow face either side of the plough,
-// their axes on the keel line at y 2 and z ±4.5: the socket sunk 1.2 m
+// their axes at y 2 and z ±4.5: the socket sunk 1.2 m
 // behind the face, the flange on it, the door shut, and the hinge up the
 // door's outboard edge.
 bathyarch.bowTubes(root, { black, grey, rust }, {
@@ -427,7 +438,7 @@ bathyarch.plantCylinder(root, { black, grey, rust }, {
 // 1.6 m off the plant deck abreast of the cylinder, two ducts into it from
 // under the cylinder — each carried in to z 1, where its top is 0.65 m
 // through the drum's keel plate — the louvre rank on its roof over 13 m —
-// four blades a metre across at a 1.25 m pitch, hung between two cheeks, no
+// four blades a metre across at a 1.5 m pitch, hung between two cheeks, no
 // shutters — and the stack standing on its fore end.
 const PLENUM = PLANT + 1.6;
 const BANK = 7.75;
@@ -449,9 +460,11 @@ bothSides((side, sgn) => {
 });
 
 // The floods along the caisson's edge, all three sides of it: a lit strip a
-// side on the older course inboard of the rim, four lamp housings a side
-// outboard of it on the bare rim, and a third strip across the flange's
-// crown from one to the other — the step, lit.
+// side on the older course inboard of the rim, x −13.75 to 30.75; four lamp
+// housings a side outboard of it, let 0.1 m into the crown and standing
+// 0.35 m out over the chamfer; and a third strip across the flange's crown,
+// z ±11.25 — half a metre abaft the other two's after ends and a quarter of
+// a metre under them, so the three do not touch. The step, lit.
 bathyarch.floodStrips(root, { flood, lampM }, {
   strip: { x: 8.5, y: OLDER + 0.15, z: 11.0, size: [44.5, 0.3, 0.5] },
   lamps: { count: 4, x: -6, pitch: 12, y: CROWN + 0.4, z: 12.125, size: [1.5, 1, 1.25] },
@@ -469,11 +482,11 @@ bathyarch.citadel(root, { black, grey, rust, lampM }, {
   bridgePorts: { x: -6.5, y: 12.9, z: [-3, -1, 1, 3], size: [0.5, 1.2, 1.4] },
 });
 
-// Ballast blisters low on both flanks, hung under the caisson's skirt and
-// flush with its belt: a six-plate drum 47 m between its caps with a plate
-// on its crown against the skirt and a vertex outboard at z 12.9, strapped
-// in older plate at every second frame, and stopping under the flange, so
-// nothing bridges the step.
+// Ballast blisters low on both flanks, hung under the caisson's skirt: a
+// six-plate drum 47 m between its caps with a plate on its crown against
+// the skirt and a vertex outboard at z 12.9, a tenth of a metre inside the
+// box's flank, strapped in older plate at every second bolt station, and
+// stopping under the flange, so nothing bridges the step.
 bathyarch.ballastBlisters(root, { grey, rust }, {
   x: 11.5, y: SKIRT - 1.7, z: 10.9, r: 2, length: 47,
   caps: { length: 3, fore: 36.5, aft: -13.5, tipR: 1.2 },
@@ -485,9 +498,9 @@ bathyarch.ballastBlisters(root, { grey, rust }, {
 // deck plate; four stays raking from the flange down to the first frame;
 // and the drive — a pressure drum a side over each tunnel, its axis 0.6 m
 // under the deck plate's top, from its flange on the shoulder to its head,
-// banded where a frame crosses it, and the head into a drive leg that
-// stands through the deck at the notch's forward wall and goes down the
-// notch to the shaft line.
+// banded at three of the seven frames it crosses, and the head into a drive
+// leg that stands through the deck at the notch's forward wall and goes
+// down the notch to 1.1 m under the shaft line.
 const FRAMES = Array.from({ length: 8 }, (_, i) => -18 - i * PITCH);
 const SHAFT = -1.2;
 bathyarch.ringFrames(root, rust, { x: FRAMES, y: 0.5, size: [0.5, 9.4, 19.8] });
@@ -513,7 +526,7 @@ bothSides((side, sgn) =>
   })
 );
 
-// The patchwork: older plate flush on the newer course to port, ahead of
+// The patchwork: older plate laid on the newer course to port, ahead of
 // the plenum; newer on the citadel's starboard flank under its ports — a
 // plate over a lit port is a port the chart loses — and newer on the bare
 // port flank of the drive hull, between two frames.
