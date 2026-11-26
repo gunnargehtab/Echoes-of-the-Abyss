@@ -43,7 +43,8 @@ graphics quality alone stands), environment geometry that is no animal of the ro
    `env-rim-ray` (#1777) on 6 November. From 12 November shape work ran on Fable 5.2,
    because `hull-designer` named the `fable` alias, which follows the newest Fable. Its new
    models are `env-drift-jelly` (#1837) and `env-rim-manta` (#1867), the manta accepted
-   by the owner on 24 November. The owner kept the switch on 25 November 2026 (#1951)
+   by the owner on 24 November, and `caisson-bathyarch`, rebuilt to its block on
+   26 November (#1956). The owner kept the switch on 25 November 2026 (#1951)
    rather than make a second one back, and `hull-designer` now pins `claude-fable-5-2`,
    so a release cannot move the series unseen. A later Fable is a decision written here
    first.
@@ -1462,7 +1463,11 @@ nodules). A pressure box: the skirmisher's wedge made in riveted plate and
 no longer tapering — a blunt plough bow, a flat plate face with chamfered
 corners, flanks parallel from the shoulders aft to the step at two thirds
 of the length, then a step in to the bare drive hull and a square stern
-with two prop tunnels. The caisson is the step: a box of heavier plate bolted over the
+with two prop tunnels. The drive hull is bare of plate, not of drive: its
+ring frames stand unclad at the pitch the caisson is bolted to, and the
+drive lies along its back in the open, a banded pressure drum a side from
+the shoulder aft to a drive leg down into its prop tunnel.
+The caisson is the step: a box of heavier plate bolted over the
 forward two thirds, riveted, patchworked older-under-newer, its after edge
 standing proud of the drive hull as a shoulder — the third more plate,
 visible in the plan. On its back the plant: a riveted pressure cylinder
