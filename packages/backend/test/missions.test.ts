@@ -1065,7 +1065,7 @@ describe('the objectives', () => {
     assert.ok(ringed >= 10, `only ${ringed} lifts were checked, so the walk is broken`);
   });
 
-  it('stands each ring #1886 added wholly on the ground it names', () => {
+  it('stands each ring #1886 and #1923 placed wholly on the ground it names', () => {
     // A ring is the place the gloss names, so every point of it is that
     // place: a lift's ring lies inside the rectangle a cut runs in (runtime.ts
     // loads a carrier only there), and a wall's ring inside the overhang §11
@@ -1081,10 +1081,16 @@ describe('the objectives', () => {
       MISSIONS.find((mission) => mission.id === missionId)!.markers.find(
         (marker) => marker.id === markerId
       )!;
-    // The lifts' places, against the mission region each lift loads in.
+    // The lifts' places, against the mission region each lift loads in. Until
+    // #1923 the West Lane's and the yard's rings left 14% and 26% of their
+    // water outside the rectangle, and the ovens had only the Holdfast's ring,
+    // 88% of it somewhere no bread waits.
     for (const [missionId, markerId, regionId] of [
       ['ledger-asset-recovery', 'working-edge', 'face-cut'],
       ['seeding-tend', 'gardens', 'gardens'],
+      ['seeding-tend', 'west-lane', 'west-lane'],
+      ['seeding-tend', 'ovens', 'ovens'],
+      ['ledger-tolerance', 'yard', 'the-yard'],
     ] as const) {
       const mission = MISSIONS.find((candidate) => candidate.id === missionId)!;
       const region = mission.regions.find((candidate) => candidate.id === regionId)!;
