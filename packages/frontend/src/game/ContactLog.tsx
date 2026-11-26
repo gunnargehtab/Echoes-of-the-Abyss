@@ -73,8 +73,9 @@ export function detail(entry: ContactLogEntry): string[] {
   // a resolution, so its range is exact: whole metres, no tilde, as §10's
   // `Corvette went loud` row prints it (#1937).
   if (entry.own === true) return [bearing, `${Math.round(entry.rangeM).toLocaleString('en-US')} m`];
-  // A contact's range is approximate at Tier 2 by design (15% blur) and exact at 3+; the
-  // tilde is on both because a player should not have to remember which.
+  // A contact's range is approximate at Tier 2 by design (15% blur) and exact
+  // at 3+; the tilde is on both because a player should not have to remember
+  // which.
   // Thousands are grouped, `~2,100 m`, as §10's sample rows print them and the
   // depth readout (`verticalCommand.ts`) does (#1903).
   return [bearing, `~${(Math.round(entry.rangeM / 100) * 100).toLocaleString('en-US')} m`];

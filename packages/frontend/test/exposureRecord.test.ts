@@ -33,6 +33,7 @@ import {
   type ContactLogEntry,
   type RendererCallbacks,
 } from '../src/game/EchoRenderer.ts';
+import { detail } from '../src/game/ContactLog.tsx';
 
 const ECHO_STEP_TICKS = SIM.TICK_HZ / SIM.ECHO_HZ;
 
@@ -126,6 +127,14 @@ describe('the red-band crossing row', () => {
       assert.match(row.label, /^Corvette /, 'and names the hull it happened to');
       assert.equal(row.tier, ResolutionTier.Silent, 'own-force rows sit under the `---` tier');
       assert.ok(row.focusX !== undefined && row.focusY !== undefined, 'a hull is a place');
+      // The hull is the player's own, so its range is fact: §10 prints it
+      // exact and untilded (`1,050 m`), never as a contact's `~1,100 m` (#1937).
+      assert.ok(row.rangeM !== undefined, 'the row measures the hull from the scope anchor');
+      assert.equal(
+        detail(row)[1],
+        `${Math.round(row.rangeM).toLocaleString('en-US')} m`,
+        'an own-force row prints its range exact'
+      );
     } finally {
       world.teardown();
     }
