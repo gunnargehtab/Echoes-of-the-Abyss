@@ -75,8 +75,9 @@ rather than handed out (every likelihood below).
   shape in `CLIENT_SHAPE`, with arrays capped at 256 ids (`WIRE` in
   `packages/shared/src/constants.ts`). An order then needs `commandSlot`, a seat in a
   running match, and `Match` re-checks ownership and ranges. A lobby message (`faction`,
-  `ready`, `addAi`, `removeAi`, `aiDifficulty`) needs a row in the roster and the lobby
-  phase instead, and its rules are the pure functions in `lobby.ts`.
+  `ready`, `addAi`, `removeAi`, `aiDifficulty`) needs a row in the roster instead, and the
+  lobby phase, except `ready`, which also votes a rematch after a result. Its rules are the
+  pure functions in `lobby.ts`.
 - **Backend → client, WebSocket.** Per observer: the resolved Echo snapshot under opaque
   handles, `assigned`, the mission view, mission lines and `missionOver`. Broadcast: the
   `MatchState` schema (lobby rows only), `ground` deltas, `phase`, `gameOver`. Per join:
