@@ -2,8 +2,9 @@
  * §11's UI scale, as the HUD draws it — docs/ui-ux.md §2 and §11.
  *
  * The setting is what the player asked for (`settings/store.ts`). This file
- * says what the screen draws from it: how big a floating panel's type is
- * against the panel it sits in, and how far a short window holds the scale.
+ * says what the screen draws from it: how big the orders panel's and the
+ * camera panel's type is against the scale, and how far a short window holds
+ * the scale.
  * GameCanvas, the orders panel's fit and the settings screen all read it here,
  * so the three cannot disagree about the factor.
  */
@@ -11,8 +12,10 @@
 import { UI_SCALE_MIN } from '../settings/store.ts';
 
 /**
- * How much smaller a floating panel's own type is set than the panel it sits
- * in.
+ * How much smaller the orders panel's own type is set than the panel it sits
+ * in. The free-water camera panel takes the same square root; it has no
+ * transform, so App.css multiplies this by the scale itself. The two logs do
+ * not take it: each magnifies whole (§11).
  *
  * The panels scale by a transform, so at 200% each one covers four times the
  * area while the screen between the top strip and the console stays the size
@@ -20,8 +23,8 @@ import { UI_SCALE_MIN } from '../settings/store.ts';
  * screen it had about 182 panel units of room for 444 units of rows, which is
  * not a layout to be tuned but arithmetic, and §2 does not let it scroll.
  *
- * So above 100% the type inside a panel grows by the square root of the scale
- * rather than by the scale. At 200% the reader still gets type about 1.4x the
+ * So above 100% the type inside the orders panel grows by the square root of
+ * the scale rather than by the scale. At 200% the reader still gets type about 1.4x the
  * size it was — magnification that is worth asking for — while the panel holds
  * roughly twice the rows it otherwise would. Below 100% it is 1: shrinking the
  * HUD is a request for more room and the panels already give it.

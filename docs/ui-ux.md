@@ -1414,6 +1414,9 @@ Audio carries primary information, so accessibility here is a correctness requir
   one line gives its detail a second line rather than printing over it (#1893). So a log holds
   fewer, larger rows at 200%, which is the magnification a player asked for, and the orders
   panel keeps its room (#1898).
+  **The free-water study's camera panel does take it.** Its rows, NAV's motion buttons among
+  them, must all be on screen at once, and it neither scrolls nor folds, so it is the orders
+  panel's case rather than the logs': its type is about 1.4x at 200% (#1934).
   **And the scale the HUD draws at is held to what the window can carry.** The strip above
   the water and the console, hint line and breath below it take 292 units of height, and at
   200% on a 1366 × 768 screen they left 92 for the water, where no legible type fits the
