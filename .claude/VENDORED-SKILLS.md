@@ -154,19 +154,19 @@ session reaches on its own, sent by another skill, an agent or a `CLAUDE.md`: `d
 by `work-issue` §5, `art-direction` by `dev-loop`, its five specialists by
 `art-direction`, `hull-intake` by `dev-loop` and `hull-designer`, `run-game` by
 `dev-loop` and `work-issue` §6, `balance-run` by the root `CLAUDE.md`. `steward` fires
-on a pull request's events. A flag would cut that reach. Only `work-issue` (60 words) and
-`roadmap-sync` (53) are started by nothing but a person or a Routine, and neither can
-take the flag yet.
+on a pull request's events. A flag would cut that reach. `work-issue` (60 words) stays
+too: `dev-loop` sends a session to its §7, and `steward` to its §4, §6 and §7. That
+leaves `roadmap-sync` (53), started by nothing but a person or its Routine, and it
+cannot take the flag yet.
 
 A session's Skill tool refuses a flagged skill, and its error forbids following the
-file "by other means" (probed with `grill-me` on 26 November). Both Routine prompts ask
-the model to invoke their skill, so a flag stops them: the backlog prompt treats a
-missing skill as a stop, and the roadmap prompt's fallback, reading the file, is the
-route the error forbids. A prompt that opens with `/work-issue` might be expanded before
-the model sees it, but that is unverified: `create_session` refuses a prompt opening with
-`/`, and the probe Routine was not created. Whether Copilot CLI honours the flag was not
-checked either. Flag the two once a fired Routine shows `/<name>` expanding, and rewrite
-both prompts to open with it in the same change.
+file "by other means" (probed with `grill-me` on 26 November 2026). The roadmap Routine's
+prompt asks the model to invoke the skill, and its fallback, reading the file, is the
+route the error forbids. A prompt that opens with `/roadmap-sync` might be expanded
+before the model sees it, but that is unverified: `create_session` refuses a prompt
+opening with `/`, and the probe Routine was not created. Whether Copilot CLI honours the
+flag was not checked either. Flag it once a fired Routine shows `/<name>` expanding, and
+rewrite the prompt to open with it in the same change.
 
 ### The BitmapText argument, measured
 
