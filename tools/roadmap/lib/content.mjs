@@ -290,6 +290,7 @@ export const phases = {
 };
 
 export const groups = {
+  'Hulls to rebuild': 'Ships to rebuild',
   'The match that does not end': 'Matches that finish',
   'Performance and netcode': 'Smoother and faster',
   Controls: 'Controls',
@@ -663,7 +664,18 @@ export const items = {
   1882: 'A field of Tetherjelly being easier to pick out on the chart from far away',
   1913: 'The lantern jelly’s colour being too close to other colours for players with blue-yellow colour blindness',
   1914: 'Several console and ore colours being too close together for players with blue-yellow colour blindness',
+  1934: 'The camera panel in the open-water trial showing its text at the wrong size',
+  1937: 'Your own ships’ range in the contact log being rounded and marked approximate, though it is exact',
+  1940: 'Three lines in the colour-blindness notes still saying the owner’s look is owed, after the owner gave it',
   1916: 'Borrowed guidance on finding bugs, writing instructions and interviewing the owner, added to the project',
+  1941: 'The project’s automatic helpers learning the names of the GitHub tools, with automatic merging switched off',
+  1944: 'The project’s automatic helpers learning one more name for the GitHub tools',
+  1946: 'Look-change work being handed to whichever helper suits it, not always the same one',
+  1951: 'The notes on 3D ship building naming the model that actually builds the ships',
+  1952: 'One shared tool for comparing two screenshots when judging a look change',
+  1953: 'A fix so a resumed work session no longer throws away an unsaved change to the install list',
+  1939: 'Screenshots of the new sea-life depths still to be taken on a real graphics card',
+  1956: 'The Consortium’s line ship, the Caisson, being rebuilt so its hull reads as one piece',
   1919: 'A test of whether the borrowed bug-finding guidance changes how a fix gets made',
   1920: 'A security review of the game server before the public playtest is switched on',
   1921: 'Marking the project’s guidance that only a person starts, so it stops loading in every session',
