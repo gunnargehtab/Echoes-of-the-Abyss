@@ -753,7 +753,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       id: 'the-slope',
       text: "The column is under the line at the tide's turn. Six of eight on the slope is a column.",
-      gloss: 'Have 6 of your 8 Choristers inside the slope marker.',
+      gloss: "Have 6 of your 8 Choristers inside the Kell Slope's ring.",
       initial: ObjectiveStatus.Pending,
       terminal: true,
       // §8 — revealed at 18:00, and the late reveal is load-bearing: an
@@ -769,7 +769,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
       id: 'the-ears',
       text: 'Two of three ears on the slope.',
       gloss:
-        'Have 2 of your 3 listeners, the Submersibles and the Cruiser, inside the slope marker.',
+        "Have 2 of your 3 listeners, the Submersibles and the Cruiser, inside the Kell Slope's ring.",
       initial: ObjectiveStatus.Pending,
       terminal: true,
       revealAtTick: T(18),

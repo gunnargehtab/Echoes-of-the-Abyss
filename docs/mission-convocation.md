@@ -665,7 +665,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | --- | --- |
 | `walk` | Keep a hull on the marked row for 60 s with every hull there at SIG 26 or less; then the walk moves to the next row. |
 | `walk`, while the walk is stalled | The row has stopped turning; after 90 s stalled, the walk starts over from the first row. |
-| `count` | Take a Light Scout into the edge marker on the bare slope. |
+| `count` | Take a Light Scout into the watch's edge, on the bare slope. |
 | `holdfast` | If another party's hulls stand on the Holdfast for 60 s before T+18:45, the mission ends lost. |
 
 ---

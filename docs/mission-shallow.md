@@ -780,8 +780,8 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | Row | Gloss |
 | --- | --- |
 | `the-transcript` | Hear 5 of the 10 plateau sounds; each counts once your contact log shows it with a bearing. |
-| `the-slope` | Have 6 of your 8 Choristers inside the slope marker. |
-| `the-ears` | Have 2 of your 3 listeners, the Submersibles and the Cruiser, inside the slope marker. |
+| `the-slope` | Have 6 of your 8 Choristers inside the Kell Slope's ring. |
+| `the-ears` | Have 2 of your 3 listeners, the Submersibles and the Cruiser, inside the Kell Slope's ring. |
 | `the-record` | How long your hulls have been classified; keep it under 60 s. |
 | `the-whole` | Hear 8 of the 10, the Holdfast's among them. |
 

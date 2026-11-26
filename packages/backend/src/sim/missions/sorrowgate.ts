@@ -592,7 +592,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-one',
       text: 'Tender One is loaded. Tender One does not move without ears.',
-      gloss: 'Order Tender One and an escort within 400 m to the Concourse together.',
+      gloss:
+        'Order Tender One and an escort within 400 m to the Concourse together, through the service lock.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(11, 20),
       markerId: 'concourse',
@@ -608,7 +609,8 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     {
       id: 'tender-two',
       text: 'Tender Two is loaded. The gate is open, and it will not be open twice.',
-      gloss: 'The same for Tender Two: order it and an escort within 400 m together.',
+      gloss:
+        'The same for Tender Two: order it and an escort within 400 m to the Concourse together, through the service lock.',
       initial: ObjectiveStatus.Pending,
       revealAtTick: T(13, 40),
       markerId: 'concourse',

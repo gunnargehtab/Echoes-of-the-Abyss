@@ -468,7 +468,7 @@ export const SEEDING_TEND: MissionDefinition = {
       id: 'gift',
       text: "Teel's landing is short of bread. We're not asking. We're saying it's short.",
       gloss:
-        'Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing.',
+        "Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to Teel's landing.",
       initial: ObjectiveStatus.Pending,
       markerId: 'landing',
       terminal: true,

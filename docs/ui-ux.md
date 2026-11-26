@@ -1272,8 +1272,9 @@ something new, and a log role would re-announce the whole panel every time a cou
   counter states its number in the gloss: a silence order its `SIG n`, a hold when it ends.
   Each mission document lists its glosses in §12's *Plain lines in the panel* table, and the
   literal transcribes that table. `missions.test.ts` holds that every row has one, that it is
-  the document's sentence, that a silence row names its `SIG n` and that a hold says when it
-  ends; whether a gloss is *true* of the runtime is review, as the anti-reveal rule is.
+  the document's sentence, that a silence row names its `SIG n`, that a hold says when it
+  ends and that a row's gloss names each marker the row points at (#1922); whether a gloss
+  is *true* of the runtime is review, as the anti-reveal rule is.
 - **A gloss is one sentence, and the panel fits without one being cut.** §2's no-scroll rule
   binds here hardest, because this panel is the one that grows: a mission reveals objectives
   as it runs, a silence order adds a debt row, and every locked ability adds another. A gloss

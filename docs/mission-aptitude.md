@@ -609,9 +609,9 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 
 | Row | Gloss |
 | --- | --- |
-| `the-chord` | Each of your 6 hulls sounds its own formation: within 400 m, facing it, out of Silent Running, for 20 s. |
+| `the-chord` | Each of your 6 hulls sounds one of the outer formations, its own: within 400 m, facing it, out of Silent Running, for 20 s. |
 | `the-lattice` | Sound at least 4 of the 6 formations. |
-| `the-party` | Keep all 6 hulls afloat until the close. |
+| `the-party` | Keep all 6 hulls afloat until the close; they set out from the Third's approach. |
 | `the-tolerance` | How long the survey has classified you; keep it under 30 s by turning your flank to it. |
 
 ---

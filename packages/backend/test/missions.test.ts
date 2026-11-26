@@ -881,6 +881,16 @@ describe('the objectives', () => {
         }
       }
 
+      // A place the chart prints is no reveal, whoever it is named after.
+      // *Teel's landing* carries a speaker's name, and §10.5 has the gloss name
+      // the place by its marker's name (#1922), so the sweep reads a gloss with
+      // the mission's own marker names cut out. The whole name only: `Teel`
+      // anywhere else in the gloss is still refused.
+      const places = mission.markers
+        .map((marker) => marker.name)
+        .filter((name): name is string => name !== undefined)
+        .map((name) => new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'));
+
       for (const objective of mission.objectives) {
         const glosses = [
           objective.gloss,
@@ -889,6 +899,7 @@ describe('the objectives', () => {
           ...(objective.states ?? []).map((state) => state.gloss),
         ].filter((gloss): gloss is string => gloss !== undefined);
         for (const gloss of glosses) {
+          const swept = places.reduce((text, place) => text.replace(place, ' '), gloss);
           assert.equal(
             gloss.trim(),
             gloss,
@@ -909,7 +920,7 @@ describe('the objectives', () => {
           // court uses for the player's own four hulls.
           for (const name of foreign) {
             assert.equal(
-              atWordBoundary(name).test(gloss),
+              atWordBoundary(name).test(swept),
               false,
               `${mission.id}: "${objective.id}" glosses with "${name}", which is not the ` +
                 `player's — §10.5: never a contact the player has not detected`
@@ -1866,6 +1877,35 @@ describe('the words a player reads', () => {
         }
         if (objective.predicate.kind === 'endure') {
           assert.match(objective.gloss, /T\+\d|until|countdown/, `${where}: a hold says when`);
+        }
+      }
+    }
+  });
+
+  it('names in its gloss every marker a row sends the camera to (#1922)', () => {
+    // docs/ui-ux.md §10.5: a gloss names "the place by its marker's name". The
+    // row is a button that recentres the camera on its marker, and the chart
+    // prints that name over the ring, so a gloss saying *the slope marker* for
+    // *The Kell Slope* sends the player to a word the screen never shows.
+    //
+    // Matched without a leading article and ignoring case, because a gloss
+    // writes *the Concourse* mid-sentence and *the West Overhang and East
+    // Overhang* in a pair. Only the row's own `gloss` is held: an alternate
+    // reading may move on, as Standing Wave's held line sends the six north.
+    for (const mission of MISSIONS) {
+      const markers = new Map(mission.markers.map((marker) => [marker.id, marker]));
+      for (const objective of mission.objectives) {
+        for (const id of [objective.markerId, objective.viaMarkerId]) {
+          if (id === undefined) continue;
+          const name = markers.get(id)?.name;
+          assert.ok(name !== undefined, `${mission.id}: marker "${id}" has no name to gloss`);
+          const bare = name.replace(/^the\s+/i, '');
+          const said = new RegExp(`\\b${bare.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          assert.match(
+            objective.gloss ?? '',
+            said,
+            `${mission.id}: "${objective.id}" points at "${name}" and its gloss never names it`
+          );
         }
       }
     }
