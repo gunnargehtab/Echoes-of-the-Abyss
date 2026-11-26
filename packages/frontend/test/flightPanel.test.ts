@@ -124,6 +124,17 @@ describe('free-water camera panel type', () => {
     assert.equal(sizes.length, 1, '.flight-panel declares one font-size');
   });
 
+  it("hands that type to NAV's motion buttons, which a user agent sets apart", () => {
+    const own = parseCss(APP_CSS)
+      .filter((rule) => rule.condition === null && rule.selector === '.flight-panel button')
+      .flatMap((rule) => rule.declarations)
+      .filter(([property]) => property === 'font-size' || property === 'font');
+    assert.equal(own.length, 1, '.flight-panel button declares one font-size');
+    // In the panel's ems, so it moves with the panel, and the user agent's
+    // 13.33 px of 16 at 100%, so the accepted 100% frame does not move.
+    assert.ok(Math.abs(fontSizeEm(own[0]![1], 1) * 16 - 40 / 3) < 0.01, own[0]![1]);
+  });
+
   for (const uiScale of [0.75, 1, 1.5, 2]) {
     it(`draws type at the orders panel's size at ${uiScale * 100}%`, () => {
       const want = uiScale * panelType(uiScale);

@@ -59,9 +59,14 @@
   pointer-events: none;
 }
 
+/* A button takes the user agent's 13.33 px control font, not its parent's, so
+   without this NAV's motion buttons would keep 100% type at every UI scale.
+   0.8333em is that 13.33 px of the 16 px the panel sets at 100%, so the
+   accepted 100% frame does not move. */
 .flight-panel button {
   min-height: 28px;
   margin: 2px;
+  font-size: 0.8333em;
 }
 
 .flight-attitude {
