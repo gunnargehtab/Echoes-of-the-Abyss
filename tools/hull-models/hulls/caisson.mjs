@@ -65,9 +65,12 @@
  * step's station. The box stands 3.5 m of half-beam proud of the drive hull
  * on each side, and that is the step. The file's beam is 26.5 m, 0.294 of
  * its length, set by the flange at z ±13.25; the flank's bolt heads and the
- * strake's rivets reach ±13.2. Abaft the flange nothing reaches past the
- * drive hull's strake at ±10.0, so the generated outline steps 3.25 m a
- * side.
+ * strake's rivets reach ±13.2. The flange's after face is at x −15 and the
+ * sixteen bolt heads on it stand 0.4 m abaft that, to x −15.4 and out to
+ * z ±12.65; abaft those nothing reaches past the drive hull's strake at
+ * ±10.0. So the step is 3.25 m a side in the file, flange to strake, and
+ * 3.15 m as `outlines.mjs` cuts it: 0.146 of the length at x −0.162 to
+ * 0.111 at −0.175 (hullOutlines.generated.ts).
  *
  * WHAT MAKES IT ONE HULL. Four things cross the step or repeat either side
  * of it, and each is a part of the machine rather than a tie drawn on:
@@ -140,7 +143,15 @@
  *   oxide over the whole crown and a newer grey course over everything
  *   abaft x 32, with sixteen rivets a side on the bare rim outboard of
  *   them, set between the bolt stations and between the flood housings.
- *   Three repair patches carry the rest, none mirrored.
+ *   Three repair patches carry the rest, none mirrored and each a newer
+ *   grey plate on what is older or bare: one on the older course to port
+ *   of the foredeck, one on the citadel's starboard flank, one on the
+ *   drive hull's port flank. Nothing older lies on anything newer. The
+ *   foredeck patch was an oxide plate on the newer course from #787 until
+ *   #1956's review — older over newer, the block's phrase turned round.
+ *   The belt is read the same way: its three plates and its strake hang
+ *   side by side at one gauge on the box, none over another, so the older
+ *   plate there is beside the newer and not on it.
  * - **The plant is one machine.** The block gives the cylinder, "two stacks
  *   abreast of it, and a rank of exhaust louvres down each side", and no
  *   stations. A side: a plenum of hull black 20 m by 5.7, standing 1.6 m
@@ -526,13 +537,15 @@ bothSides((side, sgn) =>
   })
 );
 
-// The patchwork: older plate laid on the newer course to port, ahead of
-// the plenum; newer on the citadel's starboard flank under its ports — a
-// plate over a lit port is a port the chart loses — and newer on the bare
-// port flank of the drive hull, between two frames.
+// The patchwork, three newer plates and nothing older laid on newer: one on
+// the older course to port of the foredeck, x 32.25 to 36.75, a quarter of
+// a metre ahead of the newer course's fore edge and outboard of the hatch;
+// one on the citadel's starboard flank under its ports — a plate over a
+// lit port is a port the chart loses — and one on the bare port flank of
+// the drive hull, between two frames.
 bathyarch.repairPatches(root, bathyarch.inFrame, { rust, grey }, {
   patches: [
-    ['patch_deck', 'rust', [4.5, 0.3, 4], [29, PLANT + 0.15, -6.5]],
+    ['patch_deck', 'grey', [4.5, 0.3, 3], [34.5, OLDER + 0.15, -8.5]],
     ['patch_citadel_s', 'grey', [3.5, 1.2, 0.4], [-10, 8.15, 7.1]],
     ['patch_flank_p', 'grey', [2.2, 1.8, 0.4], [-28.5, -0.6, -9.6]],
   ],

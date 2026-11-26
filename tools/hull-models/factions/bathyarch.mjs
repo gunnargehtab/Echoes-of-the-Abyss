@@ -2180,11 +2180,12 @@ export function exhaustLouvres(root, { black, flood, rust }, opts) {
  * starboard rank then the port (`plant_duct_s0..n · plant_duct_p0..n`).
  * `size` is `[along the keel, tall, across]` and `z` the trunk's centre.
  * The script sets both so the trunk meets both ends: a six-plate drum on
- * saddles has its flank a long way over a deck trunk — the Caisson's is at
- * y 9.26 where a trunk 1.3 m tall first reaches it — so the trunk is
- * carried in under the drum to where its top is through the keel plate,
- * and out into the plenum's wall. A trunk that stops at the drum's beam
- * touches nothing (#1956 review). Without them the cylinder, the louvres and the stacks are
+ * saddles has its flank a long way over a deck trunk. On the Caisson a
+ * trunk with its top at y 8.7 first meets the drum at z ±1.68, on the
+ * plate that rises from the keel plate's edge; at z ±2.0, where the second
+ * cut's trunk ended, the drum's flank is at y 9.26 and the trunk met
+ * nothing. So the trunk is carried in under the drum to where its top is
+ * through the keel plate, and out into the plenum's wall (#1956 review). Without them the cylinder, the louvres and the stacks are
  * three fixtures on a deck; with them the block's sentence is a process —
  * the plant, and what it exhausts through (#1956).
  */
