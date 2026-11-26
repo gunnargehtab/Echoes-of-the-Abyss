@@ -1,0 +1,69 @@
+{
+  "experiment": "1828-diagnosing",
+  "title": "Preflight passes an out-of-range dependency (#1828) — does diagnosing-bugs change the fix?",
+  "skill": ".claude/skills/diagnosing-bugs",
+  "graft": true,
+  "scope": [
+    "tools/",
+    "package.json"
+  ],
+  "traps": [
+    {
+      "id": "debug-tag-survives",
+      "group": "drift",
+      "severity": "required",
+      "direction": "mustNotAppear",
+      "pattern": "\\[DEBUG-[0-9a-z]+\\]",
+      "why": "The skill's Phase 4 tags every probe `[DEBUG-xxxx]` and its Phase 6 greps them out. One left in the diff is the skill followed halfway."
+    },
+    {
+      "id": "hitl-template",
+      "group": "drift",
+      "severity": "tell",
+      "direction": "mustNotAppear",
+      "pattern": "hitl-loop",
+      "why": "A tell only. The skill's last-resort human-in-the-loop script. This bug reproduces with one `mv` and one command, so reaching for it is a loop built for the wrong case."
+    },
+    {
+      "id": "semver-dependency",
+      "group": "house",
+      "severity": "tell",
+      "direction": "mustNotAppear",
+      "pattern": "\"semver\"\\s*:",
+      "why": "A tell only. The preflight's header says it has no dependencies because it runs before anyone has a working install; a `semver` dependency would need the install it checks."
+    },
+    {
+      "id": "regression-test",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustAppear",
+      "pattern": "^\\s*(it|test)\\s*\\(",
+      "scope": [
+        "tools/"
+      ],
+      "why": "Criterion 2, and the skill's Phase 5: a test of the fault lands with the fix. Any new test case under tools/ counts, so an arm is not graded on the landed file name."
+    },
+    {
+      "id": "reads-resolved-version",
+      "group": "criterion",
+      "severity": "required",
+      "direction": "mustAppear",
+      "pattern": "\\bversion\\b",
+      "scope": [
+        "tools/"
+      ],
+      "why": "Criterion 1, as a backstop. Presence cannot tell r169 from r187; only the resolved package.json's version can. The pattern is the bare word, because the landed fix destructures `({ version } = readJson(found))` and a `.version` pattern failed it. The repro itself, re-run on the arm's tree, is the real check."
+    },
+    {
+      "id": "test-in-a-gate",
+      "group": "criterion",
+      "severity": "tell",
+      "direction": "mustAppear",
+      "pattern": "\"test:[a-z-]+\"\\s*:",
+      "scope": [
+        "package.json"
+      ],
+      "why": "Criterion 2's second half. A tell, not required: a test placed under a directory `test:tools` already globs runs with no script line, so a trip here is checked by hand against the arm's tree before it is recorded."
+    }
+  ]
+}
