@@ -32,7 +32,7 @@ const post = (method: string, from: string, target = 'match') =>
  * A raw request, because `fetch` will not send a `Host` it did not derive.
  * The `Host` names a path, which Colyseus prepends to the one it dispatches.
  */
-const smuggle = async (from: string): Promise<number> => {
+const smuggle = async (from: string): Promise<{ status: number; roomId?: string }> => {
   const { request } = await import('node:http');
   const { port } = new URL(base);
   return new Promise((resolve, reject) => {
@@ -49,8 +49,18 @@ const smuggle = async (from: string): Promise<number> => {
         },
       },
       (res) => {
-        res.resume();
-        resolve(res.statusCode ?? 0);
+        let text = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk: string) => (text += chunk));
+        res.on('end', () => {
+          let roomId: string | undefined;
+          try {
+            roomId = (JSON.parse(text) as { roomId?: string }).roomId;
+          } catch {
+            roomId = undefined;
+          }
+          resolve({ status: res.statusCode ?? 0, roomId });
+        });
       }
     );
     req.on('error', reject);
@@ -127,11 +137,20 @@ describe('the matchmaking limit, as a script meets it', () => {
   it('counts a join whose Host makes it a create', async () => {
     // The review's bypass: forty of these made forty rooms, none counted.
     const from = '203.0.113.9';
+    const { matchMaker } = await colyseus();
+    const before = new Set((await matchMaker.query({ name: 'match' })).map((r) => r.roomId));
+    const made = new Set<string>();
     for (let i = 0; i < MATCHMAKING.MAX_CREATES_PER_WINDOW; i += 1) {
-      assert.equal(await smuggle(from), 200, `request ${i + 1} is inside the window`);
+      const { status, roomId } = await smuggle(from);
+      assert.equal(status, 200, `request ${i + 1} is inside the window`);
+      assert.ok(roomId !== undefined && !before.has(roomId), 'a join would seat an open room');
+      made.add(roomId);
     }
+    // The premise: each was dispatched as a create, so each made its own room.
+    // A plain join would have reused the rooms the cases above left open.
+    assert.equal(made.size, MATCHMAKING.MAX_CREATES_PER_WINDOW);
     const rooms = await matchRooms();
-    assert.equal(await smuggle(from), 429);
+    assert.equal((await smuggle(from)).status, 429);
     assert.equal(await matchRooms(), rooms, 'a refused request made no room');
   });
 
