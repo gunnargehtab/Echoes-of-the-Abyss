@@ -1068,7 +1068,10 @@ The `you were pinged` row is implemented (#206, alongside the own-force rows it 
 shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position, and, on a tick that carries no bearing, one `bearing unknown` row — a fallback, since every tick that tells a side it was lit now carries its one bearing (#1290, #1300) — under the `---` tier the log
 reserves for events that are not detections. The log also carries the own-force rows §5
 licenses, in the same form: `Corvette under fire`, `Harvester idle — mined out`, each
-focusable because the hull is the player's own. Tier-3 rows currently name the hull and
+focusable because the hull is the player's own. For the same reason an own-force row prints its
+range exact, in whole metres and with no tilde (`1,050 m`), while a contact's range is rounded
+to 100 m and tilded (`~1,400 m`): the tilde marks a resolution, and the player's own hull was
+never resolved (#1937). Tier-3 rows currently name the hull and
 faction rather than estimating a count, because the Echo Layer does not model counts.
 
 **The rows that point the other way** — what the rest of the map holds on *you* — are
@@ -1272,8 +1275,9 @@ something new, and a log role would re-announce the whole panel every time a cou
   counter states its number in the gloss: a silence order its `SIG n`, a hold when it ends.
   Each mission document lists its glosses in §12's *Plain lines in the panel* table, and the
   literal transcribes that table. `missions.test.ts` holds that every row has one, that it is
-  the document's sentence, that a silence row names its `SIG n` and that a hold says when it
-  ends; whether a gloss is *true* of the runtime is review, as the anti-reveal rule is.
+  the document's sentence, that a silence row names its `SIG n`, that a hold says when it
+  ends and that a row's gloss names each marker the row points at (#1922); whether a gloss
+  is *true* of the runtime is review, as the anti-reveal rule is.
 - **A gloss is one sentence, and the panel fits without one being cut.** §2's no-scroll rule
   binds here hardest, because this panel is the one that grows: a mission reveals objectives
   as it runs, a silence order adds a debt row, and every locked ability adds another. A gloss
@@ -1414,6 +1418,9 @@ Audio carries primary information, so accessibility here is a correctness requir
   one line gives its detail a second line rather than printing over it (#1893). So a log holds
   fewer, larger rows at 200%, which is the magnification a player asked for, and the orders
   panel keeps its room (#1898).
+  **The free-water study's camera panel does take it.** Its rows, NAV's motion buttons among
+  them, must all be on screen at once, and it neither scrolls nor folds, so it is the orders
+  panel's case rather than the logs': its type is about 1.4x at 200% (#1934).
   **And the scale the HUD draws at is held to what the window can carry.** The strip above
   the water and the console, hint line and breath below it take 292 units of height, and at
   200% on a 1366 × 768 screen they left 92 for the water, where no legible type fits the

@@ -76,7 +76,10 @@ panel, a mark or a readout is not look work, and `docs/ui-ux.md` still targets t
   same cameras, as its non-target control.
 - **A claim a script can measure carries the script.** Low's frame unchanged is a pixel
   difference from `main` at the same camera, beside two takes of `main` for the noise. A
-  cost is gate 6's reading, and an edge is a profile across it. The evidence names the
+  cost is gate 6's reading, and an edge is a profile across it. The difference and the
+  profile are `tools/render-stack/framediff.mjs` (#1952), not a script of the round's own:
+  `--floor` puts the second take in the same table, and both takes are committed beside
+  the frames, since #1892's floor quoted one that was not. The evidence names the
   command and its output, and the critic re-runs it rather than judging by eye. A claim
   only an eye can make stays a frame for the owner.
 - **A refusal names one cause.** When the owner refuses a frame, write the one cause that

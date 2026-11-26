@@ -377,12 +377,13 @@ describe('the palette tables', () => {
 });
 
 describe('what each palette is for', () => {
-  // Tritanopia's tables were drawn against an eye with no red-green axis
-  // (#1905). The eye that replaced it finds the ore's bone white 37.8 dE from
-  // the crystal's blue, under their 40. Pinned exactly, as the console
-  // accent's misses are, so that a second miss fails and a new ink lands
-  // here (#1914).
-  const PAIR_MISSES: Partial<Record<PaletteName, string[]>> = { tritanopia: ['nodule/crystal'] };
+  // None, in any palette. Tritanopia's tables were drawn against an eye with
+  // no red-green axis (#1905), and the eye that replaced it found the ore's
+  // bone white 37.8 dE from the crystal's blue, under their 40. The crystal
+  // moved to the nearest blue on an even-valued grid that clears it by 1 dE
+  // or more, at 41.2 (#1914). The slot stays, so a miss a palette has to keep
+  // is pinned here by name.
+  const PAIR_MISSES: Partial<Record<PaletteName, string[]>> = {};
   for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
 
@@ -884,18 +885,17 @@ describe('reliefTextureGain', () => {
  * and faction floors, measured for the eye each palette is for. The
  * Consortium's grey misses three, and the doc keeps it and records them,
  * because every grey that clears them is too close to read as another colour.
- * Tritanopia's accents miss four more: they were chosen against an eye with
- * no red-green axis (#1905), and the doc records them until they move
- * (#1914). All seven are pinned here exactly, so an eighth miss fails rather
- * than hiding among them.
+ * Tritanopia's Directorate and Knights miss one more each, for good (#1914):
+ * they were chosen against an eye with no red-green axis (#1905), and to the
+ * eye that replaced it no ink but the Commune's cyan corner clears every
+ * floor, so the doc keeps them and records the misses. All five are pinned
+ * here exactly, so a sixth miss fails rather than hiding among them.
  */
 describe('the console accent', () => {
   const RECORDED_MISSES = [
     'deuteranopia Bathyarch vs friendly',
     'deuteranopia Bathyarch vs chrome glassStroke',
     'protanopia Bathyarch vs friendly',
-    'tritanopia Pelagia vs friendly',
-    'tritanopia Pelagia vs the Directorate accent',
     'tritanopia Directorate vs nodule',
     'tritanopia Hadron vs sigLow',
   ];

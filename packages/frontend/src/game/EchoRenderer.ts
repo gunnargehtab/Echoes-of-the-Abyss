@@ -524,6 +524,14 @@ export interface ContactLogEntry {
    * every consumer to compare the two.
    */
   mark?: boolean;
+  /**
+   * A row about the player's own force (docs/ui-ux.md §5, §10): `under fire`,
+   * `went loud`. Its range is the player's own hull measured from the scope
+   * anchor, so the log prints it exact and untilded — nothing about it was
+   * resolved, and a tilde would claim an uncertainty that does not exist
+   * (#1937).
+   */
+  own?: boolean;
 }
 
 /** A world-frame bearing in radians, as the log's compass-north degrees. */
@@ -6709,6 +6717,7 @@ export class EchoRenderer {
       tier: ResolutionTier.Silent,
       fresh: true,
       label: `${name} ${what}`,
+      own: true,
       focusX: subject.x,
       focusY: subject.y,
     };

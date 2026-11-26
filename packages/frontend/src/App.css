@@ -24,7 +24,11 @@
    from consoleLayout.ts, `--hint-row-units` from uiScale.ts). Anchored at its
    foot so flight's EYE readout and NAV's motion buttons grow upward over the
    water and never into the console, and never wider than the block it stands
-   by, border and padding included. */
+   by, border and padding included.
+   Its type takes the orders panel's square root of the UI scale (ui-ux.md
+   §11): its rows must all be on screen too, and it neither scrolls nor folds.
+   It carries no transform, so the scale and `--panel-type` both multiply here;
+   `--panel-type` is a bare number, and alone it is no font size at all. */
 .flight-panel {
   box-sizing: border-box;
   position: absolute;
@@ -35,7 +39,7 @@
   color: var(--text-bright);
   background: var(--abyss-void);
   border: 1px solid currentColor;
-  font-size: var(--panel-type);
+  font-size: calc(1em * var(--ui-scale, 1) * var(--panel-type, 1));
 }
 
 /* The public decoration's disclosure (free-water-slice.md §5), one line and
@@ -55,9 +59,14 @@
   pointer-events: none;
 }
 
+/* A button takes the user agent's 13.33 px control font, not its parent's, so
+   without this NAV's motion buttons would keep 100% type at every UI scale.
+   0.8333em is that 13.33 px of the 16 px the panel sets at 100%, so the
+   accepted 100% frame does not move. */
 .flight-panel button {
   min-height: 28px;
   margin: 2px;
+  font-size: 0.8333em;
 }
 
 .flight-attitude {

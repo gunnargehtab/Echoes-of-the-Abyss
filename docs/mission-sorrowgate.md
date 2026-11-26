@@ -800,8 +800,8 @@ does the readings (#1883):
 | `station` | Hold under the arch until it falls, then go to the two Harvester hulls: the tenders. |
 | `silence` | Keep every escort under SIG 20 — the reading in the orders panel’s header. Diving goes over. |
 | `silence`, while the debt runs | An escort dived — following the floor down is a dive. The debt pays itself off. |
-| `tender-one` | Order Tender One and an escort within 400 m to the Concourse together. |
-| `tender-two` | The same for Tender Two: order it and an escort within 400 m together. |
+| `tender-one` | Order Tender One and an escort within 400 m to the Concourse together, through the service lock. |
+| `tender-two` | The same for Tender Two: order it and an escort within 400 m to the Concourse together, through the service lock. |
 
 ---
 

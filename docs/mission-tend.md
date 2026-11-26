@@ -415,7 +415,11 @@ about: the lane the jellies sit off, and the landing that is short. *The Gardens
 375 m ring centred on the mid rows' node at 1125, 625, the widest circle inside the Gardens' 750 m
 depth, so every point of the ring is a place a share load runs. The share's row names it as the
 place on its way to the Holdfast, so the chart shows where to load as well as where to deliver
-(#1886).
+(#1886). *The West Lane*'s ring is 375 m on the lane's centre at 750, 1375, the widest circle its
+750 m depth holds, because the re-seat runs only inside the lane. *The ovens* is printed with a
+125 m ring at 2375, 375, the circle inside the ovens' 250 m square, and the gift's row names it as
+the place on its way to the landing: the Holdfast's ring holds the ovens, but most of its water is
+not where the bread waits (#1923).
 
 ---
 
@@ -495,7 +499,7 @@ Every row also carries a plain gloss under [ui-ux.md](ui-ux.md) §10.5 (#1883): 
 | --- | --- |
 | `share` | Hold each Harvester in the Gardens west of the Holdfast for 90 s to load, then bring all three back to the Holdfast. |
 | `jellies` | Hold Watch One, a Light Scout, on the West Lane for 90 s to move the jellies, loudly, at SIG 45. |
-| `gift` | Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to the landing. |
+| `gift` | Pass Tender Three, a Harvester, by the ovens beside the Holdfast to pick up the bread, then take it to Teel's landing. |
 | `stillness` | From T+06:00 to the end, keep every Harvester at SIG 20 or less. |
 | `turning` | Nothing more is asked; the tide ends when the countdown does. |
 

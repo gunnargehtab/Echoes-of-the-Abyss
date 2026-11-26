@@ -915,6 +915,9 @@ and no row below is open.
 | A dressing rebuild leaving the old ember cloud in the scene | [#1906](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1906) |
 | Tritanopia’s lantern ink standing under its colour-distance floor at four inks | [#1913](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1913) |
 | Tritanopia’s console accents and ore ink missing five colour-distance floors | [#1914](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1914) |
+| The free-water camera panel dropping its type size | [#1934](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1934) |
+| An own-force row printing a rounded range as a contact’s | [#1937](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1937) |
+| Three sentences still calling the tritanopia sheet glance owed | [#1940](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1940) |
 
 **How the project runs**
 
@@ -931,6 +934,12 @@ and no row below is open.
 | Preflight passing a dependency that resolves outside its range | [#1828](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1828) |
 | A look-work label routing look issues away from the Routine | [#1880](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1880) |
 | Vendoring the diagnosing-bugs, writing-for-agents and grilling skills | [#1916](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1916) |
+| Login names for the GitHub tools the loop skills missed, with auto-merge denied | [#1941](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1941) |
+| The claude.ai GitHub connector’s tool prefix named in the loop skills | [#1944](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1944) |
+| Look work routed by what it needs, not to one model | [#1946](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1946) |
+| Rule 3 naming the model shape work runs on | [#1951](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1951) |
+| The session-start hook keeping an uncommitted lockfile edit | [#1953](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1953) |
+| One shared frame-diff script for look evidence | [#1952](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1952) |
 
 **Look work at High**
 
@@ -939,6 +948,7 @@ and no row below is open.
 | A dark school staged in front of the vent’s glow | [#1856](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1856) |
 | A rock’s shadow in a searchlight having a toothed edge | [#1888](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1888) |
 | The cast-edge frames taken on the named graphics card | [#1889](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1889) |
+| GPU frames of life by depth band, owed from #1935 | [#1939](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1939) |
 | A Tetherjelly field’s rim raised so its footprint reads | [#1882](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1882) |
 
 **Store art**
@@ -1057,6 +1067,14 @@ A development-only slice ([free-water-slice.md](free-water-slice.md)), not a shi
 | Work lights and floodlights on the player's own structures | [#1929](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1929) |
 
 Look work under [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637) at High. Most wait on a target frame or an owner call.
+
+**Hulls to rebuild**
+
+| Work | Issue |
+| --- | --- |
+| Rebuilding the Caisson to its block | [#1956](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1956) |
+
+Shape work with no test it serves. It waits for a branch that wants the hull.
 
 **Skills for the agent loop**
 

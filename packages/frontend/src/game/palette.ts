@@ -428,10 +428,11 @@ const PROTANOPIA: Palette = {
  * Nearly the inverse of the two above: this deficiency confuses blue with green
  * and yellow with pink while leaving the red-green axis intact, so crimson and
  * algae teal are already correct and do not move. Bathyarch's sodium lamps go
- * pale rather than saturated (a saturated amber reads pink and would collide
- * with the Directorate), and Hadron's resonance violet becomes a dark
- * instrument teal, with Resonance Crystal following it into cold cyan — the
- * resource and the faction made of it should read as the same substance.
+ * pale rather than saturated (a saturated amber reads pink, and stands under
+ * the jelly lantern's floor), and Hadron's resonance violet becomes a deep
+ * instrument blue (this eye sees the violet as a dull blue-grey, on the
+ * Consortium's cladding), with Resonance Crystal following it into a cold blue
+ * — the resource and the faction made of it should read as the same substance.
  */
 const TRITANOPIA: Palette = {
   name: 'tritanopia',
@@ -446,7 +447,7 @@ const TRITANOPIA: Palette = {
       primary: 0x1fa67a,
       accent: 0x8fe36b,
       glow: 0x8fe36b,
-      consoleAccent: 0xa0ece8,
+      consoleAccent: 0x00ffff,
     },
     [Faction.Directorate]: {
       primary: 0xa02030,
@@ -469,7 +470,7 @@ const TRITANOPIA: Palette = {
   }),
   resource: {
     [ResourceKind.Nodule]: 0xf0e0c8,
-    [ResourceKind.ResonanceCrystal]: 0x7fb8ff,
+    [ResourceKind.ResonanceCrystal]: 0x70b4fc,
   },
   fauna: 0x7a7a88,
   lantern: 0xcb68c3,

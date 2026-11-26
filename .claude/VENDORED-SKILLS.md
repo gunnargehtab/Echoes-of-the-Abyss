@@ -147,6 +147,28 @@ Why each one earns its context:
   session, and nothing in `work-issue` loads it. It costs 25 words a session;
   `grill-me` is its `/grill-me` entry point and costs none.
 
+### Why no repo-authored skill is user-invoked (#1921)
+
+The thirteen repo-authored descriptions cost 645 words a session. Eleven of them a
+session reaches on its own, sent by another skill, an agent or a `CLAUDE.md`: `dev-loop`
+by `work-issue` §5, `art-direction` by `dev-loop`, its five specialists by
+`art-direction`, `hull-intake` by `dev-loop` and `hull-designer`, `run-game` by
+`dev-loop` and `work-issue` §6, `balance-run` by the root `CLAUDE.md`. `steward` fires
+on a pull request's events. A flag would cut that reach. `work-issue` (60 words) stays
+too: `dev-loop` sends a session to its §7, and `steward` to its §4, §6 and §7. That
+leaves `roadmap-sync` (53), started by nothing but a person or its Routine, and it
+cannot take the flag yet.
+
+A session's Skill tool refuses a flagged skill, and its error forbids following the
+file "by other means" (probed with `grill-me` on 26 November 2026). The roadmap Routine's
+prompt asks the model to invoke the skill, and its fallback, reading the file, is the
+route the error forbids. A prompt that opens with `/roadmap-sync` might be expanded
+before the model sees it, but that is unverified: `create_session` refuses a prompt
+opening with `/`, and the probe Routine was not created. Whether Copilot CLI honours the
+flag was not checked either. Flag it once a fired Routine shows `/<name>` expanding, and
+rewrite the prompt to open with it in the same change. The flag also stops a plain-words
+request to update the roadmap from starting it: only a typed `/roadmap-sync` would.
+
 ### The BitmapText argument, measured
 
 This file used to say the HUD "does not yet use" `BitmapText`, which was true and
@@ -265,6 +287,31 @@ fire. What it routed to:
 So it was deleted. The four sub-skills keep their `pixijs-skills` licence, and none names
 the router. Their "Related skills" lines point at absent skills, as they always did; only
 the router's note said so, and a session that loaded a sub-skill directly never read it.
+
+### A skill-eval probe on `diagnosing-bugs` (#1919)
+
+The probe is `.claude/skill-eval/1828-diagnosing/`. It replays #1828, preflight passing a
+dependency resolved outside its range, from `1388ce41`, before the skill was vendored. The
+landed #1830 is the skill-absent arm; arm A grafted the skill onto that base:
+
+```bash
+node .claude/skill-eval/score.mjs --experiment 1828-diagnosing --selftest
+node .claude/skill-eval/score.mjs --experiment 1828-diagnosing --range 1388ce41..29fd0f29
+```
+
+Both arms: **0 blocking, 0 tell, 6 clean of 6.** Each landed a regression test and a
+dependency-free range check, and neither left a `[DEBUG-` probe.
+
+**Arm A never loaded the skill.** It ran as a subagent with `main`'s skill listing, which
+names `diagnosing-bugs`, and a bug report for a task, and made no `Skill` call. It wrote
+the fix before it ran the repro, and never watched its test fail. #1830's body reports the
+repro run before and after its fix; nothing records its test written first. The
+skill-eval README has the run and its caveats.
+
+**Decision:** keep `diagnosing-bugs`, as #1086 kept `pixijs-scene-graphics` after one
+arm that never loaded it. Its description costs about 20 words a session. A second bug
+task whose session has it listed and never loads it makes dropping it the honest call.
+That task should hand over a symptom alone: #1828's report named the faulty file.
 
 ## Rules
 

@@ -693,7 +693,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
     {
       id: 'crossing',
       text: "The line above Kell is closed and we don't have the paper they want.",
-      gloss: 'Get at least 1 Harvester across the closed line to the Holdfast Gate.',
+      gloss: 'Get at least 1 Harvester across the corridor, the closed line, to the Holdfast Gate.',
       initial: ObjectiveStatus.Pending,
       markerId: 'crossing',
       // The floor of §8's Results table — "Some of the column: one to five" —

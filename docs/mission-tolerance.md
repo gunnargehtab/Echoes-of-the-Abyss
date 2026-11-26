@@ -304,7 +304,8 @@ resources, not balanced, resolved by mission id and nothing else ([maps.md](maps
 
 **Named on the chart** (#1617). *The casting yard*, *The root aperture* and *Sector Vayle's frame*
 are printed with their markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md)
-§10.5).
+§10.5). *The casting yard*'s ring is 250 m on the yard's centre at 2000, 1000, the widest circle
+the Works Yard's 500 m depth holds, so every point of it is water the pour runs in (#1923).
 
 ---
 

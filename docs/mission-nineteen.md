@@ -782,7 +782,7 @@ formality:
 The intervals row also carries this plain operational gloss under
 [ui-ux.md](ui-ux.md) §10.5, without replacing the Order's reading:
 
-> At 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.
+> Over the Rest, at 1,750 m, use each mark's assigned hull within 400 m horizontally and hold its tone bow-on for 20 s at SIG 80; an interrupted tone restarts.
 
 The depth is the briefing's recommended working depth, not an additional sounding
 predicate (§4): the sounding measures horizontal range, facing and an uninterrupted
