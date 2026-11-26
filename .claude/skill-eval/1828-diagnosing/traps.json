@@ -48,11 +48,11 @@
       "group": "criterion",
       "severity": "required",
       "direction": "mustAppear",
-      "pattern": "\\bversion\\b",
+      "pattern": "\\bversion\\b.*\\b(readJson|JSON\\.parse|readFileSync)\\b|\\b(readJson|JSON\\.parse|readFileSync)\\b.*\\.version\\b",
       "scope": [
         "tools/"
       ],
-      "why": "Criterion 1, as a backstop. Presence cannot tell r169 from r187; only the resolved package.json's version can. The pattern is the bare word, because the landed fix destructures `({ version } = readJson(found))` and a `.version` pattern failed it. The repro itself, re-run on the arm's tree, is the real check."
+      "why": "Criterion 1, as a backstop. Presence cannot tell r169 from r187; only the resolved package.json's version can, so the trap asks for a version read off a parsed manifest on one line. Both arms destructure it, `{ version } = readJson(found)`, which a `.version` pattern missed; the bare word passed on a comment. The repro, re-run on the arm's tree, is the real check."
     },
     {
       "id": "test-in-a-gate",

@@ -31,7 +31,7 @@ new experiment id rather than reusing one whose branches you still want.
 | `lobby-callbacks` | `c` | neither, version guard in the prompt |
 | `lobby-callbacks-v2` | `a` | skill and guard, no version guard anywhere |
 | `lobby-callbacks-v2` | `c` | no guard of any kind |
-| `1828-diagnosing` | `a` | `diagnosing-bugs` grafted onto the base; never pushed, so this diff is the whole record |
+| `1828-diagnosing` | `a` | a subagent with `main`'s skill listing and `CLAUDE.md`, over the base's files; never pushed, so this diff is the whole record |
 
 `627` arm `a` has no diff: it was never run. #687 stands in for that cell, and is on `main`.
 

@@ -315,8 +315,10 @@ and one command, the tight loop the skill's Phase 1 asks for. Passed over:
 - #1301: fixed across two pull requests, #1302 and #1399.
 - #1558: a frame judged by eye, and its report's "Where" is the clamp that was fixed.
 
-`PROMPT.md` inlines the report's three sections and drops its "Additional context", which
-proposed the fix. A diagnosis probe handed the fix measures copying.
+`PROMPT.md` quotes the report's first three sections, with three trims. It drops
+"Additional context", which proposed the fix: a diagnosis probe handed the fix measures
+copying. It also drops "since #1805" and "(found in #1826)", which point at history an arm
+could read for the answer.
 
 ### The arms
 
@@ -328,16 +330,22 @@ A graft arm reads `docs:claude` red for reasons of its own. `check.mjs` at the b
 no `diagnosing-bugs`, and `VENDORED-SKILLS.md` names experiment paths the strip removed.
 Grade such an arm on the other eleven gates.
 
-**Arm A ran as a subagent, not a session.** This session could not start one. It got
-`PROMPT.md` verbatim behind three sentences naming its worktree. Its transcript shows
-`diagnosing-bugs` in its skill listing, so the treatment reached it.
+**Arm A ran as a subagent, not a session, so the graft shaped none of its context.** This
+session could not start a fresh one. A subagent takes its skill listing and `CLAUDE.md`
+from the parent's checkout, which was `main`. So arm A saw `diagnosing-bugs` listed
+because `main` has it, beside `grilling` and `writing-for-agents`, which the base lacks.
+It worked the base's files under `main`'s instructions. It got `PROMPT.md` verbatim behind
+three sentences naming its worktree.
 
 ### Run of 2026-11-26
 
-| Arm | Skill loaded | Traps | Gates | Red before the fix | Output tokens |
+| Arm | Skill loaded | Traps | Gates | Repro before the fix | Output tokens |
 | --- | --- | --- | --- | --- | --- |
 | landed #1830, no skill on disk | — | 0 of 6 tripped | CI green | yes, per its body | not comparable |
-| A, skill grafted | **no** | 0 of 6 tripped | 11 of 12, `docs:claude` from the graft | **no** | 45,409 |
+| A, skill listed | **no** | 0 of 6 tripped | 11 of 12, `docs:claude` from the graft | **no** | 21,329 |
+
+Arm A's figure counts each message once, with 2.10M cache reads. Its transcript writes one
+line per content block, and each line repeats its message's usage.
 
 **The skill never fired.** Arm A made no `Skill` call and read no file under
 `.claude/skills/diagnosing-bugs`. A bug report stating a symptom and its steps is the
@@ -346,10 +354,11 @@ skill's own trigger, "reports something broken", and the arm passed it by.
 **So nothing it teaches showed up.** Arm A read the preflight, checked the two installed
 versions, and wrote the fix at its sixth tool call. It ran the issue's repro once, after
 the fix, and its seven tests were never watched failing. Phase 1's red loop and Phase 5's
-test-before-fix are both absent. The landed arm had them, and it had no skill: it ran
-under `dev-loop`, which demands a fix's red run.
+test-before-fix are both absent. #1830's body reports the repro passing before the fix and
+failing after it. Nothing records its test written first or watched failing.
 
-Re-run here, arm A's gates pass bar that one, and the repro fails then passes on its tree.
+Re-run here, arm A's gates pass bar `docs:claude`, and the repro fails then passes on its
+tree.
 
 Both fixes read the resolved copy's version against the declared range, with a range
 reader of their own and no `semver` dependency. Arm A's reader is larger, taking `~`,
@@ -357,9 +366,11 @@ x-ranges and `||`, and puts it inside `preflight-deps.mjs`. `arms/a.diff` is the
 
 ### What this does and does not establish
 
-One run, under a neutral prompt, without the Routine's framing. The red-first gap belongs to
-`dev-loop`, not to the skill, since the skill never loaded. What it does show is that the
-description did not fire on the task it names. #1086's session read the same of
+One run, without the Routine's framing. The prompt says "Implement the change described
+below", and the report names the faulty file and its mechanism, "the presence walk". That
+is weak pressure toward a skill for hard bugs, and it bears on the drop trigger in
+`VENDORED-SKILLS.md`: the next probe should hand over a symptom alone. What it does show
+is that the description did not fire on a bug report. #1086's session read the same of
 `pixijs-scene-graphics` on a Graphics task.
 
 ## What this cannot tell you

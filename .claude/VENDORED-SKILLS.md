@@ -280,14 +280,16 @@ node .claude/skill-eval/score.mjs --experiment 1828-diagnosing --range 1388ce41.
 Both arms: **0 blocking, 0 tell, 6 clean of 6.** Each landed a regression test and a
 dependency-free range check, and neither left a `[DEBUG-` probe.
 
-**Arm A never loaded the skill.** It had `diagnosing-bugs` in its listing and a bug
-report for a task, and made no `Skill` call. It wrote the fix before it ran the repro,
-and never watched its test fail. The landed arm, with no skill, ran red first because
-`dev-loop` requires it. The skill-eval README has the run.
+**Arm A never loaded the skill.** It ran as a subagent with `main`'s skill listing, which
+names `diagnosing-bugs`, and a bug report for a task, and made no `Skill` call. It wrote
+the fix before it ran the repro, and never watched its test fail. #1830's body reports the
+repro run before and after its fix; nothing records its test written first. The
+skill-eval README has the run and its caveats.
 
 **Decision:** keep `diagnosing-bugs`, as #1086 kept `pixijs-scene-graphics` after one
 arm that never loaded it. Its description costs about 20 words a session. A second bug
 task whose session has it listed and never loads it makes dropping it the honest call.
+That task should hand over a symptom alone: #1828's report named the faulty file.
 
 ## Rules
 

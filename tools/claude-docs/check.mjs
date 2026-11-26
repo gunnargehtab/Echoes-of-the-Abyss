@@ -186,7 +186,7 @@ const DECLARED_ABSENT = new Map([
   ],
   [
     'packages/frontend/node_modules/three',
-    "The 1828-diagnosing probe's PROMPT.md quotes #1828's report verbatim, and the report names the install directory whose absence was the bug. An arm ran on that text, so it cannot be reworded.",
+    "The 1828-diagnosing probe's PROMPT.md quotes #1828's report, which names the install directory whose absence was the bug. An arm ran on that text, so it cannot be reworded.",
   ],
 ]);
 
