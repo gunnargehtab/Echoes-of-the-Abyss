@@ -266,6 +266,29 @@ So it was deleted. The four sub-skills keep their `pixijs-skills` licence, and n
 the router. Their "Related skills" lines point at absent skills, as they always did; only
 the router's note said so, and a session that loaded a sub-skill directly never read it.
 
+### A skill-eval probe on `diagnosing-bugs` (#1919)
+
+The probe is `.claude/skill-eval/1828-diagnosing/`. It replays #1828, preflight passing a
+dependency resolved outside its range, from `1388ce41`, before the skill was vendored. The
+landed #1830 is the skill-absent arm; arm A grafted the skill onto that base:
+
+```bash
+node .claude/skill-eval/score.mjs --experiment 1828-diagnosing --selftest
+node .claude/skill-eval/score.mjs --experiment 1828-diagnosing --range 1388ce41..29fd0f29
+```
+
+Both arms: **0 blocking, 0 tell, 6 clean of 6.** Each landed a regression test and a
+dependency-free range check, and neither left a `[DEBUG-` probe.
+
+**Arm A never loaded the skill.** It had `diagnosing-bugs` in its listing and a bug
+report for a task, and made no `Skill` call. It wrote the fix before it ran the repro,
+and never watched its test fail. The landed arm, with no skill, ran red first because
+`dev-loop` requires it. The skill-eval README has the run.
+
+**Decision:** keep `diagnosing-bugs`, as #1086 kept `pixijs-scene-graphics` after one
+arm that never loaded it. Its description costs about 20 words a session. A second bug
+task whose session has it listed and never loads it makes dropping it the honest call.
+
 ## Rules
 
 - **Do not edit a vendored skill.** Four exceptions exist, each marked `LOCAL`

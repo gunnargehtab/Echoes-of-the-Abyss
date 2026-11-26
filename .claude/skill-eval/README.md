@@ -297,6 +297,69 @@ assumption that it helps.
 Since #962 this repository is that project. These readings priced the skill as a guard
 against drift; none has measured it as the 0.18 reference `VENDORED-SKILLS.md` now keeps.
 
+## Experiment `1828-diagnosing`
+
+Does the vendored `diagnosing-bugs` skill (#1917) change how a bug gets fixed? It replays
+[#1828](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1828): `npm run
+preflight` passed while the client served three r169, because the root's tools pin
+satisfied a presence walk the frontend's own copy should have.
+
+### The pick
+
+#1919 asked for a closed `bug` fixed in one pull request, whose cause was not in the first
+file its report names. #1828's report names `packages/frontend/package.json` first; the
+cause was `tools/preflight-deps.mjs`, fixed in #1830 alone. It also reproduces in one `mv`
+and one command, the tight loop the skill's Phase 1 asks for. Passed over:
+
+- #1032, #1218, #1308, #1322, #1953: each report names the faulty file first.
+- #1301: fixed across two pull requests, #1302 and #1399.
+- #1558: a frame judged by eye, and its report's "Where" is the clamp that was fixed.
+
+`PROMPT.md` inlines the report's three sections and drops its "Additional context", which
+proposed the fix. A diagnosis probe handed the fix measures copying.
+
+### The arms
+
+`traps.json` sets `"graft": true`. The base, `1388ce41`, predates the skill, so the landed
+#1830 is the skill-absent arm, as #687 was for `627`. `prepare-arm.sh` arm `a` grafts
+`.claude/skills/diagnosing-bugs` from `main` onto that base. `NO_PUSH=1` cut it locally.
+
+A graft arm reads `docs:claude` red for reasons of its own. `check.mjs` at the base lists
+no `diagnosing-bugs`, and `VENDORED-SKILLS.md` names experiment paths the strip removed.
+Grade such an arm on the other eleven gates.
+
+**Arm A ran as a subagent, not a session.** This session could not start one. It got
+`PROMPT.md` verbatim behind three sentences naming its worktree. Its transcript shows
+`diagnosing-bugs` in its skill listing, so the treatment reached it.
+
+### Run of 2026-11-26
+
+| Arm | Skill loaded | Traps | Gates | Red before the fix | Output tokens |
+| --- | --- | --- | --- | --- | --- |
+| landed #1830, no skill on disk | — | 0 of 6 tripped | CI green | yes, per its body | not comparable |
+| A, skill grafted | **no** | 0 of 6 tripped | GATES_A | **no** | 45,409 |
+
+**The skill never fired.** Arm A made no `Skill` call and read no file under
+`.claude/skills/diagnosing-bugs`. A bug report stating a symptom and its steps is the
+skill's own trigger, "reports something broken", and the arm passed it by.
+
+**So nothing it teaches showed up.** Arm A read the preflight, checked the two installed
+versions, and wrote the fix at its sixth tool call. It ran the issue's repro once, after
+the fix, and its seven tests were never watched failing. Phase 1's red loop and Phase 5's
+test-before-fix are both absent. The landed arm had them, and it had no skill: it ran
+under `dev-loop`, which demands a fix's red run.
+
+Both fixes read the resolved copy's version against the declared range, with a range
+reader of their own and no `semver` dependency. Arm A's reader is larger, taking `~`,
+x-ranges and `||`, and puts it inside `preflight-deps.mjs`. `arms/a.diff` is the code.
+
+### What this does and does not establish
+
+One run, under a neutral prompt, without the Routine's framing. The red-first gap belongs to
+`dev-loop`, not to the skill, since the skill never loaded. What it does show is that the
+description did not fire on the task it names. #1086's session read the same of
+`pixijs-scene-graphics` on a Graphics task.
+
 ## What this cannot tell you
 
 One issue per arm is a sample of one, and the same prompt run twice does not produce

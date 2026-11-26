@@ -31,8 +31,12 @@ new experiment id rather than reusing one whose branches you still want.
 | `lobby-callbacks` | `c` | neither, version guard in the prompt |
 | `lobby-callbacks-v2` | `a` | skill and guard, no version guard anywhere |
 | `lobby-callbacks-v2` | `c` | no guard of any kind |
+| `1828-diagnosing` | `a` | `diagnosing-bugs` grafted onto the base; never pushed, so this diff is the whole record |
 
 `627` arm `a` has no diff: it was never run. #687 stands in for that cell, and is on `main`.
+
+`1828-diagnosing` arm `a` touched no `packages/` file, so its diff covers `tools/`, `package.json` and
+the two docs it edited. Its skill-absent arm is #1830, on `main`.
 
 ## One of these was real work, and it has now landed
 
