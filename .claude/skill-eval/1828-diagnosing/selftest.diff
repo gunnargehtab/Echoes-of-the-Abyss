@@ -1,0 +1,11 @@
+diff --git a/tools/preflight-deps.mjs b/tools/preflight-deps.mjs
+--- a/tools/preflight-deps.mjs
++++ b/tools/preflight-deps.mjs
+@@ -70,1 +70,2 @@
++    console.error('[DEBUG-a4f2] walk', name, dir);
++// see scripts/hitl-loop.template.sh
+diff --git a/package.json b/package.json
+--- a/package.json
++++ b/package.json
+@@ -40,1 +40,1 @@
++    "semver": "^7.6.0",

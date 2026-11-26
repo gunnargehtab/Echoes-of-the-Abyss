@@ -5,6 +5,14 @@
 #   .claude/skill-eval/prepare-arm.sh 627 b     # skill removed  (control)
 #   .claude/skill-eval/prepare-arm.sh 627 c     # skill and the prose guard removed
 #
+# An experiment whose traps.json sets `"graft": true` replays a fix landed
+# before its skill was vendored, so its base has no copy to remove. Arm a grafts
+# the skill named by `"skill"` onto the base from SKILL_FROM (origin/main by
+# default); arm b is the base as it stands, which the landed fix already ran.
+#
+# NO_PUSH=1 cuts the arm locally and skips the push, for an arm run in this
+# container rather than in a session started on the pushed branch.
+#
 # Cut every arm of one experiment from the same base, or they are not
 # comparable. The default base is origin/main, so cut them together rather than
 # days apart.
@@ -16,6 +24,17 @@ BASE="${3:-origin/main}"
 BRANCH="skill-eval/${EXP}-arm-${ARM}"
 
 case "$ARM" in a|b|c) ;; *) echo "unknown arm: $ARM" >&2; exit 1 ;; esac
+
+# Read the experiment's shape now: the checkout below takes its traps.json away.
+TRAPS=".claude/skill-eval/${EXP}/traps.json"
+[ -f "$TRAPS" ] || { echo "refusing: no ${TRAPS}" >&2; exit 1; }
+GRAFT_SKILL="$(node -e 'const s = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+  if (s.graft) process.stdout.write(String(s.skill ?? ""));' "$TRAPS")"
+SKILL_FROM="${SKILL_FROM:-origin/main}"
+if [ -n "$GRAFT_SKILL" ] && [ "$ARM" = c ]; then
+  echo "refusing: a graft experiment has arms a and b only" >&2
+  exit 1
+fi
 
 # The arm branch does not carry this script, so the checkout below deletes it
 # out from under the shell that is running it. Bash has already read the file so
@@ -54,6 +73,27 @@ git checkout -q -B "$BRANCH" "$BASE"
 if [ -e .claude/skill-eval ]; then
   git rm -rq .claude/skill-eval
   git commit -qm "eval(${EXP}): arm ${ARM} — the arm does not carry its own answer key"
+fi
+
+if [ -n "$GRAFT_SKILL" ]; then
+  # A skill already at the base means the landed fix ran with it, so the
+  # landed range is not the skill-absent arm this mode assumes.
+  [ ! -e "$GRAFT_SKILL" ] || { echo "refusing: ${GRAFT_SKILL} is already at the base" >&2; exit 1; }
+  if [ "$ARM" = a ]; then
+    git fetch -q origin "${SKILL_FROM#origin/}" 2>/dev/null || true
+    git checkout -q "$SKILL_FROM" -- "$GRAFT_SKILL"
+    git commit -qm "eval(${EXP}): arm a — ${GRAFT_SKILL} grafted from ${SKILL_FROM}"
+  fi
+  KEY="$([ -e .claude/skill-eval ] && echo present || echo absent)"
+  SKILL="$([ -d "$GRAFT_SKILL" ] && echo present || echo absent)"
+  WANT_SKILL="$([ "$ARM" = a ] && echo present || echo absent)"
+  [ "$KEY" = absent ] || { echo "refusing to push: the arm carries traps.json" >&2; exit 1; }
+  [ "$SKILL" = "$WANT_SKILL" ] || { echo "refusing to push: skill $SKILL, wanted $WANT_SKILL" >&2; exit 1; }
+  [ "${NO_PUSH:-0}" = 1 ] || git push -q -u origin "$BRANCH" --force-with-lease
+  echo "arm ${ARM} ready: ${BRANCH}  (base $(git rev-parse --short "$BASE"))"
+  echo "  answer key:  ${KEY}"
+  echo "  ${GRAFT_SKILL}: ${SKILL}"
+  exit 0
 fi
 
 if [ "$ARM" != a ]; then
@@ -98,7 +138,7 @@ esac
 [ "$SKILL" = "$WANT_SKILL" ] || { echo "refusing to push: skill $SKILL, wanted $WANT_SKILL" >&2; exit 1; }
 [ "$GUARD" = "$WANT_GUARD" ] || { echo "refusing to push: guard $GUARD, wanted $WANT_GUARD" >&2; exit 1; }
 
-git push -q -u origin "$BRANCH" --force-with-lease
+[ "${NO_PUSH:-0}" = 1 ] || git push -q -u origin "$BRANCH" --force-with-lease
 
 echo "arm ${ARM} ready: ${BRANCH}  (base $(git rev-parse --short "$BASE"))"
 echo "  answer key:      ${KEY}"
