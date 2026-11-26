@@ -488,10 +488,12 @@ export class Match {
   private readonly recorder: ReplayRecorder | null;
   readonly seed: number;
   /**
-   * What this match's handles are keyed by, and deliberately not the seed: a
-   * 32-bit seed fit a known-plaintext search from a client's own handles
-   * (docs/threat-model.md TM-001). It never crosses the wire, and the replay
-   * records it beside the seed.
+   * What this match's handles are keyed by. Drawn at random when the match
+   * draws its own seed, as every live room's does, because a 32-bit seed fit a
+   * known-plaintext search from a client's own handles (docs/threat-model.md
+   * TM-001). A match given a seed derives it from that seed instead, since a
+   * named seed is no secret (`handleKeyForSeed`). It never crosses the wire,
+   * and the replay records it beside the seed.
    */
   readonly handleKey: string;
 

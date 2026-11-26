@@ -430,8 +430,8 @@ export class EchoLayer {
   private readonly nextHandle = new Map<number, number>();
   /**
    * What turns a slot's counter into the handles it is published under: a
-   * permutation keyed by the match's own 128-bit secret, never by its seed
-   * (#1959, `handleKey.ts`).
+   * permutation under `Match.handleKey`, which a live match draws at random
+   * rather than from its seed (#1959, `handleKey.ts`).
    */
   private readonly handleCipher: HandleCipher;
   /** Handle order, which is the order a slot's contacts are published in. */

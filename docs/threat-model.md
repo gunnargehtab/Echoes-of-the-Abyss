@@ -243,10 +243,13 @@ Measured on `main` at `6c70fa1e`, in this repository's container, with 4 cores.
 Each high-ranked abuse path is its own `finding` issue, and fixes land in their own pull
 requests: TM-001 in #1959, TM-002 in #1960 and TM-003 in #1961.
 
-TM-001's handle half is fixed. Contact and mark handles are keyed by a 128-bit secret
-drawn per match from `crypto.randomBytes`, held server-side, recorded in the replay, and
-never the seed (`packages/backend/src/sim/handleKey.ts`, #1959). The tables above still
-describe `6c70fa1e`. The seed still keys `scatterLie` and the phantom dice; whether
+TM-001's handle half is fixed (#1959, `packages/backend/src/sim/handleKey.ts`). A match
+that draws its own seed, as every live room does, keys its contact and mark handles by a
+128-bit secret from `crypto.randomBytes`, held server-side and recorded in the replay. A
+match given a seed, as the balance harness and the tests give one, derives its key from
+that seed. This is a deliberate exception to the mitigation column: a named seed is no
+secret, and a seeded run has to come back with the same handles. `matchRoom.test.ts`
+fails if a room ever names a seed. The tables above still describe `6c70fa1e`. The seed still keys `scatterLie` and the phantom dice; whether
 another channel leaks it is not yet checked.
 
 ## Quality check

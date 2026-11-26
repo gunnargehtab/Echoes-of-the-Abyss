@@ -556,7 +556,7 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
         'inside the reveal, as the reveal is reported'
       );
     }
-    // One counter issues them all, and `contactHandle` is a permutation of it,
+    // One counter issues them all, and `HandleCipher.contact` permutes it,
     // so distinctness is a property of the construction rather than luck. What
     // the counter must *not* publish is its order — held below.
     const handles = match.echo

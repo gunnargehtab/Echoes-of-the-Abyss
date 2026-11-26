@@ -11,9 +11,11 @@
  * It used to be the 32-bit match seed. That fits a known-plaintext search: a
  * client's first handles are minted at small indices, so the one seed under
  * which eight held handles all invert below 64 is the true seed, and all 2^32
- * took about 80 s of one core (docs/threat-model.md TM-001). The key is now
- * its own 128 bits, and the round function is AES under it rather than an
- * integer mix, so a search has to guess the key rather than a seed.
+ * took about 80 s of one core (docs/threat-model.md TM-001). A live match's
+ * key is now 128 random bits of its own, and the round function is AES under
+ * it rather than an integer mix, so a search has to guess the key rather than
+ * a seed. Only a match somebody named a seed for derives its key from it
+ * (`handleKeyForSeed`).
  *
  * Server-only, and deliberately not in `@echoes/shared`: `node:crypto` does not
  * exist in the client, and nothing in the client mints or inverts a handle.
