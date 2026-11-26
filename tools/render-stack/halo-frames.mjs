@@ -138,11 +138,7 @@ function install() {
           edge++;
         }
       }
-      return {
-        wholeLampPixels: whole,
-        unchangedShare: whole === 0 ? null : same / whole,
-        edgePixels: edge,
-      };
+      return { wholeLampPixels: whole, unchangedShare: whole === 0 ? null : same / whole, edgePixels: edge };
     },
     /**
      * The halo's light and the pixels it lifts past 10 % luma, whole frame,
@@ -154,20 +150,11 @@ function install() {
       let lifted = 0;
       let peak = 0;
       for (let i = 0; i < after.length; i += 4) {
-        if (
-          after[i] === before[i] &&
-          after[i + 1] === before[i + 1] &&
-          after[i + 2] === before[i + 2]
-        )
+        if (after[i] === before[i] && after[i + 1] === before[i + 1] && after[i + 2] === before[i + 2])
           continue;
         light += rel(after, i) - rel(before, i);
         if (luma(before, i) < 0.1 && luma(after, i) >= 0.1) lifted++;
-        peak = Math.max(
-          peak,
-          after[i] - before[i],
-          after[i + 1] - before[i + 1],
-          after[i + 2] - before[i + 2]
-        );
+        peak = Math.max(peak, after[i] - before[i], after[i + 1] - before[i + 1], after[i + 2] - before[i + 2]);
       }
       return { light, lifted, peak };
     },
@@ -273,11 +260,7 @@ function collarCores({ withHud, water }, entities, dpr, tolerance = 28) {
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4;
-      const moved = Math.max(
-        Math.abs(a[i] - b[i]),
-        Math.abs(a[i + 1] - b[i + 1]),
-        Math.abs(a[i + 2] - b[i + 2])
-      );
+      const moved = Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2]));
       if (moved < 24) continue;
       let best = -1;
       let bestD = Infinity;
@@ -347,14 +330,7 @@ function strokeOf(pixels, e, dpr, w, off) {
 /** The least-squares circle through points (Kåsa), or null if they are degenerate. */
 function fitCircle(pts) {
   // Solve [Sxx Sxy Sx; Sxy Syy Sy; Sx Sy n]·[D E F] = −[Sxz Syz Sz], z = x² + y².
-  let sxx = 0,
-    sxy = 0,
-    syy = 0,
-    sx = 0,
-    sy = 0,
-    sxz = 0,
-    syz = 0,
-    sz = 0;
+  let sxx = 0, sxy = 0, syy = 0, sx = 0, sy = 0, sxz = 0, syz = 0, sz = 0;
   for (const [x, y] of pts) {
     const z = x * x + y * y;
     sxx += x * x;
@@ -437,23 +413,12 @@ function alignCores(cores, from, to, entities) {
           if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
           const i = (yy * w + xx) * 4;
           const inked =
-            Math.max(
-              Math.abs(a[i] - ink[0]),
-              Math.abs(a[i + 1] - ink[1]),
-              Math.abs(a[i + 2] - ink[2])
-            ) <= 28;
+            Math.max(Math.abs(a[i] - ink[0]), Math.abs(a[i + 1] - ink[1]), Math.abs(a[i + 2] - ink[2])) <= 28;
           const drawn =
-            Math.max(
-              Math.abs(a[i] - b[i]),
-              Math.abs(a[i + 1] - b[i + 1]),
-              Math.abs(a[i + 2] - b[i + 2])
-            ) >= 24;
+            Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])) >= 24;
           if (inked && drawn) hits++;
         }
-        if (
-          hits > bestHits ||
-          (hits === bestHits && Math.abs(dx) + Math.abs(dy) < Math.abs(best[0]) + Math.abs(best[1]))
-        ) {
+        if (hits > bestHits || (hits === bestHits && Math.abs(dx) + Math.abs(dy) < Math.abs(best[0]) + Math.abs(best[1]))) {
           bestHits = hits;
           best = [dx, dy];
         }
@@ -519,15 +484,13 @@ function coresIn(cores, from, to, entities, dpr) {
 async function collarOverPing(page, key, dpr, haloOn, shoot = null) {
   const loud = () =>
     page.evaluate(
-      (key) =>
-        (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+      (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
       key
     );
   await page.keyboard.press('KeyP');
   const pinged = await page
     .waitForFunction(
-      (key) =>
-        (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+      (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
       key,
       { timeout: 3000 }
     )
@@ -565,8 +528,7 @@ async function collarOverPing(page, key, dpr, haloOn, shoot = null) {
 /** Whether a unit's live SIG reads a ping (90 or more). */
 const pinging = (page, key) =>
   page.evaluate(
-    (key) =>
-      (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+    (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
     key
   );
 
@@ -593,8 +555,7 @@ async function collarAlongRoute(page, key, dpr, n) {
     await page.keyboard.press('KeyP');
     const pinged = await page
       .waitForFunction(
-        (key) =>
-          (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
+        (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
         key,
         { timeout: 3000 }
       )
@@ -652,11 +613,7 @@ async function ownEntities(page) {
 async function camera(page, centre, [, distance, pitchDeg]) {
   await page.evaluate(
     ({ centre, distance, pitchDeg }) =>
-      window.__perspectiveCamera(centre.x, centre.z, distance, {
-        yawDeg: 0,
-        pitchDeg,
-        focusDepthM: null,
-      }),
+      window.__perspectiveCamera(centre.x, centre.z, distance, { yawDeg: 0, pitchDeg, focusDepthM: null }),
     { centre, distance, pitchDeg }
   );
   await page.waitForTimeout(SETTLE_MS);
@@ -669,9 +626,7 @@ async function camera(page, centre, [, distance, pitchDeg]) {
 async function take(page, name, only = null) {
   await page.evaluate((only) => window.__perspectiveHaloOnly(only), only);
   // A frame for the stencil marks to follow the switch, then the capture.
-  await page.evaluate(
-    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-  );
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
   const frame = await page.evaluate((name) => window.__haloRead.take(name), name);
   const sites = await page.evaluate(() => window.__perspectiveProbe().haloSites);
   await page.evaluate(() => window.__perspectiveHaloOnly(null));
@@ -737,14 +692,7 @@ function ridgeSpot({ x, z, depthM }) {
           over = Math.max(over, ground - (ey + (hullY - ey) * f));
         }
         if (over > 8 && (best === null || over > best.overM))
-          best = {
-            xM: px,
-            zM: pz,
-            awayM: Math.round(away),
-            yawDeg,
-            distance,
-            overM: Math.round(over),
-          };
+          best = { xM: px, zM: pz, awayM: Math.round(away), yawDeg, distance, overM: Math.round(over) };
       }
     }
     if (best !== null) return { searched, best };
@@ -872,12 +820,8 @@ export default async ({ page, shot }) => {
       await take(page, 'ping:all');
       await take(page, 'ping:one', u.key);
       const ping = await page.evaluate(() => window.__haloRead.light('ping:one'));
-      const flashOn = await page.evaluate(() =>
-        window.__haloRead.flash('rest:all', 'ping:all', 'after')
-      );
-      const flashOff = await page.evaluate(() =>
-        window.__haloRead.flash('rest:all', 'ping:all', 'before')
-      );
+      const flashOn = await page.evaluate(() => window.__haloRead.flash('rest:all', 'ping:all', 'after'));
+      const flashOff = await page.evaluate(() => window.__haloRead.flash('rest:all', 'ping:all', 'before'));
       const entities = await ownEntities(page);
       // With the halo off beside it: what the ping's own marks cost the collar.
       const atPing = await collars(page, entities, dpr);
@@ -890,19 +834,10 @@ export default async ({ page, shot }) => {
         name: u.name,
         restSig,
         pinged: true,
-        liftedCssPx: {
-          rest: round(rest.lifted / dpr ** 2, 1),
-          ping: round(ping.lifted / dpr ** 2, 1),
-        },
+        liftedCssPx: { rest: round(rest.lifted / dpr ** 2, 1), ping: round(ping.lifted / dpr ** 2, 1) },
         liftRatio: rest.lifted === 0 ? null : round(ping.lifted / rest.lifted, 2),
-        flashWithHalo: {
-          frame: round(flashOn.frameShare),
-          window: round(flashOn.worstWindowShare),
-        },
-        flashWithoutHalo: {
-          frame: round(flashOff.frameShare),
-          window: round(flashOff.worstWindowShare),
-        },
+        flashWithHalo: { frame: round(flashOn.frameShare), window: round(flashOn.worstWindowShare) },
+        flashWithoutHalo: { frame: round(flashOff.frameShare), window: round(flashOff.worstWindowShare) },
         collarAtPing: collarPing ?? null,
         collarAtPingHaloOff: collarPingOff ?? null,
       };
@@ -918,9 +853,7 @@ export default async ({ page, shot }) => {
         // A ping holds SIG 95 for 3 s; each read starts from rest.
         await page.waitForTimeout(4000);
         reading.collarOverPing.push(
-          await collarOverPing(page, u.key, dpr, haloOn, () =>
-            shotAt(`ping-${slug(u.name)}-still-${haloOn ? 'on' : 'off'}`)
-          )
+          await collarOverPing(page, u.key, dpr, haloOn, () => shotAt(`ping-${slug(u.name)}-still-${haloOn ? 'on' : 'off'}`))
         );
       }
       pings.push(reading);
@@ -957,8 +890,7 @@ export default async ({ page, shot }) => {
       const working = await page
         .waitForFunction(
           (key) =>
-            window.__perspectiveLamps().structures.find((x) => `structure:${x.id}` === key)?.sig >=
-            50,
+            window.__perspectiveLamps().structures.find((x) => `structure:${x.id}` === key)?.sig >= 50,
           foundry.key,
           { timeout: 5000 }
         )
@@ -975,12 +907,7 @@ export default async ({ page, shot }) => {
         await page.evaluate(() => window.__perspectiveHalo(true));
         await page.waitForTimeout(400);
       } else {
-        structures.push({
-          key: foundry.key,
-          name: foundry.name,
-          state: 'working',
-          produced: false,
-        });
+        structures.push({ key: foundry.key, name: foundry.name, state: 'working', produced: false });
       }
     }
     await page.evaluate(() => window.__haloRead.drop());
@@ -1010,12 +937,7 @@ export default async ({ page, shot }) => {
       // From overhead the spot is the canvas's centre, and a right click
       // there is a move order to it.
       await page.evaluate(
-        (s) =>
-          window.__perspectiveCamera(s.xM, s.zM, 2500, {
-            yawDeg: 0,
-            pitchDeg: 88,
-            focusDepthM: null,
-          }),
+        (s) => window.__perspectiveCamera(s.xM, s.zM, 2500, { yawDeg: 0, pitchDeg: 88, focusDepthM: null }),
         spot
       );
       await page.waitForTimeout(SETTLE_MS);
@@ -1037,11 +959,7 @@ export default async ({ page, shot }) => {
         await page.evaluate(
           ({ key, s, pitchDeg }) => {
             const u = window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key);
-            window.__perspectiveCamera(u.xM, u.zM, s.distance, {
-              yawDeg: s.yawDeg,
-              pitchDeg,
-              focusDepthM: null,
-            });
+            window.__perspectiveCamera(u.xM, u.zM, s.distance, { yawDeg: s.yawDeg, pitchDeg, focusDepthM: null });
           },
           { key: scout.key, s: spot, pitchDeg }
         );
@@ -1058,9 +976,7 @@ export default async ({ page, shot }) => {
         await page.keyboard.press('KeyP');
         await page
           .waitForFunction(
-            (key) =>
-              (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >=
-              90,
+            (key) => (window.__perspectiveLamps().units.find((x) => `unit:${x.id}` === key)?.sig ?? 0) >= 90,
             scout.key,
             { timeout: 3000 }
           )

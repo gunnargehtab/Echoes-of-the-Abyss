@@ -20,13 +20,8 @@ import { gzipSync } from 'node:zlib';
 const models = resolve(dirname(fileURLToPath(import.meta.url)), '../../docs/concept-art/models');
 const names = readdirSync(models).filter((name) => name.endsWith('.glb'));
 const result = {
-  models: names.length,
-  rawBytes: 0,
-  gzipBytes: 0,
-  primitives: 0,
-  primitivesWithUV0: 0,
-  materialsWithAO: 0,
-  primitivesWithZeroUV0: 0,
+  models: names.length, rawBytes: 0, gzipBytes: 0,
+  primitives: 0, primitivesWithUV0: 0, materialsWithAO: 0, primitivesWithZeroUV0: 0,
   materialsWithTrim: 0,
 };
 for (const name of names) {

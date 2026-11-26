@@ -44,7 +44,8 @@ import { inflateSync } from 'node:zlib';
 const DOC_EFOLD = 14;
 let glowCurve = null;
 const curve = (sig, rest) => Math.exp((sig - rest) / glowCurve.efold);
-const factorOf = (sig, rest) => Math.min(glowCurve.max, Math.max(glowCurve.min, curve(sig, rest)));
+const factorOf = (sig, rest) =>
+  Math.min(glowCurve.max, Math.max(glowCurve.min, curve(sig, rest)));
 
 const CLOSE_M = 500;
 const ECHO_MS = 200;
@@ -115,8 +116,7 @@ export default async ({ page, shot }) => {
       .waitForFunction(
         ({ id, want }) => {
           const u = window.__perspectiveLamps().units.find((x) => x.id === id);
-          if (want.silentRunning !== undefined && u.silentRunning !== want.silentRunning)
-            return false;
+          if (want.silentRunning !== undefined && u.silentRunning !== want.silentRunning) return false;
           if (want.engineOff !== undefined && u.engineOff !== want.engineOff) return false;
           if (want.sigAtMost !== undefined && u.sig > want.sigAtMost) return false;
           if (want.sigAtLeast !== undefined && u.sig < want.sigAtLeast) return false;
@@ -333,10 +333,7 @@ function hueSat(r, g, b) {
     else hue = 60 * ((r - g) / d + 4);
     if (hue < 0) hue += 360;
   }
-  return {
-    hueDeg: hue === null ? null : Number(hue.toFixed(1)),
-    saturation: Number((d / max).toFixed(3)),
-  };
+  return { hueDeg: hue === null ? null : Number(hue.toFixed(1)), saturation: Number((d / max).toFixed(3)) };
 }
 
 /** The ink's hue as stored (sRGB), or in linear light to set beside a sum. */
@@ -420,3 +417,4 @@ function difference(a, b, hex) {
     lampInkLinear: inkOf(hex, true),
   };
 }
+

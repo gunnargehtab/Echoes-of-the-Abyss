@@ -2,13 +2,8 @@
 <meta charset="utf-8" />
 <title>halo route cost</title>
 <style>
-  body {
-    margin: 0;
-    background: #000;
-  }
-  canvas {
-    display: block;
-  }
+  body { margin: 0; background: #000; }
+  canvas { display: block; }
 </style>
 <canvas id="c"></canvas>
 <script type="module">
@@ -32,12 +27,7 @@
   // ?stencil=1 asks the canvas for a stencil buffer, as the lamp halo's masked composite
   // does (art-direction.md, Lamp halo — SPEC); the depth copy is read both ways.
   const CANVAS_STENCIL = params.get('stencil') === '1';
-  const gl = canvas.getContext('webgl2', {
-    antialias: true,
-    depth: true,
-    stencil: CANVAS_STENCIL,
-    alpha: false,
-  });
+  const gl = canvas.getContext('webgl2', { antialias: true, depth: true, stencil: CANVAS_STENCIL, alpha: false });
   gl.getExtension('EXT_color_buffer_float');
   gl.getExtension('EXT_color_buffer_half_float');
   const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
@@ -58,10 +48,7 @@
   // ---------------------------------------------------------------- programs
   const compile = (vs, fs) => {
     const p = gl.createProgram();
-    for (const [type, src] of [
-      [gl.VERTEX_SHADER, vs],
-      [gl.FRAGMENT_SHADER, fs],
-    ]) {
+    for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) {
       const s = gl.createShader(type);
       gl.shaderSource(s, '#version 300 es\nprecision highp float;\n' + src);
       gl.compileShader(s);
@@ -72,8 +59,7 @@
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
     return p;
   };
-  const FULL =
-    'out vec2 uv; void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); uv = p; gl_Position = vec4(p*2.0-1.0, 0.0, 1.0); }';
+  const FULL = 'out vec2 uv; void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); uv = p; gl_Position = vec4(p*2.0-1.0, 0.0, 1.0); }';
   // The scene: quads at depth, lit flat. Stands in for the world's depth and fill.
   const sceneProg = compile(
     'in vec4 q; out float shade; void main(){ vec2 c[6] = vec2[6](vec2(0,0),vec2(1,0),vec2(0,1),vec2(1,0),vec2(1,1),vec2(0,1)); vec2 o = c[gl_VertexID % 6]; gl_Position = vec4(q.xy + o*q.z, q.w, 1.0); shade = 0.05 + 0.1*q.w; }',
@@ -84,10 +70,7 @@
     'in vec4 q; void main(){ vec2 c[6] = vec2[6](vec2(-1,-1),vec2(1,-1),vec2(-1,1),vec2(1,-1),vec2(1,1),vec2(-1,1)); gl_Position = vec4(q.xy + c[gl_VertexID % 6]*q.z, q.w, 1.0); }',
     'out vec4 o; void main(){ o = vec4(0.95, 0.45, 0.03, 1.0); }'
   );
-  const copyProg = compile(
-    FULL,
-    'in vec2 uv; uniform sampler2D src; out vec4 o; void main(){ o = texture(src, uv); }'
-  );
+  const copyProg = compile(FULL, 'in vec2 uv; uniform sampler2D src; out vec4 o; void main(){ o = texture(src, uv); }');
   const blurProg = compile(
     FULL,
     'in vec2 uv; uniform sampler2D src; uniform vec2 step; out vec4 o; void main(){ float w[5] = float[5](0.227,0.195,0.122,0.054,0.016); vec4 s = texture(src, uv)*w[0]; for (int i=1;i<5;i++){ s += texture(src, uv+step*float(i))*w[i]; s += texture(src, uv-step*float(i))*w[i]; } o = s; }'
@@ -103,7 +86,7 @@
 
   // Deterministic geometry: a seeded generator, so every run draws one scene.
   let seed = 1;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const buffer = (data) => {
     const b = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, b);
@@ -123,16 +106,13 @@
   };
   const QUADS = 400;
   const scene = [-1, -1, 2, 0.9]; // a full-screen floor far back
-  for (let i = 0; i < QUADS; i++)
-    scene.push(rnd() * 2 - 1.2, rnd() * 2 - 1.2, 0.05 + rnd() * 0.2, rnd() * 1.6 - 0.8);
+  for (let i = 0; i < QUADS; i++) scene.push(rnd() * 2 - 1.2, rnd() * 2 - 1.2, 0.05 + rnd() * 0.2, rnd() * 1.6 - 0.8);
   const sceneVao = instanced(sceneProg, buffer(scene));
   const sites = [];
-  for (let i = 0; i < SITES; i++)
-    sites.push(rnd() * 2 - 1, rnd() * 2 - 1, (2 + rnd() * 18) / W, rnd() * 1.6 - 0.8);
+  for (let i = 0; i < SITES; i++) sites.push(rnd() * 2 - 1, rnd() * 2 - 1, (2 + rnd() * 18) / W, rnd() * 1.6 - 0.8);
   const siteVao = instanced(siteProg, buffer(sites));
   const points = [];
-  for (let i = 0; i < POINTS; i++)
-    points.push(rnd() * 2 - 1, rnd() * 2 - 1, 4 + rnd() * 44, rnd() * 1.6 - 0.8);
+  for (let i = 0; i < POINTS; i++) points.push(rnd() * 2 - 1, rnd() * 2 - 1, 4 + rnd() * 44, rnd() * 1.6 - 0.8);
   const pointVao = gl.createVertexArray();
   gl.bindVertexArray(pointVao);
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer(points));
@@ -177,13 +157,7 @@
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, W, H);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rb);
   } else {
-    gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.DEPTH_STENCIL_ATTACHMENT,
-      gl.TEXTURE_2D,
-      copiedDepth,
-      0
-    );
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, copiedDepth, 0);
   }
   const sourceComplete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
   const levels = [2, 4, 8].map((d) => [colorTarget(W / d, H / d), colorTarget(W / d, H / d)]);
@@ -220,8 +194,7 @@
     blit() {
       gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, source.fb);
-      const mask =
-        BLIT_MASK === 'depth' ? gl.DEPTH_BUFFER_BIT : gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT;
+      const mask = BLIT_MASK === 'depth' ? gl.DEPTH_BUFFER_BIT : gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT;
       gl.blitFramebuffer(0, 0, W, H, 0, 0, W, H, mask, gl.NEAREST);
     },
     source() {
@@ -243,12 +216,8 @@
       let from = source.tex;
       for (const [a, b] of levels) {
         fullscreen(copyProg, a, from);
-        fullscreen(blurProg, b, a.tex, () =>
-          gl.uniform2f(gl.getUniformLocation(blurProg, 'step'), 1 / a.w, 0)
-        );
-        fullscreen(blurProg, a, b.tex, () =>
-          gl.uniform2f(gl.getUniformLocation(blurProg, 'step'), 0, 1 / a.h)
-        );
+        fullscreen(blurProg, b, a.tex, () => gl.uniform2f(gl.getUniformLocation(blurProg, 'step'), 1 / a.w, 0));
+        fullscreen(blurProg, a, b.tex, () => gl.uniform2f(gl.getUniformLocation(blurProg, 'step'), 0, 1 / a.h));
         from = a.tex;
       }
       // Back up the chain, each level added into the one above.
@@ -298,13 +267,7 @@
     gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, W, H);
     gl.bindFramebuffer(gl.FRAMEBUFFER, refFb);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, refColor, 0);
-    gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.DEPTH_STENCIL_ATTACHMENT,
-      gl.TEXTURE_2D,
-      refDepth,
-      0
-    );
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, refDepth, 0);
     gl.viewport(0, 0, W, H);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LESS);
@@ -400,12 +363,7 @@
       renderer,
       size: { width: W, height: H },
       samples: canvasSamples,
-      blit: {
-        mask: BLIT_MASK,
-        into: BLIT_INTO,
-        canvasStencil: CANVAS_STENCIL,
-        stencilBits: canvasStencilBits,
-      },
+      blit: { mask: BLIT_MASK, into: BLIT_INTO, canvasStencil: CANVAS_STENCIL, stencilBits: canvasStencilBits },
       sourceComplete,
       routeBytes,
       routeMiB: Number((routeBytes / 2 ** 20).toFixed(2)),
