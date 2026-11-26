@@ -184,6 +184,10 @@ const DECLARED_ABSENT = new Map([
     'docs/bestiary-drift-health',
     'CONTRIBUTING.md gives this as an example branch name, beside feat/harvest-throttle. The docs/ prefix is a branch prefix here, not a directory.',
   ],
+  [
+    'packages/frontend/node_modules/three',
+    "The 1828-diagnosing probe's PROMPT.md quotes #1828's report verbatim, and the report names the install directory whose absence was the bug. An arm ran on that text, so it cannot be reworded.",
+  ],
 ]);
 
 /**
