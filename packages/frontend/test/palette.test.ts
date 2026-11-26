@@ -380,9 +380,9 @@ describe('what each palette is for', () => {
   // None, in any palette. Tritanopia's tables were drawn against an eye with
   // no red-green axis (#1905), and the eye that replaced it found the ore's
   // bone white 37.8 dE from the crystal's blue, under their 40. The crystal
-  // moved to the nearest blue that clears it by 1 dE or more, at 41.2
-  // (#1914). The slot stays, so a miss a palette has to keep is pinned here
-  // by name.
+  // moved to the nearest blue on an even-valued grid that clears it by 1 dE
+  // or more, at 41.2 (#1914). The slot stays, so a miss a palette has to keep
+  // is pinned here by name.
   const PAIR_MISSES: Partial<Record<PaletteName, string[]>> = {};
   for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
