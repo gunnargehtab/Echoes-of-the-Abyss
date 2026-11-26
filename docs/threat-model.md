@@ -14,7 +14,8 @@ match seed. A client can recover that seed offline from the handles it holds, in
 seconds on one core, and the seed is also the key of the lies the Echo Layer tells. The
 other two are about the host, which runs every room on one Node event loop. Every anonymous
 `POST` to `/matchmake/create/match` builds a full world on that loop, and a client that
-joins its own rooms holds a running simulation per socket, with no cap on either. The
+joins its own rooms holds a running simulation per socket, with no cap on either. Since
+#1960 a create is limited per address and builds no world until somebody joins. The
 per-message wire bounds, the origin lock and the error-report route are sound for what
 they cover.
 
@@ -146,7 +147,7 @@ flowchart LR
 
 | Surface | How reached | Trust boundary | Notes | Evidence |
 | --- | --- | --- | --- | --- |
-| `POST /matchmake/create/match`, `joinOrCreate`, `joinById` | HTTPS on 3000 | Internet → backend | Anonymous; no rate limit; a create builds a `Match` synchronously in `onCreate` | `MatchRoom.onCreate`, `newMatch` |
+| `POST /matchmake/create/match`, `joinOrCreate`, `joinById` | HTTPS on 3000 | Internet → backend | Anonymous. Since #1960 a `create` or `joinOrCreate` is limited per address, and a room builds its `Match` on first arrival, not in `onCreate` | `guardMatchmaking`, `MatchRoom.match`, `newMatch` |
 | Room options | Body of the matchmake request | Internet → room | `mapId` and `missionId` looked up; `driftCarry` and `spent` validated; Free Water refused in production | `validDriftCarry`, `validateSpent`, `freeWaterMap` |
 | Join option `name` | Join request | Client → every client in the room | Cut to 32 characters, then rendered as React text | `MatchRoom.onJoin`; `Lobby.tsx` |
 | 32 client messages | WebSocket | Client → room | Budget, then shape; an order then needs `commandSlot` and ownership in `Match` | `onClientMessage`, `isValidClientMessage` |
@@ -190,7 +191,7 @@ flowchart LR
 | Threat ID | Threat source | Prerequisites | Threat action | Impact | Impacted assets | Existing controls (evidence) | Gaps | Recommended mitigations | Detection ideas | Likelihood | Impact severity | Priority |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | TM-001 | A player with a modified client | A seat in any match; a few handles from its own snapshots | Brute-force the 32-bit seed from `keyedHandle`, then read mint order and the scatter lies' key | Phantoms told apart from real contacts; the bearing lie likely undone; `world.rng`'s draws predictable | Hidden match state; the seed | Handles are per slot; the seed is named in no wire message (`echo.ts`, `contactHandle` comment) | A 32-bit key that fits a known-plaintext search; the comment assumes only a sort must be resisted | Key handles with a secret of at least 128 bits drawn from `crypto.randomBytes` per match, held server-side and recorded in the replay; keep `world.rng`'s seed out of the handle key | None possible server-side: the search is offline | Medium: one script and no server contact, but it takes the insight and a modified client | High: it defeats the deception the game's central system rests on, undetectably | **High** |
-| TM-002 | Any internet host | The public URL | Flood `POST /matchmake/create/match`; each builds a `Match` on the room thread | Every live match stalls; the playtest is down while it lasts | Event loop | `guardOrigins` refuses a foreign `Origin`; an unjoined room is disposed after 15 s (`COLYSEUS_SEAT_RESERVATION_TIME`) | A request with no `Origin` passes; no rate limit | Rate-limit `/matchmake` per address in Caddy or in the `guardOrigins` wrapper; build the world on first join, not on create | Log creates per address a minute; alert on step lag | High: a curl loop, no SDK, no socket | High: every match on the host stops while it runs | **High** |
+| TM-002 | Any internet host | The public URL | Flood `POST /matchmake/create/match`; each builds a `Match` on the room thread | Every live match stalls; the playtest is down while it lasts | Event loop | `guardOrigins` refuses a foreign `Origin`; since #1960, 30 room-making requests a minute per address (`MATCHMAKING`, `src/http/matchmaking.ts`), and no world built until somebody joins; an unjoined room is disposed after 15 s (`COLYSEUS_SEAT_RESERVATION_TIME`) | Many addresses share no limit; a joined room still builds its world on the thread, which is TM-003's socket | Done in #1960; a global ceiling on rooms is TM-003's | Log creates per address a minute; alert on step lag | Low since #1960: a curl loop makes 30 empty rooms a minute; more needs many addresses or a socket per room | High: every match on the host stops while it runs | **Medium** (High before #1960) |
 | TM-003 | Any internet host | The public URL and the Colyseus SDK | Open many sockets, each holding a running room | The one event loop is spent on rooms nobody watches | Event loop | Per-session message budget; rooms close 180 s after a result (`LIFECYCLE.POST_MATCH_S`) | No cap on live rooms, or on rooms and sockets per address; AI seats cost one message each | A cap on concurrent rooms, and on rooms and sockets per address | A gauge of live rooms and AI seats | Medium: a short script against the SDK, about 75 sockets | High: every match on the host lags for as long as the sockets stay open | **High** |
 | TM-004 | Any internet host | Many source addresses | Flood the report route | Disk fills | Disk | 30 per minute per address, 8,192-byte body, 10,000 addresses tracked (`REPORTS`) | Per address only; the log has no cap | Cap the backend's Docker log (`max-size`, `max-file`) in `compose.playtest.yml`; add a global report ceiling | Disk-usage alert | Low: days of traffic from many addresses for a small VPS disk | Medium: the host fails, but slowly and visibly | Medium: raised a step because no existing control touches the gap, the log's size |
 | TM-005 | A seated player | A seat | Saturate the message budget with id-heavy orders | One room's step slows | Event loop | 240 messages a second, 256 ids, 4 KiB payload, ownership in `Match` | The per-message cost is not counted | Count the worst order's work as `Match.worstStepWork` does a step's | Log a session that spends its whole budget | Low: the budget binds a script to 240 messages a second | Low: refused ids cost a lookup each | Low |
@@ -216,9 +217,9 @@ flowchart LR
 | `packages/shared/src/echo.ts` | `keyedHandle` and `scatterLie` share the seed as their only secret | TM-001 |
 | `packages/backend/src/sim/systems/echoLayer.ts` | Mints every handle and phantom; `entityForHandle` gates orders | TM-001, TM-007 |
 | `packages/backend/src/sim/rng.ts` | `randomSeed` draws the 32-bit seed | TM-001 |
-| `packages/backend/src/index.ts` | Mounts matchmaking with no admission control | TM-002, TM-003 |
+| `packages/backend/src/index.ts`, `src/http/matchmaking.ts` | Mounts matchmaking; its only admission control is the per-address limit (#1960) | TM-002, TM-003 |
 | `packages/backend/src/http/cors.ts` | `guardOrigins` passes a request with no `Origin` | TM-002 |
-| `packages/backend/src/rooms/MatchRoom.ts` | Builds a world in `onCreate`; the budget; per-client sends | TM-002, TM-003, TM-005, TM-006 |
+| `packages/backend/src/rooms/MatchRoom.ts` | Builds a world on first arrival; the budget; per-client sends | TM-002, TM-003, TM-005, TM-006 |
 | `packages/backend/src/rooms/lobby.ts` | Seat allocation and the start rule an `addAi` flood leans on | TM-003, TM-007 |
 | `packages/backend/src/http/reports.ts` | The only anonymous write into the host's disk | TM-004 |
 | `deploy/compose.playtest.yml`, `deploy/Caddyfile` | No log cap, no proxy rate limit | TM-002, TM-004 |
@@ -241,7 +242,8 @@ Measured on `main` at `6c70fa1e`, in this repository's container, with 4 cores.
 ## Findings filed
 
 Each high-ranked abuse path is its own `finding` issue, and fixes land in their own pull
-requests: TM-001 in #1959, TM-002 in #1960 and TM-003 in #1961.
+requests: TM-001 in #1959, TM-002 in #1960 and TM-003 in #1961. #1960's fix re-ranked TM-002 in
+the table; the evidence above is the state it was measured in.
 
 ## Quality check
 
