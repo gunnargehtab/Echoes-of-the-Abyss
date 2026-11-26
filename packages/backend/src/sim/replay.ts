@@ -46,6 +46,11 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 34: handles have a key of their own (#1959). A file carries the 128-bit
+ * secret its contact and mark handles were minted under, beside the seed that
+ * used to be their key, so a v33 file has no key to replay its orders' handles
+ * under.
+ *
  * 33: explicit fixed-depth moves bypass floor-following inference (#1707).
  * The queue fingerprint includes that intent, so older checkpoints differ.
  *
@@ -321,7 +326,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 33;
+export const REPLAY_FORMAT_VERSION = 34;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -454,6 +459,11 @@ export interface ReplayCheckpoint {
 export interface Replay {
   version: number;
   seed: number;
+  /**
+   * The key the match's handles were minted under (#1959). A recorded order
+   * names a handle, so playback under any other key refuses it and diverges.
+   */
+  handleKey: string;
   /** Id of the authored map, so playback starts from the same ground. */
   mapId: string;
   /** Whether the Drift was populated. Part of the setup, like the map. */
@@ -506,6 +516,7 @@ export class ReplayRecorder {
   private readonly checkpoints: ReplayCheckpoint[] = [];
   private readonly players: ReplayPlayer[] = [];
   private readonly seed: number;
+  private readonly handleKey: string;
   private readonly mapId: string;
   private readonly fauna: boolean;
   private readonly missionId: string | null;
@@ -522,6 +533,7 @@ export class ReplayRecorder {
 
   constructor(
     seed: number,
+    handleKey: string,
     mapId: string,
     fauna: boolean,
     missionId: string | null = null,
@@ -530,6 +542,7 @@ export class ReplayRecorder {
     checkpointIntervalTicks = 300
   ) {
     this.seed = seed;
+    this.handleKey = handleKey;
     this.mapId = mapId;
     this.fauna = fauna;
     this.missionId = missionId;
@@ -564,6 +577,7 @@ export class ReplayRecorder {
     return {
       version: REPLAY_FORMAT_VERSION,
       seed: this.seed,
+      handleKey: this.handleKey,
       mapId: this.mapId,
       fauna: this.fauna,
       missionId: this.missionId,
@@ -616,6 +630,7 @@ export function playReplay(replay: Replay, terrain?: Terrain): ReplayResult {
   // mission fielded five hulls is not the mission fielded six.
   const options = {
     seed: replay.seed,
+    handleKey: replay.handleKey,
     fauna: replay.fauna,
     mission,
     driftCarry: replay.driftCarry,

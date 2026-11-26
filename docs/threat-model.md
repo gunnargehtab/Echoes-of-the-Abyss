@@ -16,9 +16,8 @@ other two are about the host, which runs every room on one Node event loop. At `
 every anonymous `POST` to `/matchmake/create/match` built a full world on that loop, and a
 client that joins its own rooms holds a running simulation per socket, with no cap on
 either. The fix in #1960 limits a create per address and builds no world until somebody
-joins. The
-per-message wire bounds, the origin lock and the error-report route are sound for what
-they cover.
+joins. The per-message wire bounds, the origin lock and the error-report route are sound
+for what they cover.
 
 ## Scope and assumptions
 
@@ -245,6 +244,15 @@ Measured on `main` at `6c70fa1e`, in this repository's container, with 4 cores.
 Each high-ranked abuse path is its own `finding` issue, and fixes land in their own pull
 requests: TM-001 in #1959, TM-002 in #1960 and TM-003 in #1961. #1960's fix re-ranked TM-002 in
 the table; the evidence above is the state it was measured in.
+
+TM-001's handle half is fixed (#1959, `packages/backend/src/sim/handleKey.ts`). A match
+that draws its own seed, as every live room does, keys its contact and mark handles by a
+128-bit secret from `crypto.randomBytes`, held server-side and recorded in the replay. A
+match given a seed, as the balance harness and the tests give one, derives its key from
+that seed. This is a deliberate exception to the mitigation column: a named seed is no
+secret, and a seeded run has to come back with the same handles. `matchRoom.test.ts`
+fails if a room ever names a seed. The tables above still describe `6c70fa1e`. The seed still keys `scatterLie` and the phantom dice; whether
+another channel leaks it is not yet checked.
 
 ## Quality check
 
