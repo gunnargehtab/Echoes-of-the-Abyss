@@ -53,6 +53,10 @@ function tierLabel(entry: ContactLogEntry): string {
  * break between them when the panel is too narrow for both on one line (#1893).
  */
 export function detail(entry: ContactLogEntry): string[] {
+  // An exposure row reports a tier held on the player and nothing else, so
+  // §10 prints it with no detail at all: `bearing unknown` would claim a
+  // listener whose direction exists and went unresolved (#1966).
+  if (entry.exposure === true) return [];
   if (entry.bearingDeg === undefined) {
     // Tier 1 carries the listener's own position, not the emitter's. There is
     // no bearing in the report, so the log says so rather than inventing one.
