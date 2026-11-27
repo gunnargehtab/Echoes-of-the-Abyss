@@ -15,8 +15,9 @@
  * twenty, `stone_dark` again under two skins of their own, `carapace` and
  * `fish_flank` — #1711; the rim ray that makes twenty-one, the same
  * two — #1777; the drift jelly that makes twenty-two, the same two
- * again — #1837; and the rim manta that makes twenty-three, the swimmers'
- * `fish_flank` over a belly skin of its own, `fish_belly` — #1867), the
+ * again — #1837; the rim manta that makes twenty-three, the swimmers'
+ * `fish_flank` over a belly skin of its own, `fish_belly` — #1867; and the
+ * comb jelly that makes twenty-four, the drift jelly's two — #1858), the
  * builders more than one prop needs, and the root every prop stands on.
  *
  * Three things about the fourteen batch files are worth knowing before
@@ -151,7 +152,8 @@ export const ground = {
    * included; the rim ray's body since (#1777), and the drift jelly's bell
    * (#1837), a pale bell over a darker oral core as a flank is over its
    * fins; its seats are the core's `stone-dark` and not the bell's, since
-   * the owner's oblate dome. On the rim manta (#1867) it is the dark of
+   * the owner's oblate dome; and the comb jelly's skin (#1858), under comb
+   * rows and a mouth in `stone-dark`. On the rim manta (#1867) it is the dark of
    * the two: the back, lobes, tail, fins, eyes and belly marks, over
    * `fish-belly`. A cold pewter — sRGB hue 186°, 23 %
    * saturated — between the
@@ -601,8 +603,9 @@ export function bake(root) {
  * docs/free-water-slice.md §5 commissions under Block 4's public-microfauna
  * variant of ENV STYLE, env-rim-ray (#1777), the one large body the
  * variant's fifth clause admits, env-drift-jelly (#1837), the one
- * drifting body its sixth does, and env-rim-manta (#1867), the one body
- * the High graphics quality alone stands, which its seventh does. Seven
+ * drifting body its sixth does, env-rim-manta (#1867), the one body
+ * the High graphics quality alone stands, which its seventh does, and
+ * env-comb-jelly (#1858), the one deep body, which its eighth does. Eight
  * files, one grammar: a body is a
  * `shaft`, a closed run of corner rings whose facets are crisp because
  * every corner is drawn with a little jitter from a seeded stream;
@@ -627,7 +630,11 @@ export function bake(root) {
  * jittered, since the runtime draws that skin with one normal a vertex;
  * its plan, thickness and pose are `faired` curves along the span, its
  * closed skin goes out as a belly and a back (`cleave`), and the marks on
- * its belly are outlines thrown onto the skin's own facets (`drape`).
+ * its belly are outlines thrown onto the skin's own facets (`drape`). The
+ * comb jelly is the shaft stood on end again, an egg whose last fan turns
+ * down into a dimple, so wound by its rings' order as the drift jelly's
+ * bell is; its eight comb rows are `comb`, ladders of low pyramids down
+ * the middles of its gores, and its mouth a `seat` on the flat under it.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -1215,6 +1222,52 @@ export function seat(facet, u, [w, h], proud, { along = null } = {}) {
     normal: n,
     facet,
   };
+}
+
+/**
+ * A comb row: a run of comb plates down one line of a skin, as one part —
+ * the comb jelly's eight (#1858). Each plate is a low four-sided pyramid
+ * on a rectangle, open at the base, which the body hides, as a `lens` is:
+ * `from` and `to` the two points of the skin's line the plate stands
+ * between, `on` the point of the line it rises over, `across` the unit
+ * direction square to the line that the rectangle is `w` wide along, and
+ * `out` a direction on the skin's outward side, which only picks the sign.
+ * The plate's normal is square to `across` and to `from`–`to`; the
+ * rectangle's four corners are sunk `sink` under the line along that
+ * normal and the apex stands `proud` over `on`, so what shows over a flat
+ * skin is a rung `proud / (proud + sink)` of the rectangle's size, wide
+ * across the row and short along it. A plate that stands between two
+ * points either side of a bend in the line bridges it. Every plate is its
+ * own mirror about the plane through the line and the normal, so a row
+ * laid down a meridian keeps the centroid of its vertices in that
+ * meridian's plane at every height, which is where the runtime reads the
+ * row's line from. Returns the one geometry and each plate's apex and
+ * four base corners, for a script to hold against the skin (`skinGap`,
+ * `insideBody`).
+ */
+export function comb(plates) {
+  const points = [];
+  const tris = [];
+  const made = plates.map(({ from, to, on, across, out, w, proud, sink }) => {
+    const [a, b, o] = [from, to, on].map((p) => new THREE.Vector3(...p));
+    const s = new THREE.Vector3(...across).normalize();
+    const n = new THREE.Vector3().crossVectors(s, b.clone().sub(a)).normalize();
+    if (n.dot(new THREE.Vector3(...out)) < 0) n.negate();
+    const corner = (p, side) =>
+      p
+        .clone()
+        .addScaledVector(s, (side * w) / 2)
+        .addScaledVector(n, -sink);
+    const base = [corner(a, 1), corner(b, 1), corner(b, -1), corner(a, -1)];
+    const apex = o.clone().addScaledVector(n, proud);
+    const first = points.length;
+    points.push(...base.map((p) => p.toArray()), apex.toArray());
+    const inside = a.clone().lerp(b, 0.5).addScaledVector(n, -sink).toArray();
+    for (let k = 0; k < 4; k++)
+      tris.push(facing(points, [first + k, first + ((k + 1) % 4), first + 4], inside));
+    return { apex, base, normal: n };
+  });
+  return { geo: faceted(points, tris), plates: made };
 }
 
 /**

@@ -48,10 +48,11 @@ Modifiers, additive to perceived loudness:
 Every creature emits SIG and resolves through the same tiers you do. At Tier 1 and Tier 2 there is **no marker, colour, or sound that distinguishes fauna from an army** — see [audio-direction.md](audio-direction.md) §7. Classification at Tier 3 is the moment you find out, and it is a genuine relief or a genuine problem.
 
 That rule describes simulated fauna. The future, development-only
-[free-water slice](free-water-slice.md) §5 explicitly licenses seven public decorative
+[free-water slice](free-water-slice.md) §5 explicitly licenses eight public decorative
 shapes outside this roster, four small, one ray of 18 m (#1777), one drifting medusa
-of 6 m (#1837, the owner's commission of 20 November 2026) and one manta of 18 m (#1867,
-the owner's commission of 21 November 2026), none of them a silhouette
+of 6 m (#1837, the owner's commission of 20 November 2026), one manta of 18 m (#1867,
+the owner's commission of 21 November 2026) and one comb jelly 3.5 m across (#1858, the
+owner's commission of 27 November 2026), none of them a silhouette
 this roster classifies. They are environment geometry with no SIG,
 entity, target, yield, collision or response to a participant, never scenic copies of
 hidden gameplay animals. Their deterministic motion reveals no occupancy. Existing
