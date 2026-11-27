@@ -203,6 +203,39 @@ describe('the passive exposure rows', () => {
     }
   });
 
+  it('prints no detail on any of its five rows, as §10 prints them', async () => {
+    const world = await boot();
+    try {
+      world.rows.length = 0;
+      let step = 1;
+      for (const tier of [
+        ResolutionTier.Contact,
+        ResolutionTier.Bearing,
+        ResolutionTier.Classification,
+        ResolutionTier.Track,
+        ResolutionTier.Silent,
+      ]) {
+        for (let held = 0; held <= SETTLE_STEPS + 1; held++, step++) {
+          world.send(step, { exposure: exposureAt(tier, tier === ResolutionTier.Silent ? 0 : 1) });
+        }
+      }
+      assert.deepEqual(labels(world.rows), [
+        'you were heard',
+        'they have your bearing',
+        'they have you classified',
+        'they have you tracked',
+        'they lost you',
+      ]);
+      // §10's sample row is `T+04:02  ---  they have your bearing` and no
+      // more. The report never had a bearing to be unknown: `bearing unknown`
+      // is what a Tier-1 contact prints, whose bearing exists but was not
+      // resolved (#1966).
+      for (const row of world.rows) assert.deepEqual(detail(row), [], row.label);
+    } finally {
+      world.teardown();
+    }
+  });
+
   it('ignores a tier that does not hold, so a hull on a threshold writes nothing', async () => {
     const world = await boot();
     try {
