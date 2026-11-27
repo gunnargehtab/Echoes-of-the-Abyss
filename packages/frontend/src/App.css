@@ -3817,13 +3817,22 @@ button.objectives-row .objectives-text {
   display: flex;
   gap: 0.9rem;
 }
+/* The MOVE 3D preview magnifies whole, as the logs do (ui-ux.md §11): it
+   scrolls under its height cap, so its rows need not all be on screen and the
+   orders panel's square root is not its case. A transform rather than a font
+   size, because a button and an input take the user agent's 13.33 px, not the
+   panel's, and the transform carries them with the box. The cap is divided by
+   the scale so the panel's top stays 215 units down, where 100% puts it: an
+   undivided cap would let its top climb past the strip above 100% (#1969). */
 .move-preview {
   box-sizing: border-box;
   position: absolute;
   left: calc(var(--ribbon-units) * var(--ui-scale) + 10px);
   bottom: calc(245px * var(--ui-scale));
+  transform: scale(var(--ui-scale, 1));
+  transform-origin: bottom left;
   width: 290px;
-  max-height: calc(100vh - 460px);
+  max-height: calc(100vh / var(--ui-scale, 1) - 460px);
   overflow: auto;
   padding: 10px;
   color: #b6edda;
