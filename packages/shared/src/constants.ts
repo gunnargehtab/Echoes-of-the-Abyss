@@ -3864,7 +3864,8 @@ export const MATCHMAKING = {
  * of the thread per match second (`docs/threat-model.md`, TM-003). A room is
  * *held* from the first seat a socket takes in it until its last such seat is
  * released, and that is what the first two count (`src/rooms/admission.ts` in
- * the backend); an unjoined room holds nothing, and `MATCHMAKING` disposes it.
+ * the backend); an unjoined room holds nothing, and Colyseus disposes it when
+ * its seat reservation lapses (15 s).
  *
  * A full server refuses a new room rather than lag the ones running: the
  * refusal is the cost, paid by whoever arrives last.

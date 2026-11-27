@@ -762,7 +762,9 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     // Before the seat and before the map is sent, which is what builds the
     // world: a refused join costs the thread nothing (#1961). Every socket
     // reaches `onJoin` through `onAuth`, which names the address; a client
-    // without one is a test harness calling `onJoin` directly.
+    // without one is a test harness calling `onJoin` directly. A static
+    // `onAuth` (`@colyseus/auth`, say) would make Colyseus skip the instance
+    // one, and this check with it: name the address there too.
     const address = (client.auth as { address?: unknown } | undefined)?.address;
     if (typeof address === 'string') {
       const refusal = roomAdmission.admit(this.roomId, client.sessionId, address);

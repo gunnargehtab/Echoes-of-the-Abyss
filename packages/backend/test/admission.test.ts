@@ -10,9 +10,17 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { Client } from '@colyseus/core';
-import { ADMISSION } from '@echoes/shared';
+import { ADMISSION, CLIENT_MSG, MatchPhase } from '@echoes/shared';
 import { RoomAdmission, roomAdmission } from '../src/rooms/admission.ts';
-import { bootRoom, fakeClient, shutdown } from './support/room.ts';
+import type { MatchRoom } from '../src/rooms/MatchRoom.ts';
+import {
+  bootRoom,
+  deliver,
+  fakeClient,
+  internals,
+  shutdown,
+  type FakeClient,
+} from './support/room.ts';
 
 describe('the room ledger', () => {
   it('holds a room from its first seat until its last is given back', () => {
@@ -69,15 +77,29 @@ describe('the room ledger', () => {
 const seatFrom = (sessionId: string, address: string) =>
   Object.assign(fakeClient(sessionId), { auth: { address } }) as unknown as Client;
 
+/**
+ * Boot a room, run `body`, and tear the room down however `body` ended: a
+ * failed assertion must fail the test, not leave a live room holding the
+ * runner open.
+ */
+async function withRoom(body: (room: MatchRoom) => void | Promise<void>): Promise<void> {
+  const room = await bootRoom();
+  try {
+    await body(room);
+  } finally {
+    await shutdown(room);
+  }
+}
+
 describe('a room asking the ledger', () => {
   it('names the address from the context Colyseus built', async () => {
-    const room = await bootRoom();
-    const client = fakeClient('auth') as unknown as Client;
-    const context = { ip: '203.0.113.40', headers: new Headers() };
-    assert.deepEqual(room.onAuth(client, {}, context), { address: '203.0.113.40' });
-    const bare = { ip: undefined, headers: new Headers() };
-    assert.deepEqual(room.onAuth(client, {}, bare), { address: 'unknown' });
-    await shutdown(room);
+    await withRoom((room) => {
+      const client = fakeClient('auth') as unknown as Client;
+      const context = { ip: '203.0.113.40', headers: new Headers() };
+      assert.deepEqual(room.onAuth(client, {}, context), { address: '203.0.113.40' });
+      const bare = { ip: undefined, headers: new Headers() };
+      assert.deepEqual(room.onAuth(client, {}, bare), { address: 'unknown' });
+    });
   });
 
   it('refuses an address at its cap before the seat or the world', async () => {
@@ -85,27 +107,55 @@ describe('a room asking the ledger', () => {
     for (let i = 0; i < ADMISSION.MAX_ROOMS_PER_ADDRESS; i += 1) {
       assert.equal(roomAdmission.admit(`elsewhere-${i}`, `s${i}`, full), null);
     }
-    const room = await bootRoom();
-    assert.throws(() => room.onJoin(seatFrom('late', full)), /already has/);
-    assert.equal(room.state.players.size, 0, 'no seat was taken');
-    assert.equal(room.seed, null, 'no world was built for a refused join');
-    for (let i = 0; i < ADMISSION.MAX_ROOMS_PER_ADDRESS; i += 1) {
-      roomAdmission.releaseRoom(`elsewhere-${i}`);
+    try {
+      await withRoom((room) => {
+        assert.throws(() => room.onJoin(seatFrom('late', full)), /already has/);
+        assert.equal(room.state.players.size, 0, 'no seat was taken');
+        assert.equal(room.seed, null, 'no world was built for a refused join');
+      });
+    } finally {
+      for (let i = 0; i < ADMISSION.MAX_ROOMS_PER_ADDRESS; i += 1) {
+        roomAdmission.releaseRoom(`elsewhere-${i}`);
+      }
     }
-    await shutdown(room);
   });
 
-  it('gives a seat back when the room releases the player, and all on dispose', async () => {
-    const from = '203.0.113.60';
-    const room = await bootRoom();
-    const first = seatFrom('first', from);
-    room.onJoin(first);
-    room.onJoin(seatFrom('second', from));
-    assert.equal(roomAdmission.roomsHeldBy(from), 1, 'two seats, one room');
-    // A drop in the lobby releases the seat.
-    room.onDrop(first);
-    assert.equal(roomAdmission.roomsHeldBy(from), 1, 'the second seat still holds it');
-    await shutdown(room);
-    assert.equal(roomAdmission.roomsHeldBy(from), 0, 'a disposed room holds nothing');
+  it('gives a seat back when the lobby releases the player, and all on dispose', async () => {
+    const leaver = '203.0.113.60';
+    const stayer = '203.0.113.61';
+    await withRoom((room) => {
+      const first = seatFrom('first', leaver);
+      room.onJoin(first);
+      room.onJoin(seatFrom('second', stayer));
+      assert.equal(roomAdmission.roomsHeldBy(leaver), 1);
+      // A drop in the lobby frees the seat, and with it the leaver's hold.
+      room.onDrop(first);
+      assert.equal(roomAdmission.roomsHeldBy(leaver), 0, 'a released seat holds nothing');
+      assert.equal(roomAdmission.roomsHeldBy(stayer), 1, 'the other seat still holds the room');
+    });
+    assert.equal(roomAdmission.roomsHeldBy(stayer), 0, 'a disposed room holds nothing');
+  });
+
+  it('keeps a hold through a mid-match drop, and gives it back on a forfeit', async () => {
+    const dropper = '203.0.113.62';
+    const resigner = '203.0.113.63';
+    await withRoom((room) => {
+      const dropped = seatFrom('dropped', dropper);
+      const resigning = seatFrom('resigning', resigner);
+      for (const client of [dropped, resigning]) room.onJoin(client);
+      for (const client of [dropped, resigning]) {
+        deliver(room, CLIENT_MSG.ready, client as unknown as FakeClient, { ready: true });
+      }
+      assert.equal(room.state.phase, MatchPhase.Playing, 'the premise: the match is running');
+      // The fleet is still in the water through the reconnect grace.
+      room.onDrop(dropped);
+      // The grace's real timer would hold the runner open past the test.
+      for (const timer of Object.values(internals(room)._reservedSeatTimeouts)) clearTimeout(timer);
+      assert.equal(roomAdmission.roomsHeldBy(dropper), 1, 'a dropped seat holds through its grace');
+      // A consented leave mid-match forfeits, and the room runs on without it.
+      room.onLeave(resigning);
+      assert.equal(roomAdmission.roomsHeldBy(resigner), 0, 'a forfeited seat holds nothing');
+      assert.equal(roomAdmission.roomsHeldBy(dropper), 1, 'the room is still held');
+    });
   });
 });
