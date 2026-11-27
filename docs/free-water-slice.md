@@ -386,7 +386,10 @@ with no HUD. Water depth is public map data, so the rule tells nothing a match h
 - **A hue tells which side of the line.** The lantern lives over it and the comb jelly
   under it, each in a token of its own
   ([style-neon-noir.md](style-neon-noir.md#world-light--the-terrain-carve-outs)), and
-  neither ever crosses: pink over a hull's ring is the Shelf, lime under it is Mid-Water.
+  neither ever crosses. In the standard palette pink over a hull's ring is the Shelf and
+  lime under it is Mid-Water. The red-green palettes tell them by hue too, a violet over
+  a yellow. Tritanopia's pair is one hue to that eye, and is told by lightness, an orchid
+  over a dark umber.
 - **Low is unchanged**, and High draws Low's list whole. So Low's two fry schools over the
   clearing, 105 to 170 m, stand in the Lid at High too: the rule's one known exception,
   2.1 km from the Close eye, where a 0.5 m fry draws under half a pixel.

@@ -227,8 +227,9 @@ export const FREE_WATER_HIGH_LIFE = {
   /**
    * The deep bodies (#1858): `env-comb-jelly`, six of them under the Shelf's
    * 400 m line over the outside rim, where the lanterns hang over it, so the
-   * hue beside a hull says which side of the line it is on (§5, "Life by
-   * depth band"). A slot is a loop's centre in map metres, the depth the
+   * light beside a hull says which side of the line it is on: by its hue,
+   * and under tritanopia by its lightness (§5, "Life by depth band"). A
+   * slot is a loop's centre in map metres, the depth the
    * body's axis hangs at and where it stands when the match starts, in
    * degrees round its loop, as a jelly's slot is. Each stands in the water
    * the Close camera has under the hulls' rings, left of the vent stand,

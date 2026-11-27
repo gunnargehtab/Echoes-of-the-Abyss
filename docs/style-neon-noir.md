@@ -927,9 +927,10 @@ bodies with at most six soft photophore dots each, bounded by rung 5. No lit ski
 halo, new ground-light family or response to a participant is licensed. Its other
 decorative animals carry no emission; this exception remains confined to the study. At
 High a schooling fry carries one point of world light, `life-glint`, a deep fish's
-seats carry that token in place of their dots, and a drifting
-jelly is drawn as a lantern, `jelly-lantern`, both above, the far bloom's 120 over the
-bowl among them (#1859).
+seats carry that token in place of their dots, a drifting
+jelly is drawn as a lantern, `jelly-lantern`, the far bloom's 120 over the
+bowl among them (#1859), and a comb jelly is drawn as eight seams of light,
+`comb-light` (#1858), all three above.
 
 ### Rule 5 in the colour-vision palettes
 
