@@ -1327,8 +1327,8 @@ describe('the objective, as docs/mission-conclave-attending.md §8 counts it', (
         ATTENDING_CONCLAVE.markers[0]!.y,
         ATTENDING_CONCLAVE.markers[0]!.radiusM,
       ],
-      [AXIS.x, AXIS.y, 500],
-      '§8: the marker `axis` at 2500, 3625, radius 500'
+      [AXIS.x, AXIS.y, 375],
+      '§8: the marker `axis` at 2500, 3625, radius 375'
     );
     for (const id of ['the-muster', 'the-cells', 'the-crossing']) {
       assert.equal(

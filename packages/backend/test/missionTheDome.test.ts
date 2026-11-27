@@ -1223,7 +1223,7 @@ describe('the count, as docs/mission-the-dome.md §6 takes it', () => {
     const marker = ATTENDING_THE_DOME.markers[0]!;
     assert.deepEqual(
       [marker.id, marker.x, marker.y, marker.radiusM],
-      ['mouth', 1500, 3625, 375],
+      ['mouth', 1500, 3625, 125],
       '§11'
     );
     // §11, §9: the array, 950 m south of the berth, is fifty metres outside it.

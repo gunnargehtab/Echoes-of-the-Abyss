@@ -765,13 +765,20 @@ describe('the objective — §8’s four rows', () => {
     assert.equal(M.markers.length, 1, 'nothing points at a return, a bed or the riser');
     assert.deepEqual(
       [M.markers[0]!.id, M.markers[0]!.x, M.markers[0]!.y, M.markers[0]!.radiusM],
-      ['terraces', 3000, 2500, 2500],
-      '§8: Prospect’s own marker, over the same six faces'
+      ['terraces', 3000, 2500, 500],
+      '§8: on Prospect’s point, and inside the terraces the row counts on'
     );
+    const terraces = M.regions.find((region) => region.id === 'the-terraces')!;
+    // Until #1971 this was Prospect's r2500 over all six faces, and it said
+    // every face is the rim; 74% of that ring was water no Chorister counts
+    // in (docs/ui-ux.md §10.5). The six faces stand inside the rectangle.
     for (const face of FACES) {
       assert.ok(
-        Math.hypot(face.x - M.markers[0]!.x, face.y - M.markers[0]!.y) <= M.markers[0]!.radiusM,
-        'the marker covers every charted face'
+        face.x >= terraces.x &&
+          face.x <= terraces.x + terraces.widthM &&
+          face.y >= terraces.y &&
+          face.y <= terraces.y + terraces.heightM,
+        'every charted face stands on the terraces the row counts on'
       );
     }
     // §8: "Nothing on this map can kill a Chorister" — the riser is the one

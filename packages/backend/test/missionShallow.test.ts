@@ -833,7 +833,7 @@ describe('the objective, as docs/mission-shallow.md §8 chooses it', () => {
       [ATTENDING_SHALLOW.markers[0]!.x, ATTENDING_SHALLOW.markers[0]!.y],
       [2500, 2750]
     );
-    assert.equal(ATTENDING_SHALLOW.markers[0]!.radiusM, 1000);
+    assert.equal(ATTENDING_SHALLOW.markers[0]!.radiusM, 250);
   });
 
   it('reads all three of Korrin’s results, in the register', () => {
