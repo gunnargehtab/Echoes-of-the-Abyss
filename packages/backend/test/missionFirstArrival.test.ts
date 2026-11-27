@@ -770,7 +770,7 @@ describe('the objective — §8’s four rows', () => {
     );
     const terraces = M.regions.find((region) => region.id === 'the-terraces')!;
     // Until #1971 this was Prospect's r2500 over all six faces, and it said
-    // every face is the rim; 74% of that ring was water no Chorister counts
+    // every face is the rim; 75% of that ring was water no Chorister counts
     // in (docs/ui-ux.md §10.5). The six faces stand inside the rectangle.
     for (const face of FACES) {
       assert.ok(

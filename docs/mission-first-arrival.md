@@ -361,7 +361,7 @@ Four rows. Two decide the count and two are read out beneath it.
 
 | Objective | Text, as the panel carries it | Predicate | Standing |
 | --- | --- | --- | --- |
-| `the-rim` | *The rim is held at the tide's turn. Eight of twelve on the terraces is a hold, and the Undermarshalcy does not round up.* | `{ kind: 'extract'; role: 'cohort'; region: 'the-terraces'; count: 8 }` | **Terminal**, read at the close (`standing`). `revealAtTick` T(19), marker `terraces` (3000, 2500, r 500, the widest circle the terraces rectangle holds; Prospect's r 2,500 over the six faces left 74% of its ring off the terraces, where no Chorister counts, until #1971), region `the-terraces` = 0, 2000, 6000, 1000 |
+| `the-rim` | *The rim is held at the tide's turn. Eight of twelve on the terraces is a hold, and the Undermarshalcy does not round up.* | `{ kind: 'extract'; role: 'cohort'; region: 'the-terraces'; count: 8 }` | **Terminal**, read at the close (`standing`). `revealAtTick` T(19), marker `terraces` (3000, 2500, r 500, the widest circle the terraces rectangle holds; Prospect's r 2,500 over the six faces left 75% of its ring off the terraces, where no Chorister counts, until #1971), region `the-terraces` = 0, 2000, 6000, 1000 |
 | `the-watch` | *Six attend the lip. Four is a watch.* | `{ kind: 'survive'; role: 'watch'; count: 4 }` | **Terminal**, and standing — re-derived every tick (`isStanding`) |
 | `the-attending` | *The rim is attended. What is heard is entered, and the gap is entered too.* | `{ kind: 'attend'; count: 2 }` | Non-terminal, monotone. Read out, never ranked |
 | `the-record` | *What is heard of the column is entered in accounts that are not ours.* | `{ kind: 'tolerance'; ticks: 3600; tier: Classification }` | Non-terminal. Sixty seconds, cumulative |

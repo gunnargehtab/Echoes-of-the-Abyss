@@ -1196,7 +1196,7 @@ something new, and a log role would re-announce the whole panel every time a cou
   rim is counted for nothing, and nothing on screen says why. The cost is a ring smaller than
   the place: Shallow's 250 m ring on a 5,000 m slope. A place the row sends the player through
   first, a corridor to cross, is its second marker, never its own. Until #1971, 40 of 45 rings
-  reached past their rectangle, and 74% of First Arrival's terraces ring lay outside it;
+  reached past their rectangle, and 75% of First Arrival's terraces ring lay outside it;
   `missions.test.ts` holds every row, and Rim Deposits' *The faces*, which rings the cut rather than the staging, is owed by
   #1923.
 - **A marker's name stands over the far side of its ring, on clear water** (#1662). The far

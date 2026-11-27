@@ -310,9 +310,9 @@ export const SEEDING_TEND: MissionDefinition = {
       radiusM: 375,
     },
     // Where the gift is picked up, as the place on the gift's way to the
-    // landing (§11, #1923). The ovens are a 250 m square inside the Holdfast's
-    // ring, so that ring left 88% of its water a place no bread is waiting;
-    // this one is the square's own inscribed circle.
+    // landing (§11, #1923). The ovens are a 250 m square the Holdfast's 400 m
+    // ring held until #1971, and that ring left 88% of its water a place no
+    // bread is waiting; this one is the square's own inscribed circle.
     {
       id: 'ovens',
       label: 'The ovens. Bread that remembers being grain.',

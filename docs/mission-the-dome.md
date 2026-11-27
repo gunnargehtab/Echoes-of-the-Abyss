@@ -640,7 +640,7 @@ rectangles.
 
 **Mission regions and markers.** One mission region, `the-mouth` — 1250, 3500, 500, 500, the
 trench's last half-kilometre above the yard — and one marker, `mouth` at (1500, 3625) with a
-375 m radius, shipped only while `the-mouth` is revealed. Its geometry is the whole objective:
+125 m radius, the widest circle `the-mouth` holds about it (#1971), shipped only while `the-mouth` is revealed. Its geometry is the whole objective:
 a hull at (1500, 3550) is **950 m** from the berth and outside a Cruiser's gun, and one on the
 region's southern edge is **500 m** from it and inside. The count is taken in the north half or
 it is taken under fire, and the only thing that ever says so is the stalls at 19:00 — "the mouth

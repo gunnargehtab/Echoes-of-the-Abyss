@@ -1122,7 +1122,7 @@ describe('the objectives', () => {
     // region, inscribed. `extract` counts a hull only `inRegion`, so a ring
     // that spills draws water where a hull parked on its rim is not counted.
     // Until #1971, 40 of 45 such rows did: the Rail Head's r500 round a 1,000
-    // by 500 m box left 38% outside, the terraces' r2500 left 74%. #1886,
+    // by 500 m box left 39% outside, the terraces' r2500 left 75%. #1886,
     // #1918 and #1923 each fixed a case; this holds the property over every
     // mission. The rim is sampled every 5°, which takes in the four points
     // nearest a rectangle's sides, so the check is exact for a rectangle.

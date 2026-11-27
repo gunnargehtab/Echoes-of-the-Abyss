@@ -366,7 +366,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
    * marker travels with the objective that names it (`projectMissionView`).
    * The marker points at the voice, and the cell is what is measured, so the
    * ring is the widest circle the cell holds about the voice: a voice stands
-   * off its cell's centre, and the cell's half-width spilled up to 26% of the
+   * off its cell's centre, and the cell's half-width spilled up to 28% of the
    * ring onto water that counts nothing (#1971, docs/ui-ux.md §10.5).
    */
   markers: VOICES.map((voice) => ({
