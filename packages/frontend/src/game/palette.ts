@@ -119,6 +119,21 @@ export interface Palette {
    */
   lantern: number;
   /**
+   * A comb jelly's own light at the High graphics quality (`comb-light`,
+   * docs/style-neon-noir.md "World light", in development with #1858): the
+   * deep body's skin and its eight comb rows (combLight.ts). The second hue
+   * of the crater's life, so a hue tells depth: the lantern lives over the
+   * Shelf's 400 m line and this under it. A palette's own, and held to the
+   * lantern's floor, 25 dE from every navy's inks, every contact tier, the
+   * chrome's two neons and `neon-violet`, and as far from its own palette's
+   * lantern, as the eye its palette serves sees them (palette.test.ts). The
+   * standard palette's is a sulphur lime. A red-green eye sees that lime as
+   * Bathyarch's amber, so the pair's is the yellow at the gamut's corner. A
+   * tritanope sees every lime and yellow as a pink, the lantern's own, so
+   * tritanopia's is a dark umber and tells depth by lightness.
+   */
+  comb: number;
+  /**
    * The five world-light families' tokens (docs/style-neon-noir.md "Rule 5 in
    * the colour-vision palettes", #1854). A palette's own, as the lantern is:
    * to a red-green eye the standard biolight is Bathyarch's cladding and the
@@ -290,6 +305,7 @@ const STANDARD: Palette = {
   },
   fauna: 0x5fa88a,
   lantern: 0xc56bc7,
+  comb: 0xd2dc28,
   worldLight: STANDARD_WORLD_LIGHT,
   ui: {
     ...CHROME,
@@ -351,6 +367,7 @@ const DEUTERANOPIA: Palette = {
   },
   fauna: 0x6e8c84,
   lantern: 0x7f00ff,
+  comb: 0xffff00,
   worldLight: RED_GREEN_WORLD_LIGHT,
   ui: {
     ...CHROME,
@@ -411,6 +428,7 @@ const PROTANOPIA: Palette = {
   },
   fauna: 0x6e8c84,
   lantern: 0x9900ff,
+  comb: 0xffff00,
   worldLight: RED_GREEN_WORLD_LIGHT,
   ui: {
     ...CHROME,
@@ -474,6 +492,7 @@ const TRITANOPIA: Palette = {
   },
   fauna: 0x7a7a88,
   lantern: 0xcb68c3,
+  comb: 0x6a422a,
   worldLight: TRITANOPIA_WORLD_LIGHT,
   ui: {
     ...CHROME,
@@ -547,6 +566,13 @@ export let FAUNA_COLOR: number = STANDARD.fauna;
 export let JELLY_LANTERN: number = STANDARD.lantern;
 
 /**
+ * A comb jelly's own light at the High graphics quality, in the active
+ * palette (`Palette.comb`). Read each frame by the environment layer, as the
+ * lantern's is, so it follows a palette changed mid-match.
+ */
+export let COMB_LIGHT: number = STANDARD.comb;
+
+/**
  * The five world-light families' tokens in the active palette
  * (`Palette.worldLight`): what an ember, a lamp, a chimney's steam and a
  * prop's licensed emissive are drawn in at both graphics qualities, and what
@@ -591,6 +617,7 @@ export function setActivePalette(name: unknown): Palette {
   RESOURCE_COLOR = palette.resource;
   FAUNA_COLOR = palette.fauna;
   JELLY_LANTERN = palette.lantern;
+  COMB_LIGHT = palette.comb;
   WORLD_LIGHT = palette.worldLight;
   UI = palette.ui;
   return palette;

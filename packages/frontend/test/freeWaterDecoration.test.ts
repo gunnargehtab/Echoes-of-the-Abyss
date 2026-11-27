@@ -120,6 +120,7 @@ const BLOCK_4_HEIGHT_M: Record<string, number> = {
   'env-rim-ray': 4.05,
   'env-drift-jelly': 4.11,
   'env-rim-manta': 2.04,
+  'env-comb-jelly': 5.0,
 };
 const bankedReach = (p: PropPlacement) => {
   const m = p.motion!;
@@ -697,6 +698,8 @@ describe('authored public decoration', () => {
       'env-vent-chimney': FREE_WATER_HIGH_VENTS.CHIMNEYS.length,
       'env-vent-basalt': FREE_WATER_HIGH_VENTS.BASALT.length,
       'env-rim-manta': 1,
+      // The deep bodies, under the Shelf's line (#1858).
+      'env-comb-jelly': FREE_WATER_HIGH_LIFE.COMBS.SLOTS.length,
     });
     // Slots, not scatter: none is refused by the public ground it stands
     // over, none is scaled, and a second call draws the same list.
@@ -773,10 +776,56 @@ describe('authored public decoration', () => {
       assert.equal(terrain.floor[cell], 600);
     }
 
+    // The deep bodies (#1858): each comb jelly alone on its own loop, at its
+    // authored depth and start, its whole loop over the outside rim's 600 m
+    // floor, and no loop within a body's width of another's.
+    const { COMBS } = FREE_WATER_HIGH_LIFE;
+    const combs = own.filter((p) => p.slug === 'env-comb-jelly');
+    assert.deepEqual(
+      combs.map((p) => [
+        p.xM,
+        p.yM,
+        p.motion!.depthM,
+        Math.round((p.motion!.phase * 180) / Math.PI),
+      ]),
+      COMBS.SLOTS.map((slot) => [...slot])
+    );
+    // After every slot #1837 to #1867 stood, which keep their indices, and
+    // before the far bloom, which stays the last of the list.
+    const firstComb = high.indexOf(combs[0]!);
+    assert.equal(high[firstComb - 1]!.slug, 'env-rim-manta');
+    assert.deepEqual(high.slice(firstComb, firstComb + combs.length), combs);
+    assert.equal(high[firstComb + combs.length]!.far, true);
+    for (const p of combs) {
+      const { phase: _phase, depthM: _depthM, ...motion } = p.motion!;
+      assert.deepEqual(motion, { ...COMBS.MOTION });
+      for (let step = 0; step < 24; step++) {
+        const pose = decorationPose(p, (p.motion!.periodS * 1000 * step) / 24, () => 0);
+        const cell =
+          Math.floor(pose.z / terrain.cellM) * terrain.cols + Math.floor(pose.x / terrain.cellM);
+        assert.equal(terrain.biomes[cell], Biome.CoralRuins);
+        assert.equal(terrain.floor[cell], 600);
+      }
+      for (const q of combs) {
+        if (q === p) continue;
+        const apart = Math.hypot(p.xM - q.xM, p.yM - q.yM);
+        assert.ok(
+          apart > 2 * COMBS.MOTION.radiusM + propSpec(p.slug)!.footprintM,
+          `comb jellies at ${p.xM},${p.yM} and ${q.xM},${q.yM} share water`
+        );
+      }
+    }
+
     // §5 prints each stream as the constants hold it.
     const doc = readFileSync(new URL('../../../docs/free-water-slice.md', import.meta.url), 'utf8');
     const numbers = (text: string) =>
       [...text.replace(/,(?=\d{3})/g, '').matchAll(/\d+(?:\.\d+)?/g)].map(Number);
+    // And each comb jelly's slot, a row a body.
+    COMBS.SLOTS.forEach((slot, i) => {
+      const row = doc.split('\n').find((line) => line.startsWith(`| Comb ${i + 1} | `));
+      assert.ok(row, `§5 lost comb jelly ${i + 1}`);
+      assert.deepEqual(numbers(row.split('|').slice(2).join(' ')), [...slot]);
+    });
     // And each jelly's slot, a row a jelly.
     JELLIES.SLOTS.forEach((slot, i) => {
       const row = doc.split('\n').find((line) => line.startsWith(`| ${i + 1} | `));
@@ -810,11 +859,12 @@ describe('authored public decoration', () => {
     const low = freeWaterPlacements(terrain, true);
     const high = freeWaterPlacements(terrain, true, true);
     const { MANTA } = FREE_WATER_HIGH_LIFE;
-    // High alone stands it, once, in the last slot before the far bloom's
-    // (#1859): every slot before it keeps its index, and Low's list has none.
+    // High alone stands it, once, in the last slot before the comb jellies'
+    // (#1858) and the far bloom's (#1859): every slot before it keeps its
+    // index, and Low's list has none.
     assert.equal(low.filter((p) => p.slug === 'env-rim-manta').length, 0);
     assert.equal(high.filter((p) => p.slug === 'env-rim-manta').length, 1);
-    const manta = high.filter((p) => p.far !== true).at(-1)!;
+    const manta = high.filter((p) => p.far !== true && p.slug !== 'env-comb-jelly').at(-1)!;
     assert.equal(manta.slug, 'env-rim-manta');
     assert.notEqual(manta.disabled, true);
     assert.equal(manta.scale, 1);
@@ -927,9 +977,11 @@ describe('authored public decoration', () => {
     const { MOTION, STATION } = BACKLIT_STREAM;
     const count = BACKLIT_STREAM.SCHOOLS * BACKLIT_STREAM.COUNT;
     // The last slots #1856 stood, so every slot #1837 stood keeps its place
-    // in the list; the one after them is the manta's (#1867), and the far
-    // bloom's follow that (#1859).
-    const fish = high.filter((p) => p.far !== true).slice(-count - 1, -1);
+    // in the list; the one after them is the manta's (#1867), then the comb
+    // jellies' (#1858), and the far bloom's follow those (#1859).
+    const fish = high
+      .filter((p) => p.far !== true && p.slug !== 'env-comb-jelly')
+      .slice(-count - 1, -1);
     for (const p of fish) {
       assert.equal(p.slug, 'env-outer-fish');
       assert.deepEqual([p.xM, p.yM], [...BACKLIT_STREAM.at]);
@@ -1054,7 +1106,14 @@ describe('authored public decoration', () => {
       assert.equal(depthBandFor(shallowest), depthBandFor(deepest), `${name} crosses a band`);
       if (p.slug === 'env-drift-jelly')
         assert.ok(deepest < shelf, `${name}, a lantern off the Shelf`);
+      // And a comb jelly stays under it: the two hues never share a band.
+      if (p.slug === 'env-comb-jelly')
+        assert.ok(shallowest >= shelf, `${name}, a comb jelly on the Shelf`);
     }
+    assert.equal(
+      own.filter((p) => p.slug === 'env-comb-jelly').length,
+      FREE_WATER_HIGH_LIFE.COMBS.SLOTS.length
+    );
     // The rim's outer fish are the one stream under the line, all of it.
     const [x, y] = FREE_WATER_HIGH_LIFE.OUTER_STREAM.at;
     const rim = own.filter((p) => p.slug === 'env-outer-fish' && p.xM === x && p.yM === y);
@@ -1152,6 +1211,7 @@ describe('authored public decoration', () => {
       'env-rim-ray',
       'env-drift-jelly',
       'env-rim-manta',
+      'env-comb-jelly',
     ]) {
       const bytes = readFileSync(
         new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)

@@ -224,6 +224,34 @@ export const FREE_WATER_HIGH_LIFE = {
     MOTION: { periodS: 13500, depthSwingM: 0, axisM: 2.76, bankDeg: 12 },
     EDDY: { SKEW: 0.3, SPREAD: 0.4, WANDER_M: [8, 20], WANDER_LAPS: [9, 22] },
   },
+  /**
+   * The deep bodies (#1858): `env-comb-jelly`, six of them under the Shelf's
+   * 400 m line over the outside rim, where the lanterns hang over it, so the
+   * hue beside a hull says which side of the line it is on (§5, "Life by
+   * depth band"). A slot is a loop's centre in map metres, the depth the
+   * body's axis hangs at and where it stands when the match starts, in
+   * degrees round its loop, as a jelly's slot is. Each stands in the water
+   * the Close camera has under the hulls' rings, left of the vent stand's
+   * light, 222 to 548 m from that eye. A comb jelly glides: one lap of a
+   * loop 16 m in radius in 420 s, three quarters of a lantern's pace, rising
+   * and sinking 8 m, leaning `bankDeg` into the turn. Its swing keeps every
+   * axis between 432 and 558 m: under the line all lap, and its lowest point
+   * 30 m of depth over the rim's 600 m floor. No two start at one phase, so
+   * no two rise and sink together, and the starts spread the six across
+   * that water in the frame reduced motion holds. `axisM` is the body's
+   * mid-height over the model's origin, its lowest point.
+   */
+  COMBS: {
+    SLOTS: [
+      [340, 2000, 440, 225],
+      [540, 1780, 460, 180],
+      [480, 1920, 440, 315],
+      [440, 1960, 520, 45],
+      [400, 2040, 450, 0],
+      [500, 1860, 550, 135],
+    ],
+    MOTION: { radiusM: 16, periodS: 420, depthSwingM: 8, axisM: 2.51, bankDeg: 8 },
+  },
 } as const;
 
 /**
@@ -589,6 +617,32 @@ export const HIGH_GRAPHICS = {
        * flashes a second along the river.
        */
       FAR: { PULSE_GAIN: 0.2 },
+    },
+    /**
+     * A comb jelly as eight seams of light (combLight.ts;
+     * docs/art-direction.md, "A comb jelly is eight seams of light"; #1858),
+     * in `comb-light`: the deep body, dimmer than a lantern in every term.
+     *
+     * `SKIN` is the membrane of its body: `LEVEL` the light a face square to
+     * the eye gives, in the renderer's linear units, `RIM` what a face
+     * edge-on adds and `RIM_POWER` how fast that falls toward the face, each
+     * under half the lantern bell's. `ROWS` are the eight comb rows its file
+     * marks: `LEVEL` the light a ridge's own membrane gives, and `BEADS`
+     * points of light hung evenly along each row, `SIZE_M` wide at `BEAD`.
+     * `HALO` is the glow in the water round the body, one soft disc. `WAVE`
+     * is what moves: crests of light `LENGTH_M` apart run down the rows, one
+     * passing a point each `PERIOD_S`, `SHARP` the exponent that narrows a
+     * crest, each adding `GAIN` of the level it passes. Each body's clock
+     * runs `STAGGER_S` ahead of the last's, which spreads the crater's six
+     * evenly through a period, 0.75 s apart in the wave. Reduced motion holds
+     * it.
+     */
+    COMB: {
+      SKIN: { LEVEL: 0.012, RIM: 0.07, RIM_POWER: 2.2 },
+      ROWS: { LEVEL: 0.1, BEADS: 8, SIZE_M: 0.34, BEAD: 0.12 },
+      HALO: { SIZE_M: 9, LEVEL: 0.014 },
+      WAVE: { LENGTH_M: 2.6, PERIOD_S: 4.5, SHARP: 3, GAIN: 0.9 },
+      STAGGER_S: 5.25,
     },
     /**
      * SPEC: the manta (mantaWing.ts; docs/art-direction.md, "A manta shows its

@@ -57,6 +57,7 @@ import {
   wingThickness,
   type MantaUniforms,
 } from './mantaWing.ts';
+import { combMembrane, combRowLine, combUniforms, type CombUniforms } from './combLight.ts';
 import {
   jellyMembrane,
   jellyShape,
@@ -80,6 +81,11 @@ import {
  * shape at survey zoom and never as a contact.
  */
 const ENV_LUMINANCE_CEILING = 0.06;
+
+/** The comb rows a comb jelly's file marks, `comb_01`..`comb_08` (asset-prompts-3d.md Block 4). */
+const COMB_ROWS = 8;
+/** The node its file names for the mouth, a dark band under the body. */
+const COMB_MOUTH = 'mouth';
 
 const ENV_MODEL_URLS = import.meta.glob<string>('../../../../docs/concept-art/models/env-*.glb', {
   query: '?url',
@@ -120,6 +126,15 @@ export interface EnvTemplate {
   jelly?: { uniforms: JellyUniforms; shape: JellyShape };
   /** Present only on the manta's High template: what its wings' stroke reads. */
   manta?: { uniforms: MantaUniforms };
+  /**
+   * The comb rows a file marks as nodes `comb_01`..`comb_08`, each the line
+   * of points its light stands on, upper pole first, in the template's frame
+   * (combLight.ts `combRowLine`, #1858). Empty for every file but the comb
+   * jelly's.
+   */
+  combRows?: readonly (readonly Vector3[])[];
+  /** Present only on the comb jelly's High template: what its membranes read. */
+  comb?: { uniforms: CombUniforms };
 }
 
 const loader = new GLTFLoader();
@@ -243,7 +258,7 @@ export function propFootprint(root: Object3D): number {
 }
 
 /** Which High template a body draws from; false is Low's, and every standing prop's. */
-export type WorldLit = boolean | 'lantern' | 'wing';
+export type WorldLit = boolean | 'lantern' | 'wing' | 'comb';
 
 /**
  * The way a seat's facet faces: the normal of its triangles, each weighed by
@@ -283,7 +298,8 @@ function facetFacing(node: Object3D): Vector3 {
  * `'lantern'` is the drifting jelly's High template instead: every part a
  * lit membrane and none of it stone (jellyLight.ts). `'wing'` is the
  * manta's: a body in the world's light whose skin is smoothed and whose
- * wings stroke (mantaWing.ts, #1867).
+ * wings stroke (mantaWing.ts, #1867). `'comb'` is the comb jelly's: a fainter
+ * membrane whose eight marked comb rows are the light (combLight.ts, #1858).
  */
 export function buildTemplate(
   scene: Group,
@@ -311,6 +327,17 @@ export function buildTemplate(
         : cloneOf(child.material);
     }
   });
+  // A comb jelly's mouth is a dark band in its rows' material, and light
+  // cannot draw dark: on a membrane it would be a ninth lit thing. It takes a
+  // material of its own here, so it merges apart from the rows, keeps its
+  // place in the template's box and is left undrawn below.
+  if (worldLit === 'comb') {
+    copy.getObjectByName(COMB_MOUTH)?.traverse((child) => {
+      if (!(child instanceof Mesh) || Array.isArray(child.material)) return;
+      child.material = child.material.clone();
+      child.material.name = COMB_MOUTH;
+    });
+  }
   normaliseLuminance(
     materialClones.values(),
     // The manta's belly is the one skin of the crater's life over a body's
@@ -356,6 +383,30 @@ export function buildTemplate(
     }
   }
 
+  // A comb row is a ridge its file names, read as the seats are: off the
+  // node's own vertices, moved and scaled as the baked parts are.
+  const combRows: Vector3[][] = [];
+  for (let i = 1; i <= COMB_ROWS; i++) {
+    const node = copy.getObjectByName(`comb_${String(i).padStart(2, '0')}`);
+    if (node === undefined) continue;
+    const vertices: Vector3[] = [];
+    node.traverse((child) => {
+      if (!(child instanceof Mesh)) return;
+      const at = child.geometry.getAttribute('position');
+      for (let v = 0; v < at.count; v++) {
+        vertices.push(
+          new Vector3()
+            .fromBufferAttribute(at, v)
+            .applyMatrix4(child.matrixWorld)
+            .sub(new Vector3(centre.x, box.min.y, centre.z))
+            .multiplyScalar(scale)
+        );
+      }
+    });
+    const line = combRowLine(vertices);
+    if (line.length > 0) combRows.push(line);
+  }
+
   const sway: SwayUniforms | null =
     swayM > 0 ? { uSwayTime: { value: 0 }, uSwayAmpM: { value: swayM } } : null;
 
@@ -365,6 +416,10 @@ export function buildTemplate(
   const jelly = shape === null ? undefined : { uniforms: jellyUniforms(shape), shape };
   // The footprint is a manta's span, so half of it is where a tip stands.
   const manta = worldLit === 'wing' ? { uniforms: mantaUniforms(footprintM / 2) } : undefined;
+  // A comb jelly needs its rows: a file that marks none is drawn as a body
+  // in the world's light, and never as a membrane with no seam.
+  const comb =
+    worldLit === 'comb' && combRows.length > 0 ? { uniforms: combUniforms(heightM) } : undefined;
 
   const parts: EnvTemplate['parts'] = [];
   let triangles = 0;
@@ -384,6 +439,23 @@ export function buildTemplate(
       parts.push({
         geometry: smoothMembrane(geometry),
         material: jellyMembrane(part, jelly.uniforms),
+      });
+      geometry.dispose();
+      return;
+    }
+    if (comb !== undefined) {
+      // The mouth stays dark: undrawn, and no triangle of the instance's count.
+      if ((child.material as Material).name === COMB_MOUTH) {
+        triangles -= Math.floor((geometry.index?.count ?? position.count) / 3);
+        geometry.dispose();
+        return;
+      }
+      // The skin is the part in the swimmers' flank; the comb rows' ridges
+      // are the darker material, and the light.
+      const part = (child.material as Material).name === 'fish_flank' ? 'skin' : 'rows';
+      parts.push({
+        geometry: smoothMembrane(geometry),
+        material: combMembrane(part, comb.uniforms),
       });
       geometry.dispose();
       return;
@@ -435,6 +507,8 @@ export function buildTemplate(
     photophoreFacings,
     jelly,
     manta,
+    combRows,
+    comb,
   };
 }
 

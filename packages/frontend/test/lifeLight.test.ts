@@ -68,16 +68,18 @@ const LIFE = [
   'env-rim-ray',
   'env-drift-jelly',
   'env-rim-manta',
+  'env-comb-jelly',
 ];
 
 describe('the crater’s life in the world’s light (#1837)', () => {
-  it('names the seven decorative bodies as life, and which of them carry a light', () => {
+  it('names the eight decorative bodies as life, and which of them carry a light', () => {
     assert.deepEqual(
       ENVIRONMENT_PROPS.filter((spec) => spec.life === true).map((spec) => spec.slug),
       LIFE
     );
     // A fry carries one point on its axis, a deep fish one on each seat its
-    // file marks, and a jelly is a lantern; no other body emits.
+    // file marks, a jelly is a lantern and a comb jelly eight seams of light
+    // (#1858); no other body emits.
     assert.deepEqual(
       ENVIRONMENT_PROPS.filter((spec) => spec.glint !== undefined).map((spec) => [
         spec.slug,
@@ -87,16 +89,21 @@ describe('the crater’s life in the world’s light (#1837)', () => {
         ['env-shoal-fry', 'axis'],
         ['env-deep-fish', 'seats'],
         ['env-drift-jelly', 'lantern'],
+        ['env-comb-jelly', 'comb'],
       ]
     );
   });
 
   it('builds a body’s High template apart from Low’s, at the cladding’s register', async () => {
     // Every body but the jelly, which is a lantern at High and no lit body
-    // (jellyLight.test.ts), and the manta, whose belly has a register of its
+    // (jellyLight.test.ts), the comb jelly, which is light too
+    // (combLight.test.ts), and the manta, whose belly has a register of its
     // own (mantaWing.test.ts).
     for (const slug of LIFE.filter(
-      (body) => propSpec(body)!.glint !== 'lantern' && propSpec(body)!.wing !== true
+      (body) =>
+        propSpec(body)!.glint !== 'lantern' &&
+        propSpec(body)!.glint !== 'comb' &&
+        propSpec(body)!.wing !== true
     )) {
       const spec = propSpec(slug)!;
       const scene = await parse(slug);
