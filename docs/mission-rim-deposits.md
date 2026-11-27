@@ -392,7 +392,7 @@ the Chord and its margin.**
 
 Roles: `cutter` (three hulls), `escort` (three). Regions: `staging` 0, 0, 6000, 1000 — Prospect's
 return line — and the three face rectangles of §6. Markers: `the-faces` at 4300, 2500, r 1,200,
-and `the-line` at 3000, 500, r 1,000. Every row is revealed at 00:00; the raid hides nothing from
+and `the-line` at 3000, 500, r 500, the widest circle the staging holds (#1971). Every row is revealed at 00:00; the raid hides nothing from
 itself.
 
 | Objective | Text | Predicate | Terminal |

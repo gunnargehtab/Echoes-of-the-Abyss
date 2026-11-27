@@ -388,7 +388,7 @@ cross.**
 | `the-crossing` | *The stalls are under the terraces. A hull under way between them is the only sound there is.* | `quiet`, role `called`, ceilingSig 25 | **No**, and standing. Read out, never ranked |
 
 **No keystone**, and one marker. `the-calling` is revealed at **T(17)**, on Korrin's own beat, and
-carries the marker `axis` at 2500, 3625, radius 500; the other three carry no `revealAtTick` and
+carries the marker `axis` at 2500, 3625, radius 375, the widest circle `the-axis` holds (#1971); the other three carry no `revealAtTick` and
 no marker and stand on the panel from the first tick, because a calling that had to be discovered
 would not be a calling. An `extract` is not a standing predicate, so left to itself it latches Met
 the first pass it is true and never re-derives: a column that stood in the axis at 05:00 and left
@@ -630,7 +630,7 @@ every cell of the galleries is a cell one of those beats names. The Axis is the 
 | --- | --- | --- |
 | `galleries-west` | 1250, 3250, 750, 500 | The ground beat at 11:00 |
 | `galleries-east` | 3000, 3250, 750, 500 | The ground beat at 11:00 |
-| `the-axis` | 2000, 3250, 1000, 750 | `the-calling`, and the marker `axis` at 2500, 3625, r 500 |
+| `the-axis` | 2000, 3250, 1000, 750 | `the-calling`, and the marker `axis` at 2500, 3625, r 375 |
 
 **A stated deviation from the chart [Attendance](mission-attendance.md) §11 built.** On
 `attending-galleries` the channel is cut north to the galleries' southern edge and does not run

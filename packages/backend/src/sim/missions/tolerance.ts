@@ -105,7 +105,7 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
       name: 'The root aperture',
       x: 2000,
       y: 1875,
-      radiusM: 300,
+      radiusM: 125,
     },
     {
       id: 'section',
@@ -113,7 +113,7 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
       name: "Sector Vayle's frame",
       x: 875,
       y: 500,
-      radiusM: 400,
+      radiusM: 250,
     },
   ],
 

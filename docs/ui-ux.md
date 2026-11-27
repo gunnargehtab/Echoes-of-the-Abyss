@@ -1189,6 +1189,16 @@ something new, and a log role would re-announce the whole panel every time a cou
   more, so every marker carries one since #1617 and `missions.test.ts` fails one without. A
   newcomer told to hold *at the arch* stood under it for ten minutes without knowing
   it was there, because nothing on screen said so (#1611).
+- **A row that counts hulls in a region rings that region, inside it** (#1971). An `extract`
+  row counts a hull only while it stands in the row's rectangle, so the row's own ring is the
+  widest circle that rectangle holds about the marker's point, and every point of the ring is
+  water a hull is counted in. A ring past the rectangle draws water where a hull parked on its
+  rim is counted for nothing, and nothing on screen says why. The cost is a ring smaller than
+  the place: Shallow's 250 m ring on a 5,000 m slope. A place the row sends the player through
+  first, a corridor to cross, is its second marker, never its own. Until #1971, 40 of 45 rings
+  reached past their rectangle, and 75% of First Arrival's terraces ring lay outside it;
+  `missions.test.ts` holds every row, and Rim Deposits' *The faces*, which rings the cut rather than the staging, is owed by
+  #1923.
 - **A marker's name stands over the far side of its ring, on clear water** (#1662). The far
   side is the arc the camera sees run left to right over the top of the ring. The name stands
   4 px outside that line, at its highest point where the whole name fits on the water: the

@@ -975,9 +975,9 @@ describe('the objective, as docs/mission-rim-deposits.md §8 counts it', () => {
       CHORD_RIM_DEPOSITS.markers.map((marker) => [marker.id, marker.x, marker.y, marker.radiusM]),
       [
         ['the-faces', 4300, 2500, 1200],
-        ['the-line', 3000, 500, 1000],
+        ['the-line', 3000, 500, 500],
       ],
-      '§8: the-faces at 4300, 2500, r 1,200 and the-line at 3000, 500, r 1,000'
+      '§8: the-faces at 4300, 2500, r 1,200 and the-line at 3000, 500, r 500'
     );
     assert.equal(objectiveById('the-chord').markerId, 'the-line');
     assert.equal(objectiveById('load-one-home').markerId, 'the-faces');

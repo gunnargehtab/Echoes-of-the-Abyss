@@ -309,7 +309,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
       name: 'The mouth',
       x: 1500,
       y: 3625,
-      radiusM: 375,
+      radiusM: 125,
     },
   ],
 

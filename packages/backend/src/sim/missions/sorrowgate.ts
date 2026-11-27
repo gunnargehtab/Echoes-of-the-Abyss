@@ -195,7 +195,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       name: 'The Concourse',
       x: 2500,
       y: 350,
-      radiusM: 900,
+      radiusM: 350,
     },
     /**
      * §12's third named place (#1594): the way north once the arch has fallen.

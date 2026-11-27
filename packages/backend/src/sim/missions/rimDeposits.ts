@@ -540,7 +540,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       name: 'The Staging line',
       x: 3000,
       y: 500,
-      radiusM: 1000,
+      radiusM: 500,
     },
   ],
 

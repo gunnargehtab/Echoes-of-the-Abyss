@@ -100,7 +100,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
       name: 'The rail transfer',
       x: 2000,
       y: 250,
-      radiusM: 500,
+      radiusM: 250,
     },
   ],
 

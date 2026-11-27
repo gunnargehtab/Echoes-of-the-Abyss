@@ -345,7 +345,7 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
       name: "The watch's edge",
       x: 2000,
       y: 1875,
-      radiusM: 350,
+      radiusM: 125,
     },
     {
       id: 'holdfast',

@@ -163,7 +163,7 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       name: 'The Rail Head',
       x: 2000,
       y: 250,
-      radiusM: 500,
+      radiusM: 250,
     },
     // Where a barge loads, as the place on each lift's way to the Rail Head
     // (§11, #1886). The widest circle inside `face-cut`, the strip a cut runs

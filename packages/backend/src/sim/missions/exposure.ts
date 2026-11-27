@@ -146,7 +146,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
       name: 'The shelf lane',
       x: 2500,
       y: 375,
-      radiusM: 750,
+      radiusM: 375,
     },
   ],
 

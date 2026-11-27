@@ -428,7 +428,7 @@ Arrival* left it.
 
 Roles: `tender` (one hull), `escort` (three), `carrier` (two). Regions: `staging` 0, 0, 6000, 1000;
 `the-cache` 2750, 250, 500, 500; `chord-water` 4500, 2900, 500, 500 — every point of it within
-391 m of the node, and therefore inside the grant. Markers: `the-chord` at 4800, 3150, r 500, and
+391 m of the node, and therefore inside the grant. Markers: `the-chord` at 4800, 3150, r 200, the widest circle `chord-water` holds about it (#1971), and
 `the-mouth` at 4800, 3550, r 400.
 
 | Objective | Text | Predicate | Terminal |

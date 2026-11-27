@@ -481,7 +481,10 @@ balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 
 **Named on the chart** (#1617). *The Holdfast Gate* and *The corridor* are printed with their
 markers' rings while a row that names each is open ([ui-ux.md](ui-ux.md) §10.5). The crossing's line
-says the short way home crosses the corridor, so its name is the corridor it crosses.
+says the short way home crosses the corridor, so its name is the corridor it crosses. The crossing's
+row counts at the gate, so the gate is its own marker and the corridor the place on its way.
+Until #1971 the row sent the camera to the corridor, the one ring a hull is never counted in. The
+gate's ring is 125 m, the widest circle its 1,000 × 250 m rectangle holds.
 
 ---
 

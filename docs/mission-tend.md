@@ -418,8 +418,8 @@ place on its way to the Holdfast, so the chart shows where to load as well as wh
 (#1886). *The West Lane*'s ring is 375 m on the lane's centre at 750, 1375, the widest circle its
 750 m depth holds, because the re-seat runs only inside the lane. *The ovens* is printed with a
 125 m ring at 2375, 375, the circle inside the ovens' 250 m square, and the gift's row names it as
-the place on its way to the landing: the Holdfast's ring holds the ovens, but most of its water is
-not where the bread waits (#1923).
+the place on its way to the landing: the Holdfast's 400 m ring held the ovens until #1971, but most
+of its water was not where the bread waits (#1923).
 
 ---
 

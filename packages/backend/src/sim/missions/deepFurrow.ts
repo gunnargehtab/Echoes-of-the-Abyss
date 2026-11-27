@@ -297,7 +297,7 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
       name: 'The furrows',
       x: 2000,
       y: 2125,
-      radiusM: 750,
+      radiusM: 375,
     },
   ],
 

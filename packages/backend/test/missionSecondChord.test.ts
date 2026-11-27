@@ -929,7 +929,7 @@ describe('the objective, as docs/mission-second-chord.md §8 counts it', () => {
     assert.deepEqual(
       M.markers.map((marker) => [marker.id, marker.x, marker.y, marker.radiusM]),
       [
-        ['the-chord', 4800, 3150, 500],
+        ['the-chord', 4800, 3150, 200],
         ['the-mouth', 4800, 3550, 400],
       ]
     );
