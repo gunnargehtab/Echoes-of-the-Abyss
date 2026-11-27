@@ -19,6 +19,7 @@ import {
   OnLeaveException,
   OnMessageException,
   Room,
+  type AuthContext,
   type Client,
   type RoomException,
 } from '@colyseus/core';
@@ -65,6 +66,7 @@ import {
   everyoneIsReady,
   type RosterEntry,
 } from './lobby.ts';
+import { roomAdmission } from './admission.ts';
 
 /**
  * An AI seat's stand-in session id.
@@ -735,6 +737,19 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     this.startIfEveryoneIsReady();
   }
 
+  /**
+   * The address a seat is held from, for `roomAdmission` (#1961).
+   *
+   * Colyseus resolves `context.ip` from `X-Real-IP` first, and `guardSockets`
+   * (`src/http/sockets.ts`) has overwritten that header on every upgrade with
+   * the address resolved past the trusted proxies only, so what arrives here
+   * is not the client's to choose. Nothing is refused here: the check and the
+   * hold are taken together in `onJoin`, where nothing can run between them.
+   */
+  override onAuth(_client: Client, _options: unknown, context: AuthContext): { address: string } {
+    return { address: context.ip ?? 'unknown' };
+  }
+
   override onJoin(client: Client, options?: { name?: string }): void {
     // A running room is locked, so joinOrCreate routes a late arrival to a
     // fresh one. This is the belt to that braces: a direct joinById to a room
@@ -744,6 +759,15 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     }
     const slot = allocateSlot(this.roster(), this.maxClients);
     if (slot === undefined) throw new Error('This match is full.');
+    // Before the seat and before the map is sent, which is what builds the
+    // world: a refused join costs the thread nothing (#1961). Every socket
+    // reaches `onJoin` through `onAuth`, which names the address; a client
+    // without one is a test harness calling `onJoin` directly.
+    const address = (client.auth as { address?: unknown } | undefined)?.address;
+    if (typeof address === 'string') {
+      const refusal = roomAdmission.admit(this.roomId, client.sessionId, address);
+      if (refusal !== null) throw new Error(refusal);
+    }
 
     const player = new PlayerState();
     player.sessionId = client.sessionId;
@@ -1061,6 +1085,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
   }
 
   private releasePlayer(sessionId: string): void {
+    roomAdmission.release(this.roomId, sessionId);
     this.slotBySession.delete(sessionId);
     this.echoSent.delete(sessionId);
     this.messageBudget.delete(sessionId);
@@ -1078,6 +1103,8 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
   }
 
   override onDispose(): void {
+    // First, and whatever else fails: a room that is going away holds nothing.
+    roomAdmission.releaseRoom(this.roomId);
     // A room nobody joined never built a match, and one whose `onCreate`
     // refused an unknown mission could not: building one here would spend a
     // world on a room that is going away, or throw on top of the real error —
