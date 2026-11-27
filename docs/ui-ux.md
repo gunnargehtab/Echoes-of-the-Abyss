@@ -1423,7 +1423,10 @@ Audio carries primary information, so accessibility here is a correctness requir
   panel's case rather than the logs': its type is about 1.4x at 200% (#1934).
   **The MOVE 3D preview does not.** It is a form under a height cap that scrolls, so its rows
   need not all be on screen, which is the logs' case: it magnifies whole from its bottom-left
-  corner, type, controls and box, and its top stays where 100% puts it (#1969).
+  corner, type, controls and box, and its height cap keeps its top 215 units down at every
+  scale. That has a cost: at 200% on a 1,200 px window the box shows about 140 of its 477 units
+  of rows, so CONFIRM is a scroll away, and Enter confirms a pinned destination without it
+  (#1969).
   **And the scale the HUD draws at is held to what the window can carry.** The strip above
   the water and the console, hint line and breath below it take 292 units of height, and at
   200% on a 1366 × 768 screen they left 92 for the water, where no legible type fits the

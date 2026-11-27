@@ -1,6 +1,6 @@
 // The free-water MOVE 3D preview, armed, at one UI scale (#1969, docs/ui-ux.md
-// §11), as a run-game steps module. It selects the nearest own hull, arms the
-// preview so every row it can hold is up, and prints its computed type, a
+// §11), as a run-game steps module. It clicks the window centre, where the
+// study's hull sits, arms the preview so every row it can hold is up, and prints its computed type, a
 // button's, the held scale and the rects of it and the camera panel in window
 // px before the frame.
 //
