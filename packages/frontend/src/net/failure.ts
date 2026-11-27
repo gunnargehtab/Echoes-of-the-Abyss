@@ -61,8 +61,9 @@ export function joinFailure(error: unknown): JoinFailure {
  * from the code field or a listing that went stale: 522.
  *
  * 526 means the room's `onJoin` threw, not that it threw on purpose: a bug in
- * `onJoin` would show its own text here too. Today its only throws are the two
- * sentences written for the player, so the code is trusted as the room's word;
+ * `onJoin` would show its own text here too. Today every throw there is a
+ * sentence written for the player — a started or full match, and since #1961 a
+ * server or an address at its cap on rooms — so the code is trusted as the room's word;
  * telling the two apart would need the backend to mark its refusals.
  */
 export function refusalSentence(error: unknown): string {

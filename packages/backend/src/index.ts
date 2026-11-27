@@ -19,6 +19,7 @@ import {
 } from './http/cors.ts';
 import { guardMatchmaking } from './http/matchmaking.ts';
 import { mountReports } from './http/reports.ts';
+import { guardSockets } from './http/sockets.ts';
 import { describeThrown, logFailure } from './log.ts';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -136,6 +137,10 @@ guardOrigins(httpServer, corsPolicy);
 // Wrapped after the origin lock, so it runs first: a room-making request is
 // counted against its address before anything else is asked of it (#1960).
 guardMatchmaking(httpServer, corsPolicy);
+// Colyseus listens for upgrades from its transport's constructor, so this can
+// wrap them here too: past its socket cap an address is refused before the
+// handshake, and every socket's room sees the address the cap counted (#1961).
+guardSockets(httpServer);
 console.log(`Echoes of the Abyss server listening on :${PORT}`);
 console.log(`  simulation ${SIM.TICK_HZ} Hz | Echo Layer ${SIM.ECHO_HZ} Hz`);
 console.log(`  origins: ${describeCorsPolicy(corsPolicy)}`);

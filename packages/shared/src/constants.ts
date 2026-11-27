@@ -3854,3 +3854,41 @@ export const MATCHMAKING = {
   /** TUNABLE — addresses the limiter remembers, for `REPORTS`' reason. */
   MAX_TRACKED_ADDRESSES: 10_000,
 } as const;
+
+/**
+ * How much of the one thread that steps every match a stranger may hold (#1961).
+ *
+ * `MATCHMAKING` bounds how fast rooms are made; this bounds how many run. A
+ * socket that joins a room it made, seats three Veteran commanders and readies
+ * holds a 60 Hz match with nobody watching, and four such seats cost 13 to 15 ms
+ * of the thread per match second (`docs/threat-model.md`, TM-003). A room is
+ * *held* from the first seat a socket takes in it until its last such seat is
+ * released, and that is what the first two count (`src/rooms/admission.ts` in
+ * the backend); an unjoined room holds nothing, and Colyseus disposes it when
+ * its seat reservation lapses (15 s).
+ *
+ * A full server refuses a new room rather than lag the ones running: the
+ * refusal is the cost, paid by whoever arrives last.
+ *
+ * None is a balance number, so none is inside `CLAUDE.md`'s freeze.
+ */
+export const ADMISSION = {
+  /**
+   * TUNABLE — rooms held at once, across every address. Twenty-four at the
+   * measured worst, four Veteran seats each, is about 360 ms of every second:
+   * a third of the thread, which leaves the rest for the Echo pass's spikes.
+   */
+  MAX_LIVE_ROOMS: 24,
+  /**
+   * TUNABLE — rooms one address may hold at once. Two, because a household or
+   * an office shares one address and may run two matches; a lobby of four
+   * players behind one address is one room, and costs one.
+   */
+  MAX_ROOMS_PER_ADDRESS: 2,
+  /**
+   * TUNABLE — WebSocket connections one address may hold open, counted at the
+   * upgrade, before Colyseus sees the socket (`src/http/sockets.ts` in the
+   * backend). Eight is that lobby of four with a spare tab each.
+   */
+  MAX_SOCKETS_PER_ADDRESS: 8,
+} as const;
