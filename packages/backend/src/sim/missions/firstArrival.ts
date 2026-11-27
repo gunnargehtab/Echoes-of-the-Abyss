@@ -321,7 +321,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
 
   /**
    * One marker, on Prospect's own point, inside the terraces the row counts on
-   * (#1971: Prospect's r2500 over the six faces was 75% off them), and it
+   * (#1971: Prospect's r2500 over the six faces was 75% off the terraces), and it
    * is revealed with the count at 19:00 — a marker ships only while an
    * objective naming it is shown (`projectMissionView`), so the terraces are
    * pointed at for the last two minutes and never before. Nothing points at
