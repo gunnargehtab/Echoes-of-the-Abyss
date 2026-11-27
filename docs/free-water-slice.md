@@ -656,6 +656,7 @@ grazer of the water and nothing of a hunter. The manta (#1867) is High's, at the
 | `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide, banked 30 degrees into its turn |
 | `env-drift-jelly` | 6 m across its bell | 5 / 700 | Over the outside rim by the start, 150..210 m depth, at the High graphics quality alone; each alone on one slow closed drift |
 | `env-rim-manta` | 18 m across | 1 / 4,000 | Over the outside rim before the Close eye, 150..180 m depth, at the High graphics quality alone; one slow closed glide, banked 40 degrees into its turn |
+| `env-comb-jelly` | 3.5 m across, 5 m tall | 6 / 700 | Over the outside rim before the Close eye, 432..558 m depth, at the High graphics quality alone; each alone on one slow closed loop, leaning 8 degrees into its turn |
 
 All motion is deterministic from published placement, a fixed seed and shared match
 time. It never reacts to a hull, a shot, a ping, damage or the camera. Reduced motion
@@ -885,15 +886,17 @@ caps, 720,000 at Low and 900,000 at High (below).
 the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent
 stand that Low does not (§5): its frame stood at up to 720,318 after #1837 and at up to
 761,358 with #1856's school, at up to 764,047 with #1867's manta, at up to 835,327
-with #1859's river of 120 lanterns, and stands at up to 851,455 with the ground #1891
-draws past the map's edge. Low keeps
+with #1859's river of 120 lanterns, and at up to 851,455 with the ground #1891
+draws past the map's edge. #1858's six comb jellies add 4,032, each 672 drawn
+triangles without its mouth, so it stands at up to 855,487: a sum on #1891's reading,
+since no survey frame was taken with them. Low keeps
 720,000, and gate 6's 8 ms of GPU time
 still binds High's frame. The 600,000 reservation above binds the Low list alone, by the
 owner's decision the same day, against binding High's list too and against a second
 reservation for High. It is what `packages/frontend/test/freeWaterDecoration.test.ts`
-sums: 551,850 by the registry's budgets. High's list sums to 759,923 by the same
-budgets, to 688,643 before #1859's river, to 685,954 before #1867 and to 644,914
-before #1856. What High alone stands is counted against the
+sums: 551,850 by the registry's budgets. High's list sums to 763,967 by the same
+budgets, to 759,923 before #1858's comb jellies, to 688,643 before #1859's river, to
+685,954 before #1867 and to 644,914 before #1856. What High alone stands is counted against the
 frame's 900,000 and has no reservation of its own.
 
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,

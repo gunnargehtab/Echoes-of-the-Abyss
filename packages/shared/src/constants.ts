@@ -621,13 +621,14 @@ export const HIGH_GRAPHICS = {
     /**
      * A comb jelly as eight seams of light (combLight.ts;
      * docs/art-direction.md, "A comb jelly is eight seams of light"; #1858),
-     * in `comb-light`: the deep body, dimmer than a lantern in every term.
+     * in `comb-light`: the deep body, and a dimmer one than a lantern.
      *
      * `SKIN` is the membrane of its body: `LEVEL` the light a face square to
      * the eye gives, in the renderer's linear units, `RIM` what a face
-     * edge-on adds and `RIM_POWER` how fast that falls toward the face, each
-     * under half the lantern bell's. `ROWS` are the eight comb rows its file
-     * marks: `LEVEL` the light a ridge's own membrane gives, and `BEADS`
+     * edge-on adds, both under half the lantern bell's, and `RIM_POWER` how
+     * fast that falls toward the face, the bell's own. `ROWS` are the eight
+     * comb rows its file marks: `LEVEL` the light a ridge's own membrane
+     * gives, eight times the skin's and over the bell's, and `BEADS`
      * points of light hung evenly along each row, `SIZE_M` wide at `BEAD`.
      * `HALO` is the glow in the water round the body, one soft disc. `WAVE`
      * is what moves: crests of light `LENGTH_M` apart run down the rows, one

@@ -129,7 +129,8 @@ export interface Palette {
    * lantern, as the eye its palette serves sees them (palette.test.ts). The
    * standard palette's is a sulphur lime. A red-green eye sees that lime as
    * Bathyarch's amber, so the pair's is the yellow at the gamut's corner. A
-   * tritanope sees every lime and yellow as a pink, the lantern's own, so
+   * tritanope sees that lime and that yellow as a pink, the lantern's own,
+   * and no colour that holds both floors for that eye is light, so
    * tritanopia's is a dark umber and tells depth by lightness.
    */
   comb: number;

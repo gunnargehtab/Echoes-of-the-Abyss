@@ -443,8 +443,8 @@ Three rules govern all three:
    palettes both sit on the preserved blue axis, and under tritanopia cyan
    reads cool and magenta reads warm. A bevel is not information. World light
    is not information either and moves all the same, so that no eye can take it
-   for an ink that is: a jelly's lantern at the High graphics quality in every
-   palette, and four of the five families in the red-green pair
+   for an ink that is: a jelly's lantern and a comb jelly's light at the High
+   graphics quality in every palette, and four of the five families in the red-green pair
    ([World light](#rule-5-in-the-colour-vision-palettes)).
 2. **Biome fills and Echo Mark residue do not move either.** The seafloor is
    deliberately desaturated to 5–10 % luminance and carries no hue-only
@@ -483,6 +483,7 @@ difference than that would be decoration.
 | Resonance Crystal | `#B98CFF` | `#7FA0F5` | `#7FA0F5` |
 | Fauna | `#5FA88A` | `#6E8C84` | `#6E8C84` |
 | Jelly lantern (world light, High) | `#C56BC7` | `#7F00FF` | `#9900FF` |
+| Comb light (world light, High) | `#D2DC28` | `#FFFF00` | `#FFFF00` |
 | `vent-ember` (world light) | `#E06A2B` | `#CC7656` | `#CC7656` |
 | `flora-biolight` (world light) | `#2E8C74` | `#4E8B4C` | `#4E8B4C` |
 | `crystal-seam` (world light) | `#5B4A8C` | `#584996` | `#584996` |
@@ -548,6 +549,7 @@ the margin the jelly lantern was given
 | Resonance Crystal | `#B98CFF` | `#70B4FC` |
 | Fauna | `#5FA88A` | `#7A7A88` |
 | Jelly lantern (world light, High) | `#C56BC7` | `#CB68C3` |
+| Comb light (world light, High) | `#D2DC28` | `#6A422A` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F0E0C8` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#1FA67A` · `#8FE36B` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#A02030` · `#E0566B` |
@@ -794,16 +796,17 @@ holds for every eye. A red-green eye sees the standard token as Bathyarch's ambe
 from it to a deuteranope and 20.7 to a protanope, so the pair shares the yellow at the
 gamut's corner, the furthest that hue reaches from the amber. A tritanope has no yellow:
 that eye sees the lime 2.4 dE from the Directorate's console accent and the pair's yellow
-6.1 from Bathyarch's primary, and every lime and yellow as a pink, which is the lantern's.
+6.1 from Bathyarch's primary, and both as a pink, which is the lantern's.
 The lightest colour that holds both floors for that eye is a dark umber at a CIELAB
 lightness of 36, and none over 33 holds them by 3 dE. So tritanopia's is `#6A422A`, at a
-lightness of 32 under the lantern's 58, and the pair is told apart there by lightness, an orchid over an umber, and
+lightness of 32 under the lantern's 59, and the pair is told apart there by lightness, an orchid over an umber, and
 by form. It is drawn as it stands, a ninth as bright as the standard lime, which is what
 that costs.
 
 Its floor leaves out what the lantern's does. What that costs, each to the eye its
-palette serves: the tritanopia token stands 7.8 dE from `ore-trace` and 21.6 from that
-palette's `SIG mid`, and deuteranopia's 23.3 from its `SIG high`. Place and form hold
+palette serves: the tritanopia token stands 7.8 dE from `ore-trace`, 21.6 from that
+palette's `SIG mid` and 24.7 from its `crystal-seam`, and deuteranopia's 23.3 from its
+`SIG high`. Place and form hold
 those apart, as they do for the lantern: a trace lies on a nodule bed and a band is a
 meter's, and a comb jelly is an egg hanging in open water under 400 m. In the standard
 palette it stands 36.8 dE from Pelagia's accent, the hue of a Commune hull's searchlight

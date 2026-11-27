@@ -231,8 +231,8 @@ describe('a comb jelly is eight seams of light (#1858)', () => {
     };
     assert.deepEqual(read('skin'), [SKIN.LEVEL, SKIN.RIM, 0]);
     assert.deepEqual(read('rows'), [ROWS.LEVEL, 0, WAVE.GAIN]);
-    // "Dimmer than a lantern in every term": the skin under half the bell's,
-    // a bead under a strand's, the glow under the bell's own.
+    // A dimmer body than a lantern: the skin's level and edge under half the
+    // bell's, a bead under a strand's, the glow under the bell's own.
     assert.ok(SKIN.LEVEL <= JELLY.BELL.LEVEL / 2 && SKIN.RIM <= JELLY.BELL.RIM / 2);
     assert.ok(ROWS.BEAD < JELLY.STRANDS.LEVEL && ROWS.SIZE_M < JELLY.STRANDS.SIZE_M);
     assert.ok(HALO.LEVEL < JELLY.HALO.LEVEL && HALO.SIZE_M < JELLY.HALO.SIZE_M);
