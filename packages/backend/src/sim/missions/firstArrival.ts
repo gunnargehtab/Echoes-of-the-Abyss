@@ -333,7 +333,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
       name: 'The terraces',
       x: 3000,
       y: 2500,
-      radiusM: 2500,
+      radiusM: 500,
     },
   ],
 

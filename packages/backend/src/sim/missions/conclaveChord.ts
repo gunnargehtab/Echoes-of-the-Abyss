@@ -234,12 +234,13 @@ const VOICES: readonly Voice[] = [
 const voiceBy = (id: string): Voice => VOICES.find((voice) => voice.id === id)!;
 
 /** §6 — the cell, 500 m on a side, on the 250 m grid. */
+const CELL_M = 500;
 const cell = (voice: Voice): MissionRegion => ({
   id: voice.id,
   x: voice.cellX,
   y: voice.cellY,
-  widthM: 500,
-  heightM: 500,
+  widthM: CELL_M,
+  heightM: CELL_M,
   note: voice.note,
 });
 
@@ -363,8 +364,10 @@ export const CHORD_CONCLAVE: MissionDefinition = {
   /**
    * §8 — six markers, one per voice, and they ship only from 13:30 because a
    * marker travels with the objective that names it (`projectMissionView`).
-   * The radius is the cell's own half-width: the marker points at the voice,
-   * and the region is what is measured.
+   * The marker points at the voice, and the cell is what is measured, so the
+   * ring is the widest circle the cell holds about the voice: a voice stands
+   * off its cell's centre, and the cell's half-width spilled up to 26% of the
+   * ring onto water that counts nothing (#1971, docs/ui-ux.md §10.5).
    */
   markers: VOICES.map((voice) => ({
     id: voice.id,
@@ -375,7 +378,12 @@ export const CHORD_CONCLAVE: MissionDefinition = {
     name: voice.name,
     x: voice.x,
     y: voice.y,
-    radiusM: 250,
+    radiusM: Math.min(
+      voice.x - voice.cellX,
+      voice.cellX + CELL_M - voice.x,
+      voice.y - voice.cellY,
+      voice.cellY + CELL_M - voice.y
+    ),
   })),
 
   parties: [

@@ -272,7 +272,7 @@ export const SEEDING_RADICALS: MissionDefinition = {
       name: 'The far water',
       x: 2500,
       y: 3875,
-      radiusM: 500,
+      radiusM: 125,
     },
   ],
 

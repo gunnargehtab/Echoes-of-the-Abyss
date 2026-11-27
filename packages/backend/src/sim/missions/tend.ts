@@ -277,7 +277,7 @@ export const SEEDING_TEND: MissionDefinition = {
       name: 'The Holdfast',
       x: 2625,
       y: 375,
-      radiusM: 400,
+      radiusM: 125,
     },
     // The widest circle the lane's 750 m depth holds, on its centre (#1923):
     // the re-seat runs only inside the rectangle, so a 500 m ring drew water
@@ -296,7 +296,7 @@ export const SEEDING_TEND: MissionDefinition = {
       name: "Teel's landing",
       x: 3750,
       y: 2000,
-      radiusM: 350,
+      radiusM: 250,
     },
     // Where the share is loaded, as the place on its way home (§11, #1886).
     // On the mid rows' node, and the widest circle the Gardens' 750 m depth

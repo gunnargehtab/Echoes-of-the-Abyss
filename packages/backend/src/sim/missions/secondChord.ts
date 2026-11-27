@@ -697,7 +697,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       name: 'The Chord',
       x: 4800,
       y: 3150,
-      radiusM: 500,
+      radiusM: 200,
     },
     {
       id: 'the-mouth',

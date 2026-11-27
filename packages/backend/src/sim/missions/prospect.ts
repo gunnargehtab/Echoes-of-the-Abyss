@@ -104,7 +104,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
       name: 'The staging',
       x: 3000,
       y: 500,
-      radiusM: 1000,
+      radiusM: 500,
     },
   ],
 

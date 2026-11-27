@@ -385,7 +385,7 @@ The row shapes are the format's own, and every one is a query over the player's 
 layer, and we're saying it the way we said six at Kell: so nobody down there has to say it
 first.* —
 `{ kind: 'extract'; role: 'tender'; region: 'the-foot'; count: 3 }` — **terminal**, not
-keystone — revealed 00:00 — marker `the-foot` (2000, 250, r 500). Right as an
+keystone — revealed 00:00 — marker `the-foot` (2000, 250, r 250). Right as an
 extract-at-reveal: nobody is in the Foot at tick zero, and a tender that reaches it is home.
 Reading met: *Three over the layer. Sixteen, by household.* Unmet: *Fewer than three over the
 layer. The rest are in the cohort's water, and the Directorate has never yet rounded anybody
@@ -591,7 +591,7 @@ region). A mission restates only the places a predicate, a lift or a beat addres
 ([mission-intake.md](mission-intake.md) §11), so the garden and the throat are prose here and
 not regions: the plan's `the-furrows` and `the-throat` are named by no row, no marker and no
 beat, and *Radicals* §11 and *The Second Seeding* §11 drop their own unaddressed rectangles
-for the same reason. One marker, `the-foot`, at 2000, 250, r 500, named by both terminal
+for the same reason. One marker, `the-foot`, at 2000, 250, r 250, named by both terminal
 rows.
 
 **Seats, checked against the floor and the band.** The households, the watch and the escorts

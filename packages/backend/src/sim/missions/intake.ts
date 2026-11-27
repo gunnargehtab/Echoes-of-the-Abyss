@@ -260,7 +260,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
       name: 'The ascent',
       x: 2500,
       y: 125,
-      radiusM: 250,
+      radiusM: 125,
     },
   ],
 

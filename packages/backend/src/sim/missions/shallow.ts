@@ -454,7 +454,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
       name: 'The Kell Slope',
       x: 2500,
       y: 2750,
-      radiusM: 1000,
+      radiusM: 250,
     },
   ],
 

@@ -347,7 +347,7 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
       name: 'The North Gallery',
       x: AXIS_X,
       y: 250,
-      radiusM: 700,
+      radiusM: 250,
     },
   ],
 

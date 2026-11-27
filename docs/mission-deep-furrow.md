@@ -490,7 +490,7 @@ Three rows, all of them queries over the player's own hulls, as the union requir
 | Objective | Predicate | Terminal | Revealed | Marker |
 | --- | --- | --- | --- | --- |
 | **sown** — the second furrow sown | `{ kind: 'sound', count: 1 }` | Yes | 00:00 | `the-second-furrow` (2625, 2125, r 400) |
-| **tended** — two tenders in the furrows | `{ kind: 'extract', role: 'tender', region: 'the-furrows', count: 2 }` | Yes | **15:30** | `the-furrows` (2000, 2125, r 750) |
+| **tended** — two tenders in the furrows | `{ kind: 'extract', role: 'tender', region: 'the-furrows', count: 2 }` | Yes | **15:30** | `the-furrows` (2000, 2125, r 375) |
 | **the-day** — three tenders alive | `{ kind: 'survive', role: 'tender', count: 3 }` | No — standing, read out | 00:00 | none |
 
 **sown.** Text: *The second furrow wants sowing. Sixty seconds on the bare rock at the working
