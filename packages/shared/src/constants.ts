@@ -231,8 +231,8 @@ export const FREE_WATER_HIGH_LIFE = {
    * depth band"). A slot is a loop's centre in map metres, the depth the
    * body's axis hangs at and where it stands when the match starts, in
    * degrees round its loop, as a jelly's slot is. Each stands in the water
-   * the Close camera has under the hulls' rings, left of the vent stand's
-   * light, 222 to 548 m from that eye. A comb jelly glides: one lap of a
+   * the Close camera has under the hulls' rings, left of the vent stand,
+   * 222 to 548 m from that eye. A comb jelly glides: one lap of a
    * loop 16 m in radius in 420 s, three quarters of a lantern's pace, rising
    * and sinking 8 m, leaning `bankDeg` into the turn. Its swing keeps every
    * axis between 432 and 558 m: under the line all lap, and its lowest point

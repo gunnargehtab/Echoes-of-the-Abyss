@@ -441,11 +441,12 @@ goes, upright, leaning 8 degrees into the turn. Each hangs by its body's mid-hei
 Their axes keep 432 to 558 m over a lap, under the line and 30 m of depth and more over
 the rim's 600 m floor at their lowest points. Over a lap they hang 222 to 548 m from the
 Close eye and 44 to 71 m of drawn height under it, so they stand in the water under the
-hulls' rings, where the lanterns stand over them, and left of the vent stand's light. A
-5 m body draws 14 to 35 px there, and 7 to 9 from Home's eye. No two start at one phase,
+hulls' rings, where the lanterns stand over them, and left of the vent stand, the
+nearest to it at the edge of its light. A 5 m body draws 14 to 35 px there, and 7 to 9
+from Home's eye. No two start at one phase,
 so no two rise and sink together, and the starts spread the six across that water in the
 frame reduced motion holds. Six is the author's count, and the slots are: the Close
-frame's water under the rings, between the Harvester's ring and the vent's light, holds
+frame's water under the rings, between the Harvester's ring and the vent stand, holds
 that many 140 px apart and more. They are decoration under every rule of this section,
 as the lanterns are. How one is drawn is
 [art-direction.md](art-direction.md#a-comb-jelly-is-eight-seams-of-light)'s. The numbers
