@@ -80,8 +80,11 @@ describe('contact log detail column (docs/ui-ux.md §10)', () => {
 
   it('keeps the rows that carry no range as §10 prints them', () => {
     assert.deepEqual(detail(row({ tier: ResolutionTier.Contact })), ['bearing unknown']);
-    // `you were pinged`: a bearing and nothing else.
+    // `you were pinged`: a bearing and nothing else, and on a tick that sent
+    // none, `bearing unknown` — it shares the `---` tier with the exposure
+    // rows, so the empty column must key on their flag, not on the tier.
     assert.deepEqual(detail(row({ bearingDeg: 70 })), ['bearing 070°']);
+    assert.deepEqual(detail(row({ label: 'you were pinged' })), ['bearing unknown']);
     assert.deepEqual(detail(row({ mark: true, bearingDeg: 310, rangeM: 900 })), [
       'bearing 310°',
       'decaying',
