@@ -1,0 +1,656 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": true,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "readings": [
+    {
+      "name": "home",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 47,
+      "triangles": 599690,
+      "camera": [
+        709,
+        1710,
+        1200,
+        -34,
+        15,
+        300
+      ],
+      "searchlights": 0,
+      "beamMotes": 0,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 1.81,
+      "queued": {
+        "gpuMs": 2.2,
+        "worstGpuMs": 3.88,
+        "loadMs": 3.66
+      },
+      "insideBudget": null
+    },
+    {
+      "name": "close",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 47,
+      "triangles": 599690,
+      "camera": [
+        542,
+        1958,
+        420,
+        -60,
+        2,
+        300
+      ],
+      "searchlights": 0,
+      "beamMotes": 0,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 1.79,
+      "queued": {
+        "gpuMs": 2.18,
+        "worstGpuMs": 3.77,
+        "loadMs": 3.7
+      },
+      "insideBudget": null
+    },
+    {
+      "name": "low",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "split-copy",
+        "split"
+      ],
+      "calls": 26,
+      "triangles": 587001,
+      "camera": [
+        2000,
+        2000,
+        1600,
+        0,
+        12,
+        850
+      ],
+      "searchlights": 0,
+      "beamMotes": 0,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 1.34,
+      "queued": {
+        "gpuMs": 1.91,
+        "worstGpuMs": 4.96,
+        "loadMs": 3.77
+      },
+      "insideBudget": null
+    },
+    {
+      "name": "survey",
+      "quality": "low",
+      "passes": [
+        "canvas",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 48,
+      "triangles": 600986,
+      "camera": [
+        2000,
+        2000,
+        10000,
+        0,
+        88,
+        null
+      ],
+      "searchlights": 0,
+      "beamMotes": 0,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 1.64,
+      "queued": {
+        "gpuMs": 2.21,
+        "worstGpuMs": 5.5,
+        "loadMs": 3.75
+      },
+      "insideBudget": null
+    },
+    {
+      "name": "home",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 72,
+      "triangles": 860863,
+      "camera": [
+        709,
+        1710,
+        1200,
+        -34,
+        15,
+        300
+      ],
+      "searchlights": 6,
+      "beamMotes": 216000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -26.5
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            }
+          ]
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -19.1
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            },
+            {
+              "lamp": "port",
+              "bearingDeg": 0,
+              "riseDeg": -27.9
+            },
+            {
+              "lamp": "starboard",
+              "bearingDeg": -180,
+              "riseDeg": -29.9
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 4.72,
+      "queued": {
+        "gpuMs": 5.04,
+        "worstGpuMs": 8.57,
+        "loadMs": 3.67
+      },
+      "insideBudget": true
+    },
+    {
+      "name": "close",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 72,
+      "triangles": 860863,
+      "camera": [
+        542,
+        1958,
+        420,
+        -60,
+        2,
+        300
+      ],
+      "searchlights": 6,
+      "beamMotes": 216000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -26.5
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            }
+          ]
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -19.1
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            },
+            {
+              "lamp": "port",
+              "bearingDeg": 0,
+              "riseDeg": -27.9
+            },
+            {
+              "lamp": "starboard",
+              "bearingDeg": -180,
+              "riseDeg": -29.9
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 4.88,
+      "queued": {
+        "gpuMs": 5.34,
+        "worstGpuMs": 8.66,
+        "loadMs": 3.65
+      },
+      "insideBudget": true
+    },
+    {
+      "name": "low",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "split-copy",
+        "split"
+      ],
+      "calls": 50,
+      "triangles": 847526,
+      "camera": [
+        2000,
+        2000,
+        1600,
+        0,
+        12,
+        850
+      ],
+      "searchlights": 6,
+      "beamMotes": 216000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -26.5
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            }
+          ]
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -19.1
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            },
+            {
+              "lamp": "port",
+              "bearingDeg": 0,
+              "riseDeg": -27.9
+            },
+            {
+              "lamp": "starboard",
+              "bearingDeg": -180,
+              "riseDeg": -29.9
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 3.44,
+      "queued": {
+        "gpuMs": 3.86,
+        "worstGpuMs": 5.57,
+        "loadMs": 3.6
+      },
+      "insideBudget": true
+    },
+    {
+      "name": "survey",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 72,
+      "triangles": 861511,
+      "camera": [
+        2000,
+        2000,
+        10000,
+        0,
+        88,
+        null
+      ],
+      "searchlights": 6,
+      "beamMotes": 216000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -20.9
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            }
+          ]
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -8
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            },
+            {
+              "lamp": "port",
+              "bearingDeg": 0,
+              "riseDeg": -15
+            },
+            {
+              "lamp": "starboard",
+              "bearingDeg": -180,
+              "riseDeg": -15
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 3.71,
+      "queued": {
+        "gpuMs": 3.96,
+        "worstGpuMs": 7.22,
+        "loadMs": 3.67
+      },
+      "insideBudget": true
+    }
+  ]
+}

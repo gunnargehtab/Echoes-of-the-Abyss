@@ -492,6 +492,41 @@ export const HIGH_GRAPHICS = {
     SHADOW: { STEPS: 12, VOLUME_STEPS: 4, LIFT_M: 1.5, SOFT_M: 2, HULL_EDGE: [0.7, 1.4] },
   },
   /**
+   * TUNABLE: a beam from each lamp an own hull's class carries
+   * (docs/art-direction.md, "A beam from each lamp"; #1845), until a frame of
+   * it is accepted. The first lamp is the bow's, which is `SEARCHLIGHT` above
+   * and SPEC, and nothing here moves it. `BANDS` is how many lamps a class
+   * carries by its idle SIG, each pair a glow band's top SIG and its count,
+   * and `CRAFT` is a carrier's craft's, whatever its SIG:
+   * docs/asset-prompts-3d.md, "Searchlights a hull class throws", writes
+   * both a class at a time, and that table moves first. The second lamp is
+   * the mast's and the third and fourth are a flood to port and to starboard.
+   *
+   * `MAST`: the lamp stands on the hull's back, `AHEAD` of amidships in
+   * lengths, and looks along the heading `RISE_DEG` over the level. It stands
+   * over the hull's top by what its cone's lower edge needs to pass over the
+   * bow, which the cone's own angles give, and `CLEAR_M` more. The rise is
+   * in the world's drawn metres, where depth is drawn at 0.22 of plan: 10
+   * degrees climbs from a hull at 300 m to the manta's 165 m in 170 m of
+   * plan. `FLOOD`: the lamp hangs `OUT_M` off the beam end, under the keel
+   * line as the bow's does, and looks abeam at the ground `THROW_M` out,
+   * between the two angles under the level `DEPRESSION_DEG` holds it to.
+   * So no point of a hull's box is in a cone of its own, and no hull is lit
+   * by a lamp of its own (gate 3). `SHARE` is a lamp's light of
+   * what the bow's is at the same live SIG: 1 is the lamp halo's gain, whole
+   * (docs/art-direction.md, limit 5).
+   */
+  LAMPS: {
+    BANDS: [
+      [15, 1],
+      [35, 2],
+      [100, 4],
+    ],
+    CRAFT: 1,
+    MAST: { AHEAD: 0.3, CLEAR_M: 0.5, RISE_DEG: 10, SHARE: 1 },
+    FLOOD: { OUT_M: 3, THROW_M: 80, DEPRESSION_DEG: [15, 60], SHARE: 1 },
+  },
+  /**
    * TUNABLE: life in the world's light (docs/art-direction.md, "Life in the
    * world's light"; #1837), until a frame of it is accepted. The world's
    * light on a decorative body (lifeLight.ts), added to the rig's as a hull's

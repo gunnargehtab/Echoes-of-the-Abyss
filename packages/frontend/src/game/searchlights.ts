@@ -34,6 +34,15 @@
  * Every number is SPEC since the owner accepted this step's frames on
  * 19 November 2026 (`HIGH_GRAPHICS.SEARCHLIGHT`, packages/shared/src/constants.ts;
  * docs/art-direction.md, "An own hull's searchlight", prints each).
+ *
+ * That step threw one beam a hull, off the bow. A hull now throws one from
+ * each lamp its class carries (docs/art-direction.md, "A beam from each
+ * lamp"; #1845): the bow's, which is the accepted beam in every number, then
+ * a mast lamp that looks ahead and up, then a flood to port and to starboard.
+ * The count is the class's, written a class at a time in
+ * docs/asset-prompts-3d.md, and the strength of each is still the hull's
+ * live SIG, so limit 5 holds for four lamps as it held for one. Those
+ * numbers are TUNABLE and in development (`HIGH_GRAPHICS.LAMPS`).
  */
 
 import {
@@ -48,11 +57,12 @@ import {
   Vector4,
   type Texture,
 } from 'three';
-import { HIGH_GRAPHICS } from '@echoes/shared';
+import { HIGH_GRAPHICS, statsFor, type UnitKind } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { haloGain } from './glow.ts';
 
 const SPEC = HIGH_GRAPHICS.SEARCHLIGHT;
+const LAMPS = HIGH_GRAPHICS.LAMPS;
 
 const glsl = (value: number): string => {
   const text = value.toFixed(6);
@@ -68,17 +78,24 @@ export interface SearchlightHull {
   z: number;
   /** Plan heading, radians: 0 looks along +x. */
   heading: number;
-  /** Drawn length and beam, the readability scale in them. */
+  /** Drawn length, beam and height, the readability scale in them. */
   lengthM: number;
   beamM: number;
+  heightM: number;
   /** Live SIG, 0 to 100, as the snapshot carries it. */
   sig: number;
+  /** Lamps its class carries (`hullLamps`): the bow's, the mast's, then the flood pair. */
+  lamps: number;
 }
+
+/** Which of a hull's lamps a beam leaves, in the order a class's count takes them. */
+export type SearchlightLamp = 'bow' | 'mast' | 'port' | 'starboard';
 
 /** One beam: where it leaves the hull, where it looks, and its light. */
 export interface Searchlight {
   /** The hull that throws it. */
   hull: number;
+  lamp: SearchlightLamp;
   x: number;
   y: number;
   z: number;
@@ -113,17 +130,38 @@ export function searchlightGain(sig: number): number {
   return haloGain(Math.min(sig, SPEC.GAIN_SIG_CAP));
 }
 
+/**
+ * Lamps a hull class carries: its glow band's, by its idle SIG, and one for
+ * a carrier's craft (docs/asset-prompts-3d.md, "Searchlights a hull class
+ * throws"). The class's own stats, so a refit that moves a hull's SIG moves
+ * how bright its lamps burn and never how many it has.
+ */
+export function hullLamps(kind: UnitKind): number {
+  const stats = statsFor(kind);
+  if (stats.launchedFrom !== undefined) return LAMPS.CRAFT;
+  const band = LAMPS.BANDS.find(([top]) => stats.sigIdle <= top);
+  return band === undefined ? LAMPS.BANDS[LAMPS.BANDS.length - 1]![1] : band[1];
+}
+
 const squared = (ax: number, az: number, bx: number, bz: number): number =>
   (ax - bx) * (ax - bx) + (az - bz) * (az - bz);
 
+const radians = (deg: number): number => (deg * Math.PI) / 180;
+
 /**
  * The beams a frame draws and the hulls that stand in their way, from the
- * player's own hulls alone. A hull throws one beam from its bow, along its
- * heading, at the ground `THROW_M` ahead of it: `groundY` is the drawn
- * ground's height at a plan point. Hulls that throw none are left out, and
- * of the rest the `MAX` nearest the camera's focus are kept, ties by id, so
- * the choice is the same on every frame of a still camera. Every hull near
- * the focus may occlude, lit or not.
+ * player's own hulls alone. `groundY` is the drawn ground's height at a plan
+ * point. Hulls that throw none are left out, and of the rest the `MAX`
+ * nearest the camera's focus throw, ties by id, so the choice is the same on
+ * every frame of a still camera. Every hull near the focus may occlude, lit
+ * or not.
+ *
+ * The frame's `MAX` is shared in rounds. Every one of those hulls takes its
+ * bow beam, the accepted one, before any takes a second lamp; then the mast
+ * lamps, nearest first; then the flood pairs, a pair whole or not at all. So
+ * `MAX` loud hulls draw exactly what one beam a hull drew, and the bow beams
+ * come first in the list, which a capture finding a hull's beam relies on
+ * (docs/screenshots/issue-1836/frames.mjs).
  */
 export function searchlightsOf(
   hulls: readonly SearchlightHull[],
@@ -136,37 +174,108 @@ export function searchlightsOf(
       squared(a.x, a.z, focus.x, focus.z) - squared(b.x, b.z, focus.x, focus.z) || a.id - b.id
   );
   const color = new Color(glow);
-  const [shallowest, steepest] = SPEC.DEPRESSION_DEG.map((deg) => (deg * Math.PI) / 180);
-  const lights: Searchlight[] = [];
-  for (const hull of nearest) {
-    if (lights.length === SPEC.MAX) break;
-    const gain = searchlightGain(hull.sig);
-    if (gain <= 0) continue;
-    const fx = Math.cos(hull.heading);
-    const fz = Math.sin(hull.heading);
-    // Off the bow and under the keel line, clear of the hull's own capsule,
-    // and never in the ground: a hull skimming the floor at a far dolly is
-    // drawn several times its size, and its keel line with it.
-    const ahead = hull.lengthM / 2 + SPEC.CLEAR_M;
-    const x = hull.x + fx * ahead;
-    const z = hull.z + fz * ahead;
-    const y = Math.max(hull.y - hull.beamM * SPEC.KEEL, groundY(x, z) + SPEC.LAMP_CLEAR_M);
-    // At the ground a throw ahead, so the pool leads the hull at any height.
-    const fall = y - groundY(x + fx * SPEC.THROW_M, z + fz * SPEC.THROW_M);
-    const pitch = Math.min(steepest!, Math.max(shallowest!, Math.atan2(fall, SPEC.THROW_M)));
-    const power = SPEC.POWER * gain;
-    lights.push({
+  type At = { x: number; y: number; z: number };
+  // Where a lamp hangs, and never in the ground: a hull skimming the floor at
+  // a far dolly is drawn several times its size, and its keel line with it.
+  const hangAt = (x: number, y: number, z: number): At => ({
+    x,
+    y: Math.max(y, groundY(x, z) + SPEC.LAMP_CLEAR_M),
+    z,
+  });
+  // One beam, along the plan direction `(ax, az)` and `rise` radians over the
+  // level, at `share` of what the bow's lamp throws at this hull's live SIG.
+  const beam = (
+    hull: SearchlightHull,
+    lamp: SearchlightLamp,
+    at: At,
+    ax: number,
+    az: number,
+    rise: number,
+    share: number
+  ): Searchlight => {
+    const power = SPEC.POWER * searchlightGain(hull.sig) * share;
+    return {
       hull: hull.id,
-      x,
-      y,
-      z,
-      dx: fx * Math.cos(pitch),
-      dy: -Math.sin(pitch),
-      dz: fz * Math.cos(pitch),
+      lamp,
+      ...at,
+      dx: ax * Math.cos(rise),
+      dy: Math.sin(rise),
+      dz: az * Math.cos(rise),
       r: color.r * power,
       g: color.g * power,
       b: color.b * power,
-    });
+    };
+  };
+  // A lamp that looks at the ground `throwM` out along `(ax, az)`, so its
+  // pool leads it at any height, held between two angles under the level.
+  const atGround = (
+    hull: SearchlightHull,
+    lamp: SearchlightLamp,
+    at: At,
+    ax: number,
+    az: number,
+    throwM: number,
+    depressionDeg: readonly number[],
+    share: number
+  ): Searchlight => {
+    const [shallowest, steepest] = depressionDeg.map(radians);
+    const fall = at.y - groundY(at.x + ax * throwM, at.z + az * throwM);
+    const pitch = Math.min(steepest!, Math.max(shallowest!, Math.atan2(fall, throwM)));
+    return beam(hull, lamp, at, ax, az, -pitch, share);
+  };
+  // Off the bow and under the keel line, clear of the hull's own capsule.
+  const bow = (hull: SearchlightHull): Searchlight => {
+    const fx = Math.cos(hull.heading);
+    const fz = Math.sin(hull.heading);
+    const ahead = hull.lengthM / 2 + SPEC.CLEAR_M;
+    const at = hangAt(hull.x + fx * ahead, hull.y - hull.beamM * SPEC.KEEL, hull.z + fz * ahead);
+    return atGround(hull, 'bow', at, fx, fz, SPEC.THROW_M, SPEC.DEPRESSION_DEG, 1);
+  };
+  // On the hull's back, forward of amidships, looking ahead and up: over
+  // level ground it meets none, so it throws a cone and no pool, and under a
+  // wall it lights the rock that stands over the hull. It stands over the
+  // hull's top by what its cone's lower edge needs to pass over the bow, so
+  // the hull is never in its own beam. From the hull's height and never its
+  // beam: a beam is a fin's span, and 0.9 of a Cruiser's stood this lamp 65
+  // drawn metres over its keel line.
+  const mast = (hull: SearchlightHull): Searchlight => {
+    const fx = Math.cos(hull.heading);
+    const fz = Math.sin(hull.heading);
+    const ahead = hull.lengthM * LAMPS.MAST.AHEAD;
+    const under = Math.max(0, radians(SPEC.OUTER_DEG - LAMPS.MAST.RISE_DEG));
+    const over = Math.max(0, hull.lengthM / 2 - ahead) * Math.tan(under) + LAMPS.MAST.CLEAR_M;
+    const at = hangAt(hull.x + fx * ahead, hull.y + hull.heightM / 2 + over, hull.z + fz * ahead);
+    return beam(hull, 'mast', at, fx, fz, radians(LAMPS.MAST.RISE_DEG), LAMPS.MAST.SHARE);
+  };
+  // Off a beam end, under the keel line as the bow's is, looking abeam at
+  // the ground beside the hull. `side` is 1 to starboard, the heading turned
+  // a quarter toward +z, and -1 to port.
+  const flood = (hull: SearchlightHull, side: 1 | -1): Searchlight => {
+    const ax = -Math.sin(hull.heading) * side;
+    const az = Math.cos(hull.heading) * side;
+    const out = hull.beamM / 2 + LAMPS.FLOOD.OUT_M;
+    const at = hangAt(hull.x + ax * out, hull.y - hull.beamM * SPEC.KEEL, hull.z + az * out);
+    return atGround(
+      hull,
+      side === 1 ? 'starboard' : 'port',
+      at,
+      ax,
+      az,
+      LAMPS.FLOOD.THROW_M,
+      LAMPS.FLOOD.DEPRESSION_DEG,
+      LAMPS.FLOOD.SHARE
+    );
+  };
+  const lit = nearest.filter((hull) => searchlightGain(hull.sig) > 0).slice(0, SPEC.MAX);
+  const lights: Searchlight[] = lit.map(bow);
+  for (const hull of lit) {
+    if (lights.length === SPEC.MAX) break;
+    if (hull.lamps >= 2) lights.push(mast(hull));
+  }
+  for (const hull of lit) {
+    // A pair or neither: a hull lit to one side alone would read as a turn.
+    if (lights.length + 2 > SPEC.MAX) break;
+    if (hull.lamps >= 4) lights.push(flood(hull, -1), flood(hull, 1));
   }
   const occluders = nearest.slice(0, SPEC.OCCLUDERS).map((hull): SearchlightOccluder => {
     const radiusM = hull.beamM / 2;
@@ -353,8 +462,10 @@ export function groundShade(
 /**
  * What the hulls leave of a beam at `at`: the shader's own test. How near
  * the line from the point to the lamp passes each hull's keel line, against
- * half its beam. `own` is the hull that throws the beam, which is behind its
- * lamp and is passed over.
+ * half its beam. `own` is the hull that throws the beam, and it is passed
+ * over: it stands outside every cone of its own (`searchlightsOf`), and a
+ * mast lamp stands inside a finned hull's capsule, which would otherwise
+ * shadow the whole beam.
  */
 export function hullShade(
   occluders: readonly SearchlightOccluder[],
@@ -440,8 +551,10 @@ export const SEARCHLIGHT_GLSL = [
   groundShadowGlsl('echoesSearchGround', SPEC.SHADOW.STEPS),
   groundShadowGlsl('echoesSearchGroundCoarse', SPEC.SHADOW.VOLUME_STEPS),
   // A hull in the way: how near the line from the point to the lamp passes
-  // its keel line, against half its beam. The beam's own hull is behind its
-  // lamp and is passed over.
+  // its keel line, against half its beam. The beam's own hull is passed
+  // over, and not as a shortcut: it stands outside every cone of its own
+  // (searchlightsOf), and a mast lamp stands inside a finned hull's capsule,
+  // which would otherwise shadow the whole beam.
   'float echoesSearchHulls( int i, vec3 at ) {',
   '  vec3 lamp = uSearchAt[ i ].xyz;',
   '  int own = int( uSearchAim[ i ].w );',

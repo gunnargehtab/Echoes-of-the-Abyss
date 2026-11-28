@@ -1,0 +1,332 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": true,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "readings": [
+    {
+      "name": "home",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 69,
+      "triangles": 854849,
+      "camera": [
+        709,
+        1710,
+        1200,
+        -34,
+        15,
+        300
+      ],
+      "searchlights": 2,
+      "beamMotes": 72000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -26.5
+            }
+          ]
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -21.1
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 3.32,
+      "worstGpuMs": 4.68,
+      "queued": {
+        "gpuMs": 3.26,
+        "worstGpuMs": 4.54,
+        "loadMs": 3.58
+      },
+      "insideBudget": true
+    },
+    {
+      "name": "close",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 69,
+      "triangles": 854849,
+      "camera": [
+        542,
+        1958,
+        420,
+        -60,
+        2,
+        300
+      ],
+      "searchlights": 2,
+      "beamMotes": 72000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -26.5
+            }
+          ]
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -21.1
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 3.34,
+      "worstGpuMs": 5.37,
+      "queued": {
+        "gpuMs": 3.22,
+        "worstGpuMs": 3.74,
+        "loadMs": 3.58
+      },
+      "insideBudget": true
+    },
+    {
+      "name": "low",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "split-copy",
+        "split"
+      ],
+      "calls": 50,
+      "triangles": 847518,
+      "camera": [
+        2000,
+        2000,
+        1600,
+        0,
+        12,
+        850
+      ],
+      "searchlights": 2,
+      "beamMotes": 72000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -26.5
+            }
+          ]
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -21.1
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 2.62,
+      "worstGpuMs": 3.29,
+      "queued": {
+        "gpuMs": 2.63,
+        "worstGpuMs": 3.28,
+        "loadMs": 3.54
+      },
+      "insideBudget": true
+    },
+    {
+      "name": "survey",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 69,
+      "triangles": 855487,
+      "camera": [
+        2000,
+        2000,
+        10000,
+        0,
+        88,
+        null
+      ],
+      "searchlights": 2,
+      "beamMotes": 72000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -20.9
+            }
+          ]
+        },
+        {
+          "name": "Harvester",
+          "sig": 18,
+          "restSig": 18,
+          "xM": 375,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -8
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 2.92,
+      "worstGpuMs": 3.93,
+      "queued": {
+        "gpuMs": 2.76,
+        "worstGpuMs": 4.69,
+        "loadMs": 3.58
+      },
+      "insideBudget": true
+    }
+  ]
+}

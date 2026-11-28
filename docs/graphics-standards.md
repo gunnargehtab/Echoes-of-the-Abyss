@@ -772,6 +772,14 @@ for the crater's 16 × 16 cells. Its cost is fragments: a lit ground fragment in
 cone reads those heights twelve times a beam, and a sight line through a cone sixteen
 steps of four reads. That is read against the 8 ms on the named GPU and is not yet.
 
+A beam from each lamp ([art-direction.md](art-direction.md#a-beam-from-each-lamp)) adds
+no pass, target, texture or draw: the same quad a beam, and still six at most. It adds
+beams to a frame that drew fewer than six. The crater's fleet at rest throws four where
+it threw two, and a class with four lamps beside a class with two fills the six. Every
+added beam costs its cone's fragments and 36,000 vertices of snow.
+[issue-1845](screenshots/issue-1845/README.md) reads both frames against the 8 ms on the
+named GPU.
+
 The snow in a beam ([art-direction.md](art-direction.md#snow-in-a-beam)) adds no pass,
 target or texture. It adds one instanced draw of points to the world pass, an instance a
 beam: 36,000 vertices a beam and 216,000 at six. A vertex in no beam is sent off the clip

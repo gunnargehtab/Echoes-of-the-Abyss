@@ -1,0 +1,112 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "software": false,
+  "unpaced": false,
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "readings": [
+    {
+      "name": "close",
+      "quality": "high",
+      "passes": [
+        "high-world",
+        "high-scatter",
+        "high-occlusion",
+        "high-bloom",
+        "high-composite",
+        "high-tactical",
+        "depth-copy",
+        "halo-source",
+        "halo-spread",
+        "halo-composite",
+        "split-copy",
+        "split"
+      ],
+      "calls": 65,
+      "triangles": 851451,
+      "camera": [
+        542,
+        1958,
+        420,
+        -60,
+        2,
+        300
+      ],
+      "searchlights": 6,
+      "beamMotes": 216000,
+      "hulls": [
+        {
+          "name": "Light Scout",
+          "sig": 6,
+          "restSig": 6,
+          "xM": 625,
+          "zM": 1875,
+          "depthM": 300,
+          "beams": []
+        },
+        {
+          "name": "Corvette",
+          "sig": 28,
+          "restSig": 28,
+          "xM": 625,
+          "zM": 2125,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 90,
+              "riseDeg": -26.5
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 90,
+              "riseDeg": 10
+            }
+          ]
+        },
+        {
+          "name": "Cruiser",
+          "sig": 55,
+          "restSig": 55,
+          "xM": 150,
+          "zM": 2330,
+          "depthM": 300,
+          "beams": [
+            {
+              "lamp": "bow",
+              "bearingDeg": 30.8,
+              "riseDeg": -19.4
+            },
+            {
+              "lamp": "mast",
+              "bearingDeg": 30.8,
+              "riseDeg": 10
+            },
+            {
+              "lamp": "port",
+              "bearingDeg": -59.2,
+              "riseDeg": -33
+            },
+            {
+              "lamp": "starboard",
+              "bearingDeg": 120.8,
+              "riseDeg": -31.4
+            }
+          ]
+        }
+      ],
+      "sway": "held",
+      "gpuTimer": "timing",
+      "avgGpuMs": 5.83,
+      "queued": {
+        "gpuMs": 4.19,
+        "worstGpuMs": 19.3,
+        "loadMs": 3.54
+      },
+      "insideBudget": null
+    }
+  ]
+}

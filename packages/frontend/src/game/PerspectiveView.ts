@@ -193,6 +193,7 @@ import { repaintWaterHue, waterHueTexture } from './waterMedium.ts';
 import { poolTexture, volumeInstances, worldLightsOf, type WorldLightSite } from './worldLights.ts';
 import {
   groundHeightTexture,
+  hullLamps,
   NO_GROUND,
   searchlightCount,
   searchlightsOf,
@@ -5474,7 +5475,9 @@ export class PerspectiveView {
         heading: this.headings.get(unit.id) ?? 0,
         lengthM: model.lengthM * draw,
         beamM: model.beamM * draw,
+        heightM: model.heightM * draw,
         sig: unit.sig,
+        lamps: hullLamps(unit.kind),
       });
     }
     const { lights, occluders } = searchlightsOf(
