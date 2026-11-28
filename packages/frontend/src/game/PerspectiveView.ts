@@ -5475,6 +5475,7 @@ export class PerspectiveView {
         heading: this.headings.get(unit.id) ?? 0,
         lengthM: model.lengthM * draw,
         beamM: model.beamM * draw,
+        heightM: model.heightM * draw,
         sig: unit.sig,
         lamps: hullLamps(unit.kind),
       });

@@ -510,7 +510,9 @@ ring over its own pool on those frames the same day. The other three palettes ar
 taken yet.*
 
 Each of the player's own hulls throws one beam from its bow, along its heading, in its
-navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light").
+navy's glow ([style-neon-noir.md](style-neon-noir.md) "World light"). A class's other
+lamps are a step in development ([A beam from each lamp](#a-beam-from-each-lamp)), and
+this section is the bow lamp's.
 It is agent light, the first at High: it pools on the ground and the stone, lights the
 cladding of another own hull it crosses, and scatters in the water as a cone. It is the
 first light with a direction, so it is the first to cast a shadow.
@@ -632,9 +634,9 @@ bow. An own hull now throws a beam from each lamp its class carries. The first i
 lamp's, the accepted beam, and no number of it moves.
 
 - **Three kinds of lamp, and each looks at a depth.** The **bow lamp** looks at the floor
-  a throw ahead, as accepted. The **mast lamp** stands on the hull's back, 0.3 of its
-  length ahead of amidships and 0.9 of its beam over the keel line, and looks along the
-  heading 10 degrees over the level. Over level ground it meets none and throws no pool:
+  a throw ahead, as accepted. The **mast lamp** stands over the bow, as far off it as
+  the bow lamp hangs and a quarter of the hull's height over the keel line, and looks
+  along the heading 10 degrees over the level. Over level ground it meets none and throws no pool:
   its cone runs its whole reach in open water, and it lights what swims over the hull's
   own depth when the hull heads that way. Under a wall or a rim it lights the rock that
   stands over the hull. A **flood** hangs under the keel line 3 m off each beam
@@ -660,7 +662,23 @@ lamp's, the accepted beam, and no number of it moves.
 - **Each lamp burns at the lamp halo's gain** (limit 5), as the bow's does: nothing
   through SIG 15. The count says how a class was built, and the live SIG alone says how
   bright. A Cruiser on Silent Running carries four lamps and throws no beam. `SHARE` is
-  a lamp's light of what the bow's is, 1 for both kinds.
+  a lamp's light of what the bow's is, 1 for both kinds: the issue's own words, read a
+  lamp. The reading not taken holds a hull's whole light to one beam's, a share of one
+  over its count, and a class built loud would then throw four dim beams.
+- **No hull is lit by a lamp of its own.** A hull's cladding takes half of a beam that
+  crosses it, and #1861's lanterns already light a hull, so gate 3 has little room near
+  the fleet. Every lamp hangs clear of its hull's box and looks away from it: the bow's
+  and the mast's off the bow, a flood off the beam end. So every point of the hull is
+  behind its own lamps and outside their cones, by where a lamp hangs and by no test in
+  a shader. The first frames stood the mast lamp amidships, 0.9 of the beam up. A
+  Commune Cruiser's beam is its fins' span, 72 drawn metres at the Close camera, and its
+  lamp hung 65 m over its keel line, in open water. So the lamp is measured in the
+  hull's heights.
+- **A mast beam reaches the manta.** A hull at rest that heads toward the manta's loop
+  puts it in the beam, which a bow beam never did
+  ([A manta shows its belly](#a-manta-shows-its-belly)). The owner named this on the
+  issue. [issue-1845](screenshots/issue-1845/README.md#the-manta-in-a-mast-beam) has the
+  frames, and the owner's reading of a belly at 0.7 in a beam is not taken.
 - **Six a frame, the bow beams first.** `SEARCHLIGHT.MAX` stays 6, and the six nearest
   loud hulls to the camera's focus still throw. Each takes its bow beam before any takes
   a second lamp. Then the mast lamps, nearest first. Then the flood pairs, a pair whole
@@ -681,16 +699,15 @@ lamp's, the accepted beam, and no number of it moves.
 
 `packages/frontend/test/searchlights.test.ts` holds the count a class to
 [asset-prompts-3d.md](asset-prompts-3d.md)'s table, the bow beam unmoved, where the mast
-and the floods hang and look, every lamp dark on Silent Running, the rounds and this
-table. `packages/frontend/test/rendererSmoke.test.ts` counts a loud Corvette's two beams
+and the floods hang and look, no hull's box in a cone of its own, every lamp dark on
+Silent Running, the rounds and this table. `packages/frontend/test/rendererSmoke.test.ts` counts a loud Corvette's two beams
 at High.
 
 | What | Constant | Value |
 | --- | --- | --- |
 | A glow band's top idle SIG and the lamps a class in it carries, a pair a band | `LAMPS.BANDS` | 15, 1, 35, 2, 100, 4 |
 | Lamps a carrier's craft carries | `LAMPS.CRAFT` | 1 |
-| How far ahead of amidships the mast lamp stands, in lengths | `LAMPS.MAST.AHEAD` | 0.3 |
-| How far over the keel line it stands, in beams | `LAMPS.MAST.UP` | 0.9 |
+| How far over the keel line the mast lamp stands, in the hull's heights | `LAMPS.MAST.UP` | 0.25 |
 | How far over the level it looks, degrees | `LAMPS.MAST.RISE_DEG` | 10 |
 | Its light, of the bow lamp's at the same live SIG | `LAMPS.MAST.SHARE` | 1 |
 | How far off the beam end a flood hangs, metres | `LAMPS.FLOOD.OUT_M` | 3 |
@@ -1303,10 +1320,12 @@ things a fish has not. Where it glides is
   The owner read a belly that pale beside a hull as clear of gate 3's reading of the
   hull: it is paler than a hull's cladding and it is no lamp, with no glow, no halo and
   no ring. A silver flank at 0.4 was turned down for a fish because it blooms
-  white in a beam. A beam is thrown down off a hull's bow and the manta swims 131 to
-  199 m deep, over the hulls' 300 m, so at rest none reaches it. A hull ordered above it
-  can put it in one, where a belly at 0.7 takes half the beam, and no frame of that is
-  taken.
+  white in a beam. A bow beam is thrown down and the manta swims 131 to
+  199 m deep, over the hulls' 300 m, so at rest no bow beam reaches it. A hull ordered
+  above it can put it in one, where a belly at 0.7 takes half the beam, and no frame of
+  that is taken. A mast lamp looks up, a step in development
+  ([A beam from each lamp](#a-beam-from-each-lamp)): a hull at rest that heads toward
+  the loop puts the manta in that beam, and the owner's reading of it is not taken.
 - **The Lid's glow comes through its wings.** A wing is centimetres thick at its margin
   and the body 1.5 m at its centre. A face that looks down takes, beside the rest, the
   Lid's glow that stands on the back over it, less what the body between keeps: all of

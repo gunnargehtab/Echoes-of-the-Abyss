@@ -502,15 +502,17 @@ export const HIGH_GRAPHICS = {
    * both a class at a time, and that table moves first. The second lamp is
    * the mast's and the third and fourth are a flood to port and to starboard.
    *
-   * `MAST`: the lamp stands `AHEAD` of amidships, in lengths, and `UP` over
-   * the keel line, in beams, clear of a sail or a fin, and looks along the
-   * heading `RISE_DEG` over the level. That is in the world's drawn metres,
-   * where depth is drawn at 0.22 of plan: 10 degrees climbs from a hull at
-   * 300 m to the manta's 165 m in 170 m of plan. `FLOOD`: the lamp hangs
-   * `OUT_M` off the beam end, under the keel line as the bow's does, and
-   * looks abeam at the ground `THROW_M` out, between the two angles under
-   * the level `DEPRESSION_DEG` holds it to. `SHARE` is a lamp's light of what
-   * the bow's is at the same live SIG: 1 is the lamp halo's gain, whole
+   * `MAST`: the lamp stands over the bow, as far off it as the bow's lamp
+   * hangs (`SEARCHLIGHT.CLEAR_M`) and `UP` over the keel line, in the hull's
+   * heights, and looks along the heading `RISE_DEG` over the level. That is
+   * in the world's drawn metres, where depth is drawn at 0.22 of plan: 10
+   * degrees climbs from a hull at 300 m to the manta's 165 m in 170 m of
+   * plan. `FLOOD`: the lamp hangs `OUT_M` off the beam end, under the keel
+   * line as the bow's does, and looks abeam at the ground `THROW_M` out,
+   * between the two angles under the level `DEPRESSION_DEG` holds it to.
+   * Every lamp so hangs clear of its hull's box and looks away from it, so no
+   * hull is lit by a lamp of its own (gate 3). `SHARE` is a lamp's light of
+   * what the bow's is at the same live SIG: 1 is the lamp halo's gain, whole
    * (docs/art-direction.md, limit 5).
    */
   LAMPS: {
@@ -520,7 +522,7 @@ export const HIGH_GRAPHICS = {
       [100, 4],
     ],
     CRAFT: 1,
-    MAST: { AHEAD: 0.3, UP: 0.9, RISE_DEG: 10, SHARE: 1 },
+    MAST: { UP: 0.25, RISE_DEG: 10, SHARE: 1 },
     FLOOD: { OUT_M: 3, THROW_M: 80, DEPRESSION_DEG: [15, 60], SHARE: 1 },
   },
   /**

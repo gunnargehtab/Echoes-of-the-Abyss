@@ -78,9 +78,10 @@ export interface SearchlightHull {
   z: number;
   /** Plan heading, radians: 0 looks along +x. */
   heading: number;
-  /** Drawn length and beam, the readability scale in them. */
+  /** Drawn length, beam and height, the readability scale in them. */
   lengthM: number;
   beamM: number;
+  heightM: number;
   /** Live SIG, 0 to 100, as the snapshot carries it. */
   sig: number;
   /** Lamps its class carries (`hullLamps`): the bow's, the mast's, then the flood pair. */
@@ -230,16 +231,18 @@ export function searchlightsOf(
     const at = hangAt(hull.x + fx * ahead, hull.y - hull.beamM * SPEC.KEEL, hull.z + fz * ahead);
     return atGround(hull, 'bow', at, fx, fz, SPEC.THROW_M, SPEC.DEPRESSION_DEG, 1);
   };
-  // On the hull's back, forward of amidships, looking ahead and up: over
+  // Over the bow, as far off it as the bow's lamp, looking ahead and up: over
   // level ground it meets none, so it throws a cone and no pool, and under a
-  // wall it lights the rock that stands over the hull.
+  // wall it lights the rock that stands over the hull. In heights and not in
+  // beams: a hull's beam is its fins' span, and 0.9 of a Cruiser's stood this
+  // lamp 65 drawn metres over its keel line.
   const mast = (hull: SearchlightHull): Searchlight => {
     const fx = Math.cos(hull.heading);
     const fz = Math.sin(hull.heading);
-    const ahead = hull.lengthM * LAMPS.MAST.AHEAD;
+    const ahead = hull.lengthM / 2 + SPEC.CLEAR_M;
     const at = hangAt(
       hull.x + fx * ahead,
-      hull.y + hull.beamM * LAMPS.MAST.UP,
+      hull.y + hull.heightM * LAMPS.MAST.UP,
       hull.z + fz * ahead
     );
     return beam(hull, 'mast', at, fx, fz, radians(LAMPS.MAST.RISE_DEG), LAMPS.MAST.SHARE);

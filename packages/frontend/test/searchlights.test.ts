@@ -54,6 +54,7 @@ const hull = (over: Partial<SearchlightHull> = {}): SearchlightHull => ({
   heading: 0,
   lengthM: 80,
   beamM: 12,
+  heightM: 10,
   sig: HALO_SIG_FULL,
   // One lamp, the bow's: the accepted step, which every test above the
   // second describe holds as it was.
@@ -345,24 +346,69 @@ describe('a beam from each lamp a class carries (#1845)', () => {
     }
   });
 
-  it('stands the mast lamp on the hull\u2019s back, looking ahead and up, over level ground', () => {
-    const [, mast] = beamsOf([hull({ lamps: 2, heading: Math.PI / 2 })]);
+  it('stands the mast lamp over the bow, looking ahead and up, over level ground', () => {
+    const [bow, mast] = beamsOf([hull({ lamps: 2, heading: Math.PI / 2 })]);
     assert.equal(mast!.lamp, 'mast');
-    // Forward of amidships and over the keel line, clear of the hull's top.
+    // Off the bow as the bow's lamp is, and over the keel line where that hangs under it.
     assert.ok(Math.abs(mast!.x - 1000) < 1e-9);
-    assert.ok(Math.abs(mast!.z - (1000 + 80 * LAMPS.MAST.AHEAD)) < 1e-9);
-    assert.ok(mast!.z < 1000 + 40, 'inside the hull\u2019s length');
-    assert.ok(Math.abs(mast!.y - (-66 + 12 * LAMPS.MAST.UP)) < 1e-9);
-    assert.ok(mast!.y > -66 + 12 / 2);
+    assert.ok(Math.abs(mast!.z - bow!.z) < 1e-9);
+    assert.ok(Math.abs(mast!.y - (-66 + 10 * LAMPS.MAST.UP)) < 1e-9);
+    assert.ok(mast!.y > -66 && bow!.y < -66);
+    // In the hull's heights and never its beams: a beam is a fin's span, and
+    // 0.9 of a Cruiser's stood this lamp 65 drawn metres over its keel line.
+    const finned = beamsOf([hull({ lamps: 2, beamM: 72 })])[1]!;
+    assert.ok(Math.abs(finned.y - (-66 + 10 * LAMPS.MAST.UP)) < 1e-9);
+    assert.ok(LAMPS.MAST.UP <= 0.5, 'no higher than the hull’s own top');
     // Along the heading, over the level: it meets no level ground at any reach.
     assert.ok(Math.abs(Math.hypot(mast!.dx, mast!.dy, mast!.dz) - 1) < 1e-9);
     assert.ok(mast!.dz > 0 && Math.abs(mast!.dx) < 1e-9);
     assert.ok(Math.abs(Math.asin(mast!.dy) - (LAMPS.MAST.RISE_DEG * Math.PI) / 180) < 1e-9);
-    // And its cone's lower edge stays over the hull's own bow, which is under the lamp.
-    assert.ok(LAMPS.MAST.RISE_DEG < SPEC.OUTER_DEG, 'the cone dips under the level');
-    const bowTop = { ahead: 80 * (0.5 - LAMPS.MAST.AHEAD), under: 12 * (LAMPS.MAST.UP - 0.5) };
-    const toBow = (Math.atan2(bowTop.under, bowTop.ahead) * 180) / Math.PI;
-    assert.ok(toBow > SPEC.OUTER_DEG - LAMPS.MAST.RISE_DEG, `the bow is ${toBow} degrees under`);
+  });
+
+  it('lights no hull by a lamp of its own, whatever its shape', () => {
+    // Gate 3: a hull's cladding brighter by its own lamps would read as a
+    // louder hull. Every lamp hangs clear of the hull's box and looks away
+    // from it, so every point of the box is outside the cone, by where the
+    // lamp is and not by a test in a shader. Corners, and points along every
+    // edge, of a slim hull, a finned one and one taller than it is wide.
+    const cosOuter = Math.cos((SPEC.OUTER_DEG * Math.PI) / 180);
+    const shapes = [
+      { lengthM: 80, beamM: 12, heightM: 10 },
+      { lengthM: 140, beamM: 72, heightM: 30 },
+      { lengthM: 60, beamM: 10, heightM: 14 },
+      { lengthM: 280, beamM: 42, heightM: 35 },
+    ];
+    const steps = [-1, -0.5, 0, 0.5, 1];
+    for (const shape of shapes) {
+      for (const heading of [0, 0.7, Math.PI / 2, -2.1]) {
+        for (const y of [-66, 200]) {
+          const own = hull({ lamps: 4, heading, y, ...shape });
+          const fx = Math.cos(heading);
+          const fz = Math.sin(heading);
+          for (const light of beamsOf([own])) {
+            let nearest = -1;
+            for (const a of steps) {
+              for (const b of steps) {
+                for (const c of steps) {
+                  // A point of the box: along the keel, abeam and up.
+                  const px = own.x + (fx * a * shape.lengthM - fz * b * shape.beamM) / 2;
+                  const pz = own.z + (fz * a * shape.lengthM + fx * b * shape.beamM) / 2;
+                  const py = own.y + (c * shape.heightM) / 2;
+                  const d = [px - light.x, py - light.y, pz - light.z];
+                  const cos =
+                    (d[0]! * light.dx + d[1]! * light.dy + d[2]! * light.dz) / Math.hypot(...d);
+                  nearest = Math.max(nearest, cos);
+                }
+              }
+            }
+            assert.ok(
+              nearest < cosOuter,
+              `the ${light.lamp} lamp of a ${shape.lengthM} by ${shape.beamM} by ${shape.heightM} m hull lights it`
+            );
+          }
+        }
+      }
+    }
   });
 
   it('throws a flood to port and to starboard, at the ground beside the hull', () => {
