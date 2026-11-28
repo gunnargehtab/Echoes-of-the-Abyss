@@ -20,9 +20,12 @@
 import { hasComponent } from 'bitecs';
 import { defineQuery } from '../query.ts';
 import {
+  DEPTH,
+  DEPTH_BANDS,
   DIRECTORATE_SHALLOW,
   Faction,
   MOVEMENT,
+  type DepthBand,
   silentSpeedMultiplierFor,
   inDirectorateShallows,
   refitSpeedFactor,
@@ -32,10 +35,12 @@ import {
 } from '@echoes/shared';
 import {
   Craft,
+  DepthOrder,
   Heading,
   MoveOrder,
   Owner,
   Position,
+  Pressure,
   EngineOff,
   SilentRunning,
   Unit,
@@ -74,9 +79,11 @@ function steerPoint(
   py: number,
   tx: number,
   ty: number,
-  depthM: number
+  depthM: number,
+  speedMps: number
 ): void {
   const terrain = world.terrain;
+  const volumetric = world.volumetric;
   const tick = world.tick;
   let plan = world.paths.get(eid);
 
@@ -99,8 +106,12 @@ function steerPoint(
   }
 
   const groundMoved = plan !== undefined && plan.revision !== terrain.revision;
+  // A volumetric route already says where the hull's depth goes, so the hull
+  // moving down it is no reason to search again; only a sealed one waits on it.
   const depthMoved =
-    plan !== undefined && Math.abs(depthM - plan.depthM) > MOVEMENT.ROUTE_DEPTH_TOLERANCE_M;
+    plan !== undefined &&
+    (!volumetric || plan.exhausted) &&
+    Math.abs(depthM - plan.depthM) > MOVEMENT.ROUTE_DEPTH_TOLERANCE_M;
   const due =
     plan !== undefined && !plan.exhausted && tick - plan.tick >= MOVEMENT.ROUTE_REVALIDATE_TICKS;
 
@@ -113,6 +124,8 @@ function steerPoint(
         depthM,
         tick,
         waypoints: [],
+        depths: [],
+        routeDepthM: NaN,
         index: 0,
         exhausted: false,
       };
@@ -126,7 +139,22 @@ function steerPoint(
     plan.index = 0;
     if (terrain.segmentAdmits(px, py, tx, ty, depthM)) {
       plan.waypoints.length = 0;
+      plan.depths.length = 0;
       plan.exhausted = false;
+    } else if (volumetric) {
+      plan.exhausted = !world.pathfinder.findPath3d(
+        terrain,
+        px,
+        py,
+        depthM,
+        tx,
+        ty,
+        DepthOrder.active[eid] ? DepthOrder.targetM[eid]! : depthM,
+        deepestRouteM(eid, depthM),
+        { speedMps, descentMps: DEPTH.DESCENT_RATE_MPS, ascentMps: DEPTH.ASCENT_RATE_MPS },
+        plan.waypoints,
+        plan.depths
+      );
     } else {
       plan.exhausted = !world.pathfinder.findPath(terrain, px, py, tx, ty, depthM, plan.waypoints);
     }
@@ -147,10 +175,29 @@ function steerPoint(
   if (plan.index < count) {
     aim.x = waypoints[2 * plan.index]!;
     aim.y = waypoints[2 * plan.index + 1]!;
+    // Only a volumetric plan carries depths; `depthSystem` holds the hull at
+    // the leg's depth until the final leg hands it back to the order's.
+    plan.routeDepthM = plan.index < plan.depths.length ? plan.depths[plan.index]! : NaN;
   } else {
     aim.x = tx;
     aim.y = ty;
+    plan.routeDepthM = NaN;
   }
+}
+
+/**
+ * The deepest a volumetric route may take a hull (docs/free-water-slice.md §9):
+ * a metre short of the band its Pressure Rating does not cover, so a route
+ * never spends crush on the player's behalf. Never shallower than where the
+ * hull already is, or than the depth the player ordered: past its rating, that
+ * is the player's own call, and the route goes no deeper than it.
+ */
+function deepestRouteM(eid: number, depthM: number): number {
+  const rating = Pressure.rating[eid]! + Pressure.bonus[eid]!;
+  const rated =
+    rating >= 3 ? DEPTH.MAX_M : DEPTH_BANDS[(Math.max(1, rating) - 1) as DepthBand].max - 1;
+  const ordered = DepthOrder.active[eid] ? DepthOrder.targetM[eid]! : depthM;
+  return Math.max(rated, ordered, depthM);
 }
 
 /**
@@ -368,7 +415,8 @@ export function movementSystem(world: SimWorld): void {
       fromY,
       MoveOrder.x[eid]!,
       MoveOrder.y[eid]!,
-      Position.depth[eid]!
+      Position.depth[eid]!,
+      speed
     );
     if (hasComponent(world, Craft, eid)) roundOwnCarrier(world, eid, fromX, fromY);
     const ax = aim.x - fromX;

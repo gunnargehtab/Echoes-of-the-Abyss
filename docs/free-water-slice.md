@@ -1244,15 +1244,20 @@ two-seat fight. A shipped map keeps §2's limits until its own issue amends
   the plan, just far enough to clear the pair in three dimensions, so a hull's depth
   still has one owner, the depth system, with its rates and its noise. The other option,
   pushing along the axis between the two, would move a hull's depth without an order.
-- **Routes that climb and dive.** The route plans in three dimensions over the terrain's
-  one water interval per cell. Each cell it enters is entered at the depth nearest the
-  last that the cell admits. It takes the fastest course, with every metre of climb and
-  dive costed at the hull's real ascent and descent rates, and it dives wherever that is
-  faster. Such a descent is as loud as an ordered one, and nothing hides it. Inside the
-  crater this lifts the rule that nothing spends a descent the player never made
+- **Routes that climb and dive.** A hull whose straight course is blocked plans in three
+  dimensions over the terrain's one water interval per cell. It enters each cell at the
+  depth nearest its last that both cells admit, and holds that depth for the leg. It
+  takes the fastest course: every metre of climb or dive is costed at the 15 m/s ascent
+  and 45 m/s descent against the hull's own speed, and so is the change of depth still
+  owed at the end to reach the order's depth. A dive under a roof to 800 m and the climb
+  back to an ordered 300 m cost about 44 seconds, so from the pocket's south rim to the
+  exit pool a Cruiser takes the roofed cut and a Corvette goes round the wall. A route's descent is as loud as an
+  ordered one and breaks Silent Running as one does. Inside the crater this lifts the rule
+  that nothing spends a descent the player never made
   ([systems-depth.md](systems-depth.md) §2), by the owner's choice over a router bounded
-  by the order's own depth span. One limit stays: a route never takes a hull below its
-  Pressure Rating. Crushing a hull stays the player's order, the way floor-following
+  by the order's own depth. One limit stays: a route goes no deeper than the hull's
+  Pressure Rating covers, a metre short of the next band, unless the hull or its order is
+  already deeper. Crushing a hull stays the player's order, the way floor-following
   disengages at the rating. A route needing more than that ends where the ground allows,
   as an unreachable route does now.
 - **Structures with a height.** A structure blocks only from the seabed under it up to

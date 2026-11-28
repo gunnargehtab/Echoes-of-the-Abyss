@@ -62,6 +62,19 @@ export function depthSystem(world: SimWorld): void {
 
     const wasAtM = Position.depth[eid]!;
 
+    // On volumetric ground a route may hold the hull at a depth of its own for
+    // a leg (docs/free-water-slice.md §9). It is travelled here, at the same
+    // rates and with the same `descending` flag, so a route's dive is exactly
+    // as loud as an ordered one; the order's own target is left alone, and the
+    // route's final leg hands the hull back to it.
+    if (world.volumetric) {
+      const routeM = routeDepthOf(world, eid);
+      if (!Number.isNaN(routeM)) {
+        travelTo(world, eid, dt, wasAtM, routeM);
+        continue;
+      }
+    }
+
     if (!DepthOrder.active[eid]) {
       DepthOrder.descending[eid] = 0;
       holdAgainstGround(world, eid, dt, wasAtM);
@@ -91,6 +104,34 @@ export function depthSystem(world: SimWorld): void {
     DepthOrder.descending[eid] = descending ? 1 : 0;
     holdAgainstGround(world, eid, dt, wasAtM);
   }
+}
+
+/** The depth a volumetric route holds this hull at now, or NaN for none. */
+function routeDepthOf(world: SimWorld, eid: number): number {
+  if (!MoveOrder.active[eid]) return NaN;
+  return world.paths.get(eid)?.routeDepthM ?? NaN;
+}
+
+/**
+ * A route's leg: travel toward `toM` without touching the order. A dive breaks
+ * Silent Running as an ordered one does (`setDepthTarget`), since the descent
+ * is the noise whoever chose it; a climb keeps its silence.
+ */
+function travelTo(world: SimWorld, eid: number, dt: number, wasAtM: number, toM: number): void {
+  const remaining = toM - wasAtM;
+  if (Math.abs(remaining) <= DEPTH.ARRIVAL_EPSILON_M) {
+    Position.depth[eid] = toM;
+    DepthOrder.descending[eid] = 0;
+  } else {
+    const descending = remaining > 0;
+    const rate =
+      (descending ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS) * driveFactor(world, eid);
+    const step = Math.min(rate * dt, Math.abs(remaining));
+    Position.depth[eid] = wasAtM + (descending ? step : -step);
+    DepthOrder.descending[eid] = descending ? 1 : 0;
+    if (descending && hasComponent(world, SilentRunning, eid)) SilentRunning.active[eid] = 0;
+  }
+  holdAgainstGround(world, eid, dt, wasAtM);
 }
 
 /**
