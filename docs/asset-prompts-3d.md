@@ -866,7 +866,8 @@ it the navy reads seven of its 1,588 off the rule, all on the Thurible built aft
 well takes its collar's count as a cap takes its can's (`thurible-bathyarch.mjs`, FACETS).
 `node tools/hull-models/facets.mjs bathyarch --parts` names those seven and no other ring,
 and the navy carries seven distinct counts a turn where it carried fifteen. The Commune's
-leaves twelve of its 1,428: the six on the four tables and six pressed tubes no count settles on (the
+leaves twelve of its 1,428: the six on the four tables and six pressed tubes no count
+settles on (the
 Commune paragraph), and the navy carries eighteen distinct counts a turn where it carried
 thirty-five, every ring from 4 m of radius up on sixteen a turn but the tables' and the
 part-turn arcs the measure reads a turn at a time. The Directorate's leaves eight of its
