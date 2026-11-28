@@ -8441,7 +8441,9 @@ describe("where a marker's name stands (#1662)", () => {
 
       assert.equal(probes.__perspectiveQuality('high'), 'high');
       apply(48, false);
-      assert.equal(beams(), 1, 'the loud Corvette throws one');
+      // A Corvette's class carries two lamps, the bow's and the mast's (#1845;
+      // docs/asset-prompts-3d.md, "Searchlights a hull class throws").
+      assert.equal(beams(), 2, 'the loud Corvette throws one from each lamp');
       // No pass of its own: the cones are one more instanced draw, into the
       // scatter pass's target and over the sources' volumes.
       assert.ok(probes.__perspectiveProbe().passes.includes('high-scatter'));
@@ -8449,7 +8451,7 @@ describe("where a marker's name stands (#1662)", () => {
       assert.equal(world.gl.frameDraws[2]!.length, 1, 'every beam is one instanced draw');
       assert.equal(world.gl.frameTargets[2], world.gl.frameTargets[1], 'into the one target');
       // Its snow is one more draw of the world pass, and no pass.
-      assert.equal(motes(), HIGH_GRAPHICS.MOTES.COUNT, 'one beam shows one cell of the snow');
+      assert.equal(motes(), 2 * HIGH_GRAPHICS.MOTES.COUNT, 'each beam shows a cell of the snow');
       const litWorld = worldDraws();
 
       apply(5, true);
