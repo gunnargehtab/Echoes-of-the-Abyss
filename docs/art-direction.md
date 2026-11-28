@@ -626,7 +626,8 @@ gives 1.8 face on.
 accepted. The owner took four calls before any frame. On 24 November 2026: a count a hull
 class, written in [asset-prompts-3d.md](asset-prompts-3d.md) first, under the frame's
 cap. In session on 28 November 2026: where the lamps look, how a class's count is set,
-and how the frame's six are shared. The readings not taken stay written under each.*
+and how the frame's six are shared. A fifth came with the first frames the same day: a
+mast beam on the manta stays as built. The readings not taken stay written under each.*
 
 The target frame shows several lamps a hull, each with a beam
 ([issue-1799](screenshots/issue-1799/README.md)). The accepted step throws one, off the
@@ -683,7 +684,10 @@ lamp's, the accepted beam, and no number of it moves.
   issue. [issue-1845](screenshots/issue-1845/README.md#the-manta-in-a-mast-beam) has the
   frames: a loud Cruiser's mast beam whitens the belly from 234 m. The owner was shown
   them in session on 28 November 2026 and kept the lamp as built, and the reading of a
-  belly at 0.7 in a beam waits for #1637's run.
+  belly at 0.7 in a beam waits for #1637's run. Two other readings were written. **Half
+  the mast lamp's light** halves the belly's gain and dims the Corvette's cone at rest.
+  **A rise of 25 degrees** climbs past the manta's depth within 65 m of the lamp, and
+  the cone reads as a column over the bow.
 - **Six a frame, the bow beams first.** `SEARCHLIGHT.MAX` stays 6, and the six nearest
   loud hulls to the camera's focus still throw. Each takes its bow beam before any takes
   a second lamp. Then the mast lamps, nearest first. Then the flood pairs, a pair whole
