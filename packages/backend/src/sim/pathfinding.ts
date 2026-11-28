@@ -70,6 +70,30 @@ export interface PathPlan {
    * "straight at the target" — open water, or nothing reachable at all.
    */
   waypoints: number[];
+  /**
+   * On volumetric ground, one depth per waypoint: the depth to hold while
+   * steering at it (`Pathfinder.findPath3d`). Empty on every other map.
+   */
+  depths: number[];
+  /**
+   * The depth the route holds the hull at this tick, which `depthSystem`
+   * travels to in place of the order's; NaN on the final leg, off a route, and
+   * on every map that is not volumetric.
+   */
+  routeDepthM: number;
+  /**
+   * The depth the hull held when this order was given, on volumetric ground:
+   * where a move with no depth order of its own is owed back to. A route that
+   * dives such a hull under a roof returns it there on its final leg, so an
+   * attack still chases at the depth the hull is on (docs/systems-depth.md §2).
+   */
+  holdDepthM: number;
+  /**
+   * Whether a route for this order has taken the hull off `holdDepthM`. Kept
+   * across revalidations, since a hull already under the roof replans
+   * straight at its new depth and the plan's own depths are then empty.
+   */
+  owesHold: boolean;
   /** Pair index of the waypoint being steered at. */
   index: number;
   /**
@@ -79,6 +103,14 @@ export interface PathPlan {
    * into a per-tick cost.
    */
   exhausted: boolean;
+}
+
+/** What a metre of depth costs a volumetric route, against a cell of travel. */
+export interface RouteCost {
+  /** The hull's speed in the plan, metres a second. */
+  speedMps: number;
+  descentMps: number;
+  ascentMps: number;
 }
 
 export class Pathfinder {
@@ -91,6 +123,8 @@ export class Pathfinder {
   private readonly parent: Int32Array;
   private readonly f: Int32Array;
   private readonly h: Int32Array;
+  /** The depth a cell was entered at, for `findPath3d`; read where `gStamp` matches. */
+  private readonly depth: Float64Array;
   /** Binary heap of cell indices ordered by (f, h, index). */
   private readonly heap: number[] = [];
   private run = 0;
@@ -107,6 +141,7 @@ export class Pathfinder {
     this.parent = new Int32Array(n);
     this.f = new Int32Array(n);
     this.h = new Int32Array(n);
+    this.depth = new Float64Array(n);
   }
 
   /**
@@ -245,6 +280,198 @@ export class Pathfinder {
       anchorX = terrain.cellCentreX(pcx);
       anchorY = terrain.cellCentreY(pcy);
       out.push(anchorX, anchorY);
+      i = pick + 1;
+    }
+    return found;
+  }
+
+  /**
+   * Route through three dimensions, for volumetric ground only
+   * (docs/free-water-slice.md §9, "Routes that climb and dive"; #1754).
+   *
+   * The same A* over the same cells, with one more fact per cell: the depth
+   * the hull holds in it. A step into a neighbour is open when the two cells'
+   * water overlaps (and, on a diagonal, the two cells it brushes too, the
+   * no-corner-cutting rule in depth), and the hull takes it at the depth in
+   * that overlap nearest the one it holds, so it climbs or dives only as far as
+   * the ground asks. Each metre of it is costed at the real rate, a dive at
+   * `cost.descentMps` and a climb at `cost.ascentMps`, in the step costs' own
+   * integer units of time at `cost.speedMps`: so a slow climb over a sill can
+   * lose to a long way round, and a fast dive through a cut can win.
+   *
+   * `deepestM` is the bottom of every overlap: the caller's Pressure Rating
+   * bound, so a route never spends crush on the player's behalf.
+   *
+   * A cell keeps the depth it was first closed at, so the search is over
+   * cells, not cells and depths: one water interval per cell makes the depth
+   * a function of the way in, and this keeps the cost and the determinism
+   * contract `findPath`'s. Writes waypoints into `out` as `findPath` does, and
+   * one depth per waypoint into `outDepths`: the depth to hold while steering
+   * at it. String-pulling never spans a change of depth, so a leg is flown at
+   * one depth and the change happens where the route says.
+   */
+  findPath3d(
+    terrain: Terrain,
+    fromX: number,
+    fromY: number,
+    fromDepthM: number,
+    toX: number,
+    toY: number,
+    goalDepthM: number,
+    deepestM: number,
+    cost: RouteCost,
+    out: number[],
+    outDepths: number[]
+  ): boolean {
+    out.length = 0;
+    outDepths.length = 0;
+    const cols = this.cols;
+    const start = terrain.cellIndexAt(fromX, fromY);
+    const goal = terrain.cellIndexAt(toX, toY);
+    if (start === goal) return true;
+
+    const goalCx = goal % cols;
+    const goalCy = (goal - goalCx) / cols;
+    const run = ++this.run;
+    const { g, gStamp, closedStamp, parent, f, h, heap, depth } = this;
+    heap.length = 0;
+    // Time in step units per metre of depth, each way: a straight step is
+    // STRAIGHT units for one cell at the hull's speed.
+    const unitsPerS = (STRAIGHT * cost.speedMps) / terrain.cellM;
+    const perDiveM = unitsPerS / cost.descentMps;
+    const perClimbM = unitsPerS / cost.ascentMps;
+    // The depth the goal is reached at: the order's, as far as the goal's
+    // water allows. What is left to climb or dive to it is part of every
+    // state's estimate (`toGoal`), so a hull under a roof is charged now for
+    // the slow climb back to an ordered 300 m. Without it a cell first reached
+    // at 800 m, cheaply, would shadow the same cell reached at 300 m by the
+    // long way, and every hull would take every cut.
+    const goalCeil = terrain.ceilingOfCell(goal);
+    const goalFloor = terrain.floorOfCell(goal);
+    const goalAtM =
+      goalDepthM < goalCeil ? goalCeil : goalDepthM > goalFloor ? goalFloor : goalDepthM;
+    const toGoal = (atM: number): number =>
+      atM === goalAtM
+        ? 0
+        : Math.ceil(atM < goalAtM ? (goalAtM - atM) * perDiveM : (atM - goalAtM) * perClimbM);
+
+    g[start] = 0;
+    gStamp[start] = run;
+    parent[start] = -1;
+    depth[start] = fromDepthM;
+    // `h` stays the plan distance alone, so a partial route still ends at the
+    // cell nearest the goal in the plan; `f` carries the depth still owed.
+    h[start] = this.octile(start % cols, (start - (start % cols)) / cols, goalCx, goalCy);
+    f[start] = h[start]! + toGoal(fromDepthM);
+    this.push(start);
+
+    let best = start;
+    let bestH = h[start]!;
+    let found = false;
+
+    while (heap.length > 0) {
+      const n = this.pop();
+      if (closedStamp[n] === run) continue;
+      closedStamp[n] = run;
+      if (n === goal) {
+        found = true;
+        break;
+      }
+      const hn = h[n]!;
+      if (hn < bestH) {
+        bestH = hn;
+        best = n;
+      }
+
+      const cx = n % cols;
+      const cy = (n - cx) / cols;
+      const gn = g[n]!;
+      const dn = depth[n]!;
+      const ceilN = terrain.ceilingOfCell(n);
+      const floorN = terrain.floorOfCell(n);
+      for (let dy = -1; dy <= 1; dy++) {
+        const ny = cy + dy;
+        if (ny < 0 || ny >= this.rows) continue;
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = cx + dx;
+          if (nx < 0 || nx >= cols) continue;
+          const idx = ny * cols + nx;
+          if (closedStamp[idx] === run) continue;
+          let lo = Math.max(ceilN, terrain.ceilingOfCell(idx));
+          let hi = Math.min(floorN, terrain.floorOfCell(idx), deepestM);
+          const diagonal = dx !== 0 && dy !== 0;
+          if (diagonal) {
+            const sideA = cy * cols + nx;
+            const sideB = ny * cols + cx;
+            lo = Math.max(lo, terrain.ceilingOfCell(sideA), terrain.ceilingOfCell(sideB));
+            hi = Math.min(hi, terrain.floorOfCell(sideA), terrain.floorOfCell(sideB));
+          }
+          if (lo > hi) continue;
+          const dm = dn < lo ? lo : dn > hi ? hi : dn;
+          const vertical =
+            dm === dn ? 0 : Math.ceil(dm > dn ? (dm - dn) * perDiveM : (dn - dm) * perClimbM);
+          const ng = gn + (diagonal ? DIAGONAL : STRAIGHT) + vertical;
+          const hm = this.octile(nx, ny, goalCx, goalCy);
+          const nf = ng + hm + toGoal(dm);
+          // One depth per cell, so two ways in are ranked by everything they
+          // still owe, depth included, not by the cost so far alone.
+          if (gStamp[idx] === run && nf >= f[idx]!) continue;
+          g[idx] = ng;
+          gStamp[idx] = run;
+          parent[idx] = n;
+          depth[idx] = dm;
+          h[idx] = hm;
+          f[idx] = nf;
+          this.push(idx);
+        }
+      }
+    }
+
+    const end = found ? goal : best;
+    if (end === start) return false;
+
+    const trail = this.trail;
+    trail.length = 0;
+    for (let n = end; n !== start; n = parent[n]!) trail.push(n);
+    trail.reverse();
+
+    // String-pulling as `findPath` does it, inside one run of equal depth: a
+    // pulled leg that crossed a change of depth would ask the hull to be at
+    // the new depth before the cell that lets it change.
+    let anchorX = fromX;
+    let anchorY = fromY;
+    let i = 0;
+    while (i < trail.length) {
+      const legDepth = depth[trail[i]!]!;
+      let runEnd = i;
+      while (runEnd + 1 < trail.length && depth[trail[runEnd + 1]!] === legDepth) runEnd++;
+      let pick = i;
+      const limit = Math.min(runEnd, i + PULL_LOOKAHEAD);
+      for (let j = limit; j > i; j--) {
+        const cell = trail[j]!;
+        const cxj = cell % cols;
+        const cyj = (cell - cxj) / cols;
+        if (
+          terrain.segmentAdmits(
+            anchorX,
+            anchorY,
+            terrain.cellCentreX(cxj),
+            terrain.cellCentreY(cyj),
+            legDepth
+          )
+        ) {
+          pick = j;
+          break;
+        }
+      }
+      const cell = trail[pick]!;
+      const pcx = cell % cols;
+      const pcy = (cell - pcx) / cols;
+      anchorX = terrain.cellCentreX(pcx);
+      anchorY = terrain.cellCentreY(pcy);
+      out.push(anchorX, anchorY);
+      outDepths.push(legDepth);
       i = pick + 1;
     }
     return found;

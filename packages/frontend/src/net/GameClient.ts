@@ -12,7 +12,9 @@ import {
   // A value, not just a type: `pushLobby` names the phase an undecoded state
   // stands in for.
   MatchPhase,
+  FREE_WATER_DUEL_MAP_ID,
   FREE_WATER_MAP_ID,
+  isFreeWaterMap,
   type AiDifficulty,
   type EchoSnapshot,
   type Faction,
@@ -42,7 +44,7 @@ import {
 import { type JoinFailure, joinFailure, refusalSentence } from './failure.ts';
 import { toListings } from './rooms.ts';
 import { leaveReportRoom, setReportRoom } from './reports.ts';
-import { FREE_WATER_SLICE } from '../game/freeWaterControls.ts';
+import { FREE_WATER_DUEL, FREE_WATER_SLICE } from '../game/freeWaterControls.ts';
 
 /**
  * The wire payloads, re-exported.
@@ -419,7 +421,7 @@ export class GameClient {
       (typeof window === 'undefined'
         ? undefined
         : (new URLSearchParams(window.location.search).get('map') ?? undefined));
-    if (mapId === FREE_WATER_MAP_ID && !FREE_WATER_SLICE) {
+    if (isFreeWaterMap(mapId) && !FREE_WATER_SLICE) {
       this.handlers.onStatus(
         'error',
         'Free Water requires the development-only ?study=free-water entry.',
@@ -427,9 +429,13 @@ export class GameClient {
       );
       return;
     }
+    // The study joins nothing but its own crater. A room code is the fight's
+    // second door (docs/free-water-slice.md §9), and only the fight's.
     if (
       FREE_WATER_SLICE &&
-      (mapId !== FREE_WATER_MAP_ID || !!options.missionId || !!options.roomId)
+      (mapId !== (FREE_WATER_DUEL ? FREE_WATER_DUEL_MAP_ID : FREE_WATER_MAP_ID) ||
+        !!options.missionId ||
+        (!!options.roomId && !FREE_WATER_DUEL))
     ) {
       this.handlers.onStatus(
         'error',

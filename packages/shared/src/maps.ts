@@ -69,6 +69,18 @@ export const DEFAULT_MAP_ID = VENTFRONT_DIVIDE_HEADER.id;
 export const FREE_WATER_MAP_ID = 'free-water-slice';
 
 /**
+ * The crater's two-seat fight (docs/free-water-slice.md §9, "Toward a vertical
+ * multiplayer match"; #1754). Development only, on the same ground and behind
+ * the same entry as the study, and absent from the catalogue as it is.
+ */
+export const FREE_WATER_DUEL_MAP_ID = 'free-water-duel';
+
+/** Either of the crater's two development fixtures. */
+export function isFreeWaterMap(id: string | undefined): boolean {
+  return id === FREE_WATER_MAP_ID || id === FREE_WATER_DUEL_MAP_ID;
+}
+
+/**
  * What the setup screen says about each map, in plain words — docs/maps.md,
  * "On the setup card"; docs/ui-ux.md §14.
  *

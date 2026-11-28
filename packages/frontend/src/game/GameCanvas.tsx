@@ -1151,7 +1151,8 @@ export function GameCanvas({
             roomId={joinedRoomId}
             // The server knows the real cap — a map's spawn list is its player
             // count — and refuses a seat past it. This only greys the button.
-            canAddAi={lobby.players.length < maxSlots}
+            // The crater's fight is two people's; the room refuses an AI seat.
+            canAddAi={!FREE_WATER_SLICE && lobby.players.length < maxSlots}
             onChooseFaction={chooseFaction}
             onReady={setReady}
             onAddAi={addAi}

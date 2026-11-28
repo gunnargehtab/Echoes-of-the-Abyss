@@ -297,7 +297,10 @@ Decisions the phase settled:
   flattens back toward the chart; 55° holds both. Pinned as SPEC in
   [art-direction.md](art-direction.md) at Phase 5, when this view becomes the default.
 - **Vertical scale: 0.22 world-metres per metre of depth** (`DEPTH_VISUAL_M_PER_M`,
-  render-only by rule), and a 150 m rock rise above the shallowest open floor.
+  render-only by rule on every shipped map), and a 150 m rock rise above the shallowest
+  open floor. On the development crater, hulls separate and structures block them as
+  they are drawn on this scale, by the owner's choice on #1754
+  ([free-water-slice.md](free-water-slice.md) §9).
 - **Gate-6 starting budgets**, from measurement: the whole Ventfront scene is **35 draw calls
   / ~33k triangles**, so the world pass gets budget caps of **150 draw calls / 250 k
   triangles** (TUNABLE) with pixel ratio capped at 1.5. The container only has software GL,

@@ -195,6 +195,13 @@ export interface MapDefinition<Region extends MapRegion = MapRegion> extends Map
    */
   regions: readonly Region[];
   spawns: MapSpawn[];
+  /**
+   * Lift docs/systems-depth.md §2's three planar limits on this ground:
+   * separation, routes and structure footprints all read depth. Only the
+   * development crater sets it (docs/free-water-slice.md §9, #1754); a shipped
+   * map that wants it amends systems-depth.md first.
+   */
+  volumetric?: true;
   /** A development fixture's exact fleet instead of the normal starting base. */
   openingFleet?: readonly {
     kind: UnitKind;
@@ -202,7 +209,15 @@ export interface MapDefinition<Region extends MapRegion = MapRegion> extends Map
     y: number;
     depth: number;
     heading: number;
+    /** The seat this hull opens for; omitted opens it for every seat. */
+    seat?: number;
   }[];
+  /**
+   * With `openingFleet`: each seat also opens on a pre-built Bastion at its
+   * spawn, standing on the floor there rather than at the working depth, so
+   * losing it is elimination as in a skirmish (docs/free-water-slice.md §9).
+   */
+  openingBastion?: true;
   resources: MapResource[];
   /** Bloom-share nodes — see `MapBloom`. Omitted is none, and no map is owed any. */
   blooms?: MapBloom[];

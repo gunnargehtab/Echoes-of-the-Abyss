@@ -152,6 +152,13 @@ export interface SimWorld extends IWorld {
    * (docs/bestiary.md §4). Empty for every map that keeps the profile's band.
    */
   ambientBands: Partial<Record<FaunaSpecies, AmbientBand>>;
+  /**
+   * The map lifts docs/systems-depth.md §2's planar limits
+   * (`MapDefinition.volumetric`): only the development crater does, by the
+   * owner's choice on #1754 (docs/free-water-slice.md §9). False everywhere
+   * else, which keeps every shipped map's movement bit-for-bit as it was.
+   */
+  volumetric: boolean;
   /** Monotonic fixed-step tick counter. */
   tick: number;
   /** Seconds per fixed step. */
@@ -574,6 +581,7 @@ export function createSimWorld(
   const world = createWorld() as SimWorld;
   world.terrain = terrain;
   world.ambientBands = {};
+  world.volumetric = false;
   // The map is built; from here, a cell write is something that happened in
   // the match. That is the distinction the wire and the state hash both need
   // (#197) — the join payload already carries the constructed ground.

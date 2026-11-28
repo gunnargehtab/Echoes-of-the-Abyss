@@ -22,6 +22,7 @@
 import { hasComponent } from 'bitecs';
 import { defineQuery } from '../query.ts';
 import {
+  DEPTH_VISUAL_M_PER_M,
   MAX_STRUCTURE_RADIUS_M,
   MAX_UNIT_RADIUS_M,
   MOVEMENT,
@@ -31,7 +32,16 @@ import {
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Craft, MoveOrder, Position, Posture, Structure, Unit, Velocity } from '../components.ts';
+import {
+  Craft,
+  DepthOrder,
+  MoveOrder,
+  Position,
+  Posture,
+  Structure,
+  Unit,
+  Velocity,
+} from '../components.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
 import type { Terrain } from '../terrain.ts';
 
@@ -84,6 +94,7 @@ function settle(terrain: Terrain, eid: number, toX: number, toY: number): void {
 function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
   const grid = world.unitGrid;
   const terrain = world.terrain;
+  const volumetric = world.volumetric;
 
   grid.clear();
   for (let i = 0; i < units.length; i++) {
@@ -129,8 +140,19 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
       const dy = by - ay;
       const minD = ra + unitRadiusM(Unit.kind[b] as UnitKind);
       const d2 = dx * dx + dy * dy;
+      // On volumetric ground the pair is two spheres as the view draws them
+      // (docs/free-water-slice.md §9): models at full scale over a column at
+      // DEPTH_VISUAL_M_PER_M, so their depth apart counts at that scale and a
+      // hull may hold station over another once it is drawn clear of it. The
+      // owner chose this on #1754, as for a structure's roof. Zero elsewhere,
+      // which leaves the planar test exactly as it was.
+      const dz = volumetric ? (Position.depth[b]! - Position.depth[a]!) * DEPTH_VISUAL_M_PER_M : 0;
       world.stepWork.separationPairs++;
-      if (d2 >= minD * minD) continue;
+      if (d2 + dz * dz >= minD * minD) continue;
+      // The push stays in the plan, so depth keeps one owner (depthSystem, with
+      // its rates and its noise): the plan distance that clears the pair at
+      // this depth difference, which is the radii when they share a depth.
+      const clearD = dz === 0 ? minD : Math.sqrt(minD * minD - dz * dz);
 
       let nx: number;
       let ny: number;
@@ -150,12 +172,12 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
         const angle = ((la * 2654435761 + lb) % 628) / 100;
         nx = Math.cos(angle);
         ny = Math.sin(angle);
-        overlap = minD;
+        overlap = clearD;
       } else {
         const d = Math.sqrt(d2);
         nx = dx / d;
         ny = dy / d;
-        overlap = minD - d;
+        overlap = clearD - d;
       }
 
       // A craft and the carrier that launched it: the carrier does not move.
@@ -211,6 +233,7 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
   // it could actually be standing in. Candidates come back in grid order,
   // which is a fixed function of the query order — deterministic, which is
   // all a replay needs.
+  const volumetric = world.volumetric;
   const grid = world.structureGrid;
   grid.clear();
   for (let j = 0; j < structures.length; j++) {
@@ -242,10 +265,15 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       const sy = Position.y[s]!;
       const dx = Position.x[a]! - sx;
       const dy = Position.y[a]! - sy;
-      const minD = ra + structureStatsFor(Structure.kind[s] as StructureKind).radiusM;
+      const stats = structureStatsFor(Structure.kind[s] as StructureKind);
+      const minD = ra + stats.radiusM;
       const d2 = dx * dx + dy * dy;
       world.stepWork.separationPairs++;
       if (d2 >= minD * minD) continue;
+      // On volumetric ground a structure is as tall as its model is drawn, not
+      // a column to the surface (docs/free-water-slice.md §9): a hull drawn
+      // clear of the roof passes over the footprint.
+      if (volumetric && clearsRoof(Position.depth[a]!, ra, s, stats.heightM)) continue;
 
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
         // Dead centre of a footprint: leave along +X, deterministically.
@@ -255,7 +283,8 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
           firstY = 0;
         } else wedged ||= wedgedBetween(a, firstX, firstY, 1, 0);
         settle(terrain, a, sx + minD, Position.y[a]!);
-        reachFootprintEdge(world, a, sx, sy, minD);
+        if (!overRoof(volumetric, a, ra, s, stats.heightM))
+          reachFootprintEdge(world, a, sx, sy, minD);
         continue;
       }
       const d = Math.sqrt(d2);
@@ -281,7 +310,8 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       // with is one the hull has to get round to.
       const beyond = orderBeyond(a, sx, sy, minD);
       settle(terrain, a, sx + (dx / d) * minD, sy + (dy / d) * minD);
-      reachFootprintEdge(world, a, sx, sy, minD);
+      if (!overRoof(volumetric, a, ra, s, stats.heightM))
+        reachFootprintEdge(world, a, sx, sy, minD);
       if (beyond) slideOffAxis(world, a, sx, sy);
     }
     if (wedged) endIfWedged(world, a);
@@ -346,6 +376,32 @@ function endIfWedged(world: SimWorld, eid: number): void {
   }
 }
 
+/**
+ * On volumetric ground, a hull ordered to a depth over the structure's roof is
+ * on its way over it: the climb that will clear it is under way, so its order
+ * point stays where the player put it rather than being moved to the edge for
+ * good (docs/free-water-slice.md §9). Until the climb clears, it is put out
+ * like any hull.
+ */
+function overRoof(volumetric: boolean, a: number, ra: number, s: number, heightM: number): boolean {
+  return (
+    volumetric && DepthOrder.active[a] === 1 && clearsRoof(DepthOrder.targetM[a]!, ra, s, heightM)
+  );
+}
+
+/**
+ * Whether a hull of radius `ra` at `depthM` is drawn clear above structure
+ * `s`'s roof. The view draws depth at `DEPTH_VISUAL_M_PER_M` and both models at
+ * full scale, so the roof stands `heightM / 0.22` metres of water above the
+ * depth the structure stands on, and the keel `ra / 0.22` under the hull's
+ * centre: a Bastion's 128 m blocks about 580 m. The owner chose this on #1754
+ * over a roof at the model's true metres, which drew a hull passing over it
+ * inside the model. Depth is positive downward.
+ */
+function clearsRoof(depthM: number, ra: number, s: number, heightM: number): boolean {
+  return depthM + (ra + heightM) / DEPTH_VISUAL_M_PER_M <= Position.depth[s]!;
+}
+
 /** Reused across hulls and ticks: `nearestEdge` writes here rather than allocating. */
 const edge = { x: 0, y: 0 };
 
@@ -358,11 +414,13 @@ const edge = { x: 0, y: 0 };
  * hull off its point, and one within a hull's width of a neighbouring
  * footprint ends the move in the notch between them (`endIfWedged`).
  *
- * The footprint holds a hull out at every depth. The sim reads no height for
- * a structure: its footprint is a column, whatever height the art draws it at
- * (docs/asset-prompts-3d.md, "A Bastion is low as well as wide", is the view's
- * scale, not a sim number). So a point in the water over a structure is not
- * reachable. `movementSystem` ends a move only within `ARRIVAL_EPSILON_M` of
+ * On every shipped map the footprint holds a hull out at every depth: it is a
+ * column, whatever height the art draws it at (docs/asset-prompts-3d.md, "A
+ * Bastion is low as well as wide", is the view's scale, not a sim number).
+ * So on those maps a point in the water over a structure is not reachable.
+ * Only volumetric ground reads the structure's `heightM`: a hull clear of it
+ * never reaches this, and one ordered to a depth over the roof keeps its point
+ * (`overRoof`). `movementSystem` ends a move only within `ARRIVAL_EPSILON_M` of
  * the point in plan: left alone, the hull steered in and was pushed out every
  * tick, the move never cleared, and `busy()` in `orderQueue.ts` held every leg
  * queued behind it. The depth order is not touched; the hull goes on to it

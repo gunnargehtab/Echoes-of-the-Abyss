@@ -431,6 +431,19 @@ export class Terrain {
     return depthM >= this.ceiling[index]! && depthM <= this.floor[index]!;
   }
 
+  /**
+   * A cell's water interval by index, for the volumetric route
+   * (`Pathfinder.findPath3d`), which asks where two cells' water overlaps
+   * rather than whether one depth fits. Every other caller asks `admits`.
+   */
+  floorOfCell(index: number): number {
+    return this.floor[index]!;
+  }
+
+  ceilingOfCell(index: number): number {
+    return this.ceiling[index]!;
+  }
+
   cellCentreX(cx: number): number {
     return (cx + 0.5) * this.cellM;
   }
