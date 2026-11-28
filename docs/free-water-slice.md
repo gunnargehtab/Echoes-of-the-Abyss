@@ -72,9 +72,11 @@ Terrain may lift a hull already below its floor; it never automatically dives a 
 under a roof. Explicit depth orders and floor-following are distinct
 ([systems-depth.md](systems-depth.md) §2).
 
-Those are retained limits, not problems this art slice secretly fixes. Do not stage a
-shot of stacked overlapping fleets, fly-over structures or an automatically routed
-tunnel as proof of volumetric navigation. The authored exercise below needs none.
+Those were retained limits, not problems this art slice secretly fixed. The owner lifted
+all three on the crater's ground, for the study and the two-player fight alike (§9,
+"Toward a vertical multiplayer match"): separation in three dimensions, routes that climb and dive, and
+structures with a height. The one-interval-per-cell terrain stays. Shipped maps keep
+every limit above.
 
 ## 3. Authored ground: two readings of one map
 
@@ -852,7 +854,7 @@ requires the following, in a real authoritative match with the HUD present.
 
 | Evidence | Required observation |
 | --- | --- |
-| Painted map and routing tests | Exact sample intervals above; shallow and cut routes; 300 m cannot enter F; structure footprints and planar separation remain unchanged |
+| Painted map and routing tests | Exact sample intervals above; shallow and cut routes; 300 m cannot enter F; on shipped maps, structure footprints and planar separation remain unchanged (§9 lifts them on the crater) |
 | Input and projection tests | Continuous yaw/pitch/roll through 90/180/360 degrees; no order from navigation, blur or release; Home recovery; parallel/behind picks refused; no mirrored offscreen contacts |
 | Moving fleet | Scout stays shallow while Corvette dives/rises on an existing course; a mixed selection and queued leg retain their documented intent; camera moves independently |
 | Refused and costly actions | Invalid column cannot confirm; roof holds ascent; PR warning is visible before a deliberate deep order; incurred crush remains unhealable |
@@ -1229,12 +1231,43 @@ when each player can tell from the instruments alone which band a Tier 3 enemy h
 which band a charge must cross, and when an order carries a hull below its PR, without
 flight.
 
-Three retained limits from §2 shape that fight. Separation is planar, so a hull cannot
-hold station directly under another; pathfinding plans at the current depth; structure
-footprints block every depth. Keeping or changing each is #1754's call to make in the
-open, inside the development fixture only; a change that reaches shipped maps is its own
-issue, with [systems-depth.md](systems-depth.md) amended first. Any change is a mechanic
-anchored to depth. No new weapon, and no balance tuning.
+Three retained limits from §2 shaped that fight: planar separation, routes planned at
+the current depth, and structure footprints that block every depth. The owner lifted all
+three for the crater on 28 November 2026, in session on #1754. Each is a mechanic about
+depth, and each holds on the crater's ground only, in both its one-seat study and the
+two-seat fight. A shipped map keeps §2's limits until its own issue amends
+[systems-depth.md](systems-depth.md) §2 first. No new weapon, and no balance tuning.
+
+- **Separation in three dimensions.** Two hulls overlap only when the straight-line
+  distance between them, depth included and in true metres, is under the sum of their
+  radii. A hull can then hold station directly over or under another. The push stays in
+  the plan, just far enough to clear the pair in three dimensions, so a hull's depth
+  still has one owner, the depth system, with its rates and its noise. The other option,
+  pushing along the axis between the two, would move a hull's depth without an order.
+- **Routes that climb and dive.** The route plans in three dimensions over the terrain's
+  one water interval per cell. Each cell it enters is entered at the depth nearest the
+  last that the cell admits. It takes the fastest course, with every metre of climb and
+  dive costed at the hull's real ascent and descent rates, and it dives wherever that is
+  faster. Such a descent is as loud as an ordered one, and nothing hides it. Inside the
+  crater this lifts the rule that nothing spends a descent the player never made
+  ([systems-depth.md](systems-depth.md) §2), by the owner's choice over a router bounded
+  by the order's own depth span. One limit stays: a route never takes a hull below its
+  Pressure Rating. Crushing a hull stays the player's order, the way floor-following
+  disengages at the rating. A route needing more than that ends where the ground allows,
+  as an unreachable route does now.
+- **Structures with a height.** A structure blocks only from the seabed under it up to
+  its top: the height of its model, the tallest of its navies', in canonical metres. A
+  hull clear of that by its own radius passes over the footprint. A charge dropped from
+  above lands on the roof, not in a wall of water. The column is drawn at 0.22, while
+  models are drawn at full scale, so a hull passing over is drawn closer to the roof than
+  it is. The section scope draws the true clearance, and the fight's frames show whether
+  the world view still reads.
+
+The fight seats each player on a pre-built Bastion on the crater floor, with its own
+opening fleet, and no resources. Losing the Bastion is elimination, as in a skirmish
+([game-identity.md](game-identity.md), "Match Structure"), so attacking from above has
+something to attack. A Bastion is the only structure the crater stages; §3's "no structures" holds
+for the one-seat study.
 
 ### Frames and the last gate
 

@@ -89,8 +89,10 @@ in the map plane at the hull's current depth and reconsidered as depth changes.
 They do not search for a climb or dive around an obstacle. Each terrain cell holds
 one water interval; it cannot model two separate traversable layers at the same plan
 position. Hull separation is planar too, and structures' footprints exclude hulls at
-every depth, regardless of their rendered height. The
-[free-water slice](free-water-slice.md) retains these limits.
+every depth, regardless of their rendered height. Every shipped map keeps these limits.
+The development-only crater of the [free-water slice](free-water-slice.md) lifts all
+three, by the owner's choice on #1754 (its §9): a change that reaches a shipped map is
+amended here first.
 
 Three things end it. A new depth order replaces it, whether a move into open water or a
 direct rise or dive, because the newer instruction is the player's current mind. So does a task that keeps
