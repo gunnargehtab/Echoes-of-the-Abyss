@@ -220,6 +220,7 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
   // it could actually be standing in. Candidates come back in grid order,
   // which is a fixed function of the query order — deterministic, which is
   // all a replay needs.
+  const volumetric = world.volumetric;
   const grid = world.structureGrid;
   grid.clear();
   for (let j = 0; j < structures.length; j++) {
@@ -251,10 +252,15 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       const sy = Position.y[s]!;
       const dx = Position.x[a]! - sx;
       const dy = Position.y[a]! - sy;
-      const minD = ra + structureStatsFor(Structure.kind[s] as StructureKind).radiusM;
+      const stats = structureStatsFor(Structure.kind[s] as StructureKind);
+      const minD = ra + stats.radiusM;
       const d2 = dx * dx + dy * dy;
       world.stepWork.separationPairs++;
       if (d2 >= minD * minD) continue;
+      // On volumetric ground a structure is as tall as its model, not a column
+      // to the surface (docs/free-water-slice.md §9): a hull whose keel clears
+      // the roof passes over the footprint. Depth is positive downward.
+      if (volumetric && Position.depth[a]! + ra <= Position.depth[s]! - stats.heightM) continue;
 
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
         // Dead centre of a footprint: leave along +X, deterministically.
@@ -367,10 +373,11 @@ const edge = { x: 0, y: 0 };
  * hull off its point, and one within a hull's width of a neighbouring
  * footprint ends the move in the notch between them (`endIfWedged`).
  *
- * The footprint holds a hull out at every depth. The sim reads no height for
- * a structure: its footprint is a column, whatever height the art draws it at
- * (docs/asset-prompts-3d.md, "A Bastion is low as well as wide", is the view's
- * scale, not a sim number). So a point in the water over a structure is not
+ * On every shipped map the footprint holds a hull out at every depth: it is a
+ * column, whatever height the art draws it at (docs/asset-prompts-3d.md, "A
+ * Bastion is low as well as wide", is the view's scale, not a sim number).
+ * Only volumetric ground reads the structure's `heightM`, and a hull clear of
+ * it never reaches this. So a point in the water over a structure is not
  * reachable. `movementSystem` ends a move only within `ARRIVAL_EPSILON_M` of
  * the point in plan: left alone, the hull steered in and was pushed out every
  * tick, the move never cleared, and `busy()` in `orderQueue.ts` held every leg

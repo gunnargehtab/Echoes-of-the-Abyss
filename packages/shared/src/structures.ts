@@ -44,6 +44,14 @@ export interface StructureStats {
   buildTimeS: number;
   /** Footprint radius in metres, for placement checks and rendering. */
   radiusM: number;
+  /**
+   * TUNABLE — metres from where the structure stands to its top: the tallest
+   * of its navies' committed models at canonical scale, rounded up, and held
+   * to them by packages/frontend/test/structureHeight.test.mjs. Read only on
+   * volumetric ground, where a hull clear above it passes over the footprint
+   * (docs/free-water-slice.md §9); every shipped map blocks at all depths.
+   */
+  heightM: number;
   /** Harvesters may dock and deposit here. */
   acceptsDeposits: boolean;
   /** May be queued for construction. The Bastion deliberately cannot. */
@@ -91,6 +99,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     cost: 0, // Never purchased; you start with exactly one, and it is the stake.
     buildTimeS: 0,
     radiusM: 220,
+    heightM: 128,
     acceptsDeposits: true,
     constructible: false,
     /**
@@ -120,6 +129,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     cost: 300,
     buildTimeS: 45,
     radiusM: 140,
+    heightM: 209,
     acceptsDeposits: true,
     constructible: true,
     drawDemand: 2,
@@ -136,6 +146,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     cost: 400,
     buildTimeS: 60,
     radiusM: 160,
+    heightM: 136,
     acceptsDeposits: false,
     constructible: true,
     // The largest consumer, and the one whose starvation the player feels:
@@ -154,6 +165,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     cost: 250,
     buildTimeS: 30,
     radiusM: 60,
+    heightM: 103,
     acceptsDeposits: false,
     constructible: true,
     // Solved from docs/systems-combat.md §9's band: a turret takes about
@@ -179,6 +191,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     crystalCost: 120,
     buildTimeS: 120,
     radiusM: 90,
+    heightM: 75,
     acceptsDeposits: false,
     constructible: true,
     faction: Faction.Bathyarch,
@@ -197,6 +210,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     crystalCost: 120,
     buildTimeS: 80,
     radiusM: 80,
+    heightM: 110,
     acceptsDeposits: false,
     constructible: true,
     faction: Faction.Directorate,
@@ -216,6 +230,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     crystalCost: 120,
     buildTimeS: 150,
     radiusM: 70,
+    heightM: 265,
     acceptsDeposits: false,
     constructible: true,
     faction: Faction.Hadron,
@@ -234,6 +249,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     crystalCost: 120,
     buildTimeS: 90,
     radiusM: 85,
+    heightM: 85,
     acceptsDeposits: false,
     constructible: true,
     faction: Faction.Pelagia,
@@ -277,6 +293,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     // TUNABLE — a yard for the roster's heaviest hulls, a little wider than
     // the Foundry's 160.
     radiusM: 170,
+    heightM: 56,
     acceptsDeposits: false,
     constructible: true,
     // A line is a line: the Foundry's demand, for the Foundry's reason.
@@ -298,6 +315,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     cost: 250,
     buildTimeS: 35,
     radiusM: 90,
+    heightM: 45,
     acceptsDeposits: false,
     constructible: true,
     drawCapacity: THERMAL_DRAW.CAPACITY_PER_TAP,
@@ -328,6 +346,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     cost: 250,
     buildTimeS: 35,
     radiusM: 90,
+    heightM: 68,
     acceptsDeposits: false,
     constructible: true,
     // No Thermal Draw demand, deliberately. §2 prices a reactor in *cover* —

@@ -621,6 +621,7 @@ export type DerivedWorldState =
   // Fixed before the first step: chosen by map id and built identically on
   // both sides of a replay.
   | 'ambientBands'
+  | 'volumetric'
   | 'dt'
   // Identity bookkeeping. The hash deliberately speaks ordinals instead — see
   // the note at the head of `hashWorld` — so these cannot be state it reads.

@@ -1257,8 +1257,10 @@ two-seat fight. A shipped map keeps §2's limits until its own issue amends
   as an unreachable route does now.
 - **Structures with a height.** A structure blocks only from the seabed under it up to
   its top: the height of its model, the tallest of its navies', in canonical metres. A
-  hull clear of that by its own radius passes over the footprint. A charge dropped from
-  above lands on the roof, not in a wall of water. The column is drawn at 0.22, while
+  hull clear of that by its own radius passes over the footprint, so a hull can stand
+  over a base and drop charges on it. A charge's blast still reaches a structure by its
+  distance in three dimensions to the depth it stands on, as everywhere
+  ([systems-combat.md](systems-combat.md) §8). The column is drawn at 0.22, while
   models are drawn at full scale, so a hull passing over is drawn closer to the roof than
   it is. The section scope draws the true clearance, and the fight's frames show whether
   the world view still reads.

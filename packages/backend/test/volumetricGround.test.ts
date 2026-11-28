@@ -6,11 +6,18 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Faction, SIM, UnitKind, unitRadiusM } from '@echoes/shared';
+import {
+  Faction,
+  SIM,
+  StructureKind,
+  structureStatsFor,
+  UnitKind,
+  unitRadiusM,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { FREE_WATER_SLICE } from '../src/sim/maps/freeWaterSlice.ts';
 import { Terrain } from '../src/sim/terrain.ts';
-import { spawnUnit } from '../src/sim/world.ts';
+import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { Position } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -106,5 +113,62 @@ describe('volumetric ground: separation in three dimensions', () => {
     advance(match, 6);
     const plan = planGap(deep, shallow);
     assert.ok(plan >= 2 * radius * 0.9, `a stack is pushed apart in plan: ${plan.toFixed(1)} m`);
+  });
+});
+
+describe('volumetric ground: structures with a height', () => {
+  const radius = unitRadiusM(UnitKind.Corvette);
+  const bastion = structureStatsFor(StructureKind.Bastion);
+  /** On the bowl's 1,500 m floor, clear of the pocket and the garden. */
+  const BOWL_X = 1250;
+  const BOWL_Y = 2250;
+  const FLOOR_M = 1500;
+
+  function base(match: Match): number {
+    return spawnStructure(match.world, {
+      kind: StructureKind.Bastion,
+      slot: 1,
+      faction: Faction.Bathyarch,
+      x: BOWL_X,
+      y: BOWL_Y,
+      depth: FLOOR_M,
+      prebuilt: true,
+    });
+  }
+
+  it('lets a hull whose keel clears the roof hold station over the footprint', () => {
+    const match = crater(1756);
+    assert.equal(match.world.terrain.floorAt(BOWL_X, BOWL_Y), FLOOR_M);
+    base(match);
+    const over = corvette(match, BOWL_X + 40, BOWL_Y, FLOOR_M - bastion.heightM - radius - 1);
+    advance(match, 1);
+    assert.equal(Position.x[over], BOWL_X + 40);
+    assert.equal(Position.y[over], BOWL_Y);
+  });
+
+  it('still puts out a hull below the roof', () => {
+    const match = crater(1757);
+    base(match);
+    const inside = corvette(match, BOWL_X + 40, BOWL_Y, FLOOR_M - bastion.heightM + radius);
+    advance(match, 1);
+    const d = Math.hypot(Position.x[inside]! - BOWL_X, Position.y[inside]! - BOWL_Y);
+    assert.ok(d >= bastion.radiusM + radius - 0.01, `held ${d.toFixed(1)} m from the centre`);
+  });
+
+  it('keeps the column at every depth on ground without the flag', () => {
+    const match = planarGround(1756);
+    spawnStructure(match.world, {
+      kind: StructureKind.Bastion,
+      slot: 1,
+      faction: Faction.Bathyarch,
+      x: BOWL_X,
+      y: BOWL_Y,
+      depth: 2400,
+      prebuilt: true,
+    });
+    const over = corvette(match, BOWL_X + 40, BOWL_Y, 300);
+    advance(match, 1);
+    const d = Math.hypot(Position.x[over]! - BOWL_X, Position.y[over]! - BOWL_Y);
+    assert.ok(d >= bastion.radiusM + radius - 0.01, `held ${d.toFixed(1)} m from the centre`);
   });
 });
