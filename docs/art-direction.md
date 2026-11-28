@@ -673,12 +673,17 @@ lamp's, the accepted beam, and no number of it moves.
   a shader. The first frames stood the mast lamp amidships, 0.9 of the beam up. A
   Commune Cruiser's beam is its fins' span, 72 drawn metres at the Close camera, and its
   lamp hung 65 m over its keel line, in open water. So the lamp is measured in the
-  hull's heights.
+  hull's heights. Another own hull is still lit by a beam that crosses it, and a mast
+  beam finds one a bow beam passed under: the staged Cruiser's lights the Light Scout
+  250 m ahead of it at its own depth. That reading under gate 3 is the owner's, and it
+  is not taken.
 - **A mast beam reaches the manta.** A hull at rest that heads toward the manta's loop
   puts it in the beam, which a bow beam never did
   ([A manta shows its belly](#a-manta-shows-its-belly)). The owner named this on the
   issue. [issue-1845](screenshots/issue-1845/README.md#the-manta-in-a-mast-beam) has the
-  frames, and the owner's reading of a belly at 0.7 in a beam is not taken.
+  frames: a loud Cruiser's mast beam whitens the belly from 234 m. The owner was shown
+  them in session on 28 November 2026 and kept the lamp as built, and the reading of a
+  belly at 0.7 in a beam waits for #1637's run.
 - **Six a frame, the bow beams first.** `SEARCHLIGHT.MAX` stays 6, and the six nearest
   loud hulls to the camera's focus still throw. Each takes its bow beam before any takes
   a second lamp. Then the mast lamps, nearest first. Then the flood pairs, a pair whole

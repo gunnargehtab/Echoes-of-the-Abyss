@@ -63,11 +63,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 1.94,
+      "avgGpuMs": 1.89,
       "queued": {
-        "gpuMs": 2.66,
-        "worstGpuMs": 5.26,
-        "loadMs": 3.66
+        "gpuMs": 2.61,
+        "worstGpuMs": 5.31,
+        "loadMs": 3.67
       },
       "insideBudget": null
     },
@@ -126,11 +126,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 1.94,
+      "avgGpuMs": 2.11,
       "queued": {
-        "gpuMs": 2.61,
-        "worstGpuMs": 5.27,
-        "loadMs": 3.71
+        "gpuMs": 2.8,
+        "worstGpuMs": 5.36,
+        "loadMs": 3.75
       },
       "insideBudget": null
     },
@@ -185,11 +185,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 1.49,
+      "avgGpuMs": 1.62,
       "queued": {
-        "gpuMs": 1.95,
-        "worstGpuMs": 4.41,
-        "loadMs": 3.75
+        "gpuMs": 2.08,
+        "worstGpuMs": 5.54,
+        "loadMs": 3.74
       },
       "insideBudget": null
     },
@@ -248,11 +248,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 1.58,
+      "avgGpuMs": 1.67,
       "queued": {
-        "gpuMs": 2.29,
-        "worstGpuMs": 5.34,
-        "loadMs": 3.75
+        "gpuMs": 2.18,
+        "worstGpuMs": 4.26,
+        "loadMs": 3.78
       },
       "insideBudget": null
     },
@@ -338,11 +338,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 4.57,
+      "avgGpuMs": 4.47,
       "queued": {
-        "gpuMs": 4.93,
-        "worstGpuMs": 8.02,
-        "loadMs": 3.66
+        "gpuMs": 4.9,
+        "worstGpuMs": 7.43,
+        "loadMs": 3.65
       },
       "insideBudget": true
     },
@@ -428,11 +428,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 4.71,
+      "avgGpuMs": 4.52,
       "queued": {
-        "gpuMs": 5.1,
-        "worstGpuMs": 7.82,
-        "loadMs": 3.66
+        "gpuMs": 5.07,
+        "worstGpuMs": 8.14,
+        "loadMs": 3.65
       },
       "insideBudget": true
     },
@@ -514,11 +514,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 3.38,
+      "avgGpuMs": 3.3,
       "queued": {
-        "gpuMs": 3.88,
-        "worstGpuMs": 6.21,
-        "loadMs": 3.62
+        "gpuMs": 3.93,
+        "worstGpuMs": 17.37,
+        "loadMs": 3.6
       },
       "insideBudget": true
     },
@@ -604,11 +604,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 3.62,
+      "avgGpuMs": 3.69,
       "queued": {
-        "gpuMs": 3.83,
-        "worstGpuMs": 6.29,
-        "loadMs": 3.63
+        "gpuMs": 3.93,
+        "worstGpuMs": 5.78,
+        "loadMs": 3.65
       },
       "insideBudget": true
     }

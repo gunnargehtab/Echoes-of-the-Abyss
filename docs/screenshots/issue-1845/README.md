@@ -7,7 +7,7 @@ with the HUD on.
 
 **The named GPU drew every frame here**: the GTX 1070 of
 [graphics-standards.md](../../graphics-standards.md) gate 6, in Edge, headed, on
-28 November 2026. The branch is `claude/issue-1845-lamp-beams` at `f52b06b9`, over `main`
+28 November 2026. The branch is `claude/issue-1845-lamp-beams` at `4f47436d`, over `main`
 at `066ddf13`. The look is in development and not accepted. Acceptance is the owner's, at
 [#1637](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1637)'s run, and no
 frame here was read for gate 7.
@@ -22,8 +22,8 @@ A Light Scout's class carries one lamp, and the other two carry two
 
 | Camera | `main` at High | The branch at High | What the branch shows |
 | --- | --- | --- | --- |
-| Home | [main](gpu/main/05-high-home.png) | [branch](gpu/rest/05-high-home.png), [difference](gpu/rest/diff-high-home-main-vs-branch.png) | The Corvette throws two beams: its bow beam to the pool it had, and a mast beam ahead and up, a cone of lit snow with no pool. The Harvester's two are faint, and the Light Scout throws none |
-| Close | [main](gpu/main/06-high-close.png) | [branch](gpu/rest/06-high-close.png), [difference](gpu/rest/diff-high-close-main-vs-branch.png) | The Corvette's mast cone runs away from the eye, so it stands as a cloud of lit snow over the hull. The Harvester's is a faint streak over its back. The manta is in neither |
+| Home | [main](gpu/main/05-high-home.png) | [branch](gpu/rest/05-high-home.png), [difference](gpu/rest/diff-high-home-main-vs-branch.png) | The Corvette throws two beams off its bow: the bow beam to the pool it had, and a mast beam ahead and up, a cone of lit snow with no pool. The Harvester's two are faint, and the Light Scout throws none |
+| Close | [main](gpu/main/06-high-close.png) | [branch](gpu/rest/06-high-close.png), [difference](gpu/rest/diff-high-close-main-vs-branch.png) | The Corvette's mast cone runs away from the eye, so it stands as a cloud of lit snow over the hull. The Harvester's is a faint streak. The manta is in neither |
 | Survey | [main](gpu/main/08-high-survey.png) | [branch](gpu/rest/08-high-survey.png) | The Corvette's wedge east of its ring, as it was. A mast beam adds nothing a survey shows |
 
 The Harvester's beams burn at 0.045 of the lamp halo's full gain at SIG 18, and the
@@ -33,51 +33,83 @@ No class in the study's fleet carries four lamps. The frames below were taken wi
 [staging.patch](staging.patch) applied to the server, which is never committed: a Cruiser
 in the Harvester's berth, at SIG 55.
 
-| Camera | The staged Cruiser at High | What it shows |
-| --- | --- | --- |
-| Home | [frame](gpu/cruiser/05-high-home.png) | The Cruiser throws four: its bow beam east, its mast beam over it, and a flood to each side. The port flood's pool lies beyond the hull, behind its stern as this eye sees it. With the Corvette's two the frame draws its six |
-| Close | [frame](gpu/cruiser/06-high-close.png) | The mast cone rises to the right, over the bow beam's pool. A flood's cone falls from each side of the hull to the rim. The Cruiser's ring crosses its cones |
-| Survey | [frame](gpu/cruiser/08-high-survey.png) | Two small pools abeam of the Cruiser, north and south of its mark, and its bow wedge |
+| Camera | `main`, staged | The branch, staged | What the branch shows |
+| --- | --- | --- | --- |
+| Home | [main](gpu/cruiser/main-01-high-home.png) | [branch](gpu/cruiser/01-high-home.png) | The Cruiser throws four: its bow beam east, its mast beam over it from the same bow, and a flood to each side. The port flood's pool lies beyond the hull, behind its stern as this eye sees it. With the Corvette's two the frame draws its six |
+| Close | [main](gpu/cruiser/main-02-high-close.png) | [branch](gpu/cruiser/02-high-close.png) | The mast cone leaves the bow and rises to the right, over the bow beam's pool. A flood's cone falls from each side of the hull to the rim. The Cruiser's ring crosses its cones |
+| Survey | | [branch](gpu/cruiser/04-high-survey.png) | Two small pools abeam of the Cruiser, north and south of its mark, and its bow wedge |
 
 The clips are the camera moved from Home to Close at High, 1280 × 720:
 [the fleet at rest](gpu/rest/clip-home-to-close.mp4) and
 [the staged Cruiser](gpu/cruiser/clip-home-to-close.mp4). Each was taken without reduced
-motion and cut from a second before the move to the end of its hold.
+motion and cut from a second before the move. The recording ends a few seconds into the
+hold at Close.
 
 What the target shows and these do not: white light where these are the navy's green
-(limit 3), and a beam on a body. The manta's loop is centred 310 m west of the Corvette,
-which heads east.
+(limit 3), and at rest a beam on a body.
 
-## What only the new lamps changed at High
+## No hull is lit by a lamp of its own
 
-`tools/render-stack/framediff.mjs` on `main`'s High frame against the branch's, at Close:
+`packages/frontend/test/searchlights.test.ts` holds it by geometry: every lamp hangs
+clear of its hull's box and looks away from it. The staged pair measures it on the hull
+with the most lamps:
 
 ```bash
-node tools/render-stack/framediff.mjs docs/screenshots/issue-1845/gpu/main/06-high-close.png \
-  docs/screenshots/issue-1845/gpu/rest/06-high-close.png \
-  --box=harvester:60,470,410,640 --box=corvette:1600,510,1690,600 --box=scout:830,505,920,550
+node tools/render-stack/framediff.mjs docs/screenshots/issue-1845/gpu/cruiser/main-02-high-close.png \
+  docs/screenshots/issue-1845/gpu/cruiser/02-high-close.png \
+  --box=cruiser-hull:120,470,440,620 --box=scout:830,505,920,550 --box=corvette:1620,535,1675,572
 ```
 
-| Region | High pair, mean of 255 | Low pair, mean of 255 |
+| Region | Mean of 255 | Moved over 2 |
 | --- | --- | --- |
-| The world area | 1.12 | 0.36 |
-| The Harvester's box | 0.29 | 0.29 |
-| The Corvette's box | 0.34 | 0.22 |
-| The Light Scout's box | 0.67 | 0.67 |
+| The world area | 11.42 | 18.66% |
+| The Cruiser's hull | 0.02 | 0.27% |
+| The Corvette's hull | 0.33 | 2.75% |
+| The Light Scout | 14.35 | 78.05% |
 
-The Low column is the same command on the two `02-low-close.png` frames: what the snow
-alone moves in each box. [The difference map](gpu/rest/diff-high-close-main-vs-branch.png)
-is two mast cones and the snow. No hull's cladding took light from its own new lamp: two
-boxes read what the snow moves, and the Corvette's top rows hold the foot of its mast
-cone. Its bow beam looks 26.5 degrees under the level in both trees' `readings.json`.
+The Cruiser's cladding does not move under its own four lamps. The Light Scout does: it
+rests 250 m dead ahead of the Cruiser at the same depth, inside the mast beam, and its
+fins and ring edges take the light from astern. That is a beam crossing another own
+hull, as the accepted step lights one, and a mast beam finds a hull ahead where a bow
+beam passed under it. A silent hull lit by a loud one's lamp is the owner's reading
+under gate 3, and it is not taken.
+
+At rest in the study's own fleet, the same boxes on `gpu/main/06-high-close.png` against
+`gpu/rest/06-high-close.png` read 0.25 for the Harvester, 0.67 for the Corvette's hull
+and 1.11 for the Light Scout, where the snow alone moves them by 0.24, 0.38 and 0.56 on
+the two `02-low-close.png` frames.
+[The difference map](gpu/rest/diff-high-close-main-vs-branch.png) is two mast cones and
+the snow.
+
+## The manta in a mast beam
+
+The accepted manta ([art-direction.md](../../art-direction.md#a-manta-shows-its-belly))
+stood on no beam reaching it at rest. A mast beam can. Two stagings, each taken on
+`main` and on the branch at Close, with reduced motion holding the manta at its loop's
+start, at 270 / 2,129 and 175 m by the view's own reading.
+
+| Staging | `main` | The branch | The belly, RGB of 255 |
+| --- | --- | --- | --- |
+| [staging-manta.patch](staging-manta.patch): the Corvette in its own berth, turned west at the manta, 355 m off, at SIG 28 | [main](gpu/manta/corvette-west-main.png) | [branch](gpu/manta/corvette-west-branch.png) | 33, 67, 98 to 34, 69, 98 |
+| [staging-belly.patch](staging-belly.patch): a Cruiser at 150 / 2,330, on the belly's side, 234 m off, at SIG 55 | [main](gpu/manta/cruiser-belly-main.png) | [branch](gpu/manta/cruiser-belly-branch.png) | 33, 67, 98 to 242, 251, 235 |
+
+The belly's patch is x 1080 to 1130, y 240 to 300 of each frame. The Corvette's beam
+strikes the manta's far side, and the belly this eye sees hardly moves. The Cruiser's
+whitens it, and the manta's box differs from `main`'s by 168 of 255. In that frame the
+eye stands inside the cone: the world area differs by 78 of 255, and the snow near the
+eye draws as discs tens of pixels across.
+
+The owner was shown both frames in session on 28 November 2026 and kept the lamp as
+built, on the record. The reading of a belly at 0.7 in a beam waits for #1637's run. A lit mote has
+a least size and no greatest (`packages/frontend/src/game/beamMotes.ts`), which is filed
+apart from this step.
 
 ## What the frame costs
 
-Queued GPU time at High, unpaced, in milliseconds, two runs a tree
-([main](gpu/main/readings.json), [again](gpu/main-again/readings.json);
-[branch](gpu/rest/readings.json), [again](gpu/rest-again/readings.json);
-[the staged Cruiser](gpu/cruiser/readings.json), one run). The four runs were interleaved:
-branch, `main`, `main`, branch.
+Queued GPU time at High, unpaced, in milliseconds. The first set is four runs
+interleaved branch, `main`, `main`, branch at `f52b06b9`, when the mast lamp still hung
+amidships. In it the Low quality read 2.63 to 2.72 ms at Home in all four runs, so its
+runs compare.
 
 | Camera | `main`, 2 beams | The branch at rest, 4 beams | The staged Cruiser, 6 beams |
 | --- | --- | --- | --- |
@@ -86,15 +118,39 @@ branch, `main`, `main`, branch.
 | Low | 3.69, 3.57 | 3.88, 3.86 | 3.86 |
 | Survey | 3.87, 3.72 | 3.83, 3.93 | 3.96 |
 
-Gate 6's 8 ms holds at every camera, at the frame's cap of six beams too. Two more beams
-cost 0.4 to 0.8 ms at Home and Close, 0.2 ms at the low camera and nothing at Survey that
-two runs can tell apart. The Low quality reads the same in both trees, 1.95 to 2.72 ms. A
-single frame read 23.77 ms in the branch's second run at High and 24.28 ms in `main`'s
-second at Low: a hitch of the machine's, in both trees.
+Two more beams cost 0.4 to 0.8 ms at Home and Close, 0.2 ms at the low camera and
+nothing at Survey that two runs can tell apart.
+
+The runs after the lamp moved to the bow, at `4f47436d`, in the order taken. The machine
+did not hold still for them: the Low quality, which is one code in both trees, read from
+1.68 to 2.85 ms at Home. So each row carries its own Low reading, and these rows do not
+resolve what the step costs.
+
+| Run | Low quality at Home | High: Home | Close | Low | Survey |
+| --- | --- | --- | --- | --- | --- |
+| The branch at rest | 2.61 | 4.90 | 5.07 | 3.93 | 3.93 |
+| The branch at rest | 2.35 | 4.12 | 4.13 | 3.22 | 3.29 |
+| The staged Cruiser, 6 beams | not taken | 4.24 | 4.50 | 3.31 | 3.42 |
+| The branch at rest | 2.28 | 4.07 | 4.16 | 3.75 | 4.03 |
+| `main` | 2.73 | 4.64 | 4.53 | 3.81 | 3.89 |
+| `main` | 2.85 | 4.47 | 4.40 | 3.63 | 3.85 |
+| The branch at rest | 1.68 | 3.64 | 3.75 | 2.88 | 2.89 |
+
+Gate 6's 8 ms holds in every reading of both tables, the six-beam frames with them. The
+highest is 5.34 ms. A single frame read over the 16.7 ms interval four times, in two
+runs of the branch and one of `main`: 23.77 and 17.09 ms at Home and Close in the first
+set's second branch run, 24.28 ms at Low's Survey in its second `main` run, and 17.37 ms
+at the low camera in the first later branch run. Their cause was not found. They fall in
+both trees and at the Low quality, which throws no beam.
 
 At rest the branch draws 69 calls, as `main` does, and 4 triangles more: two more quads in
 the cones' one instanced draw. It shows 144,000 motes of snow where `main` shows 72,000.
 The staged Cruiser's frame draws 6 beams and 216,000 motes.
+
+Every run's `readings.json` is kept: [rest](gpu/rest/readings.json),
+[main](gpu/main/readings.json), [main again](gpu/main-again/readings.json),
+[the Cruiser](gpu/cruiser/readings.json) and the rest under [timing](gpu/timing), where
+`f52b06b9-` names the first set and `later-` the last four runs.
 
 ## Low does not move
 
@@ -124,9 +180,9 @@ Then as a player has it, with the snow, on the `01` to `04` frames of `gpu/main`
 
 | Camera | `main` against `main` | `main` against the branch |
 | --- | --- | --- |
-| Home | 0.01 | 0.19 |
-| Close | 0.01 | 0.36 |
-| Low | 0.01 | 0.38 |
+| Home | 0.01 | 0.14 |
+| Close | 0.01 | 0.29 |
+| Low | 0.01 | 0.28 |
 | Survey | 0.00 | 0.00 |
 
 Here the pair stands over its floor, and [the map](gpu/rest/diff-low-close-main-vs-branch.png)
@@ -151,9 +207,10 @@ CLIP=1 RECORD_VIDEO=docs/screenshots/issue-1845/gpu/rest VIEW_W=1920 VIEW_H=1080
 The first writes eight frames and `readings.json`, which names every beam by its hull and
 its lamp. The second records the clip and prints where the move starts and ends in it.
 `main`'s sets are the first command with `packages/frontend/src` checked out from `main`.
-The Cruiser's are both commands after `git apply docs/screenshots/issue-1845/staging.patch`,
-which `git checkout -- packages/backend/src/sim/maps/freeWaterSlice.ts` undoes. That run's
-four Low frames are not kept.
+A staged set is the first command, with `QUALITY=high` and `FRAMES` naming its cameras,
+after `git apply` of its patch, which
+`git checkout -- packages/backend/src/sim/maps/freeWaterSlice.ts` undoes. The manta's four
+frames were taken paced.
 
 ## Related
 
