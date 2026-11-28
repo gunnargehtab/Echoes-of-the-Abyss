@@ -35,7 +35,9 @@ No server debug snapshot, omniscience toggle or client-side simulation is part o
 `?freeWaterControls=1` enables only the camera/order study on
 an existing development map. The same client predicate owns both entry modes; the
 controls-only mode never adds scenery or selects a different map. Promotion to normal
-play requires a separate decision.
+play requires a separate decision. `?study=free-water&seats=2` selects the two-seat
+fight on the same ground, `free-water-duel` (§9): the first client creates a private
+room and the lobby shows its code, and the second joins with `&room=<code>` added.
 
 **Reference.** The approved models, survey plates and shared Abyss Render Stack in
 [art-direction.md](art-direction.md) are the visual sources. The owner's two game
@@ -1284,7 +1286,12 @@ two-seat fight. A shipped map keeps §2's limits until its own issue amends
   the two-player fight adds what it needs of those.
 
 The fight seats each player on a pre-built Bastion on the crater floor, with its own
-opening fleet, and no resources. Losing the Bastion is elimination, as in a skirmish
+opening fleet, and no resources. The seats mirror across the bowl's axis at x 2,250 m:
+Bastions at 1,250 and 3,250 m on the bowl's 1,500 m floor, between the pocket and the
+rim, and each fleet on its outer rim at 300 m. A fleet is a Light Scout (PR 1), a
+Corvette and a Cruiser (PR 2) and an Abyssal Submersible (PR 3), each armed and so each
+able to drop a depth charge. The lobby runs as a skirmish's, each player choosing a
+navy, with no AI seat, and the match starts once both seats are taken and ready. Losing the Bastion is elimination, as in a skirmish
 ([game-identity.md](game-identity.md), "Match Structure"), so attacking from above has
 something to attack. Each Bastion stands on the floor under it, not at the 600 m a built
 structure takes. A Bastion is the only structure the crater stages; §3's "no structures"

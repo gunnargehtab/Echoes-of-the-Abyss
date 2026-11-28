@@ -1162,7 +1162,25 @@ export class Match {
     if (this.map.openingFleet === undefined) {
       this.spawnStartingBase(slot, faction);
     } else if (this.map.spawns[slot] !== undefined) {
-      for (const unit of this.map.openingFleet) spawnUnit(this.world, { ...unit, slot, faction });
+      for (const unit of this.map.openingFleet) {
+        if (unit.seat === undefined || unit.seat === slot) {
+          spawnUnit(this.world, { ...unit, slot, faction });
+        }
+      }
+      if (this.map.openingBastion === true) {
+        const spawn = this.map.spawns[slot]!;
+        spawnStructure(this.world, {
+          kind: StructureKind.Bastion,
+          slot,
+          faction,
+          x: spawn.x,
+          y: spawn.y,
+          // On the seabed, so it stands where the crater's roof rule reads it
+          // from (docs/free-water-slice.md §9), not hanging at 600 m in a bowl.
+          depth: this.world.terrain.floorAt(spawn.x, spawn.y),
+          prebuilt: true,
+        });
+      }
     }
   }
 

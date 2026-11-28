@@ -1,12 +1,22 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Faction, FREE_WATER_MAP_ID, MAP_HEADERS, MatchPhase, SIM, UnitKind } from '@echoes/shared';
+import {
+  CLIENT_MSG,
+  Faction,
+  FREE_WATER_DUEL_MAP_ID,
+  FREE_WATER_MAP_ID,
+  MAP_HEADERS,
+  MatchPhase,
+  SIM,
+  StructureKind,
+  UnitKind,
+} from '@echoes/shared';
 import type { Client } from '@colyseus/core';
-import { FREE_WATER_SLICE, freeWaterMap } from '../src/sim/maps/freeWaterSlice.ts';
+import { FREE_WATER_DUEL, FREE_WATER_SLICE, freeWaterMap } from '../src/sim/maps/freeWaterSlice.ts';
 import { mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { Pathfinder } from '../src/sim/pathfinding.ts';
 import { Match } from '../src/sim/match.ts';
-import { bootRoom, fakeClient, shutdown } from './support/room.ts';
+import { bootRoom, deliver, fakeClient, shutdown } from './support/room.ts';
 
 describe('free-water fixture contract', () => {
   it('paints the documented water intervals and both route choices', () => {
@@ -92,6 +102,69 @@ describe('free-water fixture contract', () => {
       assert.equal(room.maxClients, 1);
       assert.equal(room.state.players.get('study')!.faction, Faction.Pelagia);
       assert.equal(room.state.mapId, FREE_WATER_MAP_ID);
+    } finally {
+      await shutdown(room);
+    }
+  });
+});
+
+describe('free-water duel (docs/free-water-slice.md §9, #1754)', () => {
+  it('seats each player on a floor Bastion with its own fleet on its rim', () => {
+    const match = new Match(FREE_WATER_DUEL, { fauna: false, seed: 1754 });
+    try {
+      assert.equal(match.world.volumetric, true);
+      match.addPlayer(0, Faction.Pelagia);
+      match.addPlayer(1, Faction.Hadron);
+      let next = match.update(1000 / SIM.TICK_HZ);
+      while (next === null) next = match.update(1000 / SIM.TICK_HZ);
+      const frames = next;
+      for (const [slot, rimX, bastionX] of [
+        [0, 625, 1250],
+        [1, 3875, 3250],
+      ] as const) {
+        const own = frames.get(slot)!;
+        assert.deepEqual(
+          own.units.map((u) => [u.kind, u.x, u.depth]).sort(),
+          [
+            [UnitKind.LightScout, rimX, 300],
+            [UnitKind.Corvette, rimX, 300],
+            [UnitKind.Cruiser, rimX, 300],
+            [UnitKind.AbyssalSubmersible, rimX, 300],
+          ].sort()
+        );
+        assert.equal(own.structures.length, 1);
+        const bastion = own.structures[0]!;
+        assert.equal(bastion.kind, StructureKind.Bastion);
+        assert.deepEqual([bastion.x, bastion.y, bastion.depth], [bastionX, 2250, 1500]);
+      }
+    } finally {
+      match.dispose();
+    }
+  });
+
+  it('is development-only, out of every catalogue, like the study', () => {
+    assert.equal(mapById(FREE_WATER_DUEL_MAP_ID), undefined);
+    assert.ok(!MAP_HEADERS.some((map) => map.id === FREE_WATER_DUEL_MAP_ID));
+    assert.throws(() => freeWaterMap(FREE_WATER_DUEL_MAP_ID, 'production'), /only in development/);
+    assert.equal(freeWaterMap(FREE_WATER_DUEL_MAP_ID, 'development'), FREE_WATER_DUEL);
+  });
+
+  it('opens a private two-seat lobby that refuses AI and starts with both seats ready', async () => {
+    const room = await bootRoom({ mapId: FREE_WATER_DUEL_MAP_ID });
+    try {
+      assert.equal(room.maxClients, 2);
+      const first = fakeClient('first');
+      room.onJoin(first as unknown as Client);
+      assert.equal(room.state.phase, MatchPhase.Lobby, "a lobby, not the study's straight start");
+      deliver(room, CLIENT_MSG.addAi, first, {});
+      assert.equal(room.state.players.size, 1, 'no AI seat');
+      deliver(room, CLIENT_MSG.ready, first, { ready: true });
+      assert.equal(room.state.phase, MatchPhase.Lobby, 'one commander does not start it');
+      const second = fakeClient('second');
+      room.onJoin(second as unknown as Client);
+      deliver(room, CLIENT_MSG.ready, second, { ready: true });
+      assert.equal(room.state.phase, MatchPhase.Playing);
+      assert.equal(room.state.mapId, FREE_WATER_DUEL_MAP_ID);
     } finally {
       await shutdown(room);
     }

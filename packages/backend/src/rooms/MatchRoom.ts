@@ -26,7 +26,9 @@ import {
 import {
   AiDifficulty,
   Faction,
+  FREE_WATER_DUEL_MAP_ID,
   FREE_WATER_MAP_ID,
+  isFreeWaterMap,
   LIFECYCLE,
   MatchPhase,
   SIM,
@@ -634,6 +636,9 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
     this.onClientMessage(CLIENT_MSG.addAi, (client, message) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
       if (this.mission !== null) return;
+      // The crater's fight is two people's (docs/free-water-slice.md §9): the
+      // commander was never written for ground with no economy to run.
+      if (isFreeWaterMap(this.map.id)) return;
       if (!this.state.players.has(client.sessionId)) return;
       this.addAiSeat(message.difficulty);
     });
@@ -802,7 +807,7 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
    */
   private newMatch(): Match {
     return this.mission === null
-      ? new Match(this.map, this.map.id === FREE_WATER_MAP_ID ? { fauna: false } : {})
+      ? new Match(this.map, isFreeWaterMap(this.map.id) ? { fauna: false } : {})
       : new Match(this.map, {
           mission: this.mission,
           fauna: this.mission.fauna,
@@ -918,6 +923,9 @@ export class MatchRoom extends Room<{ state: MatchState; metadata: MatchRoomMeta
    */
   private startIfEveryoneIsReady(): void {
     if (!everyoneIsReady(this.roster(), LIFECYCLE.MIN_PLAYERS)) return;
+    // The crater's fight starts with both its seats taken, never one commander
+    // alone with an empty Bastion opposite (docs/free-water-slice.md §9).
+    if (this.map.id === FREE_WATER_DUEL_MAP_ID && this.roster().length < this.maxClients) return;
 
     if (this.state.phase === MatchPhase.Ended) {
       // A rematch is a new world on the same ground with the same roster —

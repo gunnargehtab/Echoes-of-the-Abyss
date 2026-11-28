@@ -27,6 +27,7 @@ import './App.css';
 import { useMenuAudio } from './audio/useMenuAudio.ts';
 import {
   DEFAULT_MAP_ID,
+  FREE_WATER_DUEL_MAP_ID,
   FREE_WATER_MAP_ID,
   missionHeaderById,
   PROLOGUE_SORROWGATE_HEADER,
@@ -57,6 +58,7 @@ import {
 import { storedMissionId } from './net/GameClient.ts';
 import { hasPlayed, seenScenes, witnessedConclusions } from './progression/store.ts';
 import { loadSettings, subscribeSettings } from './settings/store.ts';
+import { FREE_WATER_DUEL, FREE_WATER_DUEL_ROOM } from './game/freeWaterControls.ts';
 import { setActivePalette } from './game/palette.ts';
 
 /** The match's code: fetched by the lazy screen, and early by a travel (§7.6). */
@@ -182,12 +184,15 @@ function initialScreen(): Screen {
   const query = new URLSearchParams(window.location.search);
   if (query.get('study') === 'free-water') {
     // The connection gate reports a production refusal rather than silently opening the title.
+    // `&seats=2` is the crater's fight (docs/free-water-slice.md §9): the first
+    // commander creates its private room, the second joins it by the code.
+    const room = FREE_WATER_DUEL ? FREE_WATER_DUEL_ROOM : undefined;
     return {
       kind: 'match',
       name: loadSettings().profileName,
-      mapId: FREE_WATER_MAP_ID,
+      mapId: FREE_WATER_DUEL ? FREE_WATER_DUEL_MAP_ID : FREE_WATER_MAP_ID,
       resume: true,
-      create: 'private',
+      ...(room === undefined ? { create: 'private' as const } : { roomId: room }),
     };
   }
   const missionId = query.get('mission');
