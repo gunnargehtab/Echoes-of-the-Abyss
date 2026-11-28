@@ -125,6 +125,33 @@ model. The kit's `seat` is the placement that answers it: the lamp on the neares
 on the plate straight under its station. A haze is not a surface — a part blended at
 under half opacity neither hides a lamp from the chart nor holds one up.
 
+### Searchlights a hull class throws
+
+*In development with the High graphics quality, and not accepted
+([#1845](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1845)). The owner
+decided on 24 November 2026 that a class's count is written here first, and took this
+rule in session on 28 November 2026.*
+
+At High an own hull throws a beam from each searchlight its class carries
+([art-direction.md](art-direction.md#a-beam-from-each-lamp)). The count is the class's
+glow band above, by its idle SIG in [units.md](units.md): a class built loud carries more
+lamps. A hull's live SIG still sets how bright each burns, so a class with four throws
+none on Silent Running.
+
+| Glow band, by idle SIG | Lamps | Which | Classes |
+| --- | --- | --- | --- |
+| 0–15, nearly black | 1 | The bow lamp | Light Scout, Spinner, Precentor, Cantus, Drifter, Verger, Antiphon, Glider, Acolyte, Herald, Weaver, Blight, Lure, Reed, Bower, Rootstock |
+| 16–35, dim running lights | 2 | The bow lamp and the mast lamp | Corvette, Abyssal Submersible, Harvester, Chorister, Sower, Freighter, Beacon, Thurible, Lance, Tocsin, Succentor, Offertory |
+| 36 and over, sustained glow and brighter | 4 | Those two, and a flood to port and to starboard | Cruiser, Clarion, Tender, Bulwark, Dredge, Reciter, Broadside, Furnace, Caisson, Derrick, Responsory, Gantry |
+| A carrier's craft, whatever its SIG | 1 | The bow lamp | Spark, Runner, Treble, Versicle |
+
+A searchlight is a beam the world pass throws and no part of a model. No UNIT block
+gains a lamp for it and no script builds one: the lamps a block names are the tactical
+pass's, drawn at the strength gate 3 sets, and the light audit above reads those alone.
+A new class takes its row by its idle SIG. `HIGH_GRAPHICS.LAMPS`
+(`packages/shared/src/constants.ts`) holds the bands, and
+`packages/frontend/test/searchlights.test.ts` holds this table to them, a class a cell.
+
 ## Block 1 — STYLE (every prompt starts with this)
 
 ```text

@@ -230,6 +230,9 @@ Built so far:
   ([#1814](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1814)). Below.
 - **An own hull throws a searchlight, and it casts a shadow**
   ([#1836](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1836)). Below.
+- **An own hull throws a beam from each lamp its class carries**
+  ([#1845](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1845)). In
+  development and not accepted. Below.
 - **The crater's life stands in the world's light, its fry carry their own, and its
   jellies are lanterns**
   ([#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837)). In
@@ -554,7 +557,9 @@ first light with a direction, so it is the first to cast a shadow.
   then light fewer hulls. The owner kept one beam, and a beam from each lamp is a look
   step of its own ([#1845](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1845)).
   **A count a hull class**, written in
-  [asset-prompts-3d.md](asset-prompts-3d.md), needs that doc's blocks first. Past six,
+  [asset-prompts-3d.md](asset-prompts-3d.md), needs that doc's blocks first. That step
+  is in development, on a count a class
+  ([A beam from each lamp](#a-beam-from-each-lamp)), and this beam is its bow lamp. Past six,
   the hulls nearest the camera's focus throw theirs and the rest throw none: a beam off
   the frame lights nothing a player sees. The work lights keep the loudest instead
   (`workLight.ts`), which here would spend a beam on a loud hull across the map. Eight
@@ -609,6 +614,88 @@ gives 1.8 face on.
 | Height the shadow's line is carried over the ground, so level ground never shadows itself, metres | `SEARCHLIGHT.SHADOW.LIFT_M` | 1.5 |
 | Half-width of a shadow's soft edge, in metres of clearance | `SEARCHLIGHT.SHADOW.SOFT_M` | 2 |
 | Where a hull's shadow is whole and where it is gone, in half-beams from its keel line | `SEARCHLIGHT.SHADOW.HULL_EDGE` | 0.7, 1.4 |
+
+#### A beam from each lamp
+
+*In development with the rest of High, and not accepted
+([#1845](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1845);
+[issue-1845](screenshots/issue-1845/README.md)). Every number is TUNABLE in
+`HIGH_GRAPHICS.LAMPS` (`packages/shared/src/constants.ts`) until a frame of it is
+accepted. The owner took four calls before any frame. On 24 November 2026: a count a hull
+class, written in [asset-prompts-3d.md](asset-prompts-3d.md) first, under the frame's
+cap. In session on 28 November 2026: where the lamps look, how a class's count is set,
+and how the frame's six are shared. The readings not taken stay written under each.*
+
+The target frame shows several lamps a hull, each with a beam
+([issue-1799](screenshots/issue-1799/README.md)). The accepted step throws one, off the
+bow. An own hull now throws a beam from each lamp its class carries. The first is the bow
+lamp's, the accepted beam, and no number of it moves.
+
+- **Three kinds of lamp, and each looks at a depth.** The **bow lamp** looks at the floor
+  a throw ahead, as accepted. The **mast lamp** stands on the hull's back, 0.3 of its
+  length ahead of amidships and 0.9 of its beam over the keel line, and looks along the
+  heading 10 degrees over the level. It meets no ground, so it throws no pool: its cone
+  runs its whole reach in open water, and it lights what swims over the hull's own depth
+  when the hull heads that way. A **flood** hangs under the keel line 3 m off each beam
+  end and looks abeam at the ground 80 m out, between 15 and 60 degrees under the level:
+  a pool to port and one to starboard. So a hull's lamps read the floor ahead, the water
+  above and the ground beside. The angles are in the world's drawn metres, where depth is
+  drawn at 0.22 of plan: 10 degrees climbs from a hull at 300 m to the manta's 165 m in
+  170 m of plan. Three readings were written. **Bow, mast and a flood pair** is taken.
+  **All down**, a bow pair toed out 20 degrees a side and then the floods, is the
+  closest to the target frame's hull, and nothing would ever look up. **A fan off the
+  bow** keeps every lamp there, splayed in yaw: a loud hull would read as one wider
+  headlight and not as a lit vessel.
+- **A class's count is its glow band's.**
+  [asset-prompts-3d.md](asset-prompts-3d.md#searchlights-a-hull-class-throws) writes it
+  for every class: one lamp through an idle SIG of 15, two through 35 and four past it,
+  and one for a carrier's craft. The second lamp is the mast's, and the third and fourth
+  are the flood pair. A class built loud carries more lamps, and a refit that moves a
+  hull's SIG moves no count. Two other readings were written. **The band, held to
+  three**, gives a loud class the bow and the floods and no mast: one loud hull then
+  takes half the frame's six, not two thirds. **A count authored a class**, from the
+  lamps each UNIT block names, is the most specific, and nothing would derive a new
+  hull's.
+- **Each lamp burns at the lamp halo's gain** (limit 5), as the bow's does: nothing
+  through SIG 15. The count says how a class was built, and the live SIG alone says how
+  bright. A Cruiser on Silent Running carries four lamps and throws no beam. `SHARE` is
+  a lamp's light of what the bow's is, 1 for both kinds.
+- **Six a frame, the bow beams first.** `SEARCHLIGHT.MAX` stays 6, and the six nearest
+  loud hulls to the camera's focus still throw. Each takes its bow beam before any takes
+  a second lamp. Then the mast lamps, nearest first. Then the flood pairs, a pair whole
+  or not at all, since a hull lit to one side alone would read as a turn. So six loud
+  hulls draw exactly what the accepted step drew, and a small fleet shows the target's
+  count. Two other readings were written. **Whole hulls first** is the issue's own
+  words: six beams light as few as two hulls, and a loud hull third from the focus
+  throws none. **A cap of 12** makes every lit fragment in a cone, and 36,000 motes a
+  beam, pay for it. What the rounds cost: at the cap's edge two equal hulls differ by a
+  mast or a flood pair, the nearer taking it.
+- **Every reader of a beam reads them all.** The ground, a hull's cladding, the cone, the
+  snow, the crater's bodies and a chimney's smoke read the one set of uniforms, so a new
+  lamp lights and is shadowed as the bow's is. A hull never shadows its own lamps.
+- **No lamp is drawn, and no model changes.** A searchlight is a beam the world pass
+  throws. The lamps a model carries stay the tactical pass's at the strength gate 3
+  sets, and no mark is touched (limit 6). A loud class now stands its ring over four
+  pools and cones, so gate 7's glance is asked again on the named GPU's frames.
+
+`packages/frontend/test/searchlights.test.ts` holds the count a class to
+[asset-prompts-3d.md](asset-prompts-3d.md)'s table, the bow beam unmoved, where the mast
+and the floods hang and look, every lamp dark on Silent Running, the rounds and this
+table. `packages/frontend/test/rendererSmoke.test.ts` counts a loud Corvette's two beams
+at High.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| A glow band's top idle SIG and the lamps a class in it carries, a pair a band | `LAMPS.BANDS` | 15, 1, 35, 2, 100, 4 |
+| Lamps a carrier's craft carries | `LAMPS.CRAFT` | 1 |
+| How far ahead of amidships the mast lamp stands, in lengths | `LAMPS.MAST.AHEAD` | 0.3 |
+| How far over the keel line it stands, in beams | `LAMPS.MAST.UP` | 0.9 |
+| How far over the level it looks, degrees | `LAMPS.MAST.RISE_DEG` | 10 |
+| Its light, of the bow lamp's at the same live SIG | `LAMPS.MAST.SHARE` | 1 |
+| How far off the beam end a flood hangs, metres | `LAMPS.FLOOD.OUT_M` | 3 |
+| How far abeam a flood looks at the ground, metres | `LAMPS.FLOOD.THROW_M` | 80 |
+| The least and the most a flood looks under the level, degrees | `LAMPS.FLOOD.DEPRESSION_DEG` | 15, 60 |
+| A flood's light, of the bow lamp's at the same live SIG | `LAMPS.FLOOD.SHARE` | 1 |
 
 #### Life in the world's light
 
