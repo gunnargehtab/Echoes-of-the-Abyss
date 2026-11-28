@@ -231,20 +231,20 @@ export function searchlightsOf(
     const at = hangAt(hull.x + fx * ahead, hull.y - hull.beamM * SPEC.KEEL, hull.z + fz * ahead);
     return atGround(hull, 'bow', at, fx, fz, SPEC.THROW_M, SPEC.DEPRESSION_DEG, 1);
   };
-  // Over the bow, as far off it as the bow's lamp, looking ahead and up: over
+  // On the hull's back, forward of amidships, looking ahead and up: over
   // level ground it meets none, so it throws a cone and no pool, and under a
-  // wall it lights the rock that stands over the hull. In heights and not in
-  // beams: a hull's beam is its fins' span, and 0.9 of a Cruiser's stood this
-  // lamp 65 drawn metres over its keel line.
+  // wall it lights the rock that stands over the hull. It stands over the
+  // hull's top by what its cone's lower edge needs to pass over the bow, so
+  // the hull is never in its own beam. From the hull's height and never its
+  // beam: a beam is a fin's span, and 0.9 of a Cruiser's stood this lamp 65
+  // drawn metres over its keel line.
   const mast = (hull: SearchlightHull): Searchlight => {
     const fx = Math.cos(hull.heading);
     const fz = Math.sin(hull.heading);
-    const ahead = hull.lengthM / 2 + SPEC.CLEAR_M;
-    const at = hangAt(
-      hull.x + fx * ahead,
-      hull.y + hull.heightM * LAMPS.MAST.UP,
-      hull.z + fz * ahead
-    );
+    const ahead = hull.lengthM * LAMPS.MAST.AHEAD;
+    const under = Math.max(0, radians(SPEC.OUTER_DEG - LAMPS.MAST.RISE_DEG));
+    const over = Math.max(0, hull.lengthM / 2 - ahead) * Math.tan(under) + LAMPS.MAST.CLEAR_M;
+    const at = hangAt(hull.x + fx * ahead, hull.y + hull.heightM / 2 + over, hull.z + fz * ahead);
     return beam(hull, 'mast', at, fx, fz, radians(LAMPS.MAST.RISE_DEG), LAMPS.MAST.SHARE);
   };
   // Off a beam end, under the keel line as the bow's is, looking abeam at

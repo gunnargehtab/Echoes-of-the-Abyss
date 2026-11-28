@@ -626,8 +626,10 @@ gives 1.8 face on.
 accepted. The owner took four calls before any frame. On 24 November 2026: a count a hull
 class, written in [asset-prompts-3d.md](asset-prompts-3d.md) first, under the frame's
 cap. In session on 28 November 2026: where the lamps look, how a class's count is set,
-and how the frame's six are shared. A fifth came with the first frames the same day: a
-mast beam on the manta stays as built. The readings not taken stay written under each.*
+and how the frame's six are shared. Three more came with frames the same day: a mast
+beam on the manta stays as built, the mast lamp stands on the hull's back, and a hull lit
+by another's mast beam stays as the accepted step lights one. The readings not taken stay
+written under each.*
 
 The target frame shows several lamps a hull, each with a beam
 ([issue-1799](screenshots/issue-1799/README.md)). The accepted step throws one, off the
@@ -635,9 +637,9 @@ bow. An own hull now throws a beam from each lamp its class carries. The first i
 lamp's, the accepted beam, and no number of it moves.
 
 - **Three kinds of lamp, and each looks at a depth.** The **bow lamp** looks at the floor
-  a throw ahead, as accepted. The **mast lamp** stands over the bow, as far off it as
-  the bow lamp hangs and a quarter of the hull's height over the keel line, and looks
-  along the heading 10 degrees over the level. Over level ground it meets none and throws no pool:
+  a throw ahead, as accepted. The **mast lamp** stands on the hull's back, 0.3 of its
+  length ahead of amidships, and looks along the heading 10 degrees over the level. Over
+  level ground it meets none and throws no pool:
   its cone runs its whole reach in open water, and it lights what swims over the hull's
   own depth when the hull heads that way. Under a wall or a rim it lights the rock that
   stands over the hull. A **flood** hangs under the keel line 3 m off each beam
@@ -668,16 +670,28 @@ lamp's, the accepted beam, and no number of it moves.
   over its count, and a class built loud would then throw four dim beams.
 - **No hull is lit by a lamp of its own.** A hull's cladding takes half of a beam that
   crosses it, and #1861's lanterns already light a hull, so gate 3 has little room near
-  the fleet. Every lamp hangs clear of its hull's box and looks away from it: the bow's
-  and the mast's off the bow, a flood off the beam end. So every point of the hull is
-  behind its own lamps and outside their cones, by where a lamp hangs and by no test in
-  a shader. The first frames stood the mast lamp amidships, 0.9 of the beam up. A
-  Commune Cruiser's beam is its fins' span, 72 drawn metres at the Close camera, and its
-  lamp hung 65 m over its keel line, in open water. So the lamp is measured in the
-  hull's heights. Another own hull is still lit by a beam that crosses it, and a mast
-  beam finds one a bow beam passed under: the staged Cruiser's lights the Light Scout
-  250 m ahead of it at its own depth. That reading under gate 3 is the owner's, and it
-  is not taken.
+  the fleet. The bow lamp hangs off the bow and a flood off the beam end, and each looks
+  away from the hull. The mast lamp stands over the hull's top by what its cone needs:
+  the cone's lower edge falls 7 degrees under the level, so the lamp stands that fall
+  over the hull ahead of it, 2 m on a hull 80 m long, and 0.5 m more. So every point of
+  the hull is outside every cone of its own, by where a lamp hangs and by no test in a
+  shader.
+- **Where the mast lamp stands was taken twice.** The first frames measured its height
+  as 0.9 of the hull's beam. A Commune Cruiser's beam is its fins' span, 72 drawn metres
+  at the Close camera, and its lamp hung 65 m over its keel line, in open water. The
+  second frames stood it over the bow, off it as the bow lamp hangs, which the owner had
+  not chosen. Three readings were then put to the owner, on those frames. **On the
+  hull's back, over its top by what the cone needs** is taken: two stations a hull, and
+  the owner's first words. **Over the bow** throws a two-lamp class's beams from one
+  point, a fan in pitch. **The hull's top, looking 25 degrees up** needs no clearance,
+  and reopens the manta.
+- **A mast beam lights an own hull ahead of it.** A beam lights the cladding of another
+  own hull it crosses, as the accepted step has it, and a mast beam finds one a bow beam
+  passed under: a staged Cruiser's lights the Light Scout 250 m ahead of it at its own
+  depth. The owner was shown that pair in session on 28 November 2026 and kept it, on
+  the record, and the reading under gate 3 waits for #1637's run. Two other readings
+  were written: **cladding takes no mast beam**, and **a mast beam at half on
+  cladding**, each a flag a beam in the cladding's program.
 - **A mast beam reaches the manta.** A hull at rest that heads toward the manta's loop
   puts it in the beam, which a bow beam never did
   ([A manta shows its belly](#a-manta-shows-its-belly)). The owner named this on the
@@ -716,7 +730,8 @@ at High.
 | --- | --- | --- |
 | A glow band's top idle SIG and the lamps a class in it carries, a pair a band | `LAMPS.BANDS` | 15, 1, 35, 2, 100, 4 |
 | Lamps a carrier's craft carries | `LAMPS.CRAFT` | 1 |
-| How far over the keel line the mast lamp stands, in the hull's heights | `LAMPS.MAST.UP` | 0.25 |
+| How far ahead of amidships the mast lamp stands, in lengths | `LAMPS.MAST.AHEAD` | 0.3 |
+| How far it stands over the height its cone needs to pass over the bow, metres | `LAMPS.MAST.CLEAR_M` | 0.5 |
 | How far over the level it looks, degrees | `LAMPS.MAST.RISE_DEG` | 10 |
 | Its light, of the bow lamp's at the same live SIG | `LAMPS.MAST.SHARE` | 1 |
 | How far off the beam end a flood hangs, metres | `LAMPS.FLOOD.OUT_M` | 3 |
@@ -1334,7 +1349,8 @@ things a fish has not. Where it glides is
   above it can put it in one, where a belly at 0.7 takes half the beam, and no frame of
   that is taken. A mast lamp looks up, a step in development
   ([A beam from each lamp](#a-beam-from-each-lamp)): a hull at rest that heads toward
-  the loop puts the manta in that beam, and the owner's reading of it is not taken.
+  the loop puts the manta in that beam. The owner kept the lamp on the frames of
+  28 November 2026, and the reading of a belly at 0.7 in it waits for #1637's run.
 - **The Lid's glow comes through its wings.** A wing is centimetres thick at its margin
   and the body 1.5 m at its centre. A face that looks down takes, beside the rest, the
   Lid's glow that stands on the back over it, less what the body between keeps: all of

@@ -346,19 +346,23 @@ describe('a beam from each lamp a class carries (#1845)', () => {
     }
   });
 
-  it('stands the mast lamp over the bow, looking ahead and up, over level ground', () => {
+  it('stands the mast lamp on the hull’s back, looking ahead and up, over level ground', () => {
     const [bow, mast] = beamsOf([hull({ lamps: 2, heading: Math.PI / 2 })]);
     assert.equal(mast!.lamp, 'mast');
-    // Off the bow as the bow's lamp is, and over the keel line where that hangs under it.
+    // Forward of amidships and inside the hull's length, where the bow's lamp hangs off it.
     assert.ok(Math.abs(mast!.x - 1000) < 1e-9);
-    assert.ok(Math.abs(mast!.z - bow!.z) < 1e-9);
-    assert.ok(Math.abs(mast!.y - (-66 + 10 * LAMPS.MAST.UP)) < 1e-9);
-    assert.ok(mast!.y > -66 && bow!.y < -66);
-    // In the hull's heights and never its beams: a beam is a fin's span, and
+    assert.ok(Math.abs(mast!.z - (1000 + 80 * LAMPS.MAST.AHEAD)) < 1e-9);
+    assert.ok(mast!.z > 1000 && mast!.z < 1000 + 40 && bow!.z > 1000 + 40);
+    // Over the hull's top by what the cone's lower edge needs to pass over
+    // the bow, and a clearance: 16 m of hull ahead of it, 7 degrees under.
+    const under = ((SPEC.OUTER_DEG - LAMPS.MAST.RISE_DEG) * Math.PI) / 180;
+    const over = 80 * (0.5 - LAMPS.MAST.AHEAD) * Math.tan(under) + LAMPS.MAST.CLEAR_M;
+    assert.ok(Math.abs(mast!.y - (-66 + 10 / 2 + over)) < 1e-9);
+    assert.ok(over > LAMPS.MAST.CLEAR_M && over < 3, `the lamp stands ${over} m over the top`);
+    // From the hull's height and never its beam: a beam is a fin's span, and
     // 0.9 of a Cruiser's stood this lamp 65 drawn metres over its keel line.
     const finned = beamsOf([hull({ lamps: 2, beamM: 72 })])[1]!;
-    assert.ok(Math.abs(finned.y - (-66 + 10 * LAMPS.MAST.UP)) < 1e-9);
-    assert.ok(LAMPS.MAST.UP <= 0.5, 'no higher than the hull’s own top');
+    assert.ok(Math.abs(finned.y - mast!.y) < 1e-9);
     // Along the heading, over the level: it meets no level ground at any reach.
     assert.ok(Math.abs(Math.hypot(mast!.dx, mast!.dy, mast!.dz) - 1) < 1e-9);
     assert.ok(mast!.dz > 0 && Math.abs(mast!.dx) < 1e-9);
@@ -367,9 +371,10 @@ describe('a beam from each lamp a class carries (#1845)', () => {
 
   it('lights no hull by a lamp of its own, whatever its shape', () => {
     // Gate 3: a hull's cladding brighter by its own lamps would read as a
-    // louder hull. Every lamp hangs clear of the hull's box and looks away
-    // from it, so every point of the box is outside the cone, by where the
-    // lamp is and not by a test in a shader. Corners, and points along every
+    // louder hull. The bow's lamp and the floods hang off the hull's box and
+    // look away from it, and the mast's stands over it by what its cone needs
+    // to pass over the bow. So every point of the box is outside every cone,
+    // by where a lamp is and not by a test in a shader. Corners, and points along every
     // edge, of a slim hull, a finned one and one taller than it is wide.
     const cosOuter = Math.cos((SPEC.OUTER_DEG * Math.PI) / 180);
     const shapes = [
