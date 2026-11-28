@@ -524,6 +524,7 @@ export class Match {
     // the map's to say (docs/bestiary.md §4), and the Drift and the mission
     // runtime both read it from the world rather than from the literal.
     this.world.ambientBands = map.ambientBands ?? {};
+    this.world.volumetric = map.volumetric === true;
     this.recorder =
       options.record === true
         ? new ReplayRecorder(

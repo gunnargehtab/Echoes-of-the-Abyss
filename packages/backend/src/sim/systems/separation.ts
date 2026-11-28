@@ -84,6 +84,7 @@ function settle(terrain: Terrain, eid: number, toX: number, toY: number): void {
 function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
   const grid = world.unitGrid;
   const terrain = world.terrain;
+  const volumetric = world.volumetric;
 
   grid.clear();
   for (let i = 0; i < units.length; i++) {
@@ -129,8 +130,16 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
       const dy = by - ay;
       const minD = ra + unitRadiusM(Unit.kind[b] as UnitKind);
       const d2 = dx * dx + dy * dy;
+      // On volumetric ground the pair is two spheres, depth in true metres
+      // (docs/free-water-slice.md §9): a hull may hold station over another.
+      // Zero elsewhere, which leaves the planar test exactly as it was.
+      const dz = volumetric ? Position.depth[b]! - Position.depth[a]! : 0;
       world.stepWork.separationPairs++;
-      if (d2 >= minD * minD) continue;
+      if (d2 + dz * dz >= minD * minD) continue;
+      // The push stays in the plan, so depth keeps one owner (depthSystem, with
+      // its rates and its noise): the plan distance that clears the pair at
+      // this depth difference, which is the radii when they share a depth.
+      const clearD = dz === 0 ? minD : Math.sqrt(minD * minD - dz * dz);
 
       let nx: number;
       let ny: number;
@@ -150,12 +159,12 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
         const angle = ((la * 2654435761 + lb) % 628) / 100;
         nx = Math.cos(angle);
         ny = Math.sin(angle);
-        overlap = minD;
+        overlap = clearD;
       } else {
         const d = Math.sqrt(d2);
         nx = dx / d;
         ny = dy / d;
-        overlap = minD - d;
+        overlap = clearD - d;
       }
 
       // A craft and the carrier that launched it: the carrier does not move.

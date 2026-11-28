@@ -12,6 +12,9 @@ export const FREE_WATER_SLICE: MapDefinition = {
   cellM: 250,
   floorM: 600,
   doc: 'docs/free-water-slice.md §§3–4',
+  // §9, "Toward a vertical multiplayer match": the owner lifted §2's three
+  // planar limits on this ground, and on no other (#1754).
+  volumetric: true,
   regions: [
     { x: 0, y: 0, widthM: 4000, heightM: 4000, biome: Biome.CoralRuins, floorM: 600, ceilingM: 0 },
     {
