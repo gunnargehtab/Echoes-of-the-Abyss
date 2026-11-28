@@ -31,7 +31,16 @@ import {
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Craft, MoveOrder, Position, Posture, Structure, Unit, Velocity } from '../components.ts';
+import {
+  Craft,
+  DepthOrder,
+  MoveOrder,
+  Position,
+  Posture,
+  Structure,
+  Unit,
+  Velocity,
+} from '../components.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
 import type { Terrain } from '../terrain.ts';
 
@@ -270,7 +279,8 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
           firstY = 0;
         } else wedged ||= wedgedBetween(a, firstX, firstY, 1, 0);
         settle(terrain, a, sx + minD, Position.y[a]!);
-        reachFootprintEdge(world, a, sx, sy, minD);
+        if (!overRoof(volumetric, a, ra, s, stats.heightM))
+          reachFootprintEdge(world, a, sx, sy, minD);
         continue;
       }
       const d = Math.sqrt(d2);
@@ -296,7 +306,8 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       // with is one the hull has to get round to.
       const beyond = orderBeyond(a, sx, sy, minD);
       settle(terrain, a, sx + (dx / d) * minD, sy + (dy / d) * minD);
-      reachFootprintEdge(world, a, sx, sy, minD);
+      if (!overRoof(volumetric, a, ra, s, stats.heightM))
+        reachFootprintEdge(world, a, sx, sy, minD);
       if (beyond) slideOffAxis(world, a, sx, sy);
     }
     if (wedged) endIfWedged(world, a);
@@ -361,6 +372,21 @@ function endIfWedged(world: SimWorld, eid: number): void {
   }
 }
 
+/**
+ * On volumetric ground, a hull ordered to a depth over the structure's roof is
+ * on its way over it: the climb that will clear it is under way, so its order
+ * point stays where the player put it rather than being moved to the edge for
+ * good (docs/free-water-slice.md §9). Until the climb clears, it is put out
+ * like any hull.
+ */
+function overRoof(volumetric: boolean, a: number, ra: number, s: number, heightM: number): boolean {
+  return (
+    volumetric &&
+    DepthOrder.active[a] === 1 &&
+    DepthOrder.targetM[a]! + ra <= Position.depth[s]! - heightM
+  );
+}
+
 /** Reused across hulls and ticks: `nearestEdge` writes here rather than allocating. */
 const edge = { x: 0, y: 0 };
 
@@ -376,9 +402,10 @@ const edge = { x: 0, y: 0 };
  * On every shipped map the footprint holds a hull out at every depth: it is a
  * column, whatever height the art draws it at (docs/asset-prompts-3d.md, "A
  * Bastion is low as well as wide", is the view's scale, not a sim number).
- * Only volumetric ground reads the structure's `heightM`, and a hull clear of
- * it never reaches this. So a point in the water over a structure is not
- * reachable. `movementSystem` ends a move only within `ARRIVAL_EPSILON_M` of
+ * So on those maps a point in the water over a structure is not reachable.
+ * Only volumetric ground reads the structure's `heightM`: a hull clear of it
+ * never reaches this, and one ordered to a depth over the roof keeps its point
+ * (`overRoof`). `movementSystem` ends a move only within `ARRIVAL_EPSILON_M` of
  * the point in plan: left alone, the hull steered in and was pushed out every
  * tick, the move never cleared, and `busy()` in `orderQueue.ts` held every leg
  * queued behind it. The depth order is not touched; the hull goes on to it

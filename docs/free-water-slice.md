@@ -62,7 +62,7 @@ fauna behaviour unchanged. Normal descent is 45 m/s with its SIG floor of 72; no
 ascent is 15 m/s. Existing modifiers still apply. Looking is free; ordering a dive is not.
 There is no win-rate target, harvest demonstration or balance baseline refresh.
 
-**What the current simulation can actually do.** `sim/pathfinding.ts` plans in two
+**What the simulation does on a shipped map.** `sim/pathfinding.ts` plans in two
 dimensions at the hull's current depth. `Terrain.admitsCell` checks one floor/ceiling
 interval per cell; it cannot represent two independent water layers at the same plan
 position. Movement reconsiders routes as depth changes but does not plan a climb/dive
@@ -73,10 +73,11 @@ under a roof. Explicit depth orders and floor-following are distinct
 ([systems-depth.md](systems-depth.md) §2).
 
 Those were retained limits, not problems this art slice secretly fixed. The owner lifted
-all three on the crater's ground, for the study and the two-player fight alike (§9,
-"Toward a vertical multiplayer match"): separation in three dimensions, routes that climb and dive, and
-structures with a height. The one-interval-per-cell terrain stays. Shipped maps keep
-every limit above.
+them on the crater's ground, for the study and the two-player fight alike (§9, "Toward
+a vertical multiplayer match"): separation in three dimensions, routes that climb and
+dive, and structures with a height. A route there may dive a hull under a roof without
+a depth order. Terrain still never lowers a hull, and the one-interval-per-cell terrain
+stays. Shipped maps keep every limit above.
 
 ## 3. Authored ground: two readings of one map
 
@@ -1249,7 +1250,11 @@ two-seat fight. A shipped map keeps §2's limits until its own issue amends
   depth nearest its last that both cells admit, and holds that depth for the leg. It
   takes the fastest course: every metre of climb or dive is costed at the 15 m/s ascent
   and 45 m/s descent against the hull's own speed, and so is the change of depth still
-  owed at the end to reach the order's depth. A dive under a roof to 800 m and the climb
+  owed at the end to reach the order's depth. A move with no depth of its own, as an
+  attack's chase is, owes the depth it was given at: a route that dives it under a roof
+  brings it back up on the far side, since an attack chases at the depth the hull is on
+  (systems-depth.md §2). The other options were to owe nothing, which leaves such a hull
+  deep, or to plan it at its current depth alone. A dive under a roof to 800 m and the climb
   back to an ordered 300 m cost about 44 seconds, so from the pocket's south rim to the
   exit pool a Cruiser takes the roofed cut and a Corvette goes round the wall. A route's descent is as loud as an
   ordered one and breaks Silent Running as one does. Inside the crater this lifts the rule
@@ -1260,21 +1265,25 @@ two-seat fight. A shipped map keeps §2's limits until its own issue amends
   already deeper. Crushing a hull stays the player's order, the way floor-following
   disengages at the rating. A route needing more than that ends where the ground allows,
   as an unreachable route does now.
-- **Structures with a height.** A structure blocks only from the seabed under it up to
-  its top: the height of its model, the tallest of its navies', in canonical metres. A
-  hull clear of that by its own radius passes over the footprint, so a hull can stand
-  over a base and drop charges on it. A charge's blast still reaches a structure by its
+- **Structures with a height.** A structure blocks only from the depth it stands on up
+  to its top: the height of its model, the tallest of its navies', in canonical metres.
+  A hull clear of that by its own radius passes over the footprint, so a hull can stand
+  over a base and drop charges on it. A hull ordered to a depth over the roof is not
+  sent to the footprint's edge. A charge's blast still reaches a structure by its
   distance in three dimensions to the depth it stands on, as everywhere
-  ([systems-combat.md](systems-combat.md) §8). The column is drawn at 0.22, while
-  models are drawn at full scale, so a hull passing over is drawn closer to the roof than
-  it is. The section scope draws the true clearance, and the fight's frames show whether
-  the world view still reads.
+  ([systems-combat.md](systems-combat.md) §8). The world view does not yet read this.
+  The column is drawn at 0.22 while models are drawn at full scale, so a hull 1 m over
+  a Bastion's 128 m roof is drawn about 28 m above its base, inside the model. The
+  section scope draws an own structure as a mark at the depth it stands on, with no
+  top, and no enemy structure. Making the clearance readable is the two-player
+  fight's to settle, before its frames are taken.
 
 The fight seats each player on a pre-built Bastion on the crater floor, with its own
 opening fleet, and no resources. Losing the Bastion is elimination, as in a skirmish
 ([game-identity.md](game-identity.md), "Match Structure"), so attacking from above has
-something to attack. A Bastion is the only structure the crater stages; §3's "no structures" holds
-for the one-seat study.
+something to attack. Each Bastion stands on the floor under it, not at the 600 m a built
+structure takes. A Bastion is the only structure the crater stages; §3's "no structures"
+holds for the one-seat study.
 
 ### Frames and the last gate
 

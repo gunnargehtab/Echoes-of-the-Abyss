@@ -45,7 +45,8 @@ export interface StructureStats {
   /** Footprint radius in metres, for placement checks and rendering. */
   radiusM: number;
   /**
-   * TUNABLE — metres from where the structure stands to its top: the tallest
+   * Derived from the models, not TUNABLE — metres from where the structure
+   * stands to its top: the tallest
    * of its navies' committed models at canonical scale, rounded up, and held
    * to them by packages/frontend/test/structureHeight.test.mjs. Read only on
    * volumetric ground, where a hull clear above it passes over the footprint

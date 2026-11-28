@@ -81,6 +81,19 @@ export interface PathPlan {
    * on every map that is not volumetric.
    */
   routeDepthM: number;
+  /**
+   * The depth the hull held when this order was given, on volumetric ground:
+   * where a move with no depth order of its own is owed back to. A route that
+   * dives such a hull under a roof returns it there on its final leg, so an
+   * attack still chases at the depth the hull is on (docs/systems-depth.md §2).
+   */
+  holdDepthM: number;
+  /**
+   * Whether a route for this order has taken the hull off `holdDepthM`. Kept
+   * across revalidations, since a hull already under the roof replans
+   * straight at its new depth and the plan's own depths are then empty.
+   */
+  owesHold: boolean;
   /** Pair index of the waypoint being steered at. */
   index: number;
   /**

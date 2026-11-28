@@ -161,6 +161,21 @@ describe('volumetric ground: structures with a height', () => {
     assert.ok(d >= bastion.radiusM + radius - 0.01, `held ${d.toFixed(1)} m from the centre`);
   });
 
+  it('lets a hull ordered over the roof climb out and keep its point over the base', () => {
+    const match = crater(1758);
+    match.addPlayer(0, Faction.Pelagia);
+    base(match);
+    // Beside the base, below its roof, sent to a point over its centre at a
+    // depth that clears the roof.
+    const climber = corvette(match, BOWL_X + bastion.radiusM + radius + 20, BOWL_Y, 1450);
+    const overM = FLOOR_M - bastion.heightM - radius - 20;
+    match.orderMove(0, climber, BOWL_X, BOWL_Y, false, overM);
+    advance(match, 60);
+    const d = Math.hypot(Position.x[climber]! - BOWL_X, Position.y[climber]! - BOWL_Y);
+    assert.ok(d < 5, `stands ${d.toFixed(1)} m off the point over the base`);
+    assert.equal(Position.depth[climber], overM);
+  });
+
   it('keeps the column at every depth on ground without the flag', () => {
     const match = planarGround(1756);
     spawnStructure(match.world, {
@@ -199,7 +214,7 @@ describe('volumetric ground: routes that climb and dive', () => {
     endDepth: number;
   }
 
-  function sail(kind: UnitKind, depthM: number, seconds: number): Track {
+  function sail(kind: UnitKind, depthM: number | undefined, seconds: number): Track {
     const match = crater(1760);
     match.addPlayer(0, Faction.Pelagia);
     const eid = hull(match, kind, FROM.x, FROM.y, 300);
@@ -250,6 +265,16 @@ describe('volumetric ground: routes that climb and dive', () => {
     assert.ok(track.throughCut, 'an order to 1,000 m pays for the dive either way');
     assert.ok(track.arrived);
     assert.equal(track.endDepth, 1000);
+  });
+
+  it('returns a hull it dived with no depth order to the depth it held', () => {
+    // An attack's chase moves a hull this way, and a chase is at the depth the
+    // hull is on (docs/systems-depth.md §2): the route that dives it under a
+    // roof brings it back up on the far side.
+    const track = sail(UnitKind.Cruiser, undefined, 240);
+    assert.ok(track.throughCut, 'costed with the climb back, the cut still wins for a Cruiser');
+    assert.ok(track.arrived);
+    assert.equal(track.endDepth, 300);
   });
 
   it('never routes a hull below the deepest it is allowed', () => {

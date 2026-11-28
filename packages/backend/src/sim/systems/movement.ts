@@ -46,7 +46,9 @@ import {
   Unit,
   Velocity,
 } from '../components.ts';
+import { setDepthTarget } from './depth.ts';
 import { currentModifiers, kelpModifiers, stormModifiers } from './hazards.ts';
+import type { PathPlan } from '../pathfinding.ts';
 import type { SimWorld } from '../world.ts';
 
 const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning, EngineOff, Owner]);
@@ -94,6 +96,8 @@ function steerPoint(
     if (shift2 > MOVEMENT.ROUTE_RETARGET_M * MOVEMENT.ROUTE_RETARGET_M) {
       // A new order. Keep the object, drop everything it knew.
       plan.waypoints.length = 0;
+      plan.holdDepthM = depthM;
+      plan.owesHold = false;
       plan.index = 0;
       plan.tick = -MOVEMENT.ROUTE_REVALIDATE_TICKS;
       plan.exhausted = false;
@@ -126,6 +130,8 @@ function steerPoint(
         waypoints: [],
         depths: [],
         routeDepthM: NaN,
+        holdDepthM: depthM,
+        owesHold: false,
         index: 0,
         exhausted: false,
       };
@@ -142,6 +148,11 @@ function steerPoint(
       plan.depths.length = 0;
       plan.exhausted = false;
     } else if (volumetric) {
+      // A depth the player gave is what is owed at the end, and stays owed
+      // once reached: only a move with none returns the hull to its start.
+      if (DepthOrder.active[eid] || DepthOrder.follow[eid]) {
+        plan.holdDepthM = DepthOrder.targetM[eid]!;
+      }
       plan.exhausted = !world.pathfinder.findPath3d(
         terrain,
         px,
@@ -149,12 +160,15 @@ function steerPoint(
         depthM,
         tx,
         ty,
-        DepthOrder.active[eid] ? DepthOrder.targetM[eid]! : depthM,
-        deepestRouteM(eid, depthM),
+        owedDepthM(eid, plan.holdDepthM),
+        deepestRouteM(eid, depthM, plan.holdDepthM),
         { speedMps, descentMps: DEPTH.DESCENT_RATE_MPS, ascentMps: DEPTH.ASCENT_RATE_MPS },
         plan.waypoints,
         plan.depths
       );
+      for (let i = 0; i < plan.depths.length; i++) {
+        if (plan.depths[i] !== plan.holdDepthM) plan.owesHold = true;
+      }
     } else {
       plan.exhausted = !world.pathfinder.findPath(terrain, px, py, tx, ty, depthM, plan.waypoints);
     }
@@ -182,7 +196,35 @@ function steerPoint(
     aim.x = tx;
     aim.y = ty;
     plan.routeDepthM = NaN;
+    handBack(world, eid, plan, depthM);
   }
+}
+
+/**
+ * The end of a route that moved a hull with no depth of its own: the route
+ * costed its way back to the depth the order found it at, so it flies that way
+ * back too, as an ordinary depth order the depth system owns. Called on the
+ * final leg and on arrival, since a route's last waypoint can be the order's
+ * own point and the move then ends on the tick it is reached.
+ */
+function handBack(world: SimWorld, eid: number, plan: PathPlan, depthM: number): void {
+  if (
+    plan.owesHold &&
+    DepthOrder.active[eid] === 0 &&
+    DepthOrder.follow[eid] === 0 &&
+    Math.abs(depthM - plan.holdDepthM) > DEPTH.ARRIVAL_EPSILON_M
+  ) {
+    setDepthTarget(world, eid, plan.holdDepthM);
+  }
+}
+
+/**
+ * The depth a volumetric route is costed to reach at its end: the order's, or
+ * floor-following's, and for a move with neither, the depth the hull held when
+ * it was given (`PathPlan.holdDepthM`).
+ */
+function owedDepthM(eid: number, holdDepthM: number): number {
+  return DepthOrder.active[eid] || DepthOrder.follow[eid] ? DepthOrder.targetM[eid]! : holdDepthM;
 }
 
 /**
@@ -192,12 +234,11 @@ function steerPoint(
  * hull already is, or than the depth the player ordered: past its rating, that
  * is the player's own call, and the route goes no deeper than it.
  */
-function deepestRouteM(eid: number, depthM: number): number {
+function deepestRouteM(eid: number, depthM: number, holdDepthM: number): number {
   const rating = Pressure.rating[eid]! + Pressure.bonus[eid]!;
   const rated =
     rating >= 3 ? DEPTH.MAX_M : DEPTH_BANDS[(Math.max(1, rating) - 1) as DepthBand].max - 1;
-  const ordered = DepthOrder.active[eid] ? DepthOrder.targetM[eid]! : depthM;
-  return Math.max(rated, ordered, depthM);
+  return Math.max(rated, owedDepthM(eid, holdDepthM), depthM);
 }
 
 /**
@@ -395,6 +436,8 @@ export function movementSystem(world: SimWorld): void {
       MoveOrder.active[eid] = 0;
       Velocity.x[eid] = 0;
       Velocity.y[eid] = 0;
+      const plan = world.paths.get(eid);
+      if (plan !== undefined) handBack(world, eid, plan, Position.depth[eid]!);
       world.paths.delete(eid);
       continue;
     }
