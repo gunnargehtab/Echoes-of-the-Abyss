@@ -11,7 +11,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { ringsOf, keeps, facetsFor, orbFacets } from '../facets.mjs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { ringsOf, keeps, facetsFor, orbFacets, sceneOf } from '../facets.mjs';
 import { capsule } from '../kit.mjs';
 import { facets as bathyarch } from '../factions/bathyarch.mjs';
 import { facets as pelagia } from '../factions/pelagia.mjs';
@@ -422,4 +426,23 @@ test('a section keyed by part keeps its count on the parts it names, read as tok
   assert.equal(keeps(d, square('gantry_cable_1')), false);
   const [tube] = ringsOf(meshOf(new THREE.TorusGeometry(3, 0.4, 4, 9), { name: 'silo_1_seam' }));
   assert.equal(keeps(d, { ...tube, part: 'silo_1_seam' }), false);
+});
+
+// A script's scene is read as it was built, not as the export leaves it: the
+// trim layout and the occlusion bake re-index each buffer in corner order, and
+// a cylinder's rim read through three's own layout then spans its length
+// (#1978). The Caisson's drum is 2.3 m round and 22 m long, and its
+// hull lays the Bathyarch sheet.
+test('a script is read before its export re-indexes it: the Caisson drum is 2.3 m round', async () => {
+  const out = mkdtempSync(join(tmpdir(), 'facets-test-'));
+  try {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const { slug, root } = await sceneOf(join(here, '..', 'hulls', 'caisson.mjs'), out);
+    assert.equal(slug, 'caisson-bathyarch');
+    const [drum] = ringsOf(root.getObjectByName('drive_drum_s'));
+    assert.equal(drum.n, 6);
+    near(drum.radiusM, 2.3, 1e-4);
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
 });

@@ -1468,6 +1468,26 @@ function shareAlike(root) {
 }
 
 /**
+ * A reader's tap on the export (#1978). While one is set, `exportGlb` hands
+ * it the root and the filename and returns, before the trim layout and the
+ * bake run and before anything is written. Both of those re-index a part's
+ * buffer in corner order, so a reader that walks three's own vertex layout
+ * (facets.mjs `ringsOf`, which takes rim vertex `i` of row `y` at
+ * `y·(n + 1) + i`) read the buffers they leave across a cylinder's length
+ * rather than round its rim: the Caisson's 2.3 m drive drum read at 22.12.
+ * check.mjs and a script run alone set none, so the file is written as
+ * before. Returns the function that puts the previous tap back.
+ */
+let exportTap = null;
+export function tapExport(fn) {
+  const was = exportTap;
+  exportTap = fn;
+  return () => {
+    exportTap = was;
+  };
+}
+
+/**
  * Write the GLB into docs/concept-art/models/ and report what it contains.
  * `occlusion`, when given, is `bakeOcclusion`'s options (occlusion.mjs:
  * `size`, `rays`, `reach`), and the file carries the baked map on every
@@ -1483,6 +1503,7 @@ function shareAlike(root) {
  * once (`shareAlike`).
  */
 export async function exportGlb(root, filename, { occlusion = null, trim = null } = {}) {
+  if (exportTap) return exportTap(root, filename);
   const out = outputPath(filename);
   const laid = trim ? layoutTrim(root, sheetLayout(trim), trim) : null;
   const ao = occlusion ? bakeOcclusion(root, occlusion) : null;
