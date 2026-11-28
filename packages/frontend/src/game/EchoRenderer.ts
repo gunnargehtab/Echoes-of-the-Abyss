@@ -532,6 +532,14 @@ export interface ContactLogEntry {
    * (#1937).
    */
   own?: boolean;
+  /**
+   * A row about what the rest of the map holds on the player (docs/ui-ux.md
+   * §10): `you were heard` to `they lost you`. The report is a tier and a
+   * count, so there is no bearing to be unknown, and §10 prints the detail
+   * column empty. A flag rather than a missing bearing because a Tier-1
+   * contact also lacks one, and it prints `bearing unknown` (#1966).
+   */
+  exposure?: boolean;
 }
 
 /** A world-frame bearing in radians, as the log's compass-north degrees. */
@@ -6698,6 +6706,7 @@ export class EchoRenderer {
       tier: ResolutionTier.Silent,
       fresh: true,
       label: exposureRow(tier),
+      exposure: true,
     });
   }
 

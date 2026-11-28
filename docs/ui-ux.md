@@ -1189,6 +1189,16 @@ something new, and a log role would re-announce the whole panel every time a cou
   more, so every marker carries one since #1617 and `missions.test.ts` fails one without. A
   newcomer told to hold *at the arch* stood under it for ten minutes without knowing
   it was there, because nothing on screen said so (#1611).
+- **A row that counts hulls in a region rings that region, inside it** (#1971). An `extract`
+  row counts a hull only while it stands in the row's rectangle, so the row's own ring is the
+  widest circle that rectangle holds about the marker's point, and every point of the ring is
+  water a hull is counted in. A ring past the rectangle draws water where a hull parked on its
+  rim is counted for nothing, and nothing on screen says why. The cost is a ring smaller than
+  the place: Shallow's 250 m ring on a 5,000 m slope. A place the row sends the player through
+  first, a corridor to cross, is its second marker, never its own. Until #1971, 40 of 45 rings
+  reached past their rectangle, and 75% of First Arrival's terraces ring lay outside it;
+  `missions.test.ts` holds every row, and Rim Deposits' *The faces*, which rings the cut rather than the staging, is owed by
+  #1923.
 - **A marker's name stands over the far side of its ring, on clear water** (#1662). The far
   side is the arc the camera sees run left to right over the top of the ring. The name stands
   4 px outside that line, at its highest point where the whole name fits on the water: the
@@ -1421,6 +1431,12 @@ Audio carries primary information, so accessibility here is a correctness requir
   **The free-water study's camera panel does take it.** Its rows, NAV's motion buttons among
   them, must all be on screen at once, and it neither scrolls nor folds, so it is the orders
   panel's case rather than the logs': its type is about 1.4x at 200% (#1934).
+  **The MOVE 3D preview does not.** It is a form under a height cap that scrolls, so its rows
+  need not all be on screen, which is the logs' case: it magnifies whole from its bottom-left
+  corner, type, controls and box, and its height cap keeps its top 215 units down at every
+  scale. That has a cost: at 200% on a 1,200 px window the box shows about 140 of its 477 units
+  of rows, so CONFIRM is a scroll away, and Enter confirms a pinned destination without it
+  (#1969).
   **And the scale the HUD draws at is held to what the window can carry.** The strip above
   the water and the console, hint line and breath below it take 292 units of height, and at
   200% on a 1366 × 768 screen they left 92 for the water, where no legible type fits the

@@ -98,7 +98,7 @@ export const LEDGER_BAFFLE: MissionDefinition = {
       name: 'The Deep Yard',
       x: 1500,
       y: 4500,
-      radiusM: 500,
+      radiusM: 250,
     },
   ],
 

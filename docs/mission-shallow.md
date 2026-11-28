@@ -647,7 +647,7 @@ it reads ([maps.md](maps.md), "How a map is written").
 | `kell-slope` | 0, 2500, 5000, 500 | The withdrawal. `the-slope` and `the-ears` count into it |
 | `the-strip` | 0, 1750, 2000, 250 | The water directly beneath Marr's outer rows, from the closure's southern edge to y 2,000, which falls between §7's two Bearing lines: y 1,900 for a Chorister and 2,050 for a submersible. Its first seven cells, x 0 to 1,750, are the shoulder's Open Water at 340 m and PF 1.00. The last, under the sixth row, is the Vent Under-run's west edge, Thermal Vein at 620 m and PF 0.45, and directly beneath that row it draws both lines north, to y 1,863 and y 1,924. **Named for the reader and addressed by no predicate** |
 
-One marker: `slope`, at 2500, 2750, radius 1,000, named by `the-slope` and `the-ears` and shipped
+One marker: `slope`, at 2500, 2750, radius 250, the widest circle the 5,000 × 500 m slope holds (#1971), named by `the-slope` and `the-ears` and shipped
 only once they are revealed.
 
 **Depth, party by party**, against `requiredPressureRating` — Shelf PR-1, Mid-Water PR-2

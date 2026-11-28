@@ -287,7 +287,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       name: 'The Holdfast Gate',
       x: 750,
       y: 125,
-      radiusM: 400,
+      radiusM: 125,
     },
     {
       id: 'crossing',
@@ -695,7 +695,12 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       text: "The line above Kell is closed and we don't have the paper they want.",
       gloss: 'Get at least 1 Harvester across the corridor, the closed line, to the Holdfast Gate.',
       initial: ObjectiveStatus.Pending,
-      markerId: 'crossing',
+      // The gate is where the row counts, so it is the row's own ring; the
+      // corridor is the place on its way (docs/ui-ux.md §10.5, #1971). It
+      // was the row's own until #1971, which sent the camera to the one ring
+      // on the chart a hull is never counted in.
+      markerId: 'holdfast-gate',
+      viaMarkerId: 'crossing',
       // The floor of §8's Results table — "Some of the column: one to five" —
       // and terminal for the reason the file comment gives: the runtime reads
       // the ladder off how many terminal rows were met, so the middle rung

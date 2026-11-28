@@ -600,7 +600,7 @@ no rule binds.
 **`the-column`** — *Thirty-three are going south in four hulls, and we didn't turn it, and
 they're ours. We'd like four in the far water.* —
 `{ kind: 'extract'; role: 'tender'; region: 'the-far-water'; count: 4 }` — **terminal**, not
-keystone — revealed 00:00 — marker `the-far-water` (2500, 3875, r 500). Right as an
+keystone — revealed 00:00 — marker `the-far-water` (2500, 3875, r 125). Right as an
 extract-at-reveal: the far water is 3,500 m from the seat and a hull that reaches it has
 crossed, so the latch the judge's rule warns of is the fact the row wants. Reading met: *Four
 through. Thirty-three, by household, and one of them is Sefa.* Unmet: *Fewer than four in the
@@ -832,7 +832,7 @@ of its sown furrow, and not a spend.
 | `service-lock` | 1750, 1750, 500, 750 | The 00:00 ground beat — the lock cut back |
 | `the-far-water` | 1500, 3750, 2000, 250 | *the-column* and *the-seed*; the basin's southern strip, the way south |
 
-One marker, `the-far-water`, at 2500, 3875, r 500, named by both terminal rows: *The far
+One marker, `the-far-water`, at 2500, 3875, r 125, named by both terminal rows: *The far
 water. The basin's behind it, and the way south is past it.* The plan's `the-concourse` and
 `the-crossing` regions are not authored: no predicate, lift or beat addresses either, and a
 mission restates only the places one does ([mission-intake.md](mission-intake.md) §11).

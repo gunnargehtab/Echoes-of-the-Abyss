@@ -1117,6 +1117,47 @@ describe('the objectives', () => {
     }
   });
 
+  it("stands every delivery row's own ring wholly inside the region it counts in (#1971)", () => {
+    // docs/ui-ux.md §10.5: a row that counts hulls in a region rings that
+    // region, inscribed. `extract` counts a hull only `inRegion`, so a ring
+    // that spills draws water where a hull parked on its rim is not counted.
+    // Until #1971, 40 of 45 such rows did: the Rail Head's r500 round a 1,000
+    // by 500 m box left 39% outside, the terraces' r2500 left 75%. #1886,
+    // #1918 and #1923 each fixed a case; this holds the property over every
+    // mission. The rim is sampled every 5°, which takes in the four points
+    // nearest a rectangle's sides, so the check is exact for a rectangle.
+    // Rim Deposits' faces ring the cut, not the staging the row counts in;
+    // #1923 owes that row its own ring.
+    const EXEMPT = new Set(['chord-rim-deposits/load-one-home']);
+    const RIM = Array.from({ length: 72 }, (_, i) => (i * Math.PI) / 36);
+    let checked = 0;
+    for (const mission of MISSIONS) {
+      for (const objective of mission.objectives) {
+        const predicate = objective.predicate;
+        if (predicate.kind !== 'extract' || objective.markerId === undefined) continue;
+        if (EXEMPT.has(`${mission.id}/${objective.id}`)) continue;
+        const marker = mission.markers.find((candidate) => candidate.id === objective.markerId)!;
+        const region = mission.regions.find((candidate) => candidate.id === predicate.region)!;
+        for (const a of RIM) {
+          const x = marker.x + marker.radiusM * Math.cos(a);
+          const y = marker.y + marker.radiusM * Math.sin(a);
+          const inside =
+            x >= region.x - 1e-6 &&
+            x <= region.x + region.widthM + 1e-6 &&
+            y >= region.y - 1e-6 &&
+            y <= region.y + region.heightM + 1e-6;
+          assert.ok(
+            inside,
+            `${mission.id}: "${objective.id}" rings ${marker.id} (r ${marker.radiusM}), ` +
+              `which leaves ${predicate.region} at ${x.toFixed(0)}, ${y.toFixed(0)}`
+          );
+        }
+        checked++;
+      }
+    }
+    assert.ok(checked >= 40, `only ${checked} delivery rows were checked, so the walk is broken`);
+  });
+
   it('asks for no more hulls in a role than the mission places', () => {
     // A count above the roster is unreachable, and unreachable in the quietest
     // possible way: the counter simply never fills.

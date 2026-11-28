@@ -290,7 +290,7 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
       name: 'The axis',
       x: 2500,
       y: 3625,
-      radiusM: 500,
+      radiusM: 375,
     },
   ],
 

@@ -288,7 +288,7 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
       name: 'The Foot',
       x: 2000,
       y: 250,
-      radiusM: 500,
+      radiusM: 250,
     },
   ],
 

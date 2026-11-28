@@ -226,7 +226,7 @@ describe('the Furrow, as docs/mission-in-writing.md §11 reuses it', () => {
     );
     assert.deepEqual(
       MISSION_DEF.markers.map((m) => [m.id, m.x, m.y, m.radiusM]),
-      [['the-foot', 2000, 250, 500]],
+      [['the-foot', 2000, 250, 250]],
       '§11: one marker, named by both terminal rows'
     );
     // §13: the region pressure grant exists and is deliberately not leaned on.
