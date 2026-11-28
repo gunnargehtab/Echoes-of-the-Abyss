@@ -672,6 +672,7 @@ export const items = {
   1971: 'Rings on the chart marking where to deliver, reaching past the area the mission actually counts',
   1977: 'The propellers on two ships sitting where nothing but their own housing is around them',
   1978: 'A ship’s drive drums being measured at the wrong size when its model is built',
+  1986: 'A design note claiming one fleet’s models break no shape rule, when seven parts of one ship do on purpose',
   1959: 'A player’s screen giving away enough about contacts to work out the match’s random seed',
   1960: 'Making a match room costing the server enough that a flood of requests could starve live matches',
   1961: 'A single connection being able to hold open a running match, with no limit on how many rooms exist',

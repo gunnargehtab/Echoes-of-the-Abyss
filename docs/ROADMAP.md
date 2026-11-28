@@ -923,6 +923,7 @@ and no row below is open.
 | Delivery rings spilling past the region their row counts in | [#1971](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1971) |
 | The Broadside's and Furnace's propellers meeting only their own shrouds | [#1977](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1977) |
 | The Caisson's drive drums read at the wrong radius | [#1978](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1978) |
+| A hull-model doc saying no Bathyarch ring is off the rule when seven wells are | [#1986](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1986) |
 | A client recovering the match seed from its contact handles | [#1959](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1959) |
 | Anonymous matchmaking stalling the server on every create | [#1960](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1960) |
 | One socket holding a running match, with no cap on live rooms | [#1961](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1961) |
