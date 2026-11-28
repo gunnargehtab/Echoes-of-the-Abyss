@@ -2,7 +2,7 @@
  * Silt detail — docs/art-direction.md "Silt detail and seated stones — SPEC" (#1083).
  *
  * The bake (seabed.ts) draws the ground at 7.8 m a pixel; at the home dolly a
- * pixel is about a metre, so the plain between two isobaths is one smooth wash.
+ * pixel is about a metre, so a plain is one smooth wash.
  * This layer gives it dunes, ripples, scours and grain in the terrain's own
  * fragment shader: no pass, no draw call, no triangle, and one RGBA8 texel a
  * cell to say how much of each the ground under it carries.

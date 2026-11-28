@@ -1082,13 +1082,13 @@ its ink with them:
   roof's curtains stand on the cell edges; each jamb keeps its step on them.
 - **Mesh.** The study draws its ground at 8 vertices a cell, one every 31.25 m, where a
   shipped map keeps 4 ([three-layer-ocean.md](three-layer-ocean.md) §5). An 80 m scarp
-  that curves across vertices 62.5 m apart saw-tooths, in its lip and in its isobaths. The
+  that curves across vertices 62.5 m apart saw-tooths in its lip. The
   finer mesh adds 25,984 triangles to a study frame, inside §7's 720,000.
 - **Terraces.** Coral's blocks become benches cut in the relief's own depth, so their edges
   wander with the ground rather than marching on the 90 m grid. Every shipped map keeps
   the blocks.
-- **Ink and fills.** The coastlines run where the rounded ground changes kind, the isobaths
-  contour its floor without the relief, and the fills ease across its edges
+- **Ink and fills.** The coastlines run where the rounded ground changes kind, and the fills
+  ease across its edges
   ([map-visuals.md](map-visuals.md) §4, the study's clause). The cells stay the truth the
   simulation plays on and the scope draws.
 

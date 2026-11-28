@@ -109,17 +109,11 @@ const RUNG_5_UNDER_ITS_FLOOR: Record<PaletteName, readonly string[]> = {
 
 /**
  * The survey-ink lines residue's arc lifts some ground less than, at a faint
- * mark's own peak: all four. Under that reading rung 5's floor would sit under
- * rung 4's. The same in every palette, because neither residue's colours nor
- * the ink's change with it.
+ * mark's own peak: both of them. Under that reading rung 5's floor would sit
+ * under rung 4's. The same in every palette, because neither residue's colours
+ * nor the ink's change with it.
  */
-const RESIDUE_AT_LEAST_PEAK_UNDER_INK: readonly string[] = [
-  'border',
-  'coast',
-  'major',
-  'minor',
-  'thermocline',
-];
+const RESIDUE_AT_LEAST_PEAK_UNDER_INK: readonly string[] = ['border', 'coast'];
 
 /**
  * Which rung-6 outline is its floor in each palette. The unselected ring,

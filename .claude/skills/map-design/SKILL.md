@@ -24,7 +24,8 @@ mechanic change, amend the canonical table first and hold the painted cells in t
 - Gameplay maps are authored literals, never runtime procedural generation.
 - Render relief, normal detail and prop scatter describe public ground only. They
   cannot create floors, collisions, cover, propagation or detection.
-- Isobaths read authored floors, not noise. Biome borders still mean PF changes.
+- Survey ink reads authored cells, not noise, and draws no isobaths (#1988). Biome
+  borders still mean PF changes.
 - A decorative seam is not a route line. Keep it subordinate to the survey and fade
   it at tactical distance.
 - A ground delta must update the surface and dressing from the new public cells.

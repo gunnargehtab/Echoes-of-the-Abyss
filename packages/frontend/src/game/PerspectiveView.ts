@@ -207,8 +207,6 @@ import {
   patchSurveyCellClasses,
   surveyCellClasses,
   surveyCellTexture,
-  surveyFloorTexture,
-  type SurveyFloorSamples,
 } from './surveyInk.ts';
 import { forgetRoundedCells } from './roundedCells.ts';
 import {
@@ -888,13 +886,6 @@ export class PerspectiveView {
    */
   private surveyClasses: Uint8Array<ArrayBuffer> | null = null;
   private surveyCells: DataTexture | null = null;
-  /**
-   * The free-water study's survey floor, finer than the mesh, which its
-   * isobaths contour: the bake's own floor at each pixel it reads
-   * (seabed.ts `BakeOptions.eroded.floors`). Null on every other ground.
-   */
-  private surveyFloor: DataTexture | null = null;
-  private surveyFloorSamples: SurveyFloorSamples | null = null;
   /**
    * The silt detail (seabedDetail.ts, docs/art-direction.md "Silt detail and
    * seated stones — SPEC"): its per-cell strengths, the texture the terrain
@@ -1590,15 +1581,10 @@ export class PerspectiveView {
     return this.look !== 'free-water';
   }
 
-  /**
-   * The bake's options under this view's look: the eroded edges, with the
-   * study's survey floor taken beside the skin, or none.
-   */
-  private bakeOptions(floors?: Float32Array): BakeOptions {
+  /** The bake's options under this view's look: the eroded edges, or none. */
+  private bakeOptions(): BakeOptions {
     return {
-      ...(this.erodedGround
-        ? { eroded: { rockTopM: this.groundRockTopM, ...(floors !== undefined ? { floors } : {}) } }
-        : {}),
+      ...(this.erodedGround ? { eroded: { rockTopM: this.groundRockTopM } } : {}),
       // Under High the bake writes the lit ground's pixels beside the skin.
       ...(this.litSurface !== null ? { lit: this.litSurface.bake } : {}),
     };
@@ -3447,15 +3433,12 @@ export class PerspectiveView {
       this.searchGround = null;
       this.terrainMesh = null;
       this.surveyCells?.dispose();
-      this.surveyFloor?.dispose();
       this.detailTexture?.dispose();
       this.terrainGrid = null;
       this.seabedCanvas = null;
       this.seabedTexture = null;
       this.surveyClasses = null;
       this.surveyCells = null;
-      this.surveyFloor = null;
-      this.surveyFloorSamples = null;
       this.detailCells = null;
       this.detailTexture = null;
       this.detailUniforms = null;
@@ -3528,14 +3511,11 @@ export class PerspectiveView {
     // a chart with nothing shading it is a chart, not a black tile.
     const shades = new Float32Array(grid.vertsX * grid.vertsZ * 3).fill(1);
     geometry.setAttribute(VEIL_SHADE_ATTRIBUTE, new BufferAttribute(shades, 3));
-    // The authored floor per vertex, for the survey ink's isobaths
-    // (docs/map-visuals.md §4). Shared with the grid rather than copied, so a
-    // ground delta that patches the grid has patched the attribute too.
-    geometry.setAttribute('surveyFloor', new BufferAttribute(grid.floor, 1));
     // The free-water study's coastlines, on its rounded ground's own edges
-    // (docs/map-visuals.md §4, the study's clause), shared with the grid the
-    // same way: the rock coast's field, and the six biomes' three to an
-    // attribute.
+    // (docs/map-visuals.md §4, the study's clause), shared with the grid
+    // rather than copied, so a ground delta that patches the grid has
+    // patched the attributes too: the rock coast's field, and the six
+    // biomes' three to an attribute.
     if (grid.coast !== undefined && grid.biomes !== undefined) {
       geometry.setAttribute('surveyCoast', new BufferAttribute(grid.coast, 1));
       const biomes = new InterleavedBuffer(grid.biomes, BIOME_FIELDS);
@@ -3561,18 +3541,6 @@ export class PerspectiveView {
         Math.min(4, this.renderer.capabilities.getMaxAnisotropy())
       );
     }
-    // The study's isobaths read its rounded floor finer than the mesh can
-    // carry it, at the bake's own pixels.
-    const floorSamples: SurveyFloorSamples | null =
-      grid.coast !== undefined
-        ? {
-            nx: terrain.cols * SEABED_PX_PER_CELL,
-            nz: terrain.rows * SEABED_PX_PER_CELL,
-            stepM: terrain.cellM / SEABED_PX_PER_CELL,
-            originM: 0,
-            data: new Float32Array(terrain.cols * terrain.rows * SEABED_PX_PER_CELL ** 2),
-          }
-        : null;
     const canvas =
       baseline !== null && apron !== null && this.stones.length === 0
         ? cutSeabed(baseline, {
@@ -3581,13 +3549,7 @@ export class PerspectiveView {
             cols: terrain.cols,
             rows: terrain.rows,
           })
-        : bakeSeabed(
-            terrain,
-            this.groundSeed,
-            this.seabedRange,
-            this.stones,
-            this.bakeOptions(floorSamples?.data)
-          );
+        : bakeSeabed(terrain, this.groundSeed, this.seabedRange, this.stones, this.bakeOptions());
     const texture = new CanvasTexture(canvas);
     // The bake's row 0 is the map's north edge, and so is the grid's iz 0;
     // an unflipped texture keeps the two aligned without inverting the v axis.
@@ -3595,19 +3557,12 @@ export class PerspectiveView {
     texture.colorSpace = SRGBColorSpace;
     texture.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
     const material = new MeshBasicMaterial({ map: texture, toneMapped: false });
-    // The survey: isobaths and coastlines drawn in this material's own
-    // fragment shader, so the ground's silhouette costs no draw call.
+    // The survey: coastlines drawn in this material's own fragment shader,
+    // so the ground's silhouette costs no draw call.
     const classes = surveyCellClasses(terrain);
     const cells = surveyCellTexture(terrain, classes);
-    const surveyFloor = floorSamples !== null ? surveyFloorTexture(floorSamples) : null;
-    installSurveyInk(
-      material,
-      terrain,
-      cells,
-      floorSamples !== null && surveyFloor !== null
-        ? { floor: surveyFloor, samples: floorSamples }
-        : null
-    );
+    const drawnSurvey = grid.coast !== undefined;
+    installSurveyInk(material, terrain, cells, drawnSurvey);
     // Between the two: the veil drains the finished ground, surface and
     // detail and all, and the ink goes over it (veilShading.ts).
     installDisplayVeil(material);
@@ -3627,10 +3582,6 @@ export class PerspectiveView {
       );
     }
     this.groundSkin = material;
-    const drawnSurvey =
-      floorSamples !== null && surveyFloor !== null
-        ? { floor: surveyFloor, samples: floorSamples }
-        : null;
     if (this.litSurface !== null) {
       // High: the mesh wears the lit ground and joins the world pass, and the
       // survey is drawn over it by the tactical pass, as a layer of its own.
@@ -3692,8 +3643,6 @@ export class PerspectiveView {
     this.seabedTexture = texture;
     this.surveyClasses = classes;
     this.surveyCells = cells;
-    this.surveyFloor = surveyFloor;
-    this.surveyFloorSamples = floorSamples;
 
     // The fog is the water (water.ts). Exponential rather than linear, and
     // its density follows the dolly rather than the map: the colour is what
@@ -3877,16 +3826,13 @@ export class PerspectiveView {
     const positions = mesh.geometry.getAttribute('position') as BufferAttribute;
     for (let i = span.first; i <= span.last; i++) positions.setY(i, grid.y[i]!);
     positions.needsUpdate = true;
-    // The floor attribute is the grid's own array, already patched; it only
-    // needs re-uploading. A delta can also turn water to rock or change a
-    // biome, which moves a coastline.
-    (mesh.geometry.getAttribute('surveyFloor') as BufferAttribute).needsUpdate = true;
+    // A delta can turn water to rock or change a biome, which moves a
+    // coastline. The study's coast fields are the grid's own arrays, already
+    // patched; they only need re-uploading.
     if (grid.coast !== undefined) {
       (mesh.geometry.getAttribute('surveyCoast') as BufferAttribute).needsUpdate = true;
       (mesh.geometry.getAttribute('surveyBiomeA') as InterleavedBufferAttribute).data.needsUpdate =
         true;
-      // The survey floor is the bake's, re-baked whole below.
-      if (this.surveyFloor !== null) this.surveyFloor.needsUpdate = true;
     }
     if (this.surveyClasses !== null && this.surveyCells !== null) {
       patchSurveyCellClasses(this.surveyClasses, terrain, touched);
@@ -3911,7 +3857,7 @@ export class PerspectiveView {
       this.seabedRange,
       touched,
       this.stones,
-      this.bakeOptions(this.surveyFloorSamples?.data)
+      this.bakeOptions()
     );
     texture.needsUpdate = true;
     if (this.litSurface !== null) {

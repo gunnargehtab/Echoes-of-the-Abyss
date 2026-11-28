@@ -181,13 +181,13 @@ A new prop takes an existing token, or a new row here first.
 
 ### The ink (the survey)
 
-The lines a survey drew on the ground — isobaths and coastlines — take one hue-neutral
+The lines a survey drew on the ground — the coastlines — take one hue-neutral
 token, laid at different strengths and patterns rather than in different colours
 ([map-visuals.md](map-visuals.md) §4):
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| `survey-ink` | `#7A8C99` | Every isobath and coastline, blended in encoded space at 8–9.5% |
+| `survey-ink` | `#7A8C99` | Every coastline, blended in encoded space at 9–9.5% |
 
 It is neutral for the stone ramp's reason, and no more saturated than `rock-face`: a
 tinted line would be read as a biome. It is not a neon and not light. At its strongest it

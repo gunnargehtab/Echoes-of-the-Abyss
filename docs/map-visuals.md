@@ -63,29 +63,17 @@ and the shape comes from **survey ink**: thin, neutral lines that the chart alre
 drawn on the sculpted seabed through the one camera. That keeps the rule that light belongs to
 agents and instruments ([style-neon-noir.md](style-neon-noir.md)). Ink is not light. It is what
 a survey wrote down. At the High graphics quality the ground is lit and the ink still carries
-the survey ([art-direction.md](art-direction.md#two-layers-two-laws)).
+the survey ([art-direction.md](art-direction.md#two-layers-two-laws)). Since
+[#1988](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1988) the ink draws no
+depth contour: the coastlines alone carry it (§4).
 
 ## 4. Survey ink — SPEC
 
-Two kinds of line, both drawn in the terrain's own fragment shader so they cost no draw call
-(gate 6). `packages/frontend/src/game/surveyInk.ts` transcribes this section. The colour is the
+One kind of line, the coastline, in two patterns, drawn in the terrain's own fragment shader
+so it costs no draw call (gate 6). `packages/frontend/src/game/surveyInk.ts` transcribes this section. The colour is the
 `survey-ink` token in [style-neon-noir.md](style-neon-noir.md). Its strengths are SPEC by
 reference, the way `WATER_RAMP` is: the values are TUNABLE, the shape is not.
 
-- **Isobaths** are depth contours of the **authored floor**. A minor line every 100 m, and a
-  major line at each boundary of the ruleset's depth bands — 400 m (Shelf / Mid-Water) and
-  1,800 m (Mid-Water / Abyssal), read from `DEPTH_BANDS` rather than restated. A stack of
-  isobaths is how a cliff reads from 11 km. Where the lines fall closer than the eye can split
-  them, they are drawn as their average, which is a band of ink along the scarp.
-- **The thermocline isobath** is a major line at the layer's depth, 1,200 m, read from
-  `THERMOCLINE.DEPTH_M`. The layer decides who can hear whom
-  ([systems-depth.md](systems-depth.md#depth-also-decides-who-can-hear-you)), so a player
-  who wants to sit under it must see which ground lies below it. It lies inside the
-  Mid-Water band rather than on its edge, so it is drawn as a **double rule**, two thin
-  strokes with a clear gap between them, and it is not read as a band boundary. It replaces
-  the minor line at its depth, which would fill that gap, and where a scarp's lines are drawn
-  as their average the gap cuts a seam through that band. "Reading the Water" still draws no
-  line at the layer *in the water*: this line is on the ground.
 - **Coastlines** are drawn **exactly on the cell edges** where the ground changes kind: solid
   where water meets rock, dashed where one biome meets another. The biome is the propagation
   factor, and a coastline that rounded a corner would draw a PF boundary that is not there.
@@ -94,20 +82,28 @@ reference, the way `WATER_RAMP` is: the values are TUNABLE, the shape is not.
   "Reading the Sea Floor"); the dashed coast is what states the boundary, so the ink stays
   on the edge whatever the fill does beside it. The free-water study is the one exception
   (the study's clause below).
+- **No isobaths.** No line contours the floor's depth. Until 28 November 2026 a minor line
+  ran every 100 m of the authored floor, a major one at each depth-band boundary and a double
+  rule at the thermocline. The owner took them off: grey lines across the terrain were a sore
+  to the eye ([#1988](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1988)).
+  Depth on the ground now reads from its fill, which depth darkens (§6), and from its relief
+  and cliff shadows. What no mark shows any more is the thermocline's line, which told at a
+  glance which ground lies under the layer
+  ([systems-depth.md](systems-depth.md#depth-also-decides-who-can-hear-you)).
 
-Seven rules ride with the ink, and each is a review question:
+Six rules ride with the ink, and each is a review question:
 
-1. **Ink traces the authored floor, never the texture.** The detail relief is render-only
-   texture; contouring it would dress noise up as measurement. The floor the isobaths read is
-   the same bilinear upsample the heightfield uses, minus the detail field. The free-water
-   study upsamples its cells another way, rounded (the study's clause below), and its ink
-   traces that floor: a second reading of the same cells, not texture laid on them.
+1. **Ink traces the authored cells, never the texture.** The detail relief is render-only
+   texture; a line drawn off it would dress noise up as measurement. The coastlines lie on the
+   cell edges the author wrote. The free-water study rounds its cells (the study's clause
+   below), and its ink traces that ground: a second reading of the same cells, not texture
+   laid on them.
 2. **Ink reveals nothing a client does not already hold.** The floor, the ceiling and the biome
    of every cell are public map data. Ink reads nothing else — no contact, no field, no veil.
 3. **Ink is hue-neutral.** One colour, near-grey with the canvas's blue memory, no more
    saturated than the stone ramp. Hue belongs to the biome, and a tinted line would be read as
-   one. The five kinds of line differ in strength, width and pattern, never in colour: the
-   biome coast is dashed, the thermocline doubled, every other line solid.
+   one. The two kinds of line differ in strength, width and pattern, never in colour: the
+   biome coast is dashed, the rock coast solid.
 4. **Ink has a constant screen width.** Lines are measured in pixels at every zoom the camera
    allows, so the survey is as legible at 11 km as at 1 km. That is what makes it the V1 answer.
 5. **Ink is not drained by the veil.** The acoustic veil drains what a player can *hear*; the
@@ -119,13 +115,11 @@ Seven rules ride with the ink, and each is a review question:
    water over it the ink takes the same
    ([art-direction.md](art-direction.md#the-crater-from-above); the owner's call in session on
    22 November 2026).
-7. **Rock takes no isobaths.** Rock has no floor to measure. It is outlined by its coastline and
-   otherwise speaks in stone.
 
-The isobaths are drawn from the smoothed floor, so a contour rounds a cell corner that the
-simulation keeps square. That is the same half-cell licence the heightfield already takes
-([three-layer-ocean.md](three-layer-ocean.md) §5). A visual slope never opens a route the grid
-refuses. Coastlines take no such licence, because they mark sound rather than shape.
+The heightfield rounds a cell corner that the simulation keeps square
+([three-layer-ocean.md](three-layer-ocean.md) §5), and a visual slope never opens a route the
+grid refuses. Coastlines take no such half-cell licence, because they mark sound rather than
+shape.
 
 **The free-water study's clause.** The owner rejected the study's survey frame on 6 November
 2026 because its floor showed squares
@@ -141,8 +135,8 @@ holds the cell edges, and the wall's and the pool's sides stay ruled or nearly. 
 wander reads only the public cells and the position, so it tells nothing hidden
 (rule 2). Every centre keeps its own floor and kind, and no edge moves as far as half a
 cell, rounded and wandered together. The coastlines
-run where that ground changes kind, the isobaths contour its floor without the relief, and
-the fills ease across its edges, so the ink agrees with the ground it lies on. Rules 2 to 7
+run where that ground changes kind, and the fills ease across its edges, so the ink agrees
+with the ground it lies on. Rules 2 to 6
 hold unchanged. The PF boundary the simulation prices is still the cell edge, and the
 console's scope still draws the cells square. Every shipped map keeps its coastlines on the
 cell edges. Free water on a shipped map is its own epic, and decides this again.
@@ -163,7 +157,7 @@ on #866.
 | 1 — Water | The depth ramp, marine snow | Luminance only, one blue ([art-direction.md](art-direction.md) "Reading the Water") |
 | 2 — Stone | Rock faces, cliff shadows | `rock-face` / `rock-shadow`, below every biome fill |
 | 3 — Ground | Biome fills, relief, mottle, props | 5–10% luminance, hue by biome |
-| 4 — Survey ink | Isobaths, coastlines | Hue-neutral, thin, constant width (§4) |
+| 4 — Survey ink | Coastlines, solid on rock and dashed between biomes | Hue-neutral, thin, constant width (§4) |
 | 5 — Map furniture | Hazard sites, resource fields, currents, tunnel routes, Tetherjelly fields, Lampfry shoals, the map rim, acoustic residue | Public, or your own heard residue; conforming, each in its own token |
 | 6 — Instruments | Range rings, ping preview, blocked ground, selection, the loudness collar, a mission's named markers, a tender's ears | The interface voice: cyan tells, magenta asks, red warns |
 | 7 — Agents | Own hulls and structures, contacts at every tier, ordnance | Loudest; glow is loudness (gate 3) |
@@ -225,7 +219,7 @@ weighed them would rank the grain of a mark rather than the mark.
 column and nothing else: nested ribbons with no edge anywhere
 ([art-direction.md](art-direction.md) "Camera & Projection"). A fresh Tier-1 column's core is
 about 0.12 of its tier colour, so per pixel it lifts the ground about as much as a line of ink
-does: 0.044–0.053 over black, against the ink's 0.043–0.051. It is a different kind of mark,
+does: 0.044–0.053 over black, against the ink's 0.048–0.051. It is a different kind of mark,
 and the metric cannot rank the two. A haze spans hundreds of metres of
 water and a line is a pixel or two wide, so the eye reads a haze by its extent and a line by its
 edge. The per-pixel metric compares lines with lines; a haze answers to gate 7's glance test.
@@ -429,7 +423,7 @@ life landed as stipple in Phase 3 and classified animals in Phase 4 (§10).
 | Phase | Delivers | Touches |
 | --- | --- | --- |
 | **D — Docs** | This document, and the rows in [README.md](README.md) and the docs it relates | docs |
-| **1 — Survey ink** | §4: isobaths and coastlines in the terrain shader, with the ladder test of §5 | frontend |
+| **1 — Survey ink** | §4: isobaths and coastlines in the terrain shader, with the ladder test of §5. The isobaths came off in #1988 | frontend |
 | **2 — The ladder audit** | §5 applied to every existing layer: each draw site names its rung, and the rest of the rung-5 outline alphas join the four already in `ladder.ts` | frontend |
 | **3 — Public stipple** | §8's furniture: Tetherjelly fields and Lampfry shoals as stipple in the water column | frontend |
 | **4 — Classified stipple** | §8's agents: Tier 3 and Tier 4 fauna as stipple shapes | frontend |
@@ -492,8 +486,8 @@ What stays recorded, for the owner. The tests pin each break and fail if it move
   0.09, a detonation's at 0.35 and a destroyed structure at 1. A hum is born at what its
   delivery carried, so a partial load's can be as faint as the 0.02 below which the server
   drops a mark. Read as the scale's ceiling, the arc clears rung 5's floor in every palette.
-  Read as a mark's own peak, a lone wake or shot lifts black by 0.017–0.018, under the minor
-  isobath's 0.043. A detonation's lifts it by 0.071: over the ink, and still under rung 5's
+  Read as a mark's own peak, a lone wake or shot lifts black by 0.017–0.018, under the biome
+  border's 0.048. A detonation's lifts it by 0.071: over the ink, and still under rung 5's
   floor there (0.080–0.104). In battle red, the quietest of its four colours, the arc clears
   the coast only from intensity 0.27, and rung 5's floor only from 0.38–0.56 by palette and
   ground. Under that reading rung 5's floor is residue's, and it sits under rung 4's. The
@@ -659,11 +653,6 @@ Four choices a reviewer should see:
 
 ## 11. Open questions
 
-- **The thermocline rule on a packed scarp.** Where the minor lines stand 4–5 px apart, the
-  double rule's own spacing, it is not told apart from them: at the 4,000 m dolly on Abyssal
-  Rift's walls ([issue-1104](screenshots/issue-1104/README.md)). That is a camera at which a
-  player asks whether a plateau lies under the layer. A wider gap, or cutting the minors
-  further out, are the two answers; neither is measured.
 - **Coastline style under the colour-vision palettes.** The dash is the only thing telling a
   biome coast from a rock coast. It should hold, because the dash is shape rather than hue.
   It is unmeasured.

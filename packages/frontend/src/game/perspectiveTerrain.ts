@@ -53,8 +53,7 @@ export const VERTS_PER_CELL = 4;
  * steps a cell, one every 31.25 m (docs/free-water-slice.md §9, "Crater
  * walls"). The study's rounded edges curve across the grid, and a scarp 80 m
  * wide drawn through vertices 62.5 m apart saw-tooths wherever it crosses them
- * at an angle: in its lip, and in its isobaths, which contour the bake's finer
- * floor but lie on the mesh (#1774). A shipped map's edges run along the grid
+ * at an angle: in its lip most (#1774). A shipped map's edges run along the grid
  * lines, which 62.5 m draws whole. On the study's 16 × 16 cells this costs
  * 24,576 triangles, inside its 720,000.
  */
@@ -160,18 +159,17 @@ function homeCellIndex(terrain: TerrainPayload, xM: number, yM: number): number 
 
 /**
  * The authored floor at a world position, smoothed between cell centres and
- * nothing else: `seabedDepthAtM` without the detail field. It is what the
- * survey ink's isobaths contour (docs/map-visuals.md §4, rule 1) — a
- * measurement of the ground the author wrote, never of the render-only noise
- * laid over it.
+ * nothing else: `seabedDepthAtM` without the detail field — the ground the
+ * author wrote, never the render-only noise laid over it. The overview's
+ * raycast reads it (worldOverview.ts).
  *
  * Rock has no floor, so a rock neighbour stands in with an open floor rather
  * than its own: the home cell's where the home cell is open (exactly as the
  * heightfield does it), and otherwise the mean of the open cells among the
  * four. That second case is a vertex on a mesa's edge, and it feeds the
  * triangles of the open cell beside it — so it must carry that cell's floor,
- * or every isobath between the mesa's number and the plain's would be
- * crushed into one false scarp at the foot of the wall. Wholly inside rock,
+ * or the plain would read as sloping up into a false scarp at the foot of
+ * the wall. Wholly inside rock,
  * where no open fragment ever reads it, it is 0.
  */
 export function authoredFloorAtM(terrain: TerrainPayload, xM: number, yM: number): number {
@@ -226,10 +224,10 @@ export interface HeightGrid {
   y: Float32Array;
   /**
    * The authored floor per vertex, in metres of depth — `authoredFloorAtM`,
-   * the surface the survey ink contours. Metres rather than world Y because
-   * an isobath is a statement about depth, and the vertical compression is
-   * a look (the rule above). Under the free-water study, its rounded floor
-   * instead (`ErodedGround.floorM`; docs/map-visuals.md §4, the study's clause).
+   * which the overview's raycast reads (worldOverview.ts). Metres rather than
+   * world Y because the vertical compression is a look (the rule above).
+   * Under the free-water study, its rounded floor instead
+   * (`ErodedGround.floorM`).
    */
   floor: Float32Array;
   /**

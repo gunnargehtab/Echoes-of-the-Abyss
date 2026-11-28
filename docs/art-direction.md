@@ -2732,7 +2732,7 @@ so none of this may compete with a return for attention. If a player cannot find
 because the seabed is shouting, the seabed is wrong.
 
 What gives the ground its shape at the survey dolly is not on this list, because it is not
-ground: **survey ink** — isobaths and coastlines, hue-neutral and a constant pixel wide —
+ground: **survey ink** — the coastlines, hue-neutral and a constant pixel wide —
 is specified in [map-visuals.md](map-visuals.md) §4, with the ladder that keeps it below
 the quietest map-furniture outline and below your own unselected detection ring in §5.
 
@@ -2819,7 +2819,7 @@ study, made fit for every map, and promoted to every match on
 [#1103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1103).*
 
 The bake draws the ground at 7.8 m a pixel, so at the home dolly, about a metre a pixel,
-the plain between two isobaths is one smooth wash. The target asks for low silt dunes and
+a plain is one smooth wash. The target asks for low silt dunes and
 current ripples running east–west, shallow scours, and faceted stone half-buried in the
 silt ([issue-967](screenshots/issue-967/README.md), round 2). It is a fourth layer of
 texture, not information, and it obeys every rule above: render-only, deterministic,

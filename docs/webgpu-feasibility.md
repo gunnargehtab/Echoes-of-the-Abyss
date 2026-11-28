@@ -41,7 +41,7 @@ Five ship; three belong to the development-only Dream Loop study. Each string-re
 
 | # | Site | Patches | Rewrites | What it draws |
 | --- | --- | --- | --- | --- |
-| 1 | `surveyInk.ts:305`, `installSurveyInk` | The ground's `MeshBasicMaterial`; replaces | vertex `common`, `begin_vertex`; fragment `common`, `color_fragment` | Isobaths and coastlines inside the ground's own shader ([map-visuals.md](map-visuals.md) §4) |
+| 1 | `surveyInk.ts:305`, `installSurveyInk` | The ground's `MeshBasicMaterial`; replaces | vertex `common`, `begin_vertex`; fragment `common`, `color_fragment` | Coastlines inside the ground's own shader ([map-visuals.md](map-visuals.md) §4); its isobaths came off in #1988 |
 | 2 | `tutorialLook.ts:101`, `installSurface` | Pelagia hull and Sorrowgate prop `MeshStandardMaterial`s; chains | vertex `common`, `begin_vertex`; fragment `common`, `color_fragment`, `roughnessmap_fragment`, `normal_fragment_maps` | Triplanar laminate and stone: shade, roughness and a derivative bump ([visual-reboot.md](visual-reboot.md)) |
 | 3 | `tutorialLook.ts:189`, `installGroundSurface` | Sorrowgate's ground, after #1; chains | fragment `common`, `color_fragment` | Paving, shaded before the ink |
 | 4 | `modelLighting.ts:88`, `keepGlowOutsideToneMapping` | Own lamp clones (`rosterModels.ts:577`) and glowing props (`environmentModels.ts:246`); chains | fragment `tonemapping_fragment` | Gate 3's pixel half: the curve on surface light only, emission added after it and scaled along its hue |
@@ -194,11 +194,9 @@ Firefox refuses it. The survey ink already takes its derivatives outside every b
 
 What each becomes against r169's node API. All of them assume the output route above.
 
-1. **Survey ink.** A `colorNode` on the ground's `MeshBasicNodeMaterial`. `surveyFloor` is
-   `attribute('surveyFloor', 'float')` and the ground position is `positionWorld.xz`, each
-   passed with `.varying()`. `texelFetch` is `textureLoad(cells, ivec2)`. The constant array
-   of majors unrolls in TypeScript, since `MAJOR_ISOBATHS_M` is known when the material is
-   built. **The trap:** r169 multiplies vertex colours *after* `colorNode`
+1. **Survey ink.** A `colorNode` on the ground's `MeshBasicNodeMaterial`. The ground position
+   is `positionWorld.xz`, passed with `.varying()`. `texelFetch` is
+   `textureLoad(cells, ivec2)`. **The trap:** r169 multiplies vertex colours *after* `colorNode`
    (`materials/nodes/NodeMaterial.js:314`), so the acoustic veil would dim the ink, which
    [map-visuals.md](map-visuals.md) §4's rule 5 forbids. The ground turns `vertexColors` off
    and multiplies `attribute('color')` into its base itself, before the ink.

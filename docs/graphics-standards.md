@@ -910,8 +910,9 @@ explored/unexplored state" by another route. The review question is one question
 you still route through the cold corner?** If not, the floor is too deep.
 
 The ground is held to it at the survey dolly as well. Its shape there comes from survey ink
-([map-visuals.md](map-visuals.md) §4), not from brighter fills, and the question is again one
-question: **from the ink alone, can you name the plateau, the trench and the rock?**
+([map-visuals.md](map-visuals.md) §4) and the fills' depth shading, not from brighter fills,
+and the question is again one question: **from the ink and the fills, can you name the
+plateau, the trench and the rock?**
 
 At the High graphics quality this gate is the limit on the lit world
 ([art-direction.md](art-direction.md#two-layers-two-laws), limit 6). A mark stands bare

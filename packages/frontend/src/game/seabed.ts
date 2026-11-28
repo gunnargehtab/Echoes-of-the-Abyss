@@ -60,14 +60,9 @@ export interface BakeOptions {
   /**
    * The free-water study's eroded cell edges (`erodedGroundAtM`), given the
    * rock top the heightfield stands its mesas on; undefined on every shipped
-   * map, which bakes the authored step as it always has. `floors`, when
-   * given, takes the study's survey floor (`ErodedGround.floorM`) where the
-   * bake reads each pixel it shades, the pixel's north-west corner — the
-   * whole map's pixels, row-major — for its isobaths (surveyInk.ts
-   * `DrawnSurvey`): the bake reads the drawn ground there anyway, so the
-   * floor costs no second pass.
+   * map, which bakes the authored step as it always has.
    */
-  eroded?: { rockTopM: number; floors?: Float32Array };
+  eroded?: { rockTopM: number };
   /**
    * The High graphics quality's lit ground (litGround.ts): what a light needs
    * of each pixel, written beside the skin the bake shades, the whole map's
@@ -500,9 +495,8 @@ export interface ErodedGround {
   rockWeight: number;
   /**
    * The open floor under the step, metres, with the rock's rise left out:
-   * what the study's isobaths contour (docs/map-visuals.md §4, the study's
-   * clause). Inside the stone it reads the nearest open floor, so a face
-   * stacks no false scarp of isobaths at its foot.
+   * the study's `HeightGrid.floor`. Inside the stone it reads the nearest
+   * open floor, so a face stands no false scarp at its foot.
    */
   floorM: number;
   /** Signed distance to the drawn rock coast, metres, positive in the stone: the solid coastline is its zero. */
@@ -1125,7 +1119,6 @@ export function shadeSeabed(
         coast![i] = drawn.coastM;
         fills![i] = drawnFill(drawn.biomeM);
         mottles![i] = drawn.relief.mottle;
-        if (eroded.floors !== undefined) eroded.floors[py * w + px] = drawn.floorM;
       } else {
         const homeIndex = clampRow(Math.round(cy)) * cols + clampCol(Math.round(cx));
         const f00 = floorAt(r0, c0, homeIndex);

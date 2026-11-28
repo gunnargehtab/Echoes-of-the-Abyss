@@ -1750,18 +1750,28 @@ function loneListener(world: Booted): void {
 }
 
 /**
- * The one mesh in the conn scene carrying the survey's floor attribute: the
- * terrain. Found rather than reached for, because the view owns its own scene
- * graph and a test that indexed into `children` would break on any reorder.
- * By `surveyFloor` and not by its veil attribute, since the roofs over a
- * passage carry the veil too (#1105).
+ * Whether a mesh is the map's ground: the one whose own material draws the
+ * survey ink, or carries it at High (surveyInk.ts `installSurveyInk`). By the
+ * material's program key and not by its veil attribute, since the roofs over
+ * a passage carry the veil too (#1105); and not the ink's overlay, which
+ * shares the ground's geometry but is a layer over it.
+ */
+function isGround(object: Object3D): object is Mesh {
+  if (!(object instanceof Mesh) || Array.isArray(object.material)) return false;
+  const key = (object.material as Material).customProgramCacheKey();
+  return key.includes('survey-ink') && !key.includes('survey-ink-overlay');
+}
+
+/**
+ * The one mesh in the conn scene that is the ground. Found rather than
+ * reached for, because the view owns its own scene graph and a test that
+ * indexed into `children` would break on any reorder.
  */
 function terrainMesh(scene: Scene | null): Mesh {
   assert.ok(scene !== null, 'the conn rendered at least once');
   let found: Mesh | null = null;
   scene.traverse((object) => {
-    if (found !== null || !(object instanceof Mesh)) return;
-    if (object.geometry.getAttribute('surveyFloor') !== undefined) found = object;
+    if (found === null && isGround(object)) found = object;
   });
   assert.ok(found !== null, 'the ground is in the scene');
   return found;
@@ -2000,7 +2010,7 @@ describe('renderer smoke test: the conn view', () => {
           if (!(object instanceof Mesh)) return;
           const geometry = object.geometry;
           if (geometry.getAttribute('color') === undefined) return;
-          if (geometry.getAttribute('surveyFloor') !== undefined) return;
+          if (isGround(object)) return;
           found.push(object);
         });
         return found;
@@ -2657,8 +2667,7 @@ describe('renderer smoke test: the conn view', () => {
         assert.ok((lowKinds.get(made) ?? 0) >= times, `Low draws ${made} as it did`);
       }
       assert.ok(againDraws.includes(backdrop), 'the backdrop is Low’s water again');
-      const skin = (draws: Object3D[]) =>
-        draws.find((o) => (o as Mesh).geometry?.getAttribute('surveyFloor') !== undefined)!;
+      const skin = (draws: Object3D[]) => draws.find(isGround)!;
       assert.equal(kind(skin(againDraws)), kind(skin(lowDraws)), 'the ground wears its skin again');
       assert.equal(
         againDraws.filter((o) => kind(o).includes('survey-ink')).length,
@@ -3242,7 +3251,7 @@ describe('renderer smoke test: the water', () => {
           // the point clamped onto the map, and nothing is heard past it.
           loneListener(world);
           world.frame(1);
-          const map = grounds.find((m) => m.geometry.getAttribute('surveyFloor') !== undefined)!;
+          const map = grounds.find(isGround)!;
           const past = grounds.find((m) => m !== map)!;
           const at = map.geometry.getAttribute('position') as BufferAttribute;
           const mapShade = map.geometry.getAttribute(VEIL_SHADE_ATTRIBUTE) as BufferAttribute;

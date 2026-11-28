@@ -3,7 +3,7 @@
  *
  * The shader itself needs a GL context and is reviewed by screenshot, per the
  * graphics-standards checklist. What these hold is everything the shader is
- * handed: which depths get a major line, what a coastline compares, and the
+ * handed: that no line contours the floor, what a coastline compares, and the
  * ladder — that every ink stroke lifts the ground less than rung 5's quiet
  * rims and the unselected detection ring do, over the darkest and the palest
  * ground and in every palette.
@@ -11,8 +11,8 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { FloatType, MeshBasicMaterial, NearestFilter, RedFormat, ShaderLib } from 'three';
-import { Biome, DEPTH, DEPTH_BANDS, TERRAIN_LIFT, THERMOCLINE } from '@echoes/shared';
+import { MeshBasicMaterial, ShaderLib } from 'three';
+import { Biome, TERRAIN_LIFT } from '@echoes/shared';
 import { BIOME_COLOR, PALETTE_NAMES, PALETTES, ROCK_FACE, scaleRgb } from '../src/game/palette.ts';
 import {
   encodedLuminance,
@@ -22,8 +22,6 @@ import {
 } from '../src/game/ladder.ts';
 import {
   installSurveyInk,
-  MAJOR_ISOBATHS_M,
-  MINOR_ISOBATH_M,
   patchSurveyCellClasses,
   ROCK_CLASS,
   SURVEY_ALPHA,
@@ -31,10 +29,6 @@ import {
   SURVEY_WIDTH_PX,
   surveyCellClasses,
   surveyCellTexture,
-  surveyFloorTexture,
-  THERMOCLINE_GAP_EDGE_PX,
-  THERMOCLINE_ISOBATH_M,
-  THERMOCLINE_RULE_GAP_PX,
 } from '../src/game/surveyInk.ts';
 import type { TerrainPayload } from '../src/net/GameClient.ts';
 
@@ -65,74 +59,43 @@ const LIFTED_GROUND = scaleRgb(PALEST_GROUND, 1 + TERRAIN_LIFT.MAX);
 /** And the darkest: a fully drained veil over the trench is black. */
 const DARKEST_GROUND = 0x000000;
 
-describe('survey ink levels', () => {
-  it('draws a major isobath at each depth-band boundary, read from the ruleset', () => {
-    // SPEC: §4 names 400 m and 1,800 m, and says they are DEPTH_BANDS'. Both
-    // halves are held: the numbers the doc quotes, and that they are derived.
-    assert.deepEqual([...MAJOR_ISOBATHS_M], [400, 1800]);
-    const boundaries = Object.values(DEPTH_BANDS)
-      .map((band) => band.min)
-      .filter((depth) => depth > 0 && depth < DEPTH.MAX_M);
-    assert.deepEqual(
-      [...MAJOR_ISOBATHS_M],
-      boundaries.sort((a, b) => a - b)
-    );
+describe('survey ink lines', () => {
+  const oneCell: TerrainPayload = {
+    cols: 1,
+    rows: 1,
+    cellM: 250,
+    biomes: [Biome.OpenWater],
+    floor: [1000],
+    ceiling: [0],
+  };
+
+  it('draws two kinds of line, both on the edges where the ground changes kind', () => {
+    // §4 since #1988: coastlines and biome borders, and nothing between.
+    assert.deepEqual(Object.keys(SURVEY_ALPHA).sort(), ['border', 'coast']);
+    assert.deepEqual(Object.keys(SURVEY_WIDTH_PX).sort(), ['border', 'coast']);
   });
 
-  it('draws a minor isobath every 100 m, and every major falls on one', () => {
-    assert.equal(MINOR_ISOBATH_M, 100);
-    for (const major of MAJOR_ISOBATHS_M) assert.equal(major % MINOR_ISOBATH_M, 0);
-  });
-
-  it("draws the thermocline's isobath at the layer, read from the ruleset (#1104)", () => {
-    // SPEC: §4 names 1,200 m and says it is THERMOCLINE.DEPTH_M's.
-    assert.equal(THERMOCLINE_ISOBATH_M, 1200);
-    assert.equal(THERMOCLINE_ISOBATH_M, THERMOCLINE.DEPTH_M);
-    assert.ok(THERMOCLINE_ISOBATH_M > 0 && THERMOCLINE_ISOBATH_M < DEPTH.MAX_M);
-    // It is drawn as a double rule *because* it is not a band edge. A layer
-    // moved onto one would lay a solid major across the rule's gap.
-    assert.ok(!MAJOR_ISOBATHS_M.includes(THERMOCLINE_ISOBATH_M));
-  });
-
-  it("keeps the thermocline rule's gap clear, the minor at its depth included", () => {
-    // §4: the rule replaces the minor line at its depth. The minor ink is cut
-    // out to the gap's edge, so the edge must lie past the minor line's own
-    // anti-aliased reach, half its width and half a pixel.
-    const minorReachPx = SURVEY_WIDTH_PX.minor / 2 + 0.5;
-    assert.ok(
-      THERMOCLINE_GAP_EDGE_PX >= minorReachPx,
-      `the cut ends at ${THERMOCLINE_GAP_EDGE_PX} px, inside the minor's ${minorReachPx} px`
-    );
-    // And no stroke lays ink inside the cut: the shader's `surveyLine`, an
-    // edge anti-aliased over one pixel, sampled across the gap.
-    const smoothstep = (a: number, b: number, x: number) => {
-      const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
-      return t * t * (3 - 2 * t);
-    };
-    const line = (px: number, widthPx: number) =>
-      1 - smoothstep(widthPx / 2 - 0.5, widthPx / 2 + 0.5, px);
-    for (let px = 0; px <= THERMOCLINE_GAP_EDGE_PX; px += 0.05) {
-      const stroke = line(Math.abs(px - THERMOCLINE_RULE_GAP_PX / 2), SURVEY_WIDTH_PX.thermocline);
-      assert.equal(stroke, 0, `a stroke inks the gap ${px.toFixed(2)} px from the level`);
+  it("draws no isobath: the ground's shader reads no floor (#1988)", () => {
+    // The owner's call: no grey line contours the terrain's depth. Each
+    // isobath was a distance to a depth level, taken off a floor the shader
+    // read, so a shader that reads no floor can draw none, in any mode.
+    for (const drawn of [false, true]) {
+      for (const mode of ['ground', 'overlay', 'carrier'] as const) {
+        const material = new MeshBasicMaterial();
+        const cells = surveyCellTexture(oneCell, surveyCellClasses(oneCell));
+        installSurveyInk(material, oneCell, cells, drawn, mode);
+        const shader = { ...ShaderLib.basic, uniforms: {} as Record<string, unknown> };
+        material.onBeforeCompile(shader as never, {} as never);
+        const label = `${drawn ? 'drawn' : 'cells'} ${mode}`;
+        assert.doesNotMatch(shader.vertexShader, /surveyFloor/i, label);
+        assert.doesNotMatch(shader.fragmentShader, /surveyFloor|isobath|thermocline/i, label);
+        assert.ok(!('uSurveyFloor' in shader.uniforms), label);
+      }
     }
   });
+});
 
-  it("puts the thermocline's level into the ground's shader", () => {
-    const terrain: TerrainPayload = {
-      cols: 1,
-      rows: 1,
-      cellM: 250,
-      biomes: [Biome.OpenWater],
-      floor: [1000],
-      ceiling: [0],
-    };
-    const material = new MeshBasicMaterial();
-    installSurveyInk(material, terrain, surveyCellTexture(terrain, surveyCellClasses(terrain)));
-    const shader = { ...ShaderLib.basic, uniforms: {} };
-    material.onBeforeCompile(shader as never, {} as never);
-    assert.match(shader.fragmentShader, new RegExp(`d - ${THERMOCLINE.DEPTH_M}\\.0 `));
-  });
-
+describe('survey ink shader', () => {
   /**
    * The High graphics quality splits the ink from its ground
    * (docs/art-direction.md, "Two layers, two laws"): the tactical layer's
@@ -152,13 +115,13 @@ describe('survey ink levels', () => {
       const material = new MeshBasicMaterial();
       const cells = surveyCellTexture(terrain, surveyCellClasses(terrain));
       if (mode === undefined) installSurveyInk(material, terrain, cells);
-      else installSurveyInk(material, terrain, cells, null, mode);
+      else installSurveyInk(material, terrain, cells, false, mode);
       const shader = { ...ShaderLib.basic, uniforms: {} as Record<string, unknown> };
       material.onBeforeCompile(shader as never, {} as never);
       return { material, shader };
     };
     const MIX = 'surveyDecode( mix( surveyEncode( diffuseColor.rgb ), uSurveyInk, ink ) )';
-    const STROKE = 'float ink = max( max( minor';
+    const STROKE = 'float ink = max( border';
 
     it('mixes the strokes into its own ground by default, as Low always has', () => {
       const byDefault = compile();
@@ -179,11 +142,8 @@ describe('survey ink levels', () => {
       assert.equal(overlay.material.customProgramCacheKey(), 'survey-ink-overlay');
       // The stroke's coverage is the ground mode's, to the character.
       const stroke = (source: string) =>
-        source.slice(
-          source.indexOf(STROKE),
-          source.indexOf(';', source.indexOf('ink = max( ink, thermocline *')) + 1
-        );
-      assert.ok(stroke(ground.shader.fragmentShader).includes('thermocline *'));
+        source.slice(source.indexOf(STROKE), source.indexOf(';', source.indexOf(STROKE)) + 1);
+      assert.ok(stroke(ground.shader.fragmentShader).includes('coast *'));
       assert.equal(stroke(overlay.shader.fragmentShader), stroke(ground.shader.fragmentShader));
       assert.ok(!overlay.shader.fragmentShader.includes(MIX), 'it has no ground to mix into');
       assert.ok(overlay.shader.fragmentShader.includes('if ( ink <= 0.0 ) discard;'));
@@ -242,9 +202,8 @@ describe('survey ink levels', () => {
 
   /**
    * The free-water study's pass (docs/map-visuals.md §4, the study's clause):
-   * coastlines on the zeros of the fields its heightfield carries, isobaths
-   * of its rounded floor read from the bake's samples, and every other
-   * ground's pass unchanged.
+   * coastlines on the zeros of the fields its heightfield carries, and every
+   * other ground's pass unchanged.
    */
   describe("the study's pass", () => {
     const terrain: TerrainPayload = {
@@ -258,18 +217,10 @@ describe('survey ink levels', () => {
     const compile = (drawn: boolean) => {
       const material = new MeshBasicMaterial();
       const cells = surveyCellTexture(terrain, surveyCellClasses(terrain));
-      const samples = {
-        nx: 64,
-        nz: 32,
-        stepM: 7.8125,
-        originM: 3.90625,
-        data: new Float32Array(64 * 32),
-      };
-      const floor = surveyFloorTexture(samples);
-      installSurveyInk(material, terrain, cells, drawn ? { floor, samples } : null);
+      installSurveyInk(material, terrain, cells, drawn);
       const shader = { ...ShaderLib.basic, uniforms: {} as Record<string, unknown> };
       material.onBeforeCompile(shader as never, {} as never);
-      return { material, shader, floor };
+      return { material, shader };
     };
 
     it('draws its coasts on the fields its vertices carry, not the cell edges', () => {
@@ -282,9 +233,7 @@ describe('survey ink levels', () => {
       // triangle of ink (the cut's held corners).
       assert.match(shader.fragmentShader, /coastSound \? surveyLine/);
       assert.match(shader.fragmentShader, /water && surveyFieldSound\( borderGrad/);
-      assert.match(shader.fragmentShader, /surveyFloorAt\( vSurveyXZ \)/);
       assert.doesNotMatch(shader.fragmentShader, /surveyEdge\( here/);
-      assert.ok('uSurveyFloor' in shader.uniforms && 'uSurveyFloorGrid' in shader.uniforms);
       assert.equal(material.customProgramCacheKey(), 'survey-ink-drawn');
     });
 
@@ -294,16 +243,6 @@ describe('survey ink levels', () => {
       assert.doesNotMatch(shader.fragmentShader, /vSurveyCoast/);
       assert.doesNotMatch(shader.vertexShader, /surveyCoast/);
       assert.equal(material.customProgramCacheKey(), 'survey-ink');
-    });
-
-    it('takes its floor as one float a sample, unfiltered, for the pass to blend', () => {
-      const { floor } = compile(true);
-      assert.equal(floor.format, RedFormat);
-      assert.equal(floor.type, FloatType);
-      assert.equal(floor.magFilter, NearestFilter);
-      assert.equal(floor.minFilter, NearestFilter);
-      assert.equal(floor.image.width, 64);
-      assert.equal(floor.image.height, 32);
     });
   });
 });
@@ -373,11 +312,7 @@ describe('the loudness ladder, rung 4 under rung 5', () => {
     }
   });
 
-  it('ranks the ink within its rung: minor, then the band lines and borders, then rock', () => {
-    assert.ok(SURVEY_ALPHA.minor < SURVEY_ALPHA.major);
-    // The thermocline is a major line in another pattern, not a louder one.
-    assert.equal(SURVEY_ALPHA.thermocline, SURVEY_ALPHA.major);
-    assert.ok(SURVEY_ALPHA.major <= SURVEY_ALPHA.coast);
+  it('ranks the ink within its rung: borders, then rock', () => {
     assert.ok(SURVEY_ALPHA.border <= SURVEY_ALPHA.coast);
   });
 });
@@ -434,7 +369,7 @@ describe('coastline cell classes', () => {
 describe('survey ink over lifted ground (#1103)', () => {
   it('lifts the palest pixel the ground draws more than a lit face lifted it', () => {
     // docs/art-direction.md "Reading the Sea Floor": texture sits under the
-    // quietest line of ink, so a contour still reads across a lit dune.
+    // quietest line of ink, so a coastline still reads across a lit dune.
     const faceLift = encodedLuminance(LIFTED_GROUND) - encodedLuminance(PALEST_GROUND);
     for (const [kind, alpha] of Object.entries(SURVEY_ALPHA)) {
       const inkLift = strokeLift(SURVEY_INK_COLOR, alpha, LIFTED_GROUND);

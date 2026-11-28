@@ -214,7 +214,7 @@ describe('the lit ground’s material (#1801)', () => {
     const surface = litGroundSurface(terrain, 1);
     const material = new MeshBasicMaterial({ map: surface.albedo });
     const cells = surveyCellTexture(terrain, surveyCellClasses(terrain));
-    installSurveyInk(material, terrain, cells, null, 'carrier');
+    installSurveyInk(material, terrain, cells, false, 'carrier');
     installDisplayVeil(material);
     const pools = { value: surface.relief };
     installLitGround(material, surface.relief, pools);
