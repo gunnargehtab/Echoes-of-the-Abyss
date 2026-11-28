@@ -230,8 +230,9 @@ export function searchlightsOf(
     const at = hangAt(hull.x + fx * ahead, hull.y - hull.beamM * SPEC.KEEL, hull.z + fz * ahead);
     return atGround(hull, 'bow', at, fx, fz, SPEC.THROW_M, SPEC.DEPRESSION_DEG, 1);
   };
-  // On the hull's back, forward of amidships, looking ahead and up: it meets
-  // no ground, so it throws a cone and no pool.
+  // On the hull's back, forward of amidships, looking ahead and up: over
+  // level ground it meets none, so it throws a cone and no pool, and under a
+  // wall it lights the rock that stands over the hull.
   const mast = (hull: SearchlightHull): Searchlight => {
     const fx = Math.cos(hull.heading);
     const fz = Math.sin(hull.heading);

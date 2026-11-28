@@ -1,0 +1,13 @@
+diff --git a/packages/backend/src/sim/maps/freeWaterSlice.ts b/packages/backend/src/sim/maps/freeWaterSlice.ts
+index 8abdfd27..524060e3 100644
+--- a/packages/backend/src/sim/maps/freeWaterSlice.ts
++++ b/packages/backend/src/sim/maps/freeWaterSlice.ts
+@@ -75,7 +75,7 @@ export const FREE_WATER_SLICE: MapDefinition = {
+   openingFleet: [
+     { kind: UnitKind.LightScout, x: 625, y: 1875, depth: 300, heading: 0 },
+     { kind: UnitKind.Corvette, x: 625, y: 2125, depth: 300, heading: 0 },
+-    { kind: UnitKind.Harvester, x: 375, y: 1875, depth: 300, heading: 0 },
++    { kind: UnitKind.Cruiser, x: 375, y: 1875, depth: 300, heading: 0 },
+   ],
+   resources: [],
+   hazards: [],

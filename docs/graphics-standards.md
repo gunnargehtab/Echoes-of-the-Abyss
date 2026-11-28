@@ -775,7 +775,7 @@ steps of four reads. That is read against the 8 ms on the named GPU and is not y
 A beam from each lamp ([art-direction.md](art-direction.md#a-beam-from-each-lamp)) adds
 no pass, target, texture or draw: the same quad a beam, and still six at most. It adds
 beams to a frame that drew fewer than six. The crater's fleet at rest throws four where
-it threw two, and a class with four lamps fills the six with one other loud hull. Every
+it threw two, and a class with four lamps beside a class with two fills the six. Every
 added beam costs its cone's fragments and 36,000 vertices of snow.
 [issue-1845](screenshots/issue-1845/README.md) reads both frames against the 8 ms on the
 named GPU.

@@ -634,9 +634,10 @@ lamp's, the accepted beam, and no number of it moves.
 - **Three kinds of lamp, and each looks at a depth.** The **bow lamp** looks at the floor
   a throw ahead, as accepted. The **mast lamp** stands on the hull's back, 0.3 of its
   length ahead of amidships and 0.9 of its beam over the keel line, and looks along the
-  heading 10 degrees over the level. It meets no ground, so it throws no pool: its cone
-  runs its whole reach in open water, and it lights what swims over the hull's own depth
-  when the hull heads that way. A **flood** hangs under the keel line 3 m off each beam
+  heading 10 degrees over the level. Over level ground it meets none and throws no pool:
+  its cone runs its whole reach in open water, and it lights what swims over the hull's
+  own depth when the hull heads that way. Under a wall or a rim it lights the rock that
+  stands over the hull. A **flood** hangs under the keel line 3 m off each beam
   end and looks abeam at the ground 80 m out, between 15 and 60 degrees under the level:
   a pool to port and one to starboard. So a hull's lamps read the floor ahead, the water
   above and the ground beside. The angles are in the world's drawn metres, where depth is

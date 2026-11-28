@@ -345,7 +345,7 @@ describe('a beam from each lamp a class carries (#1845)', () => {
     }
   });
 
-  it('stands the mast lamp on the hull\u2019s back, looking ahead and up, at no ground', () => {
+  it('stands the mast lamp on the hull\u2019s back, looking ahead and up, over level ground', () => {
     const [, mast] = beamsOf([hull({ lamps: 2, heading: Math.PI / 2 })]);
     assert.equal(mast!.lamp, 'mast');
     // Forward of amidships and over the keel line, clear of the hull's top.
