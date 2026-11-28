@@ -22,6 +22,7 @@
 import { hasComponent } from 'bitecs';
 import { defineQuery } from '../query.ts';
 import {
+  DEPTH_VISUAL_M_PER_M,
   MAX_STRUCTURE_RADIUS_M,
   MAX_UNIT_RADIUS_M,
   MOVEMENT,
@@ -266,10 +267,10 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       const d2 = dx * dx + dy * dy;
       world.stepWork.separationPairs++;
       if (d2 >= minD * minD) continue;
-      // On volumetric ground a structure is as tall as its model, not a column
-      // to the surface (docs/free-water-slice.md §9): a hull whose keel clears
-      // the roof passes over the footprint. Depth is positive downward.
-      if (volumetric && Position.depth[a]! + ra <= Position.depth[s]! - stats.heightM) continue;
+      // On volumetric ground a structure is as tall as its model is drawn, not
+      // a column to the surface (docs/free-water-slice.md §9): a hull drawn
+      // clear of the roof passes over the footprint.
+      if (volumetric && clearsRoof(Position.depth[a]!, ra, s, stats.heightM)) continue;
 
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
         // Dead centre of a footprint: leave along +X, deterministically.
@@ -381,10 +382,21 @@ function endIfWedged(world: SimWorld, eid: number): void {
  */
 function overRoof(volumetric: boolean, a: number, ra: number, s: number, heightM: number): boolean {
   return (
-    volumetric &&
-    DepthOrder.active[a] === 1 &&
-    DepthOrder.targetM[a]! + ra <= Position.depth[s]! - heightM
+    volumetric && DepthOrder.active[a] === 1 && clearsRoof(DepthOrder.targetM[a]!, ra, s, heightM)
   );
+}
+
+/**
+ * Whether a hull of radius `ra` at `depthM` is drawn clear above structure
+ * `s`'s roof. The view draws depth at `DEPTH_VISUAL_M_PER_M` and both models at
+ * full scale, so the roof stands `heightM / 0.22` metres of water above the
+ * depth the structure stands on, and the keel `ra / 0.22` under the hull's
+ * centre: a Bastion's 128 m blocks about 580 m. The owner chose this on #1754
+ * over a roof at the model's true metres, which drew a hull passing over it
+ * inside the model. Depth is positive downward.
+ */
+function clearsRoof(depthM: number, ra: number, s: number, heightM: number): boolean {
+  return depthM + (ra + heightM) / DEPTH_VISUAL_M_PER_M <= Position.depth[s]!;
 }
 
 /** Reused across hulls and ticks: `nearestEdge` writes here rather than allocating. */

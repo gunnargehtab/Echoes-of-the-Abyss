@@ -7,6 +7,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  DEPTH_VISUAL_M_PER_M,
   Faction,
   SIM,
   StructureKind,
@@ -129,6 +130,12 @@ describe('volumetric ground: structures with a height', () => {
   const BOWL_X = 1250;
   const BOWL_Y = 2250;
   const FLOOR_M = 1500;
+  /**
+   * The deepest a Corvette's centre may sit and be drawn clear of the roof:
+   * the model and the keel are drawn at full scale over a column drawn at
+   * 0.22, so both count `/ DEPTH_VISUAL_M_PER_M` metres of water. About 780 m.
+   */
+  const ROOF_M = FLOOR_M - (bastion.heightM + radius) / DEPTH_VISUAL_M_PER_M;
 
   function base(match: Match): number {
     return spawnStructure(match.world, {
@@ -146,7 +153,7 @@ describe('volumetric ground: structures with a height', () => {
     const match = crater(1756);
     assert.equal(match.world.terrain.floorAt(BOWL_X, BOWL_Y), FLOOR_M);
     base(match);
-    const over = corvette(match, BOWL_X + 40, BOWL_Y, FLOOR_M - bastion.heightM - radius - 1);
+    const over = corvette(match, BOWL_X + 40, BOWL_Y, ROOF_M - 1);
     advance(match, 1);
     assert.equal(Position.x[over], BOWL_X + 40);
     assert.equal(Position.y[over], BOWL_Y);
@@ -155,7 +162,7 @@ describe('volumetric ground: structures with a height', () => {
   it('still puts out a hull below the roof', () => {
     const match = crater(1757);
     base(match);
-    const inside = corvette(match, BOWL_X + 40, BOWL_Y, FLOOR_M - bastion.heightM + radius);
+    const inside = corvette(match, BOWL_X + 40, BOWL_Y, ROOF_M + 20);
     advance(match, 1);
     const d = Math.hypot(Position.x[inside]! - BOWL_X, Position.y[inside]! - BOWL_Y);
     assert.ok(d >= bastion.radiusM + radius - 0.01, `held ${d.toFixed(1)} m from the centre`);
@@ -168,12 +175,13 @@ describe('volumetric ground: structures with a height', () => {
     // Beside the base, below its roof, sent to a point over its centre at a
     // depth that clears the roof.
     const climber = corvette(match, BOWL_X + bastion.radiusM + radius + 20, BOWL_Y, 1450);
-    const overM = FLOOR_M - bastion.heightM - radius - 20;
+    const overM = ROOF_M - 20;
     match.orderMove(0, climber, BOWL_X, BOWL_Y, false, overM);
-    advance(match, 60);
+    advance(match, 90);
     const d = Math.hypot(Position.x[climber]! - BOWL_X, Position.y[climber]! - BOWL_Y);
     assert.ok(d < 5, `stands ${d.toFixed(1)} m off the point over the base`);
-    assert.equal(Position.depth[climber], overM);
+    // Depth is an f32 component, so to the precision it holds.
+    assert.ok(Math.abs(Position.depth[climber]! - overM) < 0.01, `at ${Position.depth[climber]} m`);
   });
 
   it('keeps the column at every depth on ground without the flag', () => {

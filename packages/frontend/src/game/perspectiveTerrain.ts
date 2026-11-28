@@ -19,9 +19,11 @@
  * - **Vertical scale is presentation.** Depth spans (hundreds to thousands of
  *   metres) sit under a map only a few kilometres across; drawn 1:1 the relief
  *   would wall off the view. The compression factor below is a look, not a
- *   fact, and nothing may ever measure through it.
+ *   fact, and nothing on a shipped map measures through it. The one reader
+ *   besides the view is the volumetric crater's structure clearance (#1754).
  */
 
+import { DEPTH_VISUAL_M_PER_M } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import {
   benchedDetailM,
@@ -34,12 +36,11 @@ import {
 } from './seabed.ts';
 
 /**
- * TUNABLE — metres of world height per metre of depth. 0.22 keeps a full
- * Shelf-to-Abyssal map (~2,600 m of span) inside ~570 world metres of relief:
- * deep trenches read as deep, and the far wall of one still fits under a
- * 55° camera. Render-only by the rule above.
+ * Metres of world height per metre of depth, from shared since #1754: the
+ * crater's structure clearance reads it too (`@echoes/shared`, where the
+ * number and its reasons live). Re-exported so the view's importers keep it.
  */
-export const DEPTH_VISUAL_M_PER_M = 0.22;
+export { DEPTH_VISUAL_M_PER_M };
 
 /**
  * TUNABLE — mesh density. 4 vertex steps across a 250 m cell is one vertex

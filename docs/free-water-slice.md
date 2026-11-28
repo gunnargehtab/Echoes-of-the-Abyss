@@ -1266,17 +1266,22 @@ two-seat fight. A shipped map keeps §2's limits until its own issue amends
   disengages at the rating. A route needing more than that ends where the ground allows,
   as an unreachable route does now.
 - **Structures with a height.** A structure blocks only from the depth it stands on up
-  to its top: the height of its model, the tallest of its navies', in canonical metres.
-  A hull clear of that by its own radius passes over the footprint, so a hull can stand
-  over a base and drop charges on it. A hull ordered to a depth over the roof is not
-  sent to the footprint's edge. A charge's blast still reaches a structure by its
-  distance in three dimensions to the depth it stands on, as everywhere
-  ([systems-combat.md](systems-combat.md) §8). The world view does not yet read this.
-  The column is drawn at 0.22 while models are drawn at full scale, so a hull 1 m over
-  a Bastion's 128 m roof is drawn about 28 m above its base, inside the model. The
-  section scope draws an own structure as a mark at the depth it stands on, with no
-  top, and no enemy structure. Making the clearance readable is the two-player
-  fight's to settle, before its frames are taken.
+  to its roof, and the roof is where its model is drawn. Models are drawn at full scale
+  over a column drawn at 0.22 world metres per metre of depth, so a model's height
+  stands for its height ÷ 0.22 of water, and a hull's keel sits its radius ÷ 0.22 under
+  its centre. The model's height is the tallest of its navies', in canonical metres, so
+  a Bastion's 128 m roofs about 580 m of water. A hull drawn clear of the roof passes
+  over the footprint, and can stand over a base and drop charges on it. A hull ordered
+  to a depth over the roof is not sent to the footprint's edge. The owner chose the
+  drawn roof on 28 November 2026 over two others: a roof at the model's true 128 m,
+  which drew a hull passing over it inside the model, and models squashed to 0.22 on
+  the crater, which would change how a base looks. This makes the display scale,
+  `DEPTH_VISUAL_M_PER_M`, a number the crater's simulation reads; nothing on a shipped
+  map measures through it. A charge's blast still reaches a structure by its distance
+  in three dimensions to the depth it stands on, as everywhere
+  ([systems-combat.md](systems-combat.md) §8). The section scope draws an own
+  structure as a mark at the depth it stands on, with no roof, and no enemy structure:
+  the two-player fight adds what it needs of those.
 
 The fight seats each player on a pre-built Bastion on the crater floor, with its own
 opening fleet, and no resources. Losing the Bastion is elimination, as in a skirmish

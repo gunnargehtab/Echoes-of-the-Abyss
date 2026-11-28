@@ -1316,6 +1316,19 @@ export const ACTIVE_SONAR = {
  * make a unit that was already louder somehow quieter. It sits above every
  * cruise SIG in the roster (loudest: Cruiser, 65) and below the ping's 95.
  */
+/**
+ * TUNABLE — world-metres the conn view draws per metre of depth
+ * (docs/three-layer-ocean.md, Phase 1). 0.22 keeps a full Shelf-to-Abyssal map
+ * (~2,600 m of span) inside ~570 world metres of relief: deep trenches read as
+ * deep, and the far wall of one still fits under a 55° camera.
+ *
+ * A look, and on every shipped map nothing measures through it. In shared for
+ * one reader besides the view: on the volumetric crater a structure blocks
+ * hulls as far up the column as its full-scale model is drawn, so a hull the
+ * player sees clear of a roof is clear of it (docs/free-water-slice.md §9).
+ */
+export const DEPTH_VISUAL_M_PER_M = 0.22;
+
 export const DEPTH = {
   /** TUNABLE — direct rise/dive target offset, docs/ui-ux.md §9. */
   CONTROL_STEP_M: 150,
