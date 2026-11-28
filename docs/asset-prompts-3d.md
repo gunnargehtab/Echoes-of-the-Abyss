@@ -860,10 +860,14 @@ is sections almost through. The Order's pass leaves two of its 608, neither on a
 Sentinel Turret's two pods' caps, a capsule's meridian at 5.1 m, where the rule's share of a
 half turn is five and a capsule draws an even count; the Bastion's press (#960) re-cut its
 twelve port lights from four by three to six by two, the orbs the rule asks at the 2.3 m
-their pressed meridians draw, and they read on it. The Consortium's pass leaves none of
-its 1,310: `node tools/hull-models/facets.mjs bathyarch` names no ring, and the navy
-carries seven distinct counts a turn where it carried fifteen. The Commune's leaves twelve
-of its 1,428: the six on the four tables and six pressed tubes no count settles on (the
+their pressed meridians draw, and they read on it. The Consortium's pass left none; since
+it the navy reads seven of its 1,588 off the rule, all on the Thurible built after it
+(#1440): its seven cells' wells, eight a turn at 2.25 m where the rule reads six, since a
+well takes its collar's count as a cap takes its can's (`thurible-bathyarch.mjs`, FACETS).
+`node tools/hull-models/facets.mjs bathyarch --parts` names those seven and no other ring,
+and the navy carries seven distinct counts a turn where it carried fifteen. The Commune's
+leaves twelve of its 1,428: the six on the four tables and six pressed tubes no count
+settles on (the
 Commune paragraph), and the navy carries eighteen distinct counts a turn where it carried
 thirty-five, every ring from 4 m of radius up on sixteen a turn but the tables' and the
 part-turn arcs the measure reads a turn at a time. The Directorate's leaves eight of its
