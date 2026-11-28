@@ -69,16 +69,27 @@ function planGap(a: number, b: number): number {
   return Math.hypot(Position.x[a]! - Position.x[b]!, Position.y[a]! - Position.y[b]!);
 }
 
-function gap3d(a: number, b: number): number {
+/** How far apart the view draws two hulls: depth counts at the column's 0.22. */
+function drawnGap(a: number, b: number): number {
   return Math.hypot(
     Position.x[a]! - Position.x[b]!,
     Position.y[a]! - Position.y[b]!,
-    Position.depth[a]! - Position.depth[b]!
+    (Position.depth[a]! - Position.depth[b]!) * DEPTH_VISUAL_M_PER_M
   );
+}
+
+/** Depth is an f32 component, so a depth is compared to the precision it holds. */
+function assertDepth(eid: number, expected: number): void {
+  assert.ok(Math.abs(Position.depth[eid]! - expected) < 0.01, `at ${Position.depth[eid]} m`);
 }
 
 describe('volumetric ground: separation in three dimensions', () => {
   const radius = unitRadiusM(UnitKind.Corvette);
+  /**
+   * How far apart in depth two Corvettes must be to be drawn clear of each
+   * other: the column is drawn at 0.22 and the models at full scale.
+   */
+  const DRAWN_CLEAR_M = (2 * radius) / DEPTH_VISUAL_M_PER_M;
 
   it('is set on the crater and on no ground without the flag', () => {
     assert.equal(crater(1).world.volumetric, true);
@@ -89,34 +100,35 @@ describe('volumetric ground: separation in three dimensions', () => {
   it('lets a hull hold station directly over another one', () => {
     const match = crater(1754);
     const deep = corvette(match, POCKET_X, POCKET_Y, 900);
-    const shallow = corvette(match, POCKET_X, POCKET_Y, 900 - radius * 3);
+    const shallow = corvette(match, POCKET_X, POCKET_Y, 900 - DRAWN_CLEAR_M * 1.5);
     advance(match, 3);
     assert.equal(planGap(deep, shallow), 0, 'a pair clear in depth is not pushed in plan');
     assert.equal(Position.depth[deep], 900);
-    assert.equal(Position.depth[shallow], 900 - radius * 3);
+    assertDepth(shallow, 900 - DRAWN_CLEAR_M * 1.5);
   });
 
-  it('pushes an overlapping stacked pair apart in plan only, until it clears in 3D', () => {
+  it('pushes an overlapping stacked pair apart in plan only, until it is drawn clear', () => {
     const match = crater(1755);
-    const dz = radius; // under the 2r the pair needs, so the spheres overlap
+    // Drawn a radius apart, under the 2r the pair needs, so the spheres overlap.
+    const dz = radius / DEPTH_VISUAL_M_PER_M;
     const deep = corvette(match, POCKET_X, POCKET_Y, 900);
     const shallow = corvette(match, POCKET_X, POCKET_Y, 900 - dz);
     advance(match, 6);
     // Depth has one owner, and it is not separation.
     assert.equal(Position.depth[deep], 900);
-    assert.equal(Position.depth[shallow], 900 - dz);
-    const needed = Math.sqrt((2 * radius) ** 2 - dz ** 2);
+    assertDepth(shallow, 900 - dz);
+    const needed = Math.sqrt((2 * radius) ** 2 - (dz * DEPTH_VISUAL_M_PER_M) ** 2);
     const plan = planGap(deep, shallow);
     assert.ok(plan >= needed * 0.9, `pushed ${plan.toFixed(1)} m in plan, needs ${needed}`);
     // Only as far as the depth difference requires, not the full planar 2r.
     assert.ok(plan < 2 * radius * 0.95, `pushed ${plan.toFixed(1)} m, the planar rule's distance`);
-    assert.ok(gap3d(deep, shallow) >= 2 * radius * 0.9);
+    assert.ok(drawnGap(deep, shallow) >= 2 * radius * 0.9);
   });
 
   it('keeps the planar rule on ground without the flag', () => {
     const match = planarGround(1754);
     const deep = corvette(match, POCKET_X, POCKET_Y, 900);
-    const shallow = corvette(match, POCKET_X, POCKET_Y, 900 - radius * 3);
+    const shallow = corvette(match, POCKET_X, POCKET_Y, 900 - DRAWN_CLEAR_M * 1.5);
     advance(match, 6);
     const plan = planGap(deep, shallow);
     assert.ok(plan >= 2 * radius * 0.9, `a stack is pushed apart in plan: ${plan.toFixed(1)} m`);

@@ -1323,9 +1323,9 @@ export const ACTIVE_SONAR = {
  * deep, and the far wall of one still fits under a 55° camera.
  *
  * A look, and on every shipped map nothing measures through it. In shared for
- * one reader besides the view: on the volumetric crater a structure blocks
- * hulls as far up the column as its full-scale model is drawn, so a hull the
- * player sees clear of a roof is clear of it (docs/free-water-slice.md §9).
+ * one reader besides the view: on the volumetric crater, separation measures
+ * hulls and structures' roofs as the view draws them, so what the player sees
+ * clear is clear (docs/free-water-slice.md §9).
  */
 export const DEPTH_VISUAL_M_PER_M = 0.22;
 

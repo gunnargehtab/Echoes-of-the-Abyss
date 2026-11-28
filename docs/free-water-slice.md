@@ -1241,10 +1241,14 @@ depth, and each holds on the crater's ground only, in both its one-seat study an
 two-seat fight. A shipped map keeps §2's limits until its own issue amends
 [systems-depth.md](systems-depth.md) §2 first. No new weapon, and no balance tuning.
 
-- **Separation in three dimensions.** Two hulls overlap only when the straight-line
-  distance between them, depth included and in true metres, is under the sum of their
-  radii. A hull can then hold station directly over or under another. The push stays in
-  the plan, just far enough to clear the pair in three dimensions, so a hull's depth
+- **Separation in three dimensions.** Two hulls overlap only when the distance between
+  them as the view draws them is under the sum of their radii. The column is drawn at
+  0.22 world metres per metre of depth and the models at full scale, so their depth
+  apart counts at 0.22: two Corvettes hold station one over the other once they are
+  about 360 m apart in depth, where the view draws them clear. The owner chose this on
+  28 November 2026, the rule a structure's roof keeps below, over true metres, which
+  stacked two Corvettes 80 m apart and drew them through each other. The push stays in
+  the plan, just far enough to clear the pair as drawn, so a hull's depth
   still has one owner, the depth system, with its rates and its noise. The other option,
   pushing along the axis between the two, would move a hull's depth without an order.
 - **Routes that climb and dive.** A hull whose straight course is blocked plans in three
@@ -1282,16 +1286,17 @@ two-seat fight. A shipped map keeps §2's limits until its own issue amends
   map measures through it. A charge's blast still reaches a structure by its distance
   in three dimensions to the depth it stands on, as everywhere
   ([systems-combat.md](systems-combat.md) §8). The section scope draws an own
-  structure as a mark at the depth it stands on, with no roof, and no enemy structure:
-  the two-player fight adds what it needs of those.
+  structure as a mark at the depth it stands on, with no roof, and no enemy structure,
+  which #1754's first increment leaves as they are.
 
 The fight seats each player on a pre-built Bastion on the crater floor, with its own
-opening fleet, and no resources. The seats mirror across the bowl's axis at x 2,250 m:
-Bastions at 1,250 and 3,250 m on the bowl's 1,500 m floor, between the pocket and the
-rim, and each fleet on its outer rim at 300 m. A fleet is a Light Scout (PR 1), a
-Corvette and a Cruiser (PR 2) and an Abyssal Submersible (PR 3), each armed and so each
-able to drop a depth charge. The lobby runs as a skirmish's, each player choosing a
-navy, with no AI seat, and the match starts once both seats are taken and ready. Losing the Bastion is elimination, as in a skirmish
+opening fleet, a skirmish's starting bank and no resource fields. The seats mirror
+across the bowl's axis at x 2,250 m: Bastions at 1,250 and 3,250 m on the bowl's 1,500 m
+floor, between the pocket and the rim, and each fleet on its outer rim at 300 m. A fleet
+is a Light Scout (PR 1), a Corvette and a Cruiser (PR 2) and an Abyssal Submersible (PR
+3), each armed and so each able to drop a depth charge. The lobby runs as a skirmish's,
+each player choosing a navy, with no AI seat, and the match starts once both seats are
+taken and ready. Losing the Bastion is elimination, as in a skirmish
 ([game-identity.md](game-identity.md), "Match Structure"), so attacking from above has
 something to attack. Each Bastion stands on the floor under it, not at the 600 m a built
 structure takes. A Bastion is the only structure the crater stages; §3's "no structures"

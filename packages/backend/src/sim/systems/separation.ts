@@ -140,10 +140,13 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
       const dy = by - ay;
       const minD = ra + unitRadiusM(Unit.kind[b] as UnitKind);
       const d2 = dx * dx + dy * dy;
-      // On volumetric ground the pair is two spheres, depth in true metres
-      // (docs/free-water-slice.md §9): a hull may hold station over another.
-      // Zero elsewhere, which leaves the planar test exactly as it was.
-      const dz = volumetric ? Position.depth[b]! - Position.depth[a]! : 0;
+      // On volumetric ground the pair is two spheres as the view draws them
+      // (docs/free-water-slice.md §9): models at full scale over a column at
+      // DEPTH_VISUAL_M_PER_M, so their depth apart counts at that scale and a
+      // hull may hold station over another once it is drawn clear of it. The
+      // owner chose this on #1754, as for a structure's roof. Zero elsewhere,
+      // which leaves the planar test exactly as it was.
+      const dz = volumetric ? (Position.depth[b]! - Position.depth[a]!) * DEPTH_VISUAL_M_PER_M : 0;
       world.stepWork.separationPairs++;
       if (d2 + dz * dz >= minD * minD) continue;
       // The push stays in the plan, so depth keeps one owner (depthSystem, with
