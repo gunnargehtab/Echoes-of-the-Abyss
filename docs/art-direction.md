@@ -685,13 +685,15 @@ lamp's, the accepted beam, and no number of it moves.
   the owner's first words. **Over the bow** throws a two-lamp class's beams from one
   point, a fan in pitch. **The hull's top, looking 25 degrees up** needs no clearance,
   and reopens the manta.
-- **A mast beam lights an own hull ahead of it.** A beam lights the cladding of another
-  own hull it crosses, as the accepted step has it, and a mast beam finds one a bow beam
-  passed under: a staged Cruiser's lights the Light Scout 250 m ahead of it at its own
-  depth. The owner was shown that pair in session on 28 November 2026 and kept it, on
-  the record, and the reading under gate 3 waits for #1637's run. Two other readings
-  were written: **cladding takes no mast beam**, and **a mast beam at half on
-  cladding**, each a flag a beam in the cladding's program.
+- **A mast beam can light an own hull ahead of it.** A beam lights the cladding of
+  another own hull it crosses, as the accepted step has it, and a mast beam runs near the
+  level where a bow beam passed under. With the lamp over the bow, a staged Cruiser's lit
+  the Light Scout 250 m ahead of it at its own depth. The owner was shown that pair in
+  session on 28 November 2026 and kept the rule, on the record, and the reading under
+  gate 3 waits for #1637's run. On the hull's back the lamp stands higher and that beam
+  passes over the Scout. A hull ahead and over the lamp's level still stands in it. Two
+  other readings were written: **cladding takes no mast beam**, and **a mast beam at half
+  on cladding**, each a flag a beam in the cladding's program.
 - **A mast beam reaches the manta.** A hull at rest that heads toward the manta's loop
   puts it in the beam, which a bow beam never did
   ([A manta shows its belly](#a-manta-shows-its-belly)). The owner named this on the

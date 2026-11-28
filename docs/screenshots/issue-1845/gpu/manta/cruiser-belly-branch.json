@@ -100,11 +100,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 4.83,
+      "avgGpuMs": 5.83,
       "queued": {
-        "gpuMs": 5.72,
-        "worstGpuMs": 6.77,
-        "loadMs": 3.56
+        "gpuMs": 4.19,
+        "worstGpuMs": 19.3,
+        "loadMs": 3.54
       },
       "insideBudget": null
     }

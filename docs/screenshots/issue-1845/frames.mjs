@@ -201,7 +201,11 @@ export default async ({ page, shot, recordingStartedMs }) => {
         // Whether the camera's sway and the bodies were held (reduced motion).
         sway: probe.sway ?? null,
         gpuTimer: probe.gpuTimer,
+        // Unqueued, with its worst single frame, beside the queued reading: a
+        // queued frame whose handover outlasts the load reads high
+        // (docs/graphics-standards.md gate 6), so a worst frame is read both ways.
         avgGpuMs: probe.avgGpuMs,
+        worstGpuMs: probe.worstGpuMs ?? null,
         queued,
         // High's budget, read queued and unpaced on the named GPU (gate 6).
         insideBudget:

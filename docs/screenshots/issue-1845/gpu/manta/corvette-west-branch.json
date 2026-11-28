@@ -9,96 +9,6 @@
   },
   "readings": [
     {
-      "name": "home",
-      "quality": "high",
-      "passes": [
-        "high-world",
-        "high-scatter",
-        "high-occlusion",
-        "high-bloom",
-        "high-composite",
-        "high-tactical",
-        "depth-copy",
-        "halo-source",
-        "halo-spread",
-        "halo-composite",
-        "split-copy",
-        "split"
-      ],
-      "calls": 69,
-      "triangles": 854853,
-      "camera": [
-        709,
-        1710,
-        1200,
-        -34,
-        15,
-        300
-      ],
-      "searchlights": 4,
-      "beamMotes": 144000,
-      "hulls": [
-        {
-          "name": "Light Scout",
-          "sig": 6,
-          "restSig": 6,
-          "xM": 625,
-          "zM": 1875,
-          "depthM": 300,
-          "beams": []
-        },
-        {
-          "name": "Corvette",
-          "sig": 28,
-          "restSig": 28,
-          "xM": 625,
-          "zM": 2125,
-          "depthM": 300,
-          "beams": [
-            {
-              "lamp": "bow",
-              "bearingDeg": -90,
-              "riseDeg": -22.5
-            },
-            {
-              "lamp": "mast",
-              "bearingDeg": -90,
-              "riseDeg": 10
-            }
-          ]
-        },
-        {
-          "name": "Harvester",
-          "sig": 18,
-          "restSig": 18,
-          "xM": 375,
-          "zM": 1875,
-          "depthM": 300,
-          "beams": [
-            {
-              "lamp": "bow",
-              "bearingDeg": 90,
-              "riseDeg": -21.1
-            },
-            {
-              "lamp": "mast",
-              "bearingDeg": 90,
-              "riseDeg": 10
-            }
-          ]
-        }
-      ],
-      "sway": "held",
-      "gpuTimer": "timing",
-      "avgGpuMs": 4.43,
-      "queued": {
-        "gpuMs": 5,
-        "worstGpuMs": 7.84,
-        "loadMs": 3.57
-      },
-      "insideBudget": null
-    },
-    {
       "name": "close",
       "quality": "high",
       "passes": [
@@ -180,11 +90,11 @@
       ],
       "sway": "held",
       "gpuTimer": "timing",
-      "avgGpuMs": 4.98,
+      "avgGpuMs": 5.29,
       "queued": {
-        "gpuMs": 5.71,
-        "worstGpuMs": 9.16,
-        "loadMs": 3.57
+        "gpuMs": 4.3,
+        "worstGpuMs": 5.02,
+        "loadMs": 3.56
       },
       "insideBudget": null
     }
