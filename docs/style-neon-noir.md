@@ -88,14 +88,14 @@ palest fill; rims and cliff shadows darken only ([art-direction.md](art-directio
 
 ### The props (the seabed's furniture)
 
-The twenty-three environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
+The twenty-four environment models of [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, and
 the arch study's landmark in its Block 4b, take their base colours from this table. Each token is named for the glTF material that carries
 it, hyphenated. `basalt` and `coral_stone` each carry two values, so their tokens take a
 suffix saying which. Metalness is 0 on every one; roughness is the material's own:
 
 | Token | Hex | Roughness | Material | Props |
 | --- | --- | --- | --- | --- |
-| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes, the rim ray's lobes, tail and eyes, the drift jelly's manubrium, oral lobes and photophore seats |
+| `stone-dark` | `#15181B` | 1 | `stone_dark` | Both crags, coral growth, ruin block, dome shard, nodule bed's lumps, transit arch's masonry, rim crab's legs, the three swimmers' fins and eyes, the rim ray's lobes, tail and eyes, the drift jelly's manubrium, oral lobes and photophore seats, the comb jelly's comb rows and mouth |
 | `stone-silt` | `#17150F` | 1 | `stone_silt` | Open boulder |
 | `silt-drift` | `#211E15` | 1 | `silt_drift` | Nodule bed's drift, transit arch's sediment |
 | `structure-rib` | `#160F0C` | 0.9 | `structure_rib` | Transit arch's exposed ribs and hung fittings |
@@ -106,7 +106,7 @@ suffix saying which. Metalness is 0 on every one; roughness is the material's ow
 | `coral-stone-living` | `#171D19` | 1 | `coral_stone` | Coral tower |
 | `kelp` | `#2A2916` | 0.96 | `kelp` | Kelp cluster, kelp stand (two-sided) |
 | `carapace` | `#2F1F1C` | 0.9 | `carapace` | Rim crab's shell, claws and eyestalks |
-| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats; the drift jelly's bell; the rim manta's back, lobes, tail, fins, eyes and every mark on its belly |
+| `fish-flank` | `#212A2B` | 0.8 | `fish_flank` | Shoal fry, outer fish, deep fish and rim ray: the body, and the deep fish's photophore seats; the drift jelly's bell; the comb jelly's skin; the rim manta's back, lobes, tail, fins, eyes and every mark on its belly |
 | `fish-belly` | `#555E61` | 0.8 | `fish_belly` | Rim manta's underside skin |
 | `ember-base` | `#0B0806` | 1 | `ember` | Vent chimney, under `vent-ember` |
 | `biolight-base` | `#0B1D19` | 1 | `biolight` | Kelp cluster, kelp stand, coral growth, under `flora-biolight` |
@@ -140,7 +140,7 @@ Five rules ride with the table:
   at 0.61 of `stone-dark`, so the ribs read darker than the masonry they carry. On the arch
   the ceiling rule puts the masonry at 0.68 of its sediment and the ribs at 0.41.
 - **A body is neither, and is its own colour.** `carapace`, `fish-flank` and `fish-belly`
-  are the seven public decorative bodies' (#1711, #1777, #1837, #1867,
+  are the eight public decorative bodies' (#1711, #1777, #1837, #1867, #1858,
   [asset-prompts-3d.md](asset-prompts-3d.md) Block 4's variant): the carapace a dark russet at sRGB hue 9°, redder than `coral-stone-ruin`; the
   flank a cold pewter at sRGB hue 186°, between the stones' blue and the living coral's green,
   so a fish reads as a body against rock and kelp alike. Under the ceiling rule the crab's
@@ -150,7 +150,11 @@ Five rules ride with the table:
   middle, a quarter as far out as its margin, so the pale bell is the silhouette and the
   core a dark tuft under it. Its six photophore seats are the core's `stone-dark`, where
   the deep fish's are its flank's own: six dark flecks on the pale margin until the
-  runtime lights them, and the bell's material is the bell and nothing else. `fish-belly`
+  runtime lights them, and the bell's material is the bell and nothing else. The comb
+  jelly takes the same pair (#1858): a `fish-flank` skin under eight ladders of
+  `stone-dark` comb plates and a `stone-dark` mouth slot, dark on pale at the same 0.41
+  until the runtime lights the rows, and the skin's material is the skin and nothing
+  else. `fish-belly`
   is the rim manta's underside and nothing else. Two readings were written. **The whole
   body in `fish-flank`**, the renderer paling the faces that look down, is a pattern the
   file does not carry, and the belly's marks would have nothing to stand dark against in
@@ -439,8 +443,8 @@ Three rules govern all three:
    palettes both sit on the preserved blue axis, and under tritanopia cyan
    reads cool and magenta reads warm. A bevel is not information. World light
    is not information either and moves all the same, so that no eye can take it
-   for an ink that is: a jelly's lantern at the High graphics quality in every
-   palette, and four of the five families in the red-green pair
+   for an ink that is: a jelly's lantern and a comb jelly's light at the High
+   graphics quality in every palette, and four of the five families in the red-green pair
    ([World light](#rule-5-in-the-colour-vision-palettes)).
 2. **Biome fills and Echo Mark residue do not move either.** The seafloor is
    deliberately desaturated to 5–10 % luminance and carries no hue-only
@@ -479,6 +483,7 @@ difference than that would be decoration.
 | Resonance Crystal | `#B98CFF` | `#7FA0F5` | `#7FA0F5` |
 | Fauna | `#5FA88A` | `#6E8C84` | `#6E8C84` |
 | Jelly lantern (world light, High) | `#C56BC7` | `#7F00FF` | `#9900FF` |
+| Comb light (world light, High) | `#D2DC28` | `#FFFF00` | `#FFFF00` |
 | `vent-ember` (world light) | `#E06A2B` | `#CC7656` | `#CC7656` |
 | `flora-biolight` (world light) | `#2E8C74` | `#4E8B4C` | `#4E8B4C` |
 | `crystal-seam` (world light) | `#5B4A8C` | `#584996` | `#584996` |
@@ -544,6 +549,7 @@ the margin the jelly lantern was given
 | Resonance Crystal | `#B98CFF` | `#70B4FC` |
 | Fauna | `#5FA88A` | `#7A7A88` |
 | Jelly lantern (world light, High) | `#C56BC7` | `#CB68C3` |
+| Comb light (world light, High) | `#D2DC28` | `#6A422A` |
 | Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F0E0C8` · `#8C8378` |
 | Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#1FA67A` · `#8FE36B` |
 | Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#A02030` · `#E0566B` |
@@ -692,7 +698,7 @@ faction and no interface token wears. The owner accepted them with High's first 
 
 **Life's own light at High.** *In development with
 [#1837](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1837), and not
-accepted.* Two more world-owned sources at the High graphics quality, each the light a
+accepted.* Three more world-owned sources at the High graphics quality, each the light a
 body of the free-water crater's decorative life carries of its own
 ([art-direction.md](art-direction.md#life-in-the-worlds-light)).
 
@@ -763,8 +769,52 @@ apart from a lamp and from a panel's bevel in play is still the owner's glance. 
 families above keep a floor of their own, 15 dE:
 [Rule 5 in the colour-vision palettes](#rule-5-in-the-colour-vision-palettes).
 
-Both are placed by the fixture's authored loops and answer nothing a match does
-(rule 4). `LIFE_GLINT` and each palette's `lantern` in
+`comb-light` is a comb jelly: its skin and its eight comb rows
+([art-direction.md](art-direction.md#a-comb-jelly-is-eight-seams-of-light)), the deep
+body that lives under the Shelf's 400 m line where the lantern lives over it
+([free-water-slice.md](free-water-slice.md) §5, "Life by depth band"). *In development
+with [#1858](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1858), and not
+accepted.* It is the second hue of the crater's life, so a hue tells depth, by the
+owner's calls of 24 and 27 November 2026: a token a palette owns, held to the lantern's
+floor, in a sulphur lime. It keeps that floor from the same inks, and from its own
+palette's lantern as well, since a second hue that an eye cannot tell from the first
+tells that eye nothing:
+
+| Palette | `comb-light` | Nearest of a navy's inks, a contact tier, a chrome neon or `neon-violet`, to the eye it serves | Its palette's lantern |
+| --- | --- | --- | --- |
+| Standard | `#D2DC28` | Pelagia's accent, 36.8 dE | 134.6 dE |
+| Deuteranopia | `#FFFF00` | Bathyarch's primary, 28.4 dE | 208.2 dE |
+| Protanopia | `#FFFF00` | Bathyarch's primary, 39.3 dE | 218.1 dE |
+| Tritanopia | `#6A422A` | Bathyarch's accent, 28.4 dE | 28.4 dE |
+
+The standard palette's is a yellow-green at 63 degrees, in the gap between Bathyarch's
+amber at 40 and Pelagia's biolight at 102. Two readings were written for the owner. **The
+target's blue**, near `#1E90FF`, measures clear, 34.6 dE from Hadron's accent at the
+nearest, but blue is the contact tiers' family and the red-green palettes' tiers and
+Pelagia are blue, so it could not carry to them. **A sulphur lime** is taken. No one lime
+holds for every eye. A red-green eye sees the standard token as Bathyarch's amber, 7.5 dE
+from it to a deuteranope and 20.7 to a protanope, so the pair shares the yellow at the
+gamut's corner, the furthest that hue reaches from the amber. A tritanope has no yellow:
+that eye sees the lime 2.4 dE from the Directorate's console accent and the pair's yellow
+6.1 from Bathyarch's primary, and both as a pink, which is the lantern's.
+The lightest colour that holds both floors for that eye is a dark umber at a CIELAB
+lightness of 36, and none over 33 holds them by 3 dE. So tritanopia's is `#6A422A`, at a
+lightness of 32 under the lantern's 59, and the pair is told apart there by lightness, an orchid over an umber, and
+by form. It is drawn as it stands, a ninth as bright as the standard lime, which is what
+that costs.
+
+Its floor leaves out what the lantern's does. What that costs, each to the eye its
+palette serves: the tritanopia token stands 7.8 dE from `ore-trace`, 21.6 from that
+palette's `SIG mid` and 24.7 from its `crystal-seam`, and deuteranopia's 23.3 from its
+`SIG high`. Place and form hold
+those apart, as they do for the lantern: a trace lies on a nodule bed and a band is a
+meter's, and a comb jelly is an egg hanging in open water under 400 m. In the standard
+palette it stands 36.8 dE from Pelagia's accent, the hue of a Commune hull's searchlight
+motes; whether a comb jelly beside that beam reads as life or as lit water is the
+owner's glance.
+
+All three are placed by the fixture's authored loops and answer nothing a match does
+(rule 4). `LIFE_GLINT` and each palette's `lantern` and `comb` in
 `packages/frontend/src/game/palette.ts` transcribe them.
 
 **A vent's breath at High.** *In development with #1837 and #1853, and not accepted.*
@@ -877,9 +927,10 @@ bodies with at most six soft photophore dots each, bounded by rung 5. No lit ski
 halo, new ground-light family or response to a participant is licensed. Its other
 decorative animals carry no emission; this exception remains confined to the study. At
 High a schooling fry carries one point of world light, `life-glint`, a deep fish's
-seats carry that token in place of their dots, and a drifting
-jelly is drawn as a lantern, `jelly-lantern`, both above, the far bloom's 120 over the
-bowl among them (#1859).
+seats carry that token in place of their dots, a drifting
+jelly is drawn as a lantern, `jelly-lantern`, the far bloom's 120 over the
+bowl among them (#1859), and a comb jelly is drawn as eight seams of light,
+`comb-light` (#1858), all three above.
 
 ### Rule 5 in the colour-vision palettes
 

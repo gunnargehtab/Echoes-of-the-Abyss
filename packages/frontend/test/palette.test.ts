@@ -24,6 +24,7 @@ import { Biome, Faction, ResolutionTier, ResourceKind, TERRAIN_LIFT } from '@ech
 import {
   BIOME_COLOR,
   depthShade,
+  COMB_LIGHT,
   JELLY_LANTERN,
   PALETTE_LABEL,
   PALETTE_NAMES,
@@ -331,6 +332,7 @@ describe('the palette tables', () => {
         ['crystal', p.resource[ResourceKind.ResonanceCrystal]],
         ['fauna', p.fauna],
         ['lantern', p.lantern],
+        ['comb', p.comb],
         ...Object.entries(p.worldLight).map(([k, v]): [string, number] => [`worldLight.${k}`, v]),
         ...Object.entries(p.ui).map(([k, v]): [string, number] => [`ui.${k}`, v]),
       ];
@@ -410,23 +412,24 @@ describe('what each palette is for', () => {
   const LANTERN_FLOOR = 25;
   /** `neon-violet`, docs/style-neon-noir.md: the Mouth's, drawn by the menu's CSS token. */
   const NEON_VIOLET = 0x8b5cf6;
+  /** The inks life's own light stands clear of: a palette's agents, tiers and neons. */
+  const agentsOf = (p: Palette): Array<[string, number]> => [
+    ...FACTIONS.flatMap((f): Array<[string, number]> => [
+      [`${FACTION_NAME[f]} primary`, p.faction[f].primary],
+      [`${FACTION_NAME[f]} accent`, p.faction[f].accent],
+      [`${FACTION_NAME[f]} glow`, p.faction[f].glow],
+      [`${FACTION_NAME[f]} console accent`, p.faction[f].consoleAccent],
+    ]),
+    ...TIERS.map((t): [string, number] => [`tier ${t}`, p.tier[t].color]),
+    ['neon magenta', p.ui.glassStroke],
+    ['neon cyan', p.ui.accent],
+    ['neon violet', NEON_VIOLET],
+  ];
   for (const name of PALETTE_NAMES) {
     const kind = FOR[name];
     it(`${name}: a jelly's lantern is no navy's, no contact's and no neon under ${kind}`, () => {
       const p = PALETTES[name];
-      const agents: Array<[string, number]> = [
-        ...FACTIONS.flatMap((f): Array<[string, number]> => [
-          [`${FACTION_NAME[f]} primary`, p.faction[f].primary],
-          [`${FACTION_NAME[f]} accent`, p.faction[f].accent],
-          [`${FACTION_NAME[f]} glow`, p.faction[f].glow],
-          [`${FACTION_NAME[f]} console accent`, p.faction[f].consoleAccent],
-        ]),
-        ...TIERS.map((t): [string, number] => [`tier ${t}`, p.tier[t].color]),
-        ['neon magenta', p.ui.glassStroke],
-        ['neon cyan', p.ui.accent],
-        ['neon violet', NEON_VIOLET],
-      ];
-      for (const [what, ink] of agents) {
+      for (const [what, ink] of agentsOf(p)) {
         const d = deltaE(p.lantern, ink, kind);
         assert.ok(
           d >= LANTERN_FLOOR,
@@ -460,6 +463,46 @@ describe('what each palette is for', () => {
     assert.ok(deltaE(FIRST_CUT, bearing, 'deuteranopia') < 5);
     const pelagia = PALETTES.protanopia.faction[Faction.Pelagia].primary;
     assert.ok(deltaE(FIRST_CUT, pelagia, 'protanopia') < 10);
+  });
+
+  // docs/style-neon-noir.md, "Life's own light at High": the comb jelly's
+  // token is the second hue of the crater's life, so a hue tells depth
+  // (#1858). It keeps the lantern's floor from the same inks, and stands as
+  // far from its own palette's lantern, to the eye that palette serves.
+  for (const name of PALETTE_NAMES) {
+    const kind = FOR[name];
+    it(`${name}: a comb jelly's light is no navy's, no contact's, no neon and no lantern under ${kind}`, () => {
+      const p = PALETTES[name];
+      for (const [what, ink] of [...agentsOf(p), ['the lantern', p.lantern] as [string, number]]) {
+        const d = deltaE(p.comb, ink, kind);
+        assert.ok(
+          d >= LANTERN_FLOOR,
+          `${name}: the comb light is ${d.toFixed(1)} dE from ${what} under ${kind}, needs ${LANTERN_FLOOR}`
+        );
+      }
+    });
+  }
+
+  it('the comb light is a palette’s own: the standard lime is Bathyarch’s amber to a red-green eye, and a pink to a tritanope', () => {
+    // Why one lime cannot serve: the measurements that refuse it.
+    const LIME = PALETTES.standard.comb;
+    for (const name of ['deuteranopia', 'protanopia'] as const) {
+      const amber = PALETTES[name].faction[Faction.Bathyarch].primary;
+      assert.ok(deltaE(LIME, amber, name) < LANTERN_FLOOR, `${name} tells the lime from amber`);
+    }
+    // The pair shares one yellow, as it shares its world-light tokens.
+    assert.equal(PALETTES.deuteranopia.comb, PALETTES.protanopia.comb);
+    // A tritanope has no yellow: the lime and the pair's yellow both fall on
+    // an ink of that palette, so its token is dark and tells by lightness.
+    const p = PALETTES.tritanopia;
+    for (const yellow of [LIME, PALETTES.deuteranopia.comb]) {
+      const nearest = Math.min(...agentsOf(p).map(([, ink]) => deltaE(yellow, ink, 'tritanopia')));
+      assert.ok(
+        nearest < 10,
+        `a tritanope sees ${yellow.toString(16)} ${nearest.toFixed(1)} dE off an ink`
+      );
+    }
+    assert.ok(lightness(p.lantern, 'tritanopia') - lightness(p.comb, 'tritanopia') > 20);
   });
 
   // docs/style-neon-noir.md, "Rule 5 in the colour-vision palettes" (#1854):
@@ -709,6 +752,7 @@ describe('the active palette', () => {
       assert.equal(sigColor(90), PALETTES.tritanopia.ui.sigHigh);
       assert.equal(sigColor(10), PALETTES.tritanopia.ui.sigLow);
       assert.equal(JELLY_LANTERN, PALETTES.tritanopia.lantern);
+      assert.equal(COMB_LIGHT, PALETTES.tritanopia.comb);
       setActivePalette('protanopia');
       assert.equal(WORLD_LIGHT, PALETTES.protanopia.worldLight);
       assert.notEqual(WORLD_LIGHT.vent, PALETTES.standard.worldLight.vent);
@@ -717,6 +761,7 @@ describe('the active palette', () => {
     }
     assert.equal(WORLD_LIGHT, PALETTES.standard.worldLight);
     assert.equal(JELLY_LANTERN, PALETTES.standard.lantern);
+    assert.equal(COMB_LIGHT, PALETTES.standard.comb);
     assert.equal(UI.sigMid, PALETTES.standard.ui.sigMid);
     assert.equal(sigColor(90), PALETTES.standard.ui.sigHigh);
   });

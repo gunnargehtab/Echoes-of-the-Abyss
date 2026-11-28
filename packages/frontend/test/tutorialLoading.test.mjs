@@ -208,6 +208,7 @@ describe('pending prop delivery', () => {
       photophoreLights: 0,
       jellyLights: 0,
       farLanterns: 0,
+      combLights: 0,
       fixtureAssets: {},
     });
     assert.equal(disposed, 0, 'a match must not dispose the page-owned surface texture');
@@ -464,7 +465,8 @@ describe('roster look and palette cache isolation', () => {
 describe('a body’s own light at High (#1837)', () => {
   // A seat is a node its file names, so the two bodies that carry seats are
   // served as their real files and every other load as the stub.
-  const SEATED = ['env-deep-fish', 'env-drift-jelly'];
+  // The comb jelly's rows are nodes its file names too (#1858).
+  const SEATED = ['env-deep-fish', 'env-drift-jelly', 'env-comb-jelly'];
   const real = (slug) => {
     const bytes = readFileSync(
       new URL(`../../../docs/concept-art/models/${slug}.glb`, import.meta.url)
@@ -509,6 +511,8 @@ describe('a body’s own light at High (#1837)', () => {
       assert.equal(low.jellyLights, 0);
       assert.equal(low.farLanterns, 0);
       assert.equal(count('env-drift-jelly'), 0);
+      assert.equal(low.combLights, 0);
+      assert.equal(count('env-comb-jelly'), 0);
 
       layer.setWorldPass(true);
       layer.rebuild(cells, () => -132);
@@ -520,7 +524,8 @@ describe('a body’s own light at High (#1837)', () => {
           count('env-drift-jelly') === jellies &&
           count('env-shoal-fry') > low.fixtureAssets['env-shoal-fry'] &&
           layer.stats().lifeGlints > 0 &&
-          layer.stats().jellyLights > 0
+          layer.stats().jellyLights > 0 &&
+          layer.stats().combLights > 0
       );
       layer.tick(0, undefined, 2000);
       const high = layer.stats();
@@ -574,9 +579,42 @@ describe('a body’s own light at High (#1837)', () => {
       assert.equal(layer.lantern.count, high.jellyLights);
       assert.deepEqual(
         new Set(layer.group.children.filter((c) => c.isPoints && c.userData.worldLayer)),
-        new Set([layer.glow.points, layer.lantern.points, layer.smoke.points]),
-        'the fry’s cloud, the lantern’s and the vent’s smoke, and no cloud of the river’s own'
+        new Set([layer.glow.points, layer.lantern.points, layer.comb.points, layer.smoke.points]),
+        'the fry’s cloud, the lantern’s, the comb jelly’s and the vent’s smoke, and no cloud of the river’s own'
       );
+      // "A comb jelly is eight seams of light" (#1858): the glow round each
+      // body and the beads of its eight rows, in a cloud of its own token,
+      // and its file drawn as a membrane that names itself the world pass's.
+      const combs = FREE_WATER_HIGH_LIFE.COMBS.SLOTS.length;
+      assert.equal(count('env-comb-jelly'), combs);
+      assert.equal(high.combLights, combs * (1 + 8 * HIGH_GRAPHICS.LIFE.COMB.ROWS.BEADS));
+      assert.equal(layer.comb.count, high.combLights);
+      const eggs = layer.group.children.filter((c) => c.name === 'env-comb-jelly');
+      assert.equal(eggs.length, 2);
+      for (const egg of eggs) {
+        assert.match(egg.material.name, /^comb_/);
+        assert.equal(egg.userData.worldLayer, true);
+        assert.equal(egg.count, combs);
+      }
+      // Its waves run on the match's clock, and reduced motion holds them:
+      // a bead's level moves, and its place only as its body drifts.
+      const seams = () =>
+        Array.from(
+          layer.comb.points.geometry.getAttribute('aGlow').array.subarray(0, high.combLights * 2)
+        );
+      const seamsAt2s = seams();
+      layer.tick(0, undefined, 3100);
+      assert.notDeepEqual(seams(), seamsAt2s);
+      layer.setReducedMotion(true);
+      layer.tick(0, undefined, 2000);
+      const seamsHeld = seams();
+      layer.tick(0, undefined, 3100);
+      assert.deepEqual(seams(), seamsHeld);
+      // Width then level, a point: a held bead still gives its resting light.
+      assert.ok(seamsHeld.every((v) => v > 0));
+      layer.setReducedMotion(false);
+      layer.tick(0, undefined, 2000);
+      assert.deepEqual(seams(), seamsAt2s);
       // The five by the fleet take the whole wave of light and every lantern
       // after them the softer one: the membrane's program is told where the
       // river starts in its instances.
@@ -630,6 +668,10 @@ describe('a body’s own light at High (#1837)', () => {
       assert.equal(layer.stats().farLanterns, 0);
       assert.equal(layer.lantern.count, 0);
       assert.ok(!layer.group.children.includes(layer.lantern.points));
+      assert.equal(layer.stats().combLights, 0);
+      assert.equal(layer.comb.count, 0);
+      assert.ok(!layer.group.children.includes(layer.comb.points));
+      assert.equal(count('env-comb-jelly'), 0);
       assert.equal(count('env-drift-jelly'), 0);
       assert.equal(layer.stats().decorativePhotophores, low.decorativePhotophores);
     } finally {

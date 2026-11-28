@@ -89,8 +89,10 @@ import { setDistanceGradeOn } from './distanceGrade.ts';
 import { VentPlume, plumeSites, type PlumeSite } from './ventPlume.ts';
 import { LIFE_GLOW_KIND, LifeGlow } from './lifeGlow.ts';
 import { jellyWaveGain, tintJellyMembrane, writeJellyLights } from './jellyLight.ts';
+import { writeCombLights } from './combLight.ts';
 import {
   ACTIVE_PALETTE,
+  COMB_LIGHT,
   JELLY_LANTERN,
   WORLD_LIGHT,
   type PaletteName,
@@ -206,6 +208,13 @@ export class EnvironmentLayer {
    */
   readonly lantern = new LifeGlow(JELLY_LANTERN, 1, 'jelly_lantern');
   /**
+   * The points of light the crater's comb jellies carry at High, in their
+   * own token: the glow round each body and the beads of its eight comb rows
+   * (combLight.ts, #1858). One more draw in the world pass, in the group
+   * while the view draws one. A point's level is its own, so the cloud's is 1.
+   */
+  readonly comb = new LifeGlow(COMB_LIGHT, 1, 'comb_light');
+  /**
    * What a chimney breathes at High, one draw in the world pass, in place of
    * `plume`; in the group while a column stands and the view draws a world
    * pass (ventSmoke.ts, #1837; every map's chimneys since #1853).
@@ -218,6 +227,8 @@ export class EnvironmentLayer {
   private glintAt = new Float32Array(0);
   /** The same of each jelly's points, for `lantern`. */
   private lanternAt = new Float32Array(0);
+  /** And of each comb jelly's, for `comb`. */
+  private combAt = new Float32Array(0);
 
   /** Guards late template loads: a load that finishes after another rebuild
    * (new terrain, teardown) must not resurrect stale placements. */
@@ -552,10 +563,17 @@ export class EnvironmentLayer {
         },
         this.look,
         // A body in the world's light at High, and the jelly as a lantern.
-        // The manta as a smooth body whose wings stroke.
+        // The comb jelly as eight seams of light. The manta as a smooth body
+        // whose wings stroke.
         this.worldPass &&
           spec.life === true &&
-          (spec.glint === 'lantern' ? 'lantern' : spec.wing === true ? 'wing' : true)
+          (spec.glint === 'lantern'
+            ? 'lantern'
+            : spec.glint === 'comb'
+              ? 'comb'
+              : spec.wing === true
+                ? 'wing'
+                : true)
       );
       if (template === null) continue;
       this.license(spec.worldLight, template);
@@ -613,8 +631,8 @@ export class EnvironmentLayer {
       )
     );
     if (this.decorativeDots !== null) this.group.add(this.decorativeDots.points);
-    if (this.worldPass) this.group.add(this.glow.points, this.lantern.points);
-    else this.group.remove(this.glow.points, this.lantern.points);
+    if (this.worldPass) this.group.add(this.glow.points, this.lantern.points, this.comb.points);
+    else this.group.remove(this.glow.points, this.lantern.points, this.comb.points);
     this.tickFixture();
   }
 
@@ -645,6 +663,19 @@ export class EnvironmentLayer {
       this.lanternAt[lanterns * 5 + 3] = sizeM;
       this.lanternAt[lanterns * 5 + 4] = level;
       lanterns++;
+    };
+    // A comb jelly's are its own again, in the comb's cloud (#1858).
+    let combs = 0;
+    const combLight = (at: Vector3, sizeM: number, level: number) => {
+      if (this.combAt.length < (combs + 1) * 5) {
+        const grown = new Float32Array(Math.max(512, (combs + 1) * 2) * 5);
+        grown.set(this.combAt);
+        this.combAt = grown;
+      }
+      at.toArray(this.combAt, combs * 5);
+      this.combAt[combs * 5 + 3] = sizeM;
+      this.combAt[combs * 5 + 4] = level;
+      combs++;
     };
     const timeS = this.matchMs / 1000;
     let glints = 0;
@@ -678,6 +709,12 @@ export class EnvironmentLayer {
         // The lantern's hue is the active palette's, read live as a mark's is.
         for (const part of template.parts) tintJellyMembrane(part.material, JELLY_LANTERN);
       }
+      if (template.comb !== undefined) {
+        template.comb.uniforms.uCombTime.value = timeS;
+        template.comb.uniforms.uCombMoves.value = this.reducedMotion ? 0 : 1;
+        // Its hue is the active palette's too, read live.
+        for (const part of template.parts) tintJellyMembrane(part.material, COMB_LIGHT);
+      }
       if (template.manta !== undefined) {
         template.manta.uniforms.uMantaTime.value = timeS;
         template.manta.uniforms.uMantaMoves.value = this.reducedMotion ? 0 : 1;
@@ -699,6 +736,21 @@ export class EnvironmentLayer {
             !this.reducedMotion,
             lantern,
             jellyWaveGain(p.far === true)
+          );
+          return;
+        }
+        if (carries === 'comb') {
+          // A comb jelly's rows are world light at High, and it stands at
+          // High alone: no point on a row of a body Low never draws.
+          if (!this.worldPass || template.comb === undefined) return;
+          writeCombLights(
+            template.combRows ?? [],
+            template.heightM,
+            TMP_MATRIX,
+            i,
+            timeS,
+            !this.reducedMotion,
+            combLight
           );
           return;
         }
@@ -742,6 +794,14 @@ export class EnvironmentLayer {
       for (let i = 0; i < lanterns; i++) {
         positions.set(hung.subarray(i * 5, i * 5 + 3), i * 3);
         glow.set(hung.subarray(i * 5 + 3, i * 5 + 5), i * 2);
+      }
+    });
+    this.comb.setToken(COMB_LIGHT, 1);
+    const seams = this.combAt;
+    this.comb.write(combs, (positions, glow) => {
+      for (let i = 0; i < combs; i++) {
+        positions.set(seams.subarray(i * 5, i * 5 + 3), i * 3);
+        glow.set(seams.subarray(i * 5 + 3, i * 5 + 5), i * 2);
       }
     });
     this.decorativeDots?.write(points.length, (anchor, dot, seed) => {
@@ -995,6 +1055,7 @@ export class EnvironmentLayer {
     photophoreLights: number;
     jellyLights: number;
     farLanterns: number;
+    combLights: number;
     fixtureAssets: Record<string, number>;
   } {
     return {
@@ -1018,6 +1079,8 @@ export class EnvironmentLayer {
           sum + batch.list.filter((p) => p.far === true && p.disabled !== true).length,
         0
       ),
+      // The glow round each comb jelly and its rows' beads (#1858).
+      combLights: this.comb.count,
       fixtureAssets: Object.fromEntries(
         [...this.fixtureBatches].map(([slug, batch]) => [
           slug,
@@ -1141,6 +1204,7 @@ export class EnvironmentLayer {
     this.cloud.dispose();
     this.glow.dispose();
     this.lantern.dispose();
+    this.comb.dispose();
     this.decorativeDots?.dispose();
   }
 
@@ -1176,5 +1240,6 @@ export class EnvironmentLayer {
     this.glow.write(0, () => {});
     this.seatLights = 0;
     this.lantern.write(0, () => {});
+    this.comb.write(0, () => {});
   }
 }

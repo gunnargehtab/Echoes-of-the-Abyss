@@ -1082,6 +1082,104 @@ crater at High, none at Low, and holds it under reduced motion.
 Where the river runs, its count and its pace are
 [free-water-slice.md](free-water-slice.md) §5's.
 
+#### A comb jelly is eight seams of light
+
+*In development with the rest of High, and not accepted
+([#1858](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1858);
+[issue-1858](screenshots/issue-1858/README.md#the-deep-body)). The owner commissioned the
+body and its hue in session on 27 November 2026. Every number is TUNABLE in
+`FREE_WATER_HIGH_LIFE.COMBS` and `HIGH_GRAPHICS.LIFE.COMB`
+(`packages/shared/src/constants.ts`) until a frame of it is accepted.*
+
+The crater's life tells depth by band
+([free-water-slice.md](free-water-slice.md) §5, "Life by depth band"), and a band is told
+by what lives in it. Over the Shelf's 400 m line that is the lantern. Under it is
+`env-comb-jelly`, the deep body: light as the lantern is, and its opposite in every line
+a glance takes.
+
+- **It is an upright egg, and no bell.** Three forms were written for the owner. **A
+  crown jelly**, a flat disc with a ring of level arms, is nearest the target's jellies,
+  and a dome over a rim is the Tetherjelly stipple's own figure. **A siphonophore**, a
+  hanging chain of bells, is no bell at all, and a dotted line of light in the water can
+  read as a tether or a track. **A comb jelly** is taken: taller than it is wide where
+  the lantern is twice as wide as tall, closed everywhere, with nothing under it and
+  nothing that trails.
+- **Its skin is a membrane, a fainter one.** Each face adds its light to what is behind
+  it and hides nothing, both sides drawn, brightest at the edge, as the lantern's bell
+  is ([A jelly is a lantern](#a-jelly-is-a-lantern)), at under half the bell's levels.
+  It reads by its outline. The file emits nothing and is flat-shaded stone at intake;
+  the renderer gives the skin one normal a vertex.
+- **Its eight comb rows are the light.** The file marks each as a dark ridge down one
+  meridian, 45 degrees from the next. At High a ridge is the same membrane at eight
+  times the skin's level, and eight points of the world pass stand evenly along it,
+  each never narrower than its floor: a comb plate is 0.41 m across at its widest and
+  0.13 m tall, two or three pixels from the Close eye's nearest and under one from
+  Home's, and a seam of beads still reads there. One soft disc 9 m
+  across is the glow in the water round the body. The body is a membrane, so the far
+  rows show through the near skin, and an eye sees all eight.
+- **Its light is a token of its own, `comb-light`, and a palette's**
+  ([style-neon-noir.md](style-neon-noir.md#world-light--the-terrain-carve-outs)): a
+  sulphur lime in the standard palette, the second hue of the crater's life, so a hue
+  tells depth. The owner took the lime over the target's blue, which is the contact
+  tiers' family. It keeps the lantern's floor, 25 dE from every navy's inks, every
+  contact tier, both chrome neons and `neon-violet`, and stands as far from its own
+  palette's lantern, to the eye that palette serves. All four hold it. A comb jelly
+  follows a palette changed mid-match.
+- **One thing moves, and for nothing** (limit 4). A comb jelly swims by the beating of
+  its comb plates, in waves, and the waves are what catch light. Crests of light run
+  down the rows from the upper pole, 2.6 m apart, one passing a point every 4.5 s, each
+  adding 90% to what it passes. Each body's clock runs 5.25 s ahead of the last's,
+  which spreads the six evenly through a period, 0.75 s apart. It does not stroke: the
+  body keeps its shape, which is one more thing between it and the lantern. No hull,
+  shot, ping or camera starts, hurries or brightens a crest, and reduced motion holds
+  it, every row at its resting level.
+- **It stands under the lanterns' level.** On the Close frame, held, the six read 98
+  to 133 of 255 at their brightest pixel against open water, from 238 to 522 m, and 147
+  where one stands before the vent's light. The five lanterns read 150 to 214 in the
+  same frame, read the same way. From Home's eye the six read 73 to 95, and the
+  lanterns 105 to 140 clear of the vent's light: a comb jelly there is an olive fleck 7
+  to 9 px tall, found by its hue and not by its light. The first cut stood a row's
+  ridge at 0.2 and a bead at 0.24, and its nearest body read 181, level with a lantern
+  and yellow where the curve clipped its red and green together; at half that it is a
+  lime. The held frames show no crest, which adds 90% as it passes. Those are a software
+  rasteriser's readings ([issue-1858](screenshots/issue-1858/README.md#the-deep-body)),
+  and whether a body this dim tells depth from Home is the owner's glance on the named
+  GPU.
+- **It is not the lantern, and not the Tetherjelly's figure.** A field's stipple bell is
+  a dome over a rim with trailing tentacles ([map-visuals.md](map-visuals.md) §8), and
+  the lantern stands nearer that figure than any body here
+  ([A jelly is a lantern](#a-jelly-is-a-lantern)). The comb jelly has no dome, no rim
+  and nothing that trails: a closed egg 1.42 times as tall as it is wide, lit along
+  eight meridians, a twelfth as wide as a stipple bell, in a hue that is neither the
+  fauna colour nor the lantern's. No view of it is an open bell's crescent.
+- **Low draws none of it, and no mark, lamp or halo is touched.** A comb jelly is not
+  stood at Low, and nothing reads its file there. Its mouth, a dark band under the egg
+  in the rows' material, is left undrawn at High: light cannot draw dark.
+
+`packages/frontend/test/combLight.test.ts` holds the two templates apart, the membrane's
+blend and pass, the patch's anchors, the rows read off the file, the points a body
+hangs and what reduced motion holds. `packages/frontend/test/palette.test.ts` holds the
+token's floors in all four palettes, `packages/frontend/test/freeWaterDecoration.test.ts`
+each body under the line all lap, and `packages/frontend/test/tutorialLoading.test.mjs`
+counts them in the crater at High and none at Low.
+
+| What | Constant | Value |
+| --- | --- | --- |
+| Light a face of the skin square to the eye gives, in the renderer's linear units | `LIFE.COMB.SKIN.LEVEL` | 0.012 |
+| What a face edge-on adds | `LIFE.COMB.SKIN.RIM` | 0.07 |
+| How fast that falls toward the face: the exponent on one less the cosine | `LIFE.COMB.SKIN.RIM_POWER` | 2.2 |
+| Light a comb row's ridge gives | `LIFE.COMB.ROWS.LEVEL` | 0.1 |
+| Points of light a row | `LIFE.COMB.ROWS.BEADS` | 8 |
+| Width of one, metres | `LIFE.COMB.ROWS.SIZE_M` | 0.34 |
+| Its light at its centre, at rest | `LIFE.COMB.ROWS.BEAD` | 0.12 |
+| Width of the glow round the body, metres | `LIFE.COMB.HALO.SIZE_M` | 9 |
+| That glow at its centre | `LIFE.COMB.HALO.LEVEL` | 0.014 |
+| Metres between two crests of light on a row | `LIFE.COMB.WAVE.LENGTH_M` | 2.6 |
+| Seconds between two crests passing a point | `LIFE.COMB.WAVE.PERIOD_S` | 4.5 |
+| How narrow a crest is: the exponent on its raised cosine | `LIFE.COMB.WAVE.SHARP` | 3 |
+| What a crest adds, as a share of the light it passes | `LIFE.COMB.WAVE.GAIN` | 0.9 |
+| Seconds one body's clock runs ahead of the last's | `LIFE.COMB.STAGGER_S` | 5.25 |
+
 #### A manta shows its belly
 
 *Accepted on 24 November 2026, by the owner in session, on the named GPU's Close frame

@@ -52,6 +52,9 @@ that adds its light, blended and still the world pass's, over beads of light hun
 its lip. The far bloom over the crater's bowl is 120 more of that jelly (#1859), the last
 slots of High's list on the fixture's one elliptical loop: no draw of its own, and a
 softer wave of light, told to the membrane by where the river starts in its instances.
+A comb jelly is the deep body, under 400 m (#1858, `combLight.ts`): a fainter membrane in
+a second token, `comb-light`, whose eight comb rows its file marks are the light, as
+ridges and as points hung along them in a cloud of their own, one more draw.
 The manta is a lit body with three things more (#1867, `mantaWing.ts`): its skin is
 smoothed across its belly and back, its wings stroke in the vertex program, and a face
 that looks down takes the Lid's glow through the body by its thickness there. A

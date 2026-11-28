@@ -1,0 +1,66 @@
+[
+  {
+    "name": "close",
+    "quality": "high",
+    "pose": [
+      542,
+      1958,
+      420,
+      -60,
+      2,
+      300
+    ],
+    "probe": {
+      "eye": {
+        "xM": 179,
+        "zM": 2168,
+        "depthM": 238
+      },
+      "focus": {
+        "xM": 542,
+        "zM": 1958,
+        "depthM": 300
+      },
+      "yawDeg": 300,
+      "pitchDeg": 2,
+      "life": {
+        "combs": 6,
+        "combLights": 390,
+        "jellyLights": 41375,
+        "farLanterns": 120
+      }
+    }
+  },
+  {
+    "name": "home",
+    "quality": "high",
+    "pose": [
+      709,
+      1710,
+      1200,
+      -34,
+      15,
+      300
+    ],
+    "probe": {
+      "eye": {
+        "xM": 60,
+        "zM": 2671,
+        "depthM": -1100
+      },
+      "focus": {
+        "xM": 709,
+        "zM": 1710,
+        "depthM": 300
+      },
+      "yawDeg": 326,
+      "pitchDeg": 15,
+      "life": {
+        "combs": 6,
+        "combLights": 390,
+        "jellyLights": 41375,
+        "farLanterns": 120
+      }
+    }
+  }
+]

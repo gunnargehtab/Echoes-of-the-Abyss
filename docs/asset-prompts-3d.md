@@ -21,10 +21,11 @@ generated from this kit is:
 Nothing here weakens the Asymmetric Fidelity Law: full-detail unit and structure models
 describe *own-force* rendering only, and no prompt in this kit generates fauna — animals
 are contacts, drawn at earned fidelity, never world meshes
-([bestiary.md](bestiary.md) §3) — but for the seven public decorative bodies Block 4's
+([bestiary.md](bestiary.md) §3) — but for the eight public decorative bodies Block 4's
 public-microfauna variant scopes under that section's own licence (#1711, #1777 for
-the one large body, #1837 for the one drifting body and #1867 for the manta the High
-graphics quality alone stands), environment geometry that is no animal of the roster.
+the one large body, #1837 for the one drifting body, #1867 for the manta the High
+graphics quality alone stands and #1858 for the comb jelly it stands under 400 m),
+environment geometry that is no animal of the roster.
 
 ## Workflow rules
 
@@ -43,8 +44,8 @@ graphics quality alone stands), environment geometry that is no animal of the ro
    `env-rim-ray` (#1777) on 6 November. From 12 November shape work ran on Fable 5.2,
    because `hull-designer` named the `fable` alias, which follows the newest Fable. Its new
    models are `env-drift-jelly` (#1837) and `env-rim-manta` (#1867), the manta accepted
-   by the owner on 24 November, and `caisson-bathyarch`, rebuilt to its block on
-   26 November (#1956). The owner kept the switch on 25 November 2026 (#1951)
+   by the owner on 24 November, `caisson-bathyarch`, rebuilt to its block on
+   26 November (#1956), and `env-comb-jelly` (#1858), authored on 27 November. The owner kept the switch on 25 November 2026 (#1951)
    rather than make a second one back, and `hull-designer` now pins `claude-fable-5-2`,
    so a release cannot move the series unseen. A later Fable is a decision written here
    first.
@@ -1917,27 +1918,30 @@ surface — this stands on the seabed, deep underwater.
 ```
 
 ```text
-ENV STYLE, public-microfauna variant (for exactly seven models of the
+ENV STYLE, public-microfauna variant (for exactly eight models of the
 "Echoes of the Abyss" environment set, the decorative bodies
 docs/free-water-slice.md section 5 commissions: env-rim-crab,
 env-shoal-fry, env-outer-fish, env-deep-fish, the one large body,
-env-rim-ray, the one drifting body, env-drift-jelly, and the one body
-the High graphics quality alone stands, env-rim-manta): everything in
-ENV STYLE holds — no faction, nothing manufactured, desaturated dark
-low-luminance materials, at most two, crisp low-poly facets, no lights
-and no emissive — with two lines changed. The natural form is a living
+env-rim-ray, the one drifting body, env-drift-jelly, the one body
+the High graphics quality alone stands, env-rim-manta, and the one deep
+body, env-comb-jelly): everything in ENV STYLE holds — no faction,
+nothing manufactured, desaturated dark low-luminance materials, at most
+two, crisp low-poly facets, no lights and no emissive — with two lines
+changed. The natural form is a living
 body rather than stone, coral, kelp or crystal: a crab standing on its
 own legs on the seabed, a fish in one still swimming pose, or a medusa
-hanging in one still pose, with nothing under it — no base, no rock, no
-stand, no water. "This stands on the seabed" holds for the crab alone;
-the five swimmers and the medusa hang free in the column, built with
-their lowest vertex on the ground plane like every prop, and the runtime
-hangs each at an authored depth. Decoration, not an animal of the
-bestiary: no silhouette borrowed from a classified predator — nothing
-coiled to strike, no pack hunter's jaw, no colossus — no eye that glows,
-no lure, no lit skin, no photophore in the file; the deep fish and the
+or a comb jelly hanging in one still pose, with nothing under it — no
+base, no rock, no stand, no water. "This stands on the seabed" holds for
+the crab alone; the five swimmers, the medusa and the comb jelly hang
+free in the column, built with their lowest vertex on the ground plane
+like every prop, and the runtime hangs each at an authored depth.
+Decoration, not an animal of the bestiary: no silhouette borrowed from
+a classified predator — nothing coiled to strike, no pack hunter's jaw,
+no colossus — no eye that glows, no lure, no lit skin, no photophore in
+the file; the deep fish and the
 drift jelly each mark six photophore seats as dark facets and the
-runtime lights them. The one large body, the rim ray, is held to every
+runtime lights them, as it does the comb jelly's eight comb rows, dark
+ridges in its file. The one large body, the rim ray, is held to every
 line above at 18 m of span: a grazer of the water and not a hunter — a
 broad blunt head, two short cephalic lobes, wings swept back to rounded
 tips, a short whip tail, no jaw, nothing swept to a point, no armour —
@@ -1977,7 +1981,24 @@ every prop's is, but in fine facets with no corner pushed where every
 other body's are few and crisp, so that the runtime may draw the skin
 with one normal a vertex. No tooth, no jaw, no spine
 or barb on the tail, no armour, no photophore seat, and nothing of the
-colossus, under a third of the smallest Sounder.
+colossus, under a third of the smallest Sounder. The one deep body, the
+comb jelly, is held to every line above at 3.5 m across and about 5 m
+tall: one solitary comb jelly hanging upright, and neither the drift
+jelly's lantern nor the Tetherjelly's dome over a rim — an egg about
+1.4 times as tall as it is wide, its blunt end up and its widest a
+little over its middle, closed everywhere, its skin sixteen flat gores
+from pole to pole; eight comb rows down the middle of every other gore,
+45 degrees apart, from near its upper pole to about four fifths of the
+way down, each a ladder of short dark plates lying across its row and
+raised a few centimetres proud of the skin, widest at the egg's widest
+and dying away toward the mouth, the last fifth of the egg bare; a
+shallow dimple at the upper pole where the rows close; a small flat
+under the lower pole with a dark mouth slot across it, a band and no
+opening. No bell, no margin, no lip, nothing under it, and nothing that
+trails: no tentacle, arm, strand or streamer of any length; no open
+hollow, so no view of it shows a bell's crescent; no photophore seat,
+its comb rows being what the runtime lights; and regular enough about
+its own vertical axis that a slow turn about it reads as drifting.
 ```
 
 The variant is the scoped amendment [free-water-slice.md](free-water-slice.md) §5 asks of
@@ -2011,11 +2032,17 @@ skin is smooth". So does a third, which is the runtime's: at the High
 graphics quality the belly is lifted to a register of its own, over a body's and over a
 vessel's cladding ([art-direction.md](art-direction.md#a-manta-shows-its-belly)), so
 of this block's checklist the manta's belly does not answer "darker and quieter than any
-vessel", and whether it may not is the owner's glance at the frame. The variant
-covers those seven slugs and nothing else — no other floating prop, no
+vessel", and whether it may not is the owner's glance at the frame. The
+eighth is the comb jelly (#1858), the one deep body, which the owner commissioned in
+session on 27 November 2026 for the water under 400 m at the High graphics quality: "a
+comb jelly, an upright egg with eight lit comb rows and no strands". Its clause draws it
+away from the lantern in every line, tall where the lantern is wide, closed and bare
+where the lantern has a margin and a core, and with nothing for the runtime to hang a
+strand from. The variant
+covers those eight slugs and nothing else — no other floating prop, no
 gameplay fauna — and the rest of ENV STYLE
-binds them as it binds a crag. All seven rows carry Light `none`, the deep fish and the
-drift jelly included. The deep fish's
+binds them as it binds a crag. All eight rows carry Light `none`, the deep fish, the
+drift jelly and the comb jelly included. The deep fish's
 photophores are the runtime's, at most six soft rung-5 dots on the public-life channel
 ([style-neon-noir.md](style-neon-noir.md) "World light") or, at the High graphics quality,
 six points of world light, and its file marks where they sit
@@ -2025,20 +2052,23 @@ owner's call, 3 November 2026). The drift jelly's file marks six the same way, u
 same names, evenly round its bell's margin, in its second material and not the bell's
 own, for the runtime to light at the High graphics quality; what light a seat takes
 there, and what the runtime hangs from the margin, is the runtime's and
-[art-direction.md](art-direction.md)'s to say, and nothing in the file. The swimmers and
-the medusa are built as every prop is, lowest vertex on
+[art-direction.md](art-direction.md)'s to say, and nothing in the file. The comb jelly's
+file marks no seat: its eight comb rows are eight named nodes, `comb_01`..`_08`, dark
+ridges in its second material, and the runtime reads each row's line off its node and
+lights it at the High graphics quality. The swimmers, the medusa and the comb jelly are
+built as every prop is, lowest vertex on
 y = 0 (`seabed.mjs` `stand`), and the fixture hangs each at its listed depth; nothing in
 the file says where in the column it belongs (the owner's call of 3 November 2026 too). Their
 footprint is the body's length, the slice's canonical size; the crab's is its spread
-across the legs, the ray's and the manta's their wingspan, and the jelly's the width of
-its bell across its margin.
+across the legs, the ray's and the manta's their wingspan, the jelly's the width of
+its bell across its margin, and the comb jelly's the width of its egg across its girdle.
 
 The prop table — one row per asset, with the numbers intake and the registry check.
 `Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`) and the
 runtime draws at, taken over the parts' own boxes rather than their vertices (#876);
 `Height` is the vertical silhouette the 55° camera actually reads, by intake's measure
 (`sizeM.height`) at the row's footprint — a single figure is the approved model's to the
-metre (to the centimetre for the seven decorative bodies), a range the band a generated one lands in; `Tris` is the per-instance budget;
+metre (to the centimetre for the eight decorative bodies), a range the band a generated one lands in; `Tris` is the per-instance budget;
 `Light` names the licensed world-light family, `none` meaning any emissive fails intake:
 
 | Biome | Slug | Footprint | Height | Tris | Light |
@@ -2065,6 +2095,7 @@ metre (to the centimetre for the seven decorative bodies), a range the band a ge
 | Crater rim approach, suspended | `env-rim-ray` | 18 m | 4.05 m | ≤ 800 | none |
 | Crater open water, suspended | `env-drift-jelly` | 6 m | 4.11 m | ≤ 700 | none |
 | Crater rim approach, suspended, High alone | `env-rim-manta` | 18 m | 2.04 m | ≤ 4,000 | none |
+| Crater rim, suspended under 400 m, High alone | `env-comb-jelly` | 3.5 m | 5.00 m | ≤ 700 | none |
 
 Four heights moved to their approved models (#879): the trench slab from 10 m, the
 resonance pylon from 25 m, the dome shard from 20 m to 14 m and the coral growth from
@@ -2112,14 +2143,17 @@ authored list places it; intake takes `--max-tris 9000` for this row, over its d
 decorative bodies [free-water-slice.md](free-water-slice.md) §5 commissions for the crater
 fixture (#1711), `env-rim-ray` the fifth, the one large body #1777 adds for the
 opening frame, `env-drift-jelly` the sixth, the one drifting body #1837 adds for the
-High graphics quality's life, and `env-rim-manta` the seventh, the manta #1867 adds for
-the same quality's Close camera, under the variant above and nothing else; the Footprint
+High graphics quality's life, `env-rim-manta` the seventh, the manta #1867 adds for
+the same quality's Close camera, and `env-comb-jelly` the eighth, the one deep
+body that #1858 adds for the same quality's water under 400 m, under the variant above
+and nothing else; the Footprint
 column is the slice's canonical size for each, the crab's its spread across the legs, a
-fish's its length, the ray's and the manta's their wingspan and the jelly's the width of
-its bell, every row's Light is `none`, and their Height is the file's to the centimetre.
-All seven are one grammar in `seabed.mjs` ("The microfauna"): a body is a `shaft`, a closed
-run of corner rings whose band quads are cut on mirrored diagonals, and on six of the
-seven each corner is pushed and slipped a little by a seeded stream, so the skin is crisp
+fish's its length, the ray's and the manta's their wingspan, the jelly's the width of
+its bell and the comb jelly's the width of its egg, every row's Light is `none`, and
+their Height is the file's to the centimetre.
+All eight are one grammar in `seabed.mjs` ("The microfauna"): a body is a `shaft`, a closed
+run of corner rings whose band quads are cut on mirrored diagonals, and on seven of the
+eight each corner is pushed and slipped a little by a seeded stream, so the skin is crisp
 facets and not a lathe. The manta's corners are not pushed: its skin is fine facets for
 the runtime to smooth (its own paragraphs, below). Everything flat on a body is a `blade`, a thin closed slab on a convex outline,
 rooted through the skin the way the kelp stand's fronds root through their stalk — a
@@ -2142,12 +2176,20 @@ its own, and it adds the two things its belly asks: its closed skin goes out as 
 meshes, the bottom facets and the top (`cleave`), and its marks are flat outlines thrown
 onto the belly's facets and cut along every facet edge they cross (`drape`), where a
 `seat` is one lozenge on one quad.
-Every one of the seven is authored as a seeded formula in its script with no export behind
+The comb jelly is the shaft stood on end once more, an egg whose last fan turns down
+into a dimple, so it is the third skin stitched by its rings' order and held closed and
+facing out; and it adds the one noun its rows ask, a `comb`: a run of low pyramids on
+rectangles down one line of a skin, each sunk under the skin at its rim and proud of it
+at its apex, open underneath as a `lens` is, and each its own mirror about the plane of
+the line it stands on.
+Every one of the eight is authored as a seeded formula in its script with no export behind
 it, as the nodule bed and the kelp stand are. Three tokens were added for the kit,
 `carapace`, `fish-flank` and, for the manta's underside alone, `fish-belly`
 ([style-neon-noir.md](style-neon-noir.md) "The props"); the second material on each of
 the first six is `stone_dark`. The jelly adds no third: its bell wears `fish-flank` and
 the rest of it `stone_dark`. The manta wears no stone: `fish-belly` under `fish-flank`.
+The comb jelly wears the jelly's pair: `fish-flank` on its skin, `stone_dark` on its
+comb rows and its mouth.
 
 `env-rim-crab` is the one that stands. A shell of three ten-cornered rings stood on end —
 0.73 m long by 0.97 m across at its widest in the file, wider across than long, knuckled by
@@ -2402,6 +2444,93 @@ the pelvic fins two dark tabs at the tail's root; and the light behind the body.
 [art-direction.md](art-direction.md#a-manta-shows-its-belly)'s to say. Authored in
 `tools/hull-models/props/rim-manta.mjs`.
 
+`env-comb-jelly` is the one deep body, a solitary comb jelly hanging upright in the
+crater's open water under 400 m, and not the lantern. The drift jelly is a bell 0.45 as
+tall as it is wide over a flared margin, with a stalk and five lobes under it and six
+seats round its lip for the runtime to hang strands from. This is an egg 1.42 times as
+tall as it is wide, 4.98 m on 3.50, with one girdle and no margin, nothing under it and
+nothing that trails. It is not the Tetherjelly either, whose stipple figure is a dome
+over a rim with tentacles ([map-visuals.md](map-visuals.md) §8), and not the Hollow's
+open crescent: its skin is closed everywhere and its one concavity is a dimple 6 cm
+deep, so no view of it shows a bell's crescent.
+
+The skin is one `shaft` stood on end, nine sixteen-cornered rings, the corners 22.5°
+apart from 11.25° round from +x toward +z, so it is sixteen flat gores from pole to pole
+with the middle of one on every 22.5°. It is two half-ellipsoids on one girdle, the
+blunt half up. From the mouth: a flat under the egg at y 0.02, 0.40 m from the axis to
+its corners; rings at y 0.36–0.37 and 0.92 m, y 0.97–0.98 and 1.35–1.36 m and y
+1.70–1.71 and 1.63–1.64 m; the girdle at y 2.86–2.88 and 1.78 m to its corners, 1.75 m
+to a gore's middle, the widest ring and 0.57 of the way up; then y 3.64–3.65 and
+1.66–1.67 m, y 4.34–4.35 and 1.31–1.32 m and y 4.86–4.87 and 0.71 m to the dimple's rim
+at y 5.00 and 0.34 m, the top of the file, fanned in to the dimple's point on the axis at
+y 4.94. The four bands under the girdle look 55–57°, 35–36°, 20–22° and 7° below the
+level and the four over it 8–9°, 26–28°, 48–49° and 68–70° above it, so there is one
+girdle and nothing flares. Every corner but the girdle's is pushed by up to 0.4 % of its
+radius, 7 mm at the most, and every corner but the mouth's rim lifted by up to 4–8 mm,
+and no more: the runtime merges these facets' corners and draws the skin with one normal
+a vertex, and the file keeps its facets flat as every prop's are. The girdle's corners
+are not pushed, so the plan's box is the girdle's own, 3.500 m along x and across z, and
+the axis stands on the origin. It is wound by its rings' order, since the dimple's fan
+turns down and toward the axis, and held to a closed skin facing out. The flat under it
+is a fan of sixteen equal triangles from its own middle on the axis, and not a cap fanned
+from one corner, so the one normal a vertex the runtime takes comes out alike on every
+corner of the mouth's rim. 288 triangles, and 32.0 m³.
+
+The eight comb rows are `comb_01`..`_08` in `stone_dark`, eight nodes, each a ladder of
+twelve plates down the middle of every other gore. They stand on bearings 202.5°, 247.5°,
+292.5°, 337.5°, 22.5°, 67.5°, 112.5° and 157.5° from +x toward +z, 45° apart to the
+hundredth of a degree, in one continuous round, `_01`–`_04` on port (−z) and `_05`–`_08`
+on starboard. A row runs from y 4.953–4.957, 5 cm under the top of the file, down to y
+1.067–1.075, 0.79 of the way down the skin, and the last fifth of the egg is bare. A
+plate is a low four-sided pyramid on a rectangle lying across its gore, its rim sunk
+under the skin and its apex proud of it, open underneath as a fish's eye is. At the
+girdle the rectangle is 0.64 m across and 0.20 m down the row, sunk 2.5 cm, with its apex
+4.5 cm proud, so what shows is a rung 0.41 m across and 0.13 m long. A plate is as wide
+as its gore allows, and the rest of it shrinks toward the pole, where the rows close on
+each other; a row's last three plates are 0.86, 0.72 and 0.58 of their gore's share, so
+it dies away toward the mouth; and each is drawn ±6 % across and along from the script's
+seeded stream. In the file the rectangles are 0.18–0.66 m across and 0.12–0.21 m along,
+and the apexes stand 2.6–4.7 cm proud of the skin by its own triangles. The plates are
+0.387–0.395 m apart along a row, 1, 2, 2, 2, 3 and 2 of them on the six bands from the
+dimple's rim down: the rings were placed for that pitch, so no plate lies across a ring
+and each stands on one flat of the skin. A row's crest runs from 0.53 m out at y 4.96
+through 1.77 m at y 2.66–3.06 to 1.44 m at y 1.14, and neighbouring rows come no nearer
+than 0.165 m, at their heads. Every plate is its own mirror about its row's meridian
+plane, so the centroid of a row's vertices at every height lies in that plane, which is
+where the runtime reads the row's line. A plate is twelve vertices, and a row's plates
+are written from its head down. 48 triangles a row, 384 in all.
+
+The mouth is `mouth`, a lozenge of two triangles in `stone_dark`, 0.56 m along x and
+0.15 m across, facing down and lying 2 cm proud of the flat under the egg: a slot, a band
+and no opening. It is the lowest part of the file, on y = 0, and its ends point down two
+plain gores, with a row 22.5° either side. A comb jelly has no bow: the still pose is the
+hang, and a slow turn about the axis reads as drift, since the gores repeat every 45° and
+only the mouth's slot, the pushes and the plates' drawn sizes tell one eighth of a turn
+from the next.
+
+The script asserts the contract the runtime reads. The parts are `body`, the eight rows
+and `mouth`, in that order and nothing else, the skin in `fish_flank` and the rest in
+`stone_dark`; there is no `photophore_NN` node and no emissive. The skin is closed and
+faces out, the axis stands within a millimetre of the origin, and the lowest vertex is
+the mouth's, on y = 0. The rings widen from the mouth's rim to one girdle and narrow from
+it, every facet under the girdle looks below the level and every facet over it above,
+the skin is at least 1.35 times as tall as it is wide, and the dimple's point stands no
+more than 10 cm under its rim. Every plate's rim is inside the closed skin and its apex
+2 cm or more proud of it. Each row is 48 triangles, bears within a degree of its 45°
+step, four a side, starts within 0.3 m of the top and ends 0.77 to 0.83 of the way down;
+the centroid of its vertices at every height lies within a millimetre of its meridian
+plane; no row stands within 5 cm of its neighbour; and no row's box stands past the
+skin's. Nothing hangs under the skin but the mouth's 2 cm.
+
+`fish_flank` on the skin, `stone_dark` on the comb rows and the mouth; 674 triangles;
+5.00 m tall (5.0037) at its 3.5 m, 3.500 m along x and across z, which is the skin's own
+box; no vertex stands more than 1.784 m from the origin, so turned to any heading the
+body keeps inside a circle 3.57 m across; the skin's mid-height, half way from its lowest
+vertex to its highest, is y 2.512. The sweep lists the eight rows against the skin and
+nothing else. Intake takes `--footprint-m 3.5 --max-tris 700` for this row, under its
+default of 800, and no `--world-light`. Authored in
+`tools/hull-models/props/comb-jelly.mjs`.
+
 Shape cues, so the prompts land in each biome's materials brief
 ([environments.md](environments.md)): vent props are basalt and magma glass, cracked
 and heat-scorched; kelp props are the forty-metre columns of
@@ -2440,14 +2569,14 @@ roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
-Every row of this table but the nodule bed's, the kelp stand's and the seven microfauna's was filled by a Claude Design model from
+Every row of this table but the nodule bed's, the kelp stand's and the eight microfauna's was filled by a Claude Design model from
 the Block 4 batch; the deterministic generator that stood in for the batch was retired
 when the last row landed ([graphics-standards.md](graphics-standards.md), "The
 environment branch"). Each file is now written by a script under
 `tools/hull-models/props/` (#869) that ports that model part for part — or, for the
-dome shard, replaces it (#883), and for the nodule bed, the kelp stand and the seven
+dome shard, replaces it (#883), and for the nodule bed, the kelp stand and the eight
 microfauna authors it from a seeded formula with no export behind it (#1555, #1712, and
-the microfauna's #1711, #1777, #1837 and #1867) — composed from `tools/hull-models/seabed.mjs`, and
+the microfauna's #1711, #1777, #1837, #1867 and #1858) — composed from `tools/hull-models/seabed.mjs`, and
 held at the row's footprint. A model generated from the prompts above replaces its row through that
 script: port the export into it, run it, run intake with the row's footprint, cap and
 light, commit the GLB with the script, and update the registry row's triangle count from

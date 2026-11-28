@@ -204,6 +204,7 @@ lanterns drifts over its north half, in development (#1859, below).
 | Drifting life / over the fleet's start, High alone | The jelly below, a public decorative medusa of 6 m (#1837) | The same independence. Not the Tetherjelly or its stipple figure: a field's bell is seven times as wide, a figure in dots in the fauna colour with six tentacles, and stands where it is, where a lantern is a lit skin in a hue of its own over eighteen strands, adrift alone. Not the Hollow's crescent. No light in its file |
 | Far life / over the bowl, High alone | The jelly again: the far bloom below, 120 of it in one river (#1859) | The same independence, and no file of its own. Not a Tetherjelly field: a lantern is a lit skin 6 m across in a hue of its own, adrift, where a field's bell is a figure in dots seven times as wide, in the fauna colour, and stands where it is. No bell among the hulls' 300 m or under it |
 | Large life / before the Close eye, High alone | The manta below, a public decorative body of 18 m (#1867) | The same independence; no silhouette of a classified animal, nothing of a hunter and nothing of the colossus. It is not the rim ray reshaped: that file and its glide stand as they did |
+| Deep life / under 400 m over the rim, High alone | The comb jelly below, a public decorative body 3.5 m across and about 5 m tall (#1858) | The same independence. Not the lantern: an upright egg, with no bell, no margin and nothing that trails. Not the Tetherjelly or its stipple figure, and not the Hollow's crescent. No light in its file |
 
 Two placement options were considered:
 
@@ -372,7 +373,7 @@ with no HUD. Water depth is public map data, so the rule tells nothing a match h
 | --- | --- | --- |
 | The Lid | Above 150 m | Nothing: its glow is an empty roof over the lanterns |
 | Shelf | 150 to 400 m | The lanterns, in `jelly-lantern`; the fry; the backlit mill; the manta |
-| Mid-Water, over the rim | 400 to 600 m | The rim's outer fish; and a deep body in a second hue (#1860), not yet modelled |
+| Mid-Water, over the rim | 400 to 600 m | The rim's outer fish; the comb jellies, in `comb-light` |
 
 - **A body is measured by its axis**, as every swim depth here is (#1713). The manta's
   axis keeps 157 to 173 m, so its accepted numbers stand, though a wingtip at its bank
@@ -382,6 +383,13 @@ with no HUD. Water depth is public map data, so the rule tells nothing a match h
 - **The deep body's line is 400 m, the Shelf's floor, not the thermocline.** The crater's
   eyes stand at 233 m and higher, and under 1,200 m there is only the pocket, which they
   see dark at High (#1857). The thermocline waits for a camera that sees under it (§9).
+- **A hue tells which side of the line.** The lantern lives over it and the comb jelly
+  under it, each in a token of its own
+  ([style-neon-noir.md](style-neon-noir.md#world-light--the-terrain-carve-outs)), and
+  neither ever crosses. In the standard palette pink over a hull's ring is the Shelf and
+  lime under it is Mid-Water. The red-green palettes tell them by hue too, a violet over
+  a yellow. Tritanopia's pair is one hue to that eye, and is told by lightness, an orchid
+  over a dark umber.
 - **Low is unchanged**, and High draws Low's list whole. So Low's two fry schools over the
   clearing, 105 to 170 m, stand in the Lid at High too: the rule's one known exception,
   2.1 km from the Close eye, where a 0.5 m fry draws under half a pixel.
@@ -417,6 +425,35 @@ Over a lap they hang 165 to 534 m from the Close eye, 190 to 526 m at its start,
 to 83 m over the eye's own depth, 50 m deeper than #1837 hung them, out of the Lid (Life by
 depth band, above), so they stand in the water above the hulls' rings, as
 the target's do. A 6 m bell draws 17 to 56 px there, and 10 to 13 from Home's eye.
+
+The **deep bodies** are six `env-comb-jelly` (#1858, the owner's commission of
+27 November 2026), each alone on its own loop under the Shelf's 400 m line: a 16 m radius
+and a lap in 420 s, three quarters of a lantern's pace, rising and sinking 8 m as it
+goes, upright, leaning 8 degrees into the turn. Each hangs by its body's mid-height,
+2.51 m over its lowest point, at an authored depth from an authored start.
+
+| Comb jelly | Loop centre, map x / y | Depth | Start, degrees round its loop |
+| --- | --- | --- | --- |
+| Comb 1 | 340 / 2,000 | 440 m | 225 |
+| Comb 2 | 540 / 1,780 | 460 m | 180 |
+| Comb 3 | 480 / 1,920 | 440 m | 315 |
+| Comb 4 | 440 / 1,960 | 520 m | 45 |
+| Comb 5 | 400 / 2,040 | 450 m | 0 |
+| Comb 6 | 500 / 1,860 | 550 m | 135 |
+
+Their axes keep 432 to 558 m over a lap, under the line and 30 m of depth and more over
+the rim's 600 m floor at their lowest points. Over a lap they hang 222 to 548 m from the
+Close eye and 44 to 71 m of drawn height under it, so they stand in the water under the
+hulls' rings, where the lanterns stand over them, and left of the vent stand, the
+nearest to it at the edge of its light. A 5 m body draws 14 to 35 px there, and 7 to 9
+from Home's eye. No two start at one phase,
+so no two rise and sink together, and the starts spread the six across that water in the
+frame reduced motion holds. Six is the author's count, and the slots are: the Close
+frame's water under the rings, between the Harvester's ring and the vent stand, holds
+that many 140 px apart and more. They are decoration under every rule of this section,
+as the lanterns are. How one is drawn is
+[art-direction.md](art-direction.md#a-comb-jelly-is-eight-seams-of-light)'s. The numbers
+are TUNABLE in `FREE_WATER_HIGH_LIFE.COMBS` until the owner accepts a frame.
 
 The fry's loop passes 50 m in front of the Close eye, 233 m deep at `(178, 2,168)`, where
 a 0.5 m body draws 15 px. A fry school is a ribbon, 14 m long, 3 m across and 2 m deep as
@@ -622,6 +659,7 @@ grazer of the water and nothing of a hunter. The manta (#1867) is High's, at the
 | `env-rim-ray` | 18 m across | 1 / 800 | Outside rim south-east of the start, 200..300 m depth; one slow closed glide, banked 30 degrees into its turn |
 | `env-drift-jelly` | 6 m across its bell | 5 / 700 | Over the outside rim by the start, 150..210 m depth, at the High graphics quality alone; each alone on one slow closed drift |
 | `env-rim-manta` | 18 m across | 1 / 4,000 | Over the outside rim before the Close eye, 150..180 m depth, at the High graphics quality alone; one slow closed glide, banked 40 degrees into its turn |
+| `env-comb-jelly` | 3.5 m across, 5 m tall | 6 / 700 | Over the outside rim before the Close eye, 432..558 m depth, at the High graphics quality alone; each alone on one slow closed loop, leaning 8 degrees into its turn |
 
 All motion is deterministic from published placement, a fixed seed and shared match
 time. It never reacts to a hull, a shot, a ping, damage or the camera. Reduced motion
@@ -662,7 +700,8 @@ hidden state. Neither extra participant is exposed by the study entry.
 **Shape lane.** The five new slugs were approved in #1711 and #1712 before integration,
 and the ray's answers the same gates in the pull request that places it (#1777). So does
 the jelly's (#1837): its designer and its reviewer are separate agents, and the reviewer
-passed the model. The manta's (#1867) answers them the same way.
+passed the model. The manta's (#1867) answers them the same way, and the comb jelly's
+(#1858).
 Environment props have no faction: each shape PR authors
 **ENV STYLE + one prop-table row** in [asset-prompts-3d.md](asset-prompts-3d.md) Block 4, including
 Footprint, Height, Tris and Light, plus its script, GLB, intake report,
@@ -674,13 +713,14 @@ Block 4 currently describes stone, coral, kelp and crystal standing on the seabe
 The #1711 shape PR must first add the scoped public-microfauna variant: the crab may
 stand on the floor, while the three swimming slugs may be suspended in the column.
 Retain its no-faction, low-luminance, material-count and intake constraints; the exception
-is for these seven decorative forms, the ray under its own large-body clause, the jelly
-under its drifting-body clause and the manta under its own, not gameplay fauna or other
-floating props.
-All seven rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
+is for these eight decorative forms, the ray under its own large-body clause, the jelly
+under its drifting-body clause, the manta under its own and the comb jelly under its
+deep-body clause, not gameplay fauna or other floating props.
+All eight rows carry **Light `none`**, including `env-deep-fish`: its GLB has no emissive,
 and runtime supplies the separately budgeted rung-5 photophore dots described above, or
 at High a point of world light a seat. The
-jelly's six seats are dark facets too, and are lit at High alone, as world light.
+jelly's six seats are dark facets too, and are lit at High alone, as world light. So
+are the comb jelly's eight comb rows, dark ridges in its file.
 This preserves the inverted intake light gate. No links to nonexistent exports,
 placeholder primitives passed off as finished assets, or one-off fish loader.
 
@@ -849,15 +889,17 @@ caps, 720,000 at Low and 900,000 at High (below).
 the owner's decision in session on 20 November 2026 (#1856). High stands life and a vent
 stand that Low does not (§5): its frame stood at up to 720,318 after #1837 and at up to
 761,358 with #1856's school, at up to 764,047 with #1867's manta, at up to 835,327
-with #1859's river of 120 lanterns, and stands at up to 851,455 with the ground #1891
-draws past the map's edge. Low keeps
+with #1859's river of 120 lanterns, and at up to 851,455 with the ground #1891
+draws past the map's edge. #1858's six comb jellies add 4,032, each 672 drawn
+triangles without its mouth, so it stands at up to 855,487: a sum on #1891's reading,
+since no survey frame was taken with them. Low keeps
 720,000, and gate 6's 8 ms of GPU time
 still binds High's frame. The 600,000 reservation above binds the Low list alone, by the
 owner's decision the same day, against binding High's list too and against a second
 reservation for High. It is what `packages/frontend/test/freeWaterDecoration.test.ts`
-sums: 551,850 by the registry's budgets. High's list sums to 759,923 by the same
-budgets, to 688,643 before #1859's river, to 685,954 before #1867 and to 644,914
-before #1856. What High alone stands is counted against the
+sums: 551,850 by the registry's budgets. High's list sums to 763,967 by the same
+budgets, to 759,923 before #1858's comb jellies, to 688,643 before #1859's river, to
+685,954 before #1867 and to 644,914 before #1856. What High alone stands is counted against the
 frame's 900,000 and has no reservation of its own.
 
 Record actual whole-frame calls, triangles, instances, texture/target bytes, hardware,

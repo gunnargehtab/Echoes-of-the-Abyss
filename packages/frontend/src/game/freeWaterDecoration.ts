@@ -359,6 +359,18 @@ export function freeWaterPlacements(
   // eye, its start authored as the ray's is.
   const { at: mantaAt, startDeg: mantaStart, MOTION: manta } = FREE_WATER_HIGH_LIFE.MANTA;
   add('env-rim-manta', mantaAt[0], mantaAt[1], { ...manta, phase: (mantaStart * Math.PI) / 180 });
+  // The deep bodies (#1858), after every slot #1837 to #1867 stood, which
+  // keep their indices, and before the far bloom, which stays the last of
+  // the list: each comb jelly alone on its own loop under the Shelf's 400 m
+  // line, hung at an authored depth from an authored start, as a lantern is
+  // over it.
+  for (const [x, y, depthM, startDeg] of FREE_WATER_HIGH_LIFE.COMBS.SLOTS) {
+    add('env-comb-jelly', x, y, {
+      ...FREE_WATER_HIGH_LIFE.COMBS.MOTION,
+      depthM,
+      phase: (startDeg * Math.PI) / 180,
+    });
+  }
   // The far bloom (#1859), last again, so every slot before it keeps its
   // index and the five lanterns by the fleet stay the first of their file's
   // list: a river of whole lanterns carried round the eddy over the bowl, where

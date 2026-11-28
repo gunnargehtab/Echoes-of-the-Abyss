@@ -123,9 +123,12 @@ export interface PropSpec {
    * marks, which at Low are the stipple channel's dots and at High are not
    * (#1857). `lantern` is the drifting jelly's: its file drawn as a lit
    * membrane, with its seats and its strands' beads as points, all in
-   * `jelly-lantern` (jellyLight.ts). Every other body emits nothing there.
+   * `jelly-lantern` (jellyLight.ts). `comb` is the comb jelly's: its file
+   * drawn as a fainter membrane, with the eight comb rows it marks as the
+   * light and points hung along them, all in `comb-light` (combLight.ts,
+   * #1858). Every other body emits nothing there.
    */
-  glint?: 'axis' | 'seats' | 'lantern';
+  glint?: 'axis' | 'seats' | 'lantern' | 'comb';
   /**
    * The manta's (#1867): at High its skin is one normal a vertex and its
    * wings stroke about the file's pose (mantaWing.ts). A body in the world's
@@ -382,6 +385,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
       ['env-rim-ray', 18, 586],
       ['env-drift-jelly', 6, 594],
       ['env-rim-manta', 18, 2689],
+      ['env-comb-jelly', 3.5, 674],
     ] as const
   ).map(([slug, footprintM, triBudget]): PropSpec => ({
     slug,
@@ -399,6 +403,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     ...(slug === 'env-shoal-fry' ? { glint: 'axis' as const } : {}),
     ...(slug === 'env-deep-fish' ? { glint: 'seats' as const } : {}),
     ...(slug === 'env-drift-jelly' ? { glint: 'lantern' as const } : {}),
+    ...(slug === 'env-comb-jelly' ? { glint: 'comb' as const } : {}),
     ...(slug === 'env-rim-manta' ? { wing: true as const } : {}),
   })),
 ];
