@@ -72,8 +72,9 @@ the snow moves between two page loads. The Cruiser's hull moves by less than tha
 own four lamps.
 
 The Light Scout rests 250 m dead ahead of the Cruiser at the same depth. With the mast
-lamp over the bow, at `4f47436d`, that box read 14.35 and 78.05%: the beam lit the
-Scout's fins and ring edges from astern. On the hull's back the lamp stands higher and
+lamp over the bow, at `4f47436d`, that box read 14.35 and 78.05% on `2ac63cbd`'s
+`gpu/cruiser/main-02-high-close.png` and `02-high-close.png`: the beam lit the Scout's
+fins and ring edges from astern. On the hull's back the lamp stands higher and
 the beam passes over it. A hull ahead of a mast lamp and over its level still stands in
 the beam, as any hull a beam crosses does. The owner was shown the lit Scout in session
 on 28 November 2026 and kept the rule, and the reading under gate 3 waits for #1637's

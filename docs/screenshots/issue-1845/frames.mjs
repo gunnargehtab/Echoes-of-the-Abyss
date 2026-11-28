@@ -21,7 +21,8 @@
 //
 // The study's fleet fields no class with four lamps. The frames under
 // gpu/cruiser were taken with staging.patch applied to the server, which is
-// never committed: a Cruiser in the Harvester's berth.
+// never committed: a Cruiser in the Harvester's berth. gpu/manta's are the
+// same with staging-manta.patch and staging-belly.patch.
 //
 // Reduced motion holds the camera's sway, every body at its loop's start and
 // the snow where it hangs, so two runs frame alike.
