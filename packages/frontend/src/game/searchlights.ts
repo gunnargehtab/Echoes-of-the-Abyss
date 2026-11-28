@@ -462,8 +462,10 @@ export function groundShade(
 /**
  * What the hulls leave of a beam at `at`: the shader's own test. How near
  * the line from the point to the lamp passes each hull's keel line, against
- * half its beam. `own` is the hull that throws the beam, which is behind its
- * lamp and is passed over.
+ * half its beam. `own` is the hull that throws the beam, and it is passed
+ * over: it stands outside every cone of its own (`searchlightsOf`), and a
+ * mast lamp stands inside a finned hull's capsule, which would otherwise
+ * shadow the whole beam.
  */
 export function hullShade(
   occluders: readonly SearchlightOccluder[],
@@ -549,8 +551,10 @@ export const SEARCHLIGHT_GLSL = [
   groundShadowGlsl('echoesSearchGround', SPEC.SHADOW.STEPS),
   groundShadowGlsl('echoesSearchGroundCoarse', SPEC.SHADOW.VOLUME_STEPS),
   // A hull in the way: how near the line from the point to the lamp passes
-  // its keel line, against half its beam. The beam's own hull is behind its
-  // lamp and is passed over.
+  // its keel line, against half its beam. The beam's own hull is passed
+  // over, and not as a shortcut: it stands outside every cone of its own
+  // (searchlightsOf), and a mast lamp stands inside a finned hull's capsule,
+  // which would otherwise shadow the whole beam.
   'float echoesSearchHulls( int i, vec3 at ) {',
   '  vec3 lamp = uSearchAt[ i ].xyz;',
   '  int own = int( uSearchAim[ i ].w );',

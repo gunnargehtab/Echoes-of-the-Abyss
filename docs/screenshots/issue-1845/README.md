@@ -136,12 +136,14 @@ A single queued frame read over the 16.7 ms interval in five of the branch's ten
 runs kept here, 17.09 to 28.55 ms, in none of `main`'s six, and once at Low on `main`,
 24.28 ms. Gate 6 warns that a queued frame whose handover outlasts the load reads high.
 So ten more High runs read the worst frame unqueued beside it, five a tree, the
-`worst-` files under [timing](gpu/timing). Unqueued, no frame passes 6.27 ms on the
+`worst-` files under [timing](gpu/timing). Seven a tree were started, and the two a tree
+missing from the numbering never joined a match and wrote no reading. Unqueued, no frame passes 6.27 ms on the
 branch or 6.51 ms on `main`. Queued, one reads 11.55 and one 14.98 ms on the branch, and
 one 12.13 and one 17.60 ms on `main`. So the long frames are the queue's, in both trees,
 and the step draws none of its own.
 
-Earlier runs are kept under [timing](gpu/timing) and none is read here. `f52b06b9-` is
+Earlier runs are kept under [timing](gpu/timing), and none is read in the table above.
+`f52b06b9-` is
 the first set, with the mast lamp 0.9 of a beam over the keel line. `rest-a`, `rest-b`
 and `later-` are the runs with it over the bow, at `4f47436d`, on a machine whose Low
 reading moved from 1.68 to 2.85 ms between runs. `branch-again` is this set's second
