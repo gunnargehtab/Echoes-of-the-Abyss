@@ -918,6 +918,15 @@ and no row below is open.
 | The free-water camera panel dropping its type size | [#1934](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1934) |
 | An own-force row printing a rounded range as a contact’s | [#1937](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1937) |
 | Three sentences still calling the tritanopia sheet glance owed | [#1940](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1940) |
+| An exposure row printing `bearing unknown` where the spec prints no detail | [#1966](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1966) |
+| The free-water destination panel ignoring the UI scale | [#1969](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1969) |
+| Delivery rings spilling past the region their row counts in | [#1971](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1971) |
+| The Broadside's and Furnace's propellers meeting only their own shrouds | [#1977](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1977) |
+| The Caisson's drive drums read at the wrong radius | [#1978](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1978) |
+| A hull-model doc saying no Bathyarch ring is off the rule when seven wells are | [#1986](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1986) |
+| A client recovering the match seed from its contact handles | [#1959](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1959) |
+| Anonymous matchmaking stalling the server on every create | [#1960](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1960) |
+| One socket holding a running match, with no cap on live rooms | [#1961](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/1961) |
 
 **How the project runs**
 
