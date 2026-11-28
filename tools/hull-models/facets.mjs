@@ -9,9 +9,10 @@
  * A committed GLB cannot say how many facets a part was meant to have — a
  * twelve-sided cylinder and a twelve-sided prism are the same triangles — so
  * this runs every script, the way check.mjs does, and reads each primitive's
- * rings off the live scene before the exporter flattens it. Every model came
- * over from an approved export (Phase 3) or was built beside one (Phase 4),
- * so each part carries whatever count its first author picked: the ports
+ * rings off the live scene as the script built it, before its export lays
+ * UVs on it (`sceneOf`). Every model came over from an approved export
+ * (Phase 3) or was built beside one (Phase 4), so each part carries
+ * whatever count its first author picked: the ports
  * copied it faithfully, and Phase 3 kept facet counts out of scope on
  * purpose. The result is a navy whose cylinders run from four sides to
  * twenty-eight with no rule a reader can state.
@@ -58,9 +59,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as THREE from 'three';
-import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { sceneParts, topDown, occludes } from './glb.mjs';
 import { NAVIES } from './finishes.mjs';
+import { tapExport } from './kit.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -338,40 +339,53 @@ export function panelsOf(root, { ppm = 4, minM2 = 0.25 } = {}) {
 }
 
 /* --------------------------------------------------------------------------
- * Running every script in-process: one import each, the exporter watched for
- * the root it is handed, the file itself written to scratch and thrown away.
+ * Running every script in-process: one import each, its export tapped for the
+ * root it is handed before anything lays UVs on it or writes it.
  * ------------------------------------------------------------------------ */
 
-async function measureAll(only) {
-  const roots = [];
-  const parseAsync = GLTFExporter.prototype.parseAsync;
-  GLTFExporter.prototype.parseAsync = function (input, options) {
-    roots.push(input);
-    return parseAsync.call(this, input, options);
-  };
-  const scratch = mkdtempSync(join(tmpdir(), 'hull-facets-'));
+/**
+ * One script's scene: its file imported under kit.mjs `tapExport`, so its
+ * `exportGlb` hands over the root as the script built it and writes
+ * nothing. Read any later and the trim layout and the bake have re-indexed
+ * every buffer in corner order, which `ringsOf`'s walk of three's own
+ * layout reads across a cylinder's length (#1978). `out` takes whatever
+ * else a script writes. Returns `{ slug, root }`, the root's world matrices
+ * current, so `ringsOf` reads it in metres.
+ */
+export async function sceneOf(file, out) {
+  const taken = [];
+  const untap = tapExport((root, filename) => {
+    taken.push({ root, filename });
+  });
   const quiet = { log: console.log, warn: console.warn };
+  process.env.HULL_MODELS_OUT = out;
+  console.log = console.warn = () => {};
+  try {
+    await import(pathToFileURL(file).href);
+  } finally {
+    Object.assign(console, quiet);
+    untap();
+    delete process.env.HULL_MODELS_OUT;
+  }
+  const [{ root, filename }] = taken;
+  root.updateMatrixWorld(true);
+  return { slug: filename.replace(/\.glb$/, ''), root };
+}
+
+async function measureAll(only) {
+  const scratch = mkdtempSync(join(tmpdir(), 'hull-facets-'));
   const models = [];
   try {
     for (const dir of ['hulls', 'structures', 'props']) {
       for (const file of readdirSync(join(here, dir))
         .filter((f) => f.endsWith('.mjs'))
         .sort()) {
-        const out = join(scratch, `${dir}-${file}`);
-        process.env.HULL_MODELS_OUT = out;
-        roots.length = 0;
-        console.log = console.warn = () => {};
-        try {
-          await import(pathToFileURL(join(here, dir, file)).href);
-        } finally {
-          Object.assign(console, quiet);
-        }
-        const [glb] = readdirSync(out).filter((f) => f.endsWith('.glb'));
-        const slug = glb.replace(/\.glb$/, '');
+        const { slug, root } = await sceneOf(
+          join(here, dir, file),
+          join(scratch, `${dir}-${file}`)
+        );
         const navy = NAVIES.find((n) => slug.endsWith(`-${n}`)) ?? 'env';
         if (only.length && !only.includes(navy)) continue;
-        const [root] = roots;
-        root.updateMatrixWorld(true);
         const rings = [];
         root.traverse((o) => {
           if (o.isMesh) for (const r of ringsOf(o)) rings.push({ ...r, part: o.name });
@@ -381,8 +395,6 @@ async function measureAll(only) {
       }
     }
   } finally {
-    GLTFExporter.prototype.parseAsync = parseAsync;
-    delete process.env.HULL_MODELS_OUT;
     rmSync(scratch, { recursive: true, force: true });
   }
   return models;
